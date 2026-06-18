@@ -143,7 +143,9 @@ watch(() => props.modelValue, (open) => {
   <template v-else>
     <nav
       class="nd-inline flex h-full shrink-0 flex-col border-r border-outline-variant bg-surface"
-      :class="collapsed ? 'nd-collapsed w-[72px]' : 'w-72'"
+      :class="[
+        !modelValue ? 'nd-hidden w-0 border-r-0' : collapsed ? 'nd-collapsed w-[72px]' : 'w-72',
+      ]"
     >
       <div v-if="$slots.header" class="shrink-0">
         <slot name="header" />
@@ -162,7 +164,7 @@ watch(() => props.modelValue, (open) => {
           <button
             v-if="section.title && section.collapsible"
             type="button"
-            class="mt-1 flex w-full cursor-pointer items-center gap-3 overflow-hidden whitespace-nowrap rounded-xl px-3 py-2.5 text-on-surface-variant hover:bg-on-surface/8"
+            class="mt-1 flex w-full shrink-0 cursor-pointer items-center gap-3 overflow-hidden whitespace-nowrap rounded-xl px-3 py-2.5 text-on-surface-variant hover:bg-on-surface/8"
             :title="collapsed ? section.title : undefined"
             @click="toggleSection(section, si)"
           >
@@ -192,7 +194,7 @@ watch(() => props.modelValue, (open) => {
                   :to="item.to && !item.disabled ? item.to : undefined"
                   :type="item.to ? undefined : 'button'"
                   :title="collapsed ? item.label : undefined"
-                  class="flex w-full items-center gap-3 overflow-hidden whitespace-nowrap rounded-full py-2.5 text-left focus-visible:outline-none"
+                  class="flex w-full shrink-0 items-center gap-3 overflow-hidden whitespace-nowrap rounded-full py-2.5 text-left focus-visible:outline-none"
                   :class="[
                     section.collapsible && !collapsed ? 'pl-8 pr-3' : 'px-3',
                     item.disabled
@@ -286,6 +288,10 @@ watch(() => props.modelValue, (open) => {
 }
 .nd-inline.nd-collapsed .nd-collapse-h {
   max-height: 0;
+}
+
+.nd-inline.nd-hidden {
+  overflow: hidden;
 }
 
 .nd-inline .nd-section-body > * {
