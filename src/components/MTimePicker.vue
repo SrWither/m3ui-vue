@@ -25,8 +25,8 @@ const { resolvedFieldBg } = useFieldBg(triggerEl, () => props.fieldBg)
 
 const parsed = computed(() => {
   if (!props.modelValue) return { h: 12, m: 0 }
-  const [hh, mm] = props.modelValue.split(':').map(Number)
-  return { h: hh, m: mm }
+  const parts = props.modelValue.split(':').map(Number)
+  return { h: parts[0] ?? 12, m: parts[1] ?? 0 }
 })
 
 const selectedHour = ref(parsed.value.h)

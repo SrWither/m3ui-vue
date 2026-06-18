@@ -50,7 +50,7 @@ function onDrop(e: DragEvent, toIndex: number) {
   }
 
   const items = [...props.modelValue]
-  const [moved] = items.splice(fromIndex, 1)
+  const moved = items.splice(fromIndex, 1)[0]!
   items.splice(toIndex, 0, moved)
 
   emit('update:modelValue', items)

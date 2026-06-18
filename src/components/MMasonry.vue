@@ -39,24 +39,24 @@ function layout() {
   const container = containerRef.value
   if (!container) return
 
-  const gap = gapPx[props.gap]
+  const gap = gapPx[props.gap] ?? 0
   const cols = activeCols.value
   const children = Array.from(container.children) as HTMLElement[]
 
   const colWidth = (container.clientWidth - gap * (cols - 1)) / cols
-  const colHeights = new Array(cols).fill(0)
+  const colHeights = new Array<number>(cols).fill(0)
 
   for (const child of children) {
     const shortest = colHeights.indexOf(Math.min(...colHeights))
     const x = shortest * (colWidth + gap)
-    const y = colHeights[shortest]
+    const y = colHeights[shortest] ?? 0
 
     child.style.position = 'absolute'
     child.style.left = `${x}px`
     child.style.top = `${y}px`
     child.style.width = `${colWidth}px`
 
-    colHeights[shortest] += child.offsetHeight + gap
+    colHeights[shortest] = (colHeights[shortest] ?? 0) + child.offsetHeight + gap
   }
 
   container.style.height = `${Math.max(...colHeights) - gap}px`

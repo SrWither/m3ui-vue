@@ -86,7 +86,7 @@ function onKeydown(e: KeyboardEvent) {
     scrollToActive()
   } else if (e.key === 'Enter' && len) {
     e.preventDefault()
-    selectResult(props.results[activeIndex.value])
+    selectResult(props.results[activeIndex.value]!)
   } else if (e.key === 'Escape') {
     close()
   }

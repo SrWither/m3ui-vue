@@ -81,7 +81,7 @@ function onKeydown(e: KeyboardEvent) {
     scrollToActive()
   } else if (e.key === 'Enter' && filtered.value.length) {
     e.preventDefault()
-    selectItem(filtered.value[activeIndex.value])
+    selectItem(filtered.value[activeIndex.value]!)
   } else if (e.key === 'Escape') {
     close()
   }

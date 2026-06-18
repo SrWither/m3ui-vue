@@ -20,7 +20,7 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{ 'update:modelValue': [number] }>()
 
 function stepState(index: number) {
-  if (props.steps[index].error) return 'error'
+  if (props.steps[index]?.error) return 'error'
   if (index < props.modelValue) return 'completed'
   if (index === props.modelValue) return 'active'
   return 'inactive'

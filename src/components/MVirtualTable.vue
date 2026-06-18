@@ -76,7 +76,7 @@ let ro: ResizeObserver | null = null
 onMounted(() => {
   if (scrollEl.value) {
     containerH.value = scrollEl.value.clientHeight
-    ro = new ResizeObserver(([entry]) => { containerH.value = entry.contentRect.height })
+    ro = new ResizeObserver((entries) => { containerH.value = entries[0]!.contentRect.height })
     ro.observe(scrollEl.value)
   }
 })

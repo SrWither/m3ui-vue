@@ -31,8 +31,9 @@ function createObserver() {
   if (props.disabled || props.ended) return
 
   observer = new IntersectionObserver(
-    ([entry]) => {
-      if (entry.isIntersecting && !props.loading && !props.ended && !props.disabled) {
+    (entries) => {
+      const entry = entries[0]
+      if (entry?.isIntersecting && !props.loading && !props.ended && !props.disabled) {
         emit('load')
       }
     },

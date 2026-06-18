@@ -3,7 +3,7 @@
   "include": ["src/**/*", "src/**/*.vue"],
   "exclude": ["src/components/_MTreeNode.vue"],
   "compilerOptions": {
-    "noUncheckedIndexedAccess": false,
+    "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,
     "rootDir": "src",
     "declaration": true,
