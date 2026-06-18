@@ -59,7 +59,7 @@ const config = {
     <button
       v-if="closeable"
       type="button"
-      class="shrink-0 cursor-pointer rounded-full p-1 transition-colors hover:bg-on-surface/8"
+      class="-mr-1 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-on-surface/8"
       aria-label="Cerrar"
       @click="emit('close')"
     >
