@@ -80,9 +80,11 @@ onBeforeUnmount(() => {
           : 'h-2 cursor-row-resize flex-row',
         dragging ? 'bg-primary/20' : 'bg-outline-variant/40 hover:bg-primary/12',
       ]"
+      style="touch-action: none"
       @pointerdown="onPointerDown"
       @pointermove="onPointerMove"
       @pointerup="onPointerUp"
+      @pointercancel="onPointerUp"
     >
       <div
         class="rounded-full bg-outline"

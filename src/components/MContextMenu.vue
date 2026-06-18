@@ -9,6 +9,7 @@ export interface ContextMenuItem {
   disabled?: boolean
   danger?: boolean
   divider?: boolean
+  to?: string | Record<string, any>
   children?: ContextMenuItem[]
   onClick?: () => void
 }

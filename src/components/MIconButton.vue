@@ -9,6 +9,7 @@ const props = withDefaults(
     variant?: 'standard' | 'filled' | 'tonal' | 'outlined'
     disabled?: boolean
     size?: number
+    to?: string | Record<string, any>
   }>(),
   {
     variant: 'standard',
@@ -16,6 +17,8 @@ const props = withDefaults(
     size: 40,
   },
 )
+
+const tag = computed(() => props.to ? 'RouterLink' : 'button')
 
 const base =
   'inline-flex shrink-0 items-center justify-center rounded-full transition-colors duration-150 cursor-pointer ' +
@@ -36,8 +39,10 @@ const variantClasses = computed(() => {
 </script>
 
 <template>
-  <button
-    type="button"
+  <component
+    :is="tag"
+    :to="to || undefined"
+    :type="to ? undefined : 'button'"
     :aria-label="label"
     :title="label"
     :disabled="disabled"
@@ -45,5 +50,5 @@ const variantClasses = computed(() => {
     :style="{ width: `${size}px`, height: `${size}px` }"
   >
     <MIcon :name="icon" :size="Math.round(size * 0.55)" />
-  </button>
+  </component>
 </template>

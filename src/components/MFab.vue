@@ -5,6 +5,7 @@ import MIcon from './MIcon.vue'
 export interface SpeedDialItem {
   icon: string
   label?: string
+  to?: string | Record<string, any>
   onClick?: () => void
 }
 
@@ -17,6 +18,7 @@ const props = withDefaults(
     disabled?: boolean
     items?: SpeedDialItem[]
     direction?: 'up' | 'down' | 'left' | 'right' | 'radial'
+    to?: string | Record<string, any>
   }>(),
   {
     color: 'primary',
@@ -25,6 +27,8 @@ const props = withDefaults(
     direction: 'up',
   },
 )
+
+const fabTag = computed(() => props.to ? 'RouterLink' : 'button')
 
 const emit = defineEmits<{ click: [MouseEvent] }>()
 
@@ -186,12 +190,14 @@ onUnmounted(() => {
 
 <template>
   <div ref="fabEl" class="relative inline-flex items-center justify-center">
-    <button
-      type="button"
+    <component
+      :is="fabTag"
+      :to="to || undefined"
+      :type="to ? undefined : 'button'"
       class="relative inline-flex cursor-pointer items-center justify-center overflow-hidden shadow-elevation-1 transition-shadow duration-150 hover:shadow-elevation-2 active:shadow-elevation-1 disabled:cursor-not-allowed disabled:opacity-[0.38] before:content-[''] before:pointer-events-none before:absolute before:inset-0 before:bg-current before:opacity-0 before:transition-opacity before:duration-150 hover:before:opacity-[0.08] active:before:opacity-[0.12]"
       :class="[colorMap[color], fabSizeClasses]"
       :disabled="disabled"
-      @pointerdown="(e) => { createRipple(e); handleFabClick(e) }"
+      @pointerdown="(e: PointerEvent) => { createRipple(e); handleFabClick(e) }"
     >
       <MIcon
         :name="icon"
@@ -200,7 +206,7 @@ onUnmounted(() => {
         :class="hasItems && open ? 'rotate-45' : ''"
       />
       <span v-if="label" class="text-label-large font-medium">{{ label }}</span>
-    </button>
+    </component>
   </div>
 
   <Teleport to="body">
@@ -221,15 +227,17 @@ onUnmounted(() => {
           {{ item.label }}
         </span>
 
-        <button
-          type="button"
+        <component
+          :is="item.to ? 'RouterLink' : 'button'"
+          :to="item.to || undefined"
+          :type="item.to ? undefined : 'button'"
           class="relative flex cursor-pointer items-center justify-center overflow-hidden rounded-lg shadow-elevation-1 transition-shadow duration-150 hover:shadow-elevation-2 active:shadow-elevation-1 before:content-[''] before:pointer-events-none before:absolute before:inset-0 before:bg-current before:opacity-0 before:transition-opacity before:duration-150 hover:before:opacity-[0.08] active:before:opacity-[0.12]"
           :class="colorMap[color]"
           :style="{ width: `${ITEM_PX}px`, height: `${ITEM_PX}px` }"
-          @pointerdown="(e) => handleItemClick(e, item, e.currentTarget as HTMLElement)"
+          @pointerdown="(e: PointerEvent) => handleItemClick(e, item, e.currentTarget as HTMLElement)"
         >
           <MIcon :name="item.icon" :size="20" />
-        </button>
+        </component>
       </div>
     </template>
   </Teleport>

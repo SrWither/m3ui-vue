@@ -74,8 +74,10 @@ function onPanelMouseLeave(e: MouseEvent) {
       <template v-for="(item, i) in items" :key="i">
         <hr v-if="item.divider" class="my-1 border-outline-variant" />
 
-        <div
+        <component
           v-else
+          :is="item.to && !item.disabled ? 'RouterLink' : 'div'"
+          :to="item.to && !item.disabled ? item.to : undefined"
           class="relative flex cursor-default select-none items-center gap-3 px-4 py-2.5 text-body-large"
           :class="[
             item.disabled
@@ -116,7 +118,7 @@ function onPanelMouseLeave(e: MouseEvent) {
             :size="18"
             class="shrink-0 text-on-surface-variant"
           />
-        </div>
+        </component>
       </template>
     </div>
   </div>

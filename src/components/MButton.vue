@@ -19,6 +19,7 @@ const props = withDefaults(
     disabled?: boolean
     loading?: boolean
     icon?: string
+    to?: string | Record<string, any>
   }>(),
   {
     variant: 'filled',
@@ -28,6 +29,8 @@ const props = withDefaults(
     loading: false,
   },
 )
+
+const tag = computed(() => props.to ? 'RouterLink' : 'button')
 
 const isCustomColor = computed(
   () => !!props.color && !(NAMED_COLORS as readonly string[]).includes(props.color),
@@ -97,8 +100,10 @@ function createRipple(event: PointerEvent) {
 </script>
 
 <template>
-  <button
-    :type="type"
+  <component
+    :is="tag"
+    :to="to || undefined"
+    :type="to ? undefined : type"
     :disabled="disabled || loading"
     :class="[base, variantClasses]"
     :style="customStyle"
@@ -107,5 +112,5 @@ function createRipple(event: PointerEvent) {
     <MSpinner v-if="loading" :size="18" />
     <MIcon v-else-if="icon" :name="icon" :size="20" />
     <slot />
-  </button>
+  </component>
 </template>
