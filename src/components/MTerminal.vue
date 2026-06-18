@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
-import { Terminal } from '@xterm/xterm'
-import { FitAddon } from '@xterm/addon-fit'
 import MIcon from './MIcon.vue'
 
 const props = withDefaults(
@@ -25,8 +23,8 @@ const emit = defineEmits<{
 }>()
 
 const containerRef = ref<HTMLElement | null>(null)
-let terminal: Terminal | null = null
-let fitAddon: FitAddon | null = null
+let terminal: any = null
+let fitAddon: any = null
 let resizeObserver: ResizeObserver | null = null
 let lineBuffer = ''
 
@@ -44,11 +42,16 @@ function getThemeColors() {
 onMounted(async () => {
   if (!containerRef.value) return
 
+  const [xtermMod, fitMod] = await Promise.all([
+    import('@xterm/xterm'),
+    import('@xterm/addon-fit'),
+  ])
+
   try { await import('@xterm/xterm/css/xterm.css') } catch { /* consumer will provide styles */ }
 
   const colors = getThemeColors()
 
-  terminal = new Terminal({
+  terminal = new xtermMod.Terminal({
     fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
     fontSize: 14,
     lineHeight: 1.4,
@@ -65,7 +68,7 @@ onMounted(async () => {
     convertEol: true,
   })
 
-  fitAddon = new FitAddon()
+  fitAddon = new fitMod.FitAddon()
   terminal.loadAddon(fitAddon)
   terminal.open(containerRef.value)
 
@@ -76,7 +79,7 @@ onMounted(async () => {
   }
 
   if (!props.readonly) {
-    terminal.onData((data) => {
+    terminal.onData((data: string) => {
       emit('input', data)
 
       if (data === '\r') {
@@ -143,4 +146,3 @@ defineExpose({
     />
   </div>
 </template>
-

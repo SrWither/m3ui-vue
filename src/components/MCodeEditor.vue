@@ -1,15 +1,5 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue'
-import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view'
-import { EditorState } from '@codemirror/state'
-import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
-import { syntaxHighlighting, defaultHighlightStyle, bracketMatching, foldGutter, indentOnInput } from '@codemirror/language'
-import { javascript } from '@codemirror/lang-javascript'
-import { json } from '@codemirror/lang-json'
-import { html } from '@codemirror/lang-html'
-import { css } from '@codemirror/lang-css'
-import { python } from '@codemirror/lang-python'
-import { oneDark } from '@codemirror/theme-one-dark'
 
 type Language = 'javascript' | 'typescript' | 'json' | 'html' | 'css' | 'python' | 'plain'
 
@@ -37,7 +27,8 @@ const props = withDefaults(
 const emit = defineEmits<{ 'update:modelValue': [string] }>()
 
 const containerRef = ref<HTMLElement | null>(null)
-let view: EditorView | null = null
+let view: any = null
+let cmModules: any = null
 
 const langLabel = computed(() => {
   const labels: Record<Language, string> = {
@@ -52,49 +43,74 @@ const langLabel = computed(() => {
   return labels[props.language]
 })
 
-function getLangExtension() {
+async function loadModules() {
+  if (cmModules) return cmModules
+
+  const [viewMod, stateMod, commandsMod, languageMod, oneDarkMod, jsMod, jsonMod, htmlMod, cssMod, pyMod] = await Promise.all([
+    import('@codemirror/view'),
+    import('@codemirror/state'),
+    import('@codemirror/commands'),
+    import('@codemirror/language'),
+    import('@codemirror/theme-one-dark'),
+    import('@codemirror/lang-javascript'),
+    import('@codemirror/lang-json'),
+    import('@codemirror/lang-html'),
+    import('@codemirror/lang-css'),
+    import('@codemirror/lang-python'),
+  ])
+
+  cmModules = { viewMod, stateMod, commandsMod, languageMod, oneDarkMod, jsMod, jsonMod, htmlMod, cssMod, pyMod }
+  return cmModules
+}
+
+function getLangExtension(mods: any) {
   switch (props.language) {
-    case 'javascript': return javascript()
-    case 'typescript': return javascript({ typescript: true })
-    case 'json': return json()
-    case 'html': return html()
-    case 'css': return css()
-    case 'python': return python()
+    case 'javascript': return mods.jsMod.javascript()
+    case 'typescript': return mods.jsMod.javascript({ typescript: true })
+    case 'json': return mods.jsonMod.json()
+    case 'html': return mods.htmlMod.html()
+    case 'css': return mods.cssMod.css()
+    case 'python': return mods.pyMod.python()
     default: return []
   }
 }
 
-function buildExtensions() {
+function buildExtensions(mods: any) {
+  const { viewMod, stateMod, commandsMod, languageMod, oneDarkMod } = mods
+
   const exts = [
-    keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
-    history(),
-    bracketMatching(),
-    indentOnInput(),
-    foldGutter(),
-    highlightActiveLine(),
-    highlightActiveLineGutter(),
-    syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-    getLangExtension(),
-    EditorView.updateListener.of((update) => {
+    viewMod.keymap.of([...commandsMod.defaultKeymap, ...commandsMod.historyKeymap, commandsMod.indentWithTab]),
+    commandsMod.history(),
+    languageMod.bracketMatching(),
+    languageMod.indentOnInput(),
+    languageMod.foldGutter(),
+    viewMod.highlightActiveLine(),
+    viewMod.highlightActiveLineGutter(),
+    languageMod.syntaxHighlighting(languageMod.defaultHighlightStyle, { fallback: true }),
+    getLangExtension(mods),
+    viewMod.EditorView.updateListener.of((update: any) => {
       if (update.docChanged) emit('update:modelValue', update.state.doc.toString())
     }),
-    EditorState.readOnly.of(props.readonly),
+    stateMod.EditorState.readOnly.of(props.readonly),
   ]
 
-  if (props.lineNumbers) exts.push(lineNumbers())
-  if (props.theme === 'dark') exts.push(oneDark)
+  if (props.lineNumbers) exts.push(viewMod.lineNumbers())
+  if (props.theme === 'dark') exts.push(oneDarkMod.oneDark)
 
   return exts
 }
 
-function createEditor() {
+async function createEditor() {
   if (!containerRef.value) return
+  const mods = await loadModules()
+  const { viewMod, stateMod } = mods
+
   view?.destroy()
 
-  view = new EditorView({
-    state: EditorState.create({
+  view = new viewMod.EditorView({
+    state: stateMod.EditorState.create({
       doc: props.modelValue,
-      extensions: buildExtensions(),
+      extensions: buildExtensions(mods),
     }),
     parent: containerRef.value,
   })

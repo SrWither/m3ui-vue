@@ -1,15 +1,5 @@
 <script setup lang="ts">
-import { watch } from 'vue'
-import { useEditor, EditorContent } from '@tiptap/vue-3'
-import StarterKit from '@tiptap/starter-kit'
-import Underline from '@tiptap/extension-underline'
-import TextAlign from '@tiptap/extension-text-align'
-import Link from '@tiptap/extension-link'
-import Image from '@tiptap/extension-image'
-import Highlight from '@tiptap/extension-highlight'
-import Placeholder from '@tiptap/extension-placeholder'
-import { TextStyle } from '@tiptap/extension-text-style'
-import Color from '@tiptap/extension-color'
+import { ref, watch, onMounted, onBeforeUnmount, shallowRef } from 'vue'
 import MIcon from './MIcon.vue'
 
 const props = withDefaults(
@@ -24,28 +14,9 @@ const props = withDefaults(
 
 const emit = defineEmits<{ 'update:modelValue': [string] }>()
 
-const editor = useEditor({
-  content: props.modelValue,
-  editable: !props.disabled,
-  extensions: [
-    StarterKit,
-    Underline,
-    TextAlign.configure({ types: ['heading', 'paragraph'] }),
-    Link.configure({ openOnClick: false }),
-    Image,
-    Highlight.configure({ multicolor: true }),
-    Placeholder.configure({ placeholder: props.placeholder }),
-    TextStyle,
-    Color,
-  ],
-  onUpdate: ({ editor: e }) => emit('update:modelValue', e.getHTML()),
-})
-
-watch(() => props.modelValue, (val) => {
-  if (editor.value && editor.value.getHTML() !== val) editor.value.commands.setContent(val)
-})
-
-watch(() => props.disabled, (v) => editor.value?.setEditable(!v))
+const ready = ref(false)
+const editorRef = shallowRef<any>(null)
+const editorContainer = ref<HTMLElement | null>(null)
 
 interface ToolBtn {
   icon: string
@@ -54,43 +25,106 @@ interface ToolBtn {
   active?: () => boolean
 }
 
-const toolGroups: ToolBtn[][] = [
-  [
-    { icon: 'format_bold', label: 'Negrita', action: () => editor.value?.chain().focus().toggleBold().run(), active: () => !!editor.value?.isActive('bold') },
-    { icon: 'format_italic', label: 'Cursiva', action: () => editor.value?.chain().focus().toggleItalic().run(), active: () => !!editor.value?.isActive('italic') },
-    { icon: 'format_underlined', label: 'Subrayado', action: () => editor.value?.chain().focus().toggleUnderline().run(), active: () => !!editor.value?.isActive('underline') },
-    { icon: 'format_strikethrough', label: 'Tachado', action: () => editor.value?.chain().focus().toggleStrike().run(), active: () => !!editor.value?.isActive('strike') },
-    { icon: 'ink_highlighter', label: 'Resaltar', action: () => editor.value?.chain().focus().toggleHighlight().run(), active: () => !!editor.value?.isActive('highlight') },
-  ],
-  [
-    { icon: 'format_list_bulleted', label: 'Lista', action: () => editor.value?.chain().focus().toggleBulletList().run(), active: () => !!editor.value?.isActive('bulletList') },
-    { icon: 'format_list_numbered', label: 'Lista numerada', action: () => editor.value?.chain().focus().toggleOrderedList().run(), active: () => !!editor.value?.isActive('orderedList') },
-    { icon: 'format_quote', label: 'Cita', action: () => editor.value?.chain().focus().toggleBlockquote().run(), active: () => !!editor.value?.isActive('blockquote') },
-    { icon: 'code', label: 'Código', action: () => editor.value?.chain().focus().toggleCode().run(), active: () => !!editor.value?.isActive('code') },
-  ],
-  [
-    { icon: 'format_align_left', label: 'Izquierda', action: () => editor.value?.chain().focus().setTextAlign('left').run(), active: () => !!editor.value?.isActive({ textAlign: 'left' }) },
-    { icon: 'format_align_center', label: 'Centro', action: () => editor.value?.chain().focus().setTextAlign('center').run(), active: () => !!editor.value?.isActive({ textAlign: 'center' }) },
-    { icon: 'format_align_right', label: 'Derecha', action: () => editor.value?.chain().focus().setTextAlign('right').run(), active: () => !!editor.value?.isActive({ textAlign: 'right' }) },
-  ],
-  [
-    { icon: 'undo', label: 'Deshacer', action: () => editor.value?.chain().focus().undo().run() },
-    { icon: 'redo', label: 'Rehacer', action: () => editor.value?.chain().focus().redo().run() },
-  ],
-]
+const toolGroups = ref<ToolBtn[][]>([])
+
+onMounted(async () => {
+  const [
+    { useEditor, EditorContent },
+    { default: StarterKit },
+    { default: Underline },
+    { default: TextAlign },
+    { default: Link },
+    { default: Image },
+    { default: Highlight },
+    { default: Placeholder },
+    { TextStyle },
+    { default: Color },
+  ] = await Promise.all([
+    import('@tiptap/vue-3'),
+    import('@tiptap/starter-kit'),
+    import('@tiptap/extension-underline'),
+    import('@tiptap/extension-text-align'),
+    import('@tiptap/extension-link'),
+    import('@tiptap/extension-image'),
+    import('@tiptap/extension-highlight'),
+    import('@tiptap/extension-placeholder'),
+    import('@tiptap/extension-text-style'),
+    import('@tiptap/extension-color'),
+  ])
+
+  const editor = useEditor({
+    content: props.modelValue,
+    editable: !props.disabled,
+    extensions: [
+      StarterKit,
+      Underline,
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      Link.configure({ openOnClick: false }),
+      Image,
+      Highlight.configure({ multicolor: true }),
+      Placeholder.configure({ placeholder: props.placeholder }),
+      TextStyle,
+      Color,
+    ],
+    onUpdate: ({ editor: e }) => emit('update:modelValue', e.getHTML()),
+  })
+
+  editorRef.value = editor
+
+  toolGroups.value = [
+    [
+      { icon: 'format_bold', label: 'Negrita', action: () => editor.value?.chain().focus().toggleBold().run(), active: () => !!editor.value?.isActive('bold') },
+      { icon: 'format_italic', label: 'Cursiva', action: () => editor.value?.chain().focus().toggleItalic().run(), active: () => !!editor.value?.isActive('italic') },
+      { icon: 'format_underlined', label: 'Subrayado', action: () => editor.value?.chain().focus().toggleUnderline().run(), active: () => !!editor.value?.isActive('underline') },
+      { icon: 'format_strikethrough', label: 'Tachado', action: () => editor.value?.chain().focus().toggleStrike().run(), active: () => !!editor.value?.isActive('strike') },
+      { icon: 'ink_highlighter', label: 'Resaltar', action: () => editor.value?.chain().focus().toggleHighlight().run(), active: () => !!editor.value?.isActive('highlight') },
+    ],
+    [
+      { icon: 'format_list_bulleted', label: 'Lista', action: () => editor.value?.chain().focus().toggleBulletList().run(), active: () => !!editor.value?.isActive('bulletList') },
+      { icon: 'format_list_numbered', label: 'Lista numerada', action: () => editor.value?.chain().focus().toggleOrderedList().run(), active: () => !!editor.value?.isActive('orderedList') },
+      { icon: 'format_quote', label: 'Cita', action: () => editor.value?.chain().focus().toggleBlockquote().run(), active: () => !!editor.value?.isActive('blockquote') },
+      { icon: 'code', label: 'Código', action: () => editor.value?.chain().focus().toggleCode().run(), active: () => !!editor.value?.isActive('code') },
+    ],
+    [
+      { icon: 'format_align_left', label: 'Izquierda', action: () => editor.value?.chain().focus().setTextAlign('left').run(), active: () => !!editor.value?.isActive({ textAlign: 'left' }) },
+      { icon: 'format_align_center', label: 'Centro', action: () => editor.value?.chain().focus().setTextAlign('center').run(), active: () => !!editor.value?.isActive({ textAlign: 'center' }) },
+      { icon: 'format_align_right', label: 'Derecha', action: () => editor.value?.chain().focus().setTextAlign('right').run(), active: () => !!editor.value?.isActive({ textAlign: 'right' }) },
+    ],
+    [
+      { icon: 'undo', label: 'Deshacer', action: () => editor.value?.chain().focus().undo().run() },
+      { icon: 'redo', label: 'Rehacer', action: () => editor.value?.chain().focus().redo().run() },
+    ],
+  ]
+
+  // Mount EditorContent manually since we can't use the component from dynamic import in template
+  if (editorContainer.value) {
+    const app = await import('vue')
+    const editorApp = app.createApp(EditorContent, { editor: editor.value })
+    editorApp.mount(editorContainer.value)
+    onBeforeUnmount(() => editorApp.unmount())
+  }
+
+  watch(() => props.modelValue, (val) => {
+    if (editor.value && editor.value.getHTML() !== val) editor.value.commands.setContent(val)
+  })
+
+  watch(() => props.disabled, (v) => editor.value?.setEditable(!v))
+
+  ready.value = true
+})
 
 function insertLink() {
   const url = window.prompt('URL del enlace:')
-  if (url) editor.value?.chain().focus().setLink({ href: url }).run()
+  if (url) editorRef.value?.value?.chain().focus().setLink({ href: url }).run()
 }
 
 function insertImage() {
   const url = window.prompt('URL de la imagen:')
-  if (url) editor.value?.chain().focus().setImage({ src: url }).run()
+  if (url) editorRef.value?.value?.chain().focus().setImage({ src: url }).run()
 }
 
 function setHeading(level: 1 | 2 | 3) {
-  editor.value?.chain().focus().toggleHeading({ level }).run()
+  editorRef.value?.value?.chain().focus().toggleHeading({ level }).run()
 }
 </script>
 
@@ -100,19 +134,19 @@ function setHeading(level: 1 | 2 | 3) {
     :class="disabled ? 'border-outline-variant/50 opacity-60' : 'border-outline-variant focus-within:border-primary'"
   >
     <!-- Toolbar -->
-    <div class="flex flex-wrap items-center gap-0.5 border-b border-outline-variant bg-surface-container px-2 py-1.5">
+    <div v-if="ready" class="flex flex-wrap items-center gap-0.5 border-b border-outline-variant bg-surface-container px-2 py-1.5">
       <!-- Heading select -->
       <select
         class="h-8 cursor-pointer rounded bg-transparent px-2 text-label-large text-on-surface-variant outline-none hover:bg-on-surface/8"
         :value="
-          editor?.isActive('heading', { level: 1 }) ? '1'
-          : editor?.isActive('heading', { level: 2 }) ? '2'
-          : editor?.isActive('heading', { level: 3 }) ? '3'
+          editorRef?.value?.isActive('heading', { level: 1 }) ? '1'
+          : editorRef?.value?.isActive('heading', { level: 2 }) ? '2'
+          : editorRef?.value?.isActive('heading', { level: 3 }) ? '3'
           : '0'
         "
         @change="(e: Event) => {
           const v = (e.target as HTMLSelectElement).value
-          if (v === '0') editor?.chain().focus().setParagraph().run()
+          if (v === '0') editorRef?.value?.chain().focus().setParagraph().run()
           else setHeading(Number(v) as 1 | 2 | 3)
         }"
       >
@@ -160,8 +194,8 @@ function setHeading(level: 1 | 2 | 3) {
     </div>
 
     <!-- Editor content -->
-    <EditorContent
-      :editor="editor"
+    <div
+      ref="editorContainer"
       class="rte-content bg-surface px-4 py-3 text-body-large text-on-surface"
       :style="{ minHeight: minHeight }"
     />

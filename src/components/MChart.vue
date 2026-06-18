@@ -1,48 +1,21 @@
 <script setup lang="ts">
-import { computed, ref, watch, onMounted } from 'vue'
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  RadialLinearScale,
-  Filler,
-  Tooltip,
-  Legend,
-  Title,
-  type ChartData,
-  type ChartOptions,
-} from 'chart.js'
-import { Line, Bar, Pie, Doughnut, Radar } from 'vue-chartjs'
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  RadialLinearScale,
-  Filler,
-  Tooltip,
-  Legend,
-  Title,
-)
+import { computed, ref, watch, onMounted, onBeforeUnmount, shallowRef, type Component } from 'vue'
 
 type ChartType = 'line' | 'bar' | 'pie' | 'doughnut' | 'radar'
 
 const props = withDefaults(
   defineProps<{
     type: ChartType
-    data: ChartData<any>
-    options?: ChartOptions<any>
+    data: Record<string, any>
+    options?: Record<string, any>
     height?: string
   }>(),
   { height: '300px' },
 )
+
+const ready = ref(false)
+const chartComponent = shallowRef<Component | null>(null)
+const componentMap = shallowRef<Record<string, Component>>({})
 
 function getM3Colors() {
   const style = getComputedStyle(document.documentElement)
@@ -59,19 +32,57 @@ function getM3Colors() {
 
 const m3Colors = ref(getM3Colors())
 
-onMounted(() => { m3Colors.value = getM3Colors() })
+let themeObserver: MutationObserver | null = null
 
-const themeObserver = ref<MutationObserver | null>(null)
-onMounted(() => {
-  themeObserver.value = new MutationObserver(() => { m3Colors.value = getM3Colors() })
-  themeObserver.value.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+onMounted(async () => {
+  m3Colors.value = getM3Colors()
+
+  themeObserver = new MutationObserver(() => { m3Colors.value = getM3Colors() })
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+
+  const [chartjs, vueChartjs] = await Promise.all([
+    import('chart.js'),
+    import('vue-chartjs'),
+  ])
+
+  chartjs.Chart.register(
+    chartjs.CategoryScale,
+    chartjs.LinearScale,
+    chartjs.PointElement,
+    chartjs.LineElement,
+    chartjs.BarElement,
+    chartjs.ArcElement,
+    chartjs.RadialLinearScale,
+    chartjs.Filler,
+    chartjs.Tooltip,
+    chartjs.Legend,
+    chartjs.Title,
+  )
+
+  componentMap.value = {
+    line: vueChartjs.Line,
+    bar: vueChartjs.Bar,
+    pie: vueChartjs.Pie,
+    doughnut: vueChartjs.Doughnut,
+    radar: vueChartjs.Radar,
+  }
+
+  ready.value = true
 })
 
-watch(() => m3Colors.value, () => {}, { deep: true })
+onBeforeUnmount(() => { themeObserver?.disconnect() })
 
-const mergedOptions = computed<ChartOptions<any>>(() => {
+watch(() => props.type, () => {
+  if (ready.value) chartComponent.value = componentMap.value[props.type] ?? null
+}, { immediate: true })
+
+watch(ready, () => {
+  chartComponent.value = componentMap.value[props.type] ?? null
+})
+
+const mergedOptions = computed<Record<string, any>>(() => {
   const c = m3Colors.value
-  const base: ChartOptions<any> = {
+  const base: Record<string, any> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -140,16 +151,12 @@ function deepMerge(target: any, source: any): any {
   }
   return output
 }
-
-const chartComponent = computed(() => {
-  const map = { line: Line, bar: Bar, pie: Pie, doughnut: Doughnut, radar: Radar }
-  return map[props.type]
-})
 </script>
 
 <template>
   <div class="rounded-lg border border-outline-variant bg-surface p-4" :style="{ height }">
     <component
+      v-if="ready && chartComponent"
       :is="chartComponent"
       :data="data"
       :options="mergedOptions"

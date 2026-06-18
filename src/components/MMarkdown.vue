@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import MarkdownIt from 'markdown-it'
+import { computed, ref, onMounted } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -11,23 +10,31 @@ const props = withDefaults(
   { breaks: true, linkify: true },
 )
 
-const md = new MarkdownIt({
-  html: false,
-  breaks: props.breaks,
-  linkify: props.linkify,
-  typographer: true,
+const md = ref<any>(null)
+
+onMounted(async () => {
+  const { default: MarkdownIt } = await import('markdown-it')
+
+  const instance = new MarkdownIt({
+    html: false,
+    breaks: props.breaks,
+    linkify: props.linkify,
+    typographer: true,
+  })
+
+  instance.renderer.rules.link_open = (tokens: any, idx: number, options: any, _env: any, self: any) => {
+    const token = tokens[idx]
+    if (token) {
+      token.attrSet('target', '_blank')
+      token.attrSet('rel', 'noopener noreferrer')
+    }
+    return self.renderToken(tokens, idx, options)
+  }
+
+  md.value = instance
 })
 
-md.renderer.rules.link_open = (tokens, idx, options, _env, self) => {
-  const token = tokens[idx]
-  if (token) {
-    token.attrSet('target', '_blank')
-    token.attrSet('rel', 'noopener noreferrer')
-  }
-  return self.renderToken(tokens, idx, options)
-}
-
-const rendered = computed(() => md.render(props.source))
+const rendered = computed(() => md.value ? md.value.render(props.source) : '')
 </script>
 
 <template>
