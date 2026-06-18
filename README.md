@@ -1,4 +1,4 @@
-# @m3ui/vue
+# @m3ui-vue/m3ui-vue
 
 Material 3 component library for Vue 3 + Tailwind CSS v4.
 
