@@ -1,0 +1,15 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "include": ["src/**/*", "src/**/*.vue"],
+  "exclude": ["src/components/_MTreeNode.vue"],
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": false,
+    "skipLibCheck": true,
+    "rootDir": "src",
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "declarationDir": "dist",
+    "outDir": "dist",
+    "noEmit": false
+  }
+}
