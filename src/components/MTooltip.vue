@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 
 const props = withDefaults(defineProps<{
   text: string
@@ -27,6 +27,10 @@ function hide() {
   visible.value = false
 }
 
+function onScroll() {
+  if (visible.value) hide()
+}
+
 function reposition() {
   if (!triggerEl.value || !tipEl.value) return
   const tr = triggerEl.value.getBoundingClientRect()
@@ -45,6 +49,9 @@ function reposition() {
   left = Math.max(6, Math.min(left, window.innerWidth  - tt.width  - 6))
   tipStyle.value = { top: `${top}px`, left: `${left}px` }
 }
+
+onMounted(() => window.addEventListener('scroll', onScroll, true))
+onUnmounted(() => window.removeEventListener('scroll', onScroll, true))
 </script>
 
 <template>
