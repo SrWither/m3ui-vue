@@ -27,6 +27,27 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/m3ui.js"
     },
+    "./chart": {
+      "types": "./dist/chart.d.ts",
+      "import": "./dist/chart.js"
+    },
+    "./code-editor": {
+      "types": "./dist/code-editor.d.ts",
+      "import": "./dist/code-editor.js"
+    },
+    "./markdown": {
+      "types": "./dist/markdown.d.ts",
+      "import": "./dist/markdown.js"
+    },
+    "./rich-text-editor": {
+      "types": "./dist/rich-text-editor.d.ts",
+      "import": "./dist/rich-text-editor.js"
+    },
+    "./terminal": {
+      "types": "./dist/terminal.d.ts",
+      "import": "./dist/terminal.js"
+    },
+    "./styles": "./dist/styles.css",
     "./theme": "./src/styles/theme.css",
     "./palettes": "./src/styles/palettes.css"
   },
@@ -36,7 +57,7 @@
   ],
   "scripts": {
     "build": "pnpm build:js && pnpm build:types && pnpm build:css",
-    "build:js": "vite build",
+    "build:js": "vite build && cp dist/m3ui-vue.css dist/styles.css",
     "build:types": "vue-tsc -p tsconfig.build.json",
     "build:css": "cp -r src/styles dist/",
     "prepublishOnly": "pnpm build"

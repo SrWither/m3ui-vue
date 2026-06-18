@@ -33,6 +33,7 @@ In your main stylesheet (e.g. `src/style.css`):
 @import 'tailwindcss';
 @import '@m3ui-vue/m3ui-vue/theme';
 @import '@m3ui-vue/m3ui-vue/palettes'; /* optional — includes 20 color palettes */
+@import '@m3ui-vue/m3ui-vue/styles';   /* component scoped styles (transitions, animations) */
 
 /* Required: tells Tailwind to scan the library for class names */
 @source '../node_modules/@m3ui-vue/m3ui-vue';

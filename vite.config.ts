@@ -6,9 +6,15 @@ export default defineConfig({
   plugins: [vue()],
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      entry: {
+        m3ui: resolve(__dirname, 'src/index.ts'),
+        chart: resolve(__dirname, 'src/chart.ts'),
+        'code-editor': resolve(__dirname, 'src/code-editor.ts'),
+        markdown: resolve(__dirname, 'src/markdown.ts'),
+        'rich-text-editor': resolve(__dirname, 'src/rich-text-editor.ts'),
+        terminal: resolve(__dirname, 'src/terminal.ts'),
+      },
       formats: ['es'],
-      fileName: 'm3ui',
     },
     rollupOptions: {
       external: [
