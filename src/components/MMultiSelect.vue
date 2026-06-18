@@ -147,7 +147,8 @@ const triggerClasses = computed(() => {
 
   return [
     ...base,
-    'rounded-t-sm bg-surface-container-highest border-b pt-7 pb-2',
+    'rounded-t-sm bg-surface-container-highest border-b pb-2',
+    hasValue.value || open.value ? 'pt-7' : 'pt-4',
     open.value
       ? (props.error ? 'border-b-2 border-error' : 'border-b-2 border-primary')
       : (props.error ? 'border-error' : 'border-on-surface-variant hover:border-on-surface'),
@@ -161,7 +162,7 @@ const labelClasses = computed(() => {
 
   const floated = props.variant === 'outlined'
     ? '-top-2.5 translate-y-0 text-label-small bg-[var(--field-bg)] px-1 right-auto max-w-[calc(100%-1.5rem)]'
-    : 'top-3.5 translate-y-0 text-label-small'
+    : 'top-2 translate-y-0 text-label-small'
 
   const unFloated = 'top-1/2 -translate-y-1/2 text-body-large'
   const active = open.value || hasValue.value
