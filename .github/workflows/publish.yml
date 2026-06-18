@@ -49,8 +49,5 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Check npm auth
-        run: npm whoami
-
       - name: Publish to npm
         run: npm publish --provenance --access public
