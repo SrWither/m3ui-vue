@@ -10,6 +10,8 @@ const props = withDefaults(
     image?: string
     imageAlt?: string
     imageHeight?: string
+    title?: string
+    subtitle?: string
   }>(),
   { variant: 'elevated', clickable: false, elevated: false },
 )
@@ -51,6 +53,18 @@ const fieldBgByVariant: Record<string, string> = {
       <slot v-else name="media" />
     </div>
 
+    <div v-if="$slots.header" class="px-4 pt-4 pb-2">
+      <slot name="header" />
+    </div>
+    <div v-else-if="title" class="px-4 pt-4 pb-2">
+      <h3 class="text-title-large font-medium text-on-surface">{{ title }}</h3>
+      <p v-if="subtitle" class="mt-1 text-body-medium text-on-surface-variant">{{ subtitle }}</p>
+    </div>
+
     <slot />
+
+    <div v-if="$slots.actions" class="flex justify-end gap-2 px-4 pt-2 pb-4">
+      <slot name="actions" />
+    </div>
   </div>
 </template>
