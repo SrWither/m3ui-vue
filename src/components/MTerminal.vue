@@ -41,8 +41,10 @@ function getThemeColors() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   if (!containerRef.value) return
+
+  try { await import('@xterm/xterm/css/xterm.css') } catch { /* consumer will provide styles */ }
 
   const colors = getThemeColors()
 
@@ -142,6 +144,3 @@ defineExpose({
   </div>
 </template>
 
-<style>
-@import '@xterm/xterm/css/xterm.css';
-</style>
