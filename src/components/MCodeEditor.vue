@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue'
+import MIcon from './MIcon.vue'
 
 type Language = 'javascript' | 'typescript' | 'json' | 'html' | 'css' | 'python' | 'plain'
 
@@ -31,6 +32,13 @@ const emit = defineEmits<{ 'update:modelValue': [string] }>()
 const containerRef = ref<HTMLElement | null>(null)
 let view: any = null
 let cmModules: any = null
+const copied = ref(false)
+
+async function copyCode() {
+  await navigator.clipboard.writeText(props.modelValue)
+  copied.value = true
+  setTimeout(() => { copied.value = false }, 1500)
+}
 
 const langLabel = computed(() => {
   const labels: Record<Language, string> = {
@@ -187,7 +195,18 @@ onBeforeUnmount(() => view?.destroy())
     <!-- Header bar -->
     <div class="flex items-center justify-between border-b border-outline-variant bg-surface-container px-4 py-2">
       <span class="text-label-medium text-on-surface-variant">{{ langLabel }}</span>
-      <slot name="actions" />
+      <div class="flex items-center gap-2">
+        <slot name="actions" />
+        <button
+          type="button"
+          class="flex h-7 cursor-pointer items-center gap-1.5 rounded-md px-2 text-label-medium text-on-surface-variant transition-colors hover:bg-on-surface/8"
+          :title="copied ? 'Copied!' : 'Copy code'"
+          @click="copyCode"
+        >
+          <MIcon :name="copied ? 'check' : 'content_copy'" :size="16" :class="copied ? 'text-primary' : ''" />
+          <span v-if="copied" class="text-primary">Copied</span>
+        </button>
+      </div>
     </div>
 
     <!-- Editor -->
