@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch, nextTick } from 'vue'
 import MIcon from './MIcon.vue'
 
 export interface SpeedDialItem {
@@ -15,9 +15,7 @@ const props = withDefaults(
     color?: 'primary' | 'secondary' | 'tertiary' | 'surface'
     size?: 'small' | 'regular' | 'large'
     disabled?: boolean
-    /** Speed-dial child items. If provided, clicking the FAB toggles them instead of emitting click. */
     items?: SpeedDialItem[]
-    /** Direction the speed-dial items expand toward. */
     direction?: 'up' | 'down' | 'left' | 'right' | 'radial'
   }>(),
   {
@@ -31,7 +29,7 @@ const props = withDefaults(
 const emit = defineEmits<{ click: [MouseEvent] }>()
 
 const open = ref(false)
-const containerEl = ref<HTMLElement>()
+const fabEl = ref<HTMLElement>()
 
 const hasItems = computed(() => !!props.items?.length)
 
@@ -60,7 +58,6 @@ const fabIconSize = computed(() => {
   }
 })
 
-// FAB height in px — used to position items relative to the container
 const fabPx = computed(() => {
   if (props.label) return 56
   switch (props.size) {
@@ -70,17 +67,24 @@ const fabPx = computed(() => {
   }
 })
 
-// Item size (always small-FAB-sized): 40px
 const ITEM_PX = 40
 const ITEM_GAP = 8
 
+function getRect(): DOMRect | null {
+  return fabEl.value?.getBoundingClientRect() ?? null
+}
+
 function itemStyle(index: number): Record<string, string> {
+  const rect = getRect()
+  if (!rect) return { position: 'fixed', opacity: '0', pointerEvents: 'none' }
+
+  const cx = rect.left + rect.width / 2
+  const cy = rect.top + rect.height / 2
   const count = props.items?.length ?? 0
-  // Stagger delay: open = forward order, close = reverse order
+
   const delay = open.value
     ? `${index * 35}ms`
     : `${(count - 1 - index) * 35}ms`
-
   const transition = `transform 220ms cubic-bezier(0.2,0,0,1) ${delay}, opacity 180ms ease ${delay}`
 
   if (props.direction === 'radial') {
@@ -89,27 +93,25 @@ function itemStyle(index: number): Record<string, string> {
     const dx = (Math.cos(angle) * r).toFixed(1)
     const dy = (Math.sin(angle) * r).toFixed(1)
     return {
-      position: 'absolute',
-      top: '50%',
-      left: '50%',
-      marginTop: `${-ITEM_PX / 2}px`,
-      marginLeft: `${-ITEM_PX / 2}px`,
+      position: 'fixed',
+      top: `${cy - ITEM_PX / 2}px`,
+      left: `${cx - ITEM_PX / 2}px`,
       transform: open.value ? `translate(${dx}px, ${dy}px) scale(1)` : 'translate(0,0) scale(0)',
       opacity: open.value ? '1' : '0',
       transition,
       pointerEvents: open.value ? 'auto' : 'none',
+      zIndex: '1000',
     }
   }
 
-  // Linear directions: offset from the container edge
   const step = ITEM_PX + ITEM_GAP
-  const base = fabPx.value + ITEM_GAP + index * step
+  const offset = fabPx.value / 2 + ITEM_GAP + ITEM_PX / 2 + index * step
 
-  const offsetMap: Record<string, Record<string, string>> = {
-    up:    { bottom: `${base}px`, left: '50%', marginLeft: `${-ITEM_PX / 2}px` },
-    down:  { top:    `${base}px`, left: '50%', marginLeft: `${-ITEM_PX / 2}px` },
-    left:  { right:  `${base}px`, top:  '50%', marginTop:  `${-ITEM_PX / 2}px` },
-    right: { left:   `${base}px`, top:  '50%', marginTop:  `${-ITEM_PX / 2}px` },
+  const posMap: Record<string, { top: string; left: string }> = {
+    up:    { top: `${cy - offset - ITEM_PX / 2}px`, left: `${cx - ITEM_PX / 2}px` },
+    down:  { top: `${cy + offset - ITEM_PX / 2}px`, left: `${cx - ITEM_PX / 2}px` },
+    left:  { top: `${cy - ITEM_PX / 2}px`, left: `${cx - offset - ITEM_PX / 2}px` },
+    right: { top: `${cy - ITEM_PX / 2}px`, left: `${cx + offset - ITEM_PX / 2}px` },
   }
 
   const translateFrom: Record<string, string> = {
@@ -119,18 +121,26 @@ function itemStyle(index: number): Record<string, string> {
     right: 'translateX(-12px) scale(0.75)',
   }
 
+  const pos = posMap[props.direction] ?? posMap.up
+
   return {
-    position: 'absolute',
-    ...offsetMap[props.direction] ?? offsetMap.up,
+    position: 'fixed',
+    ...pos,
     transform: open.value ? 'translate(0,0) scale(1)' : (translateFrom[props.direction] ?? 'scale(0.75)'),
     opacity: open.value ? '1' : '0',
     transition,
     pointerEvents: open.value ? 'auto' : 'none',
+    zIndex: '1000',
   }
 }
 
-// Label only makes sense for up/down; placed to the left of the item button
 const showLabel = computed(() => props.direction === 'up' || props.direction === 'down')
+
+// Force re-render to recalculate positions on scroll
+const scrollTick = ref(0)
+function onScroll() {
+  if (open.value) scrollTick.value++
+}
 
 function createRipple(event: PointerEvent | MouseEvent, target?: HTMLElement) {
   const button = (target ?? event.currentTarget) as HTMLElement
@@ -159,48 +169,23 @@ function handleItemClick(e: PointerEvent, item: SpeedDialItem, buttonEl: HTMLEle
 
 function onDocClick(e: MouseEvent) {
   if (!open.value) return
-  if (containerEl.value && !containerEl.value.contains(e.target as Node)) {
+  if (fabEl.value && !fabEl.value.contains(e.target as Node)) {
     open.value = false
   }
 }
 
-onMounted(() => document.addEventListener('click', onDocClick, true))
-onUnmounted(() => document.removeEventListener('click', onDocClick, true))
+onMounted(() => {
+  document.addEventListener('click', onDocClick, true)
+  window.addEventListener('scroll', onScroll, true)
+})
+onUnmounted(() => {
+  document.removeEventListener('click', onDocClick, true)
+  window.removeEventListener('scroll', onScroll, true)
+})
 </script>
 
 <template>
-  <div ref="containerEl" class="relative inline-flex items-center justify-center">
-    <!-- Speed-dial items (absolutely positioned outside the container) -->
-    <template v-if="hasItems">
-      <div
-        v-for="(item, i) in items"
-        :key="i"
-        :style="itemStyle(i)"
-        class="flex items-center gap-3"
-        :class="showLabel ? 'flex-row-reverse' : ''"
-      >
-        <!-- Label pill (up/down only) -->
-        <span
-          v-if="item.label && showLabel"
-          class="whitespace-nowrap rounded-md bg-surface-container-high px-3 py-1.5 text-label-medium text-on-surface shadow-elevation-1"
-        >
-          {{ item.label }}
-        </span>
-
-        <!-- Mini FAB button -->
-        <button
-          type="button"
-          class="relative flex cursor-pointer items-center justify-center overflow-hidden rounded-lg shadow-elevation-1 transition-shadow duration-150 hover:shadow-elevation-2 active:shadow-elevation-1 before:content-[''] before:pointer-events-none before:absolute before:inset-0 before:bg-current before:opacity-0 before:transition-opacity before:duration-150 hover:before:opacity-[0.08] active:before:opacity-[0.12]"
-          :class="colorMap[color]"
-          :style="{ width: `${ITEM_PX}px`, height: `${ITEM_PX}px` }"
-          @pointerdown="(e) => handleItemClick(e, item, e.currentTarget as HTMLElement)"
-        >
-          <MIcon :name="item.icon" :size="20" />
-        </button>
-      </div>
-    </template>
-
-    <!-- Main FAB -->
+  <div ref="fabEl" class="relative inline-flex items-center justify-center">
     <button
       type="button"
       class="relative inline-flex cursor-pointer items-center justify-center overflow-hidden shadow-elevation-1 transition-shadow duration-150 hover:shadow-elevation-2 active:shadow-elevation-1 disabled:cursor-not-allowed disabled:opacity-[0.38] before:content-[''] before:pointer-events-none before:absolute before:inset-0 before:bg-current before:opacity-0 before:transition-opacity before:duration-150 hover:before:opacity-[0.08] active:before:opacity-[0.12]"
@@ -217,4 +202,35 @@ onUnmounted(() => document.removeEventListener('click', onDocClick, true))
       <span v-if="label" class="text-label-large font-medium">{{ label }}</span>
     </button>
   </div>
+
+  <Teleport to="body">
+    <template v-if="hasItems">
+      <!-- hidden dep on scrollTick to force style recalc -->
+      <span :data-tick="scrollTick" class="hidden" />
+      <div
+        v-for="(item, i) in items"
+        :key="i"
+        :style="itemStyle(i)"
+        class="flex items-center gap-3"
+        :class="showLabel ? 'flex-row-reverse' : ''"
+      >
+        <span
+          v-if="item.label && showLabel"
+          class="whitespace-nowrap rounded-md bg-surface-container-high px-3 py-1.5 text-label-medium text-on-surface shadow-elevation-1"
+        >
+          {{ item.label }}
+        </span>
+
+        <button
+          type="button"
+          class="relative flex cursor-pointer items-center justify-center overflow-hidden rounded-lg shadow-elevation-1 transition-shadow duration-150 hover:shadow-elevation-2 active:shadow-elevation-1 before:content-[''] before:pointer-events-none before:absolute before:inset-0 before:bg-current before:opacity-0 before:transition-opacity before:duration-150 hover:before:opacity-[0.08] active:before:opacity-[0.12]"
+          :class="colorMap[color]"
+          :style="{ width: `${ITEM_PX}px`, height: `${ITEM_PX}px` }"
+          @pointerdown="(e) => handleItemClick(e, item, e.currentTarget as HTMLElement)"
+        >
+          <MIcon :name="item.icon" :size="20" />
+        </button>
+      </div>
+    </template>
+  </Teleport>
 </template>
