@@ -2,7 +2,7 @@
 import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue'
 import MIcon from './MIcon.vue'
 
-type Language = 'javascript' | 'typescript' | 'json' | 'html' | 'css' | 'python' | 'plain'
+type Language = 'javascript' | 'typescript' | 'json' | 'html' | 'css' | 'python' | 'vue' | 'plain'
 
 const props = withDefaults(
   defineProps<{
@@ -48,6 +48,7 @@ const langLabel = computed(() => {
     html: 'HTML',
     css: 'CSS',
     python: 'Python',
+    vue: 'Vue',
     plain: 'Texto',
   }
   return labels[props.language]
@@ -56,7 +57,7 @@ const langLabel = computed(() => {
 async function loadModules() {
   if (cmModules) return cmModules
 
-  const [viewMod, stateMod, commandsMod, languageMod, highlightMod, oneDarkMod, jsMod, jsonMod, htmlMod, cssMod, pyMod] = await Promise.all([
+  const [viewMod, stateMod, commandsMod, languageMod, highlightMod, oneDarkMod, jsMod, jsonMod, htmlMod, cssMod, pyMod, vueMod] = await Promise.all([
     import('@codemirror/view'),
     import('@codemirror/state'),
     import('@codemirror/commands'),
@@ -68,9 +69,10 @@ async function loadModules() {
     import('@codemirror/lang-html'),
     import('@codemirror/lang-css'),
     import('@codemirror/lang-python'),
+    import('@codemirror/lang-vue'),
   ])
 
-  cmModules = { viewMod, stateMod, commandsMod, languageMod, highlightMod, oneDarkMod, jsMod, jsonMod, htmlMod, cssMod, pyMod }
+  cmModules = { viewMod, stateMod, commandsMod, languageMod, highlightMod, oneDarkMod, jsMod, jsonMod, htmlMod, cssMod, pyMod, vueMod }
   return cmModules
 }
 
@@ -128,6 +130,7 @@ function getLangExtension(mods: any) {
     case 'html': return mods.htmlMod.html()
     case 'css': return mods.cssMod.css()
     case 'python': return mods.pyMod.python()
+    case 'vue': return mods.vueMod.vue()
     default: return []
   }
 }
