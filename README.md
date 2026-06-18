@@ -9,9 +9,9 @@ Material 3 component library for Vue 3 + Tailwind CSS v4.
 ### 1. Install
 
 ```bash
-pnpm add @m3ui/vue
+pnpm add @m3ui-vue/m3ui-vue
 # or
-npm install @m3ui/vue
+npm install @m3ui-vue/m3ui-vue
 ```
 
 ### 2. Add Google Fonts
@@ -31,11 +31,11 @@ In your main stylesheet (e.g. `src/style.css`):
 
 ```css
 @import 'tailwindcss';
-@import '@m3ui/vue/theme';
-@import '@m3ui/vue/palettes'; /* optional — includes 20 color palettes */
+@import '@m3ui-vue/m3ui-vue/theme';
+@import '@m3ui-vue/m3ui-vue/palettes'; /* optional — includes 20 color palettes */
 
 /* Required: tells Tailwind to scan the library for class names */
-@source '../node_modules/@m3ui/vue';
+@source '../node_modules/@m3ui-vue/m3ui-vue';
 ```
 
 ### 4. Register the Plugin (optional)
@@ -43,7 +43,7 @@ In your main stylesheet (e.g. `src/style.css`):
 ```ts
 // main.ts
 import { createApp } from 'vue'
-import { createM3UI } from '@m3ui/vue'
+import { createM3UI } from '@m3ui-vue/m3ui-vue'
 import App from './App.vue'
 
 const app = createApp(App)
@@ -57,7 +57,7 @@ The plugin is optional — without it the default purple palette is used.
 
 ```vue
 <script setup>
-import { MButton, MCard, MTextField, useToast } from '@m3ui/vue'
+import { MButton, MCard, MTextField, useToast } from '@m3ui-vue/m3ui-vue'
 
 const toast = useToast()
 const name = ref('')
@@ -83,7 +83,7 @@ M3UI ships with 20 pre-built color palettes, each with light and dark variants:
 
 ```vue
 <script setup>
-import { useColorPalette } from '@m3ui/vue'
+import { useColorPalette } from '@m3ui-vue/m3ui-vue'
 
 const { palette, palettes, set } = useColorPalette()
 </script>
@@ -103,7 +103,7 @@ The selection is persisted to `localStorage` automatically.
 
 ```vue
 <script setup>
-import { useTheme } from '@m3ui/vue'
+import { useTheme } from '@m3ui-vue/m3ui-vue'
 
 const { theme, cycle } = useTheme()
 // theme: 'light' | 'dark' | 'system'
