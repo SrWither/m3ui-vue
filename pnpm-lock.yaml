@@ -42,6 +42,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.43.1
         version: 6.43.1
+      '@lezer/highlight':
+        specifier: ^1.2.3
+        version: 1.2.3
       '@tiptap/extension-color':
         specifier: ^3.26.1
         version: 3.26.1(@tiptap/extension-text-style@3.26.1(@tiptap/core@3.26.1(@tiptap/pm@3.26.1)))

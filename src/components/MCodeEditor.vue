@@ -13,6 +13,7 @@ const props = withDefaults(
     minHeight?: string
     maxHeight?: string
     placeholder?: string
+    wrap?: boolean
   }>(),
   {
     language: 'javascript',
@@ -21,6 +22,7 @@ const props = withDefaults(
     theme: 'light',
     minHeight: '200px',
     maxHeight: '600px',
+    wrap: true,
   },
 )
 
@@ -46,11 +48,12 @@ const langLabel = computed(() => {
 async function loadModules() {
   if (cmModules) return cmModules
 
-  const [viewMod, stateMod, commandsMod, languageMod, oneDarkMod, jsMod, jsonMod, htmlMod, cssMod, pyMod] = await Promise.all([
+  const [viewMod, stateMod, commandsMod, languageMod, highlightMod, oneDarkMod, jsMod, jsonMod, htmlMod, cssMod, pyMod] = await Promise.all([
     import('@codemirror/view'),
     import('@codemirror/state'),
     import('@codemirror/commands'),
     import('@codemirror/language'),
+    import('@lezer/highlight'),
     import('@codemirror/theme-one-dark'),
     import('@codemirror/lang-javascript'),
     import('@codemirror/lang-json'),
@@ -59,8 +62,54 @@ async function loadModules() {
     import('@codemirror/lang-python'),
   ])
 
-  cmModules = { viewMod, stateMod, commandsMod, languageMod, oneDarkMod, jsMod, jsonMod, htmlMod, cssMod, pyMod }
+  cmModules = { viewMod, stateMod, commandsMod, languageMod, highlightMod, oneDarkMod, jsMod, jsonMod, htmlMod, cssMod, pyMod }
   return cmModules
+}
+
+function buildM3HighlightStyle(languageMod: any, tags: any) {
+  return languageMod.HighlightStyle.define([
+    { tag: tags.keyword, color: 'var(--color-primary)' },
+    { tag: tags.controlKeyword, color: 'var(--color-primary)', fontWeight: '500' },
+    { tag: tags.operatorKeyword, color: 'var(--color-primary)' },
+    { tag: tags.definitionKeyword, color: 'var(--color-primary)' },
+    { tag: tags.moduleKeyword, color: 'var(--color-primary)' },
+
+    { tag: tags.string, color: 'var(--color-tertiary)' },
+    { tag: tags.regexp, color: 'var(--color-tertiary)' },
+
+    { tag: tags.number, color: 'var(--color-error)' },
+    { tag: tags.bool, color: 'var(--color-error)' },
+
+    { tag: tags.function(tags.variableName), color: 'var(--color-secondary)' },
+    { tag: tags.function(tags.definition(tags.variableName)), color: 'var(--color-secondary)', fontWeight: '500' },
+
+    { tag: tags.typeName, color: 'var(--color-primary)', fontStyle: 'italic' },
+    { tag: tags.className, color: 'var(--color-primary)', fontStyle: 'italic' },
+    { tag: tags.namespace, color: 'var(--color-on-surface-variant)' },
+
+    { tag: tags.propertyName, color: 'var(--color-on-surface)' },
+    { tag: tags.definition(tags.propertyName), color: 'var(--color-on-surface)' },
+
+    { tag: tags.variableName, color: 'var(--color-on-surface)' },
+    { tag: tags.definition(tags.variableName), color: 'var(--color-on-surface)' },
+
+    { tag: tags.comment, color: 'var(--color-outline)', fontStyle: 'italic' },
+    { tag: tags.lineComment, color: 'var(--color-outline)', fontStyle: 'italic' },
+    { tag: tags.blockComment, color: 'var(--color-outline)', fontStyle: 'italic' },
+
+    { tag: tags.meta, color: 'var(--color-on-surface-variant)' },
+    { tag: tags.tagName, color: 'var(--color-primary)' },
+    { tag: tags.attributeName, color: 'var(--color-tertiary)' },
+    { tag: tags.attributeValue, color: 'var(--color-secondary)' },
+
+    { tag: tags.atom, color: 'var(--color-error)' },
+    { tag: tags.null, color: 'var(--color-error)' },
+
+    { tag: tags.punctuation, color: 'var(--color-on-surface-variant)' },
+    { tag: tags.bracket, color: 'var(--color-on-surface-variant)' },
+    { tag: tags.operator, color: 'var(--color-on-surface-variant)' },
+    { tag: tags.separator, color: 'var(--color-on-surface-variant)' },
+  ])
 }
 
 function getLangExtension(mods: any) {
@@ -76,7 +125,9 @@ function getLangExtension(mods: any) {
 }
 
 function buildExtensions(mods: any) {
-  const { viewMod, stateMod, commandsMod, languageMod, oneDarkMod } = mods
+  const { viewMod, stateMod, commandsMod, languageMod, highlightMod, oneDarkMod } = mods
+
+  const m3Style = buildM3HighlightStyle(languageMod, highlightMod.tags)
 
   const exts = [
     viewMod.keymap.of([...commandsMod.defaultKeymap, ...commandsMod.historyKeymap, commandsMod.indentWithTab]),
@@ -86,6 +137,7 @@ function buildExtensions(mods: any) {
     languageMod.foldGutter(),
     viewMod.highlightActiveLine(),
     viewMod.highlightActiveLineGutter(),
+    languageMod.syntaxHighlighting(m3Style),
     languageMod.syntaxHighlighting(languageMod.defaultHighlightStyle, { fallback: true }),
     getLangExtension(mods),
     viewMod.EditorView.updateListener.of((update: any) => {
@@ -94,6 +146,7 @@ function buildExtensions(mods: any) {
     stateMod.EditorState.readOnly.of(props.readonly),
   ]
 
+  if (props.wrap) exts.push(viewMod.EditorView.lineWrapping)
   if (props.lineNumbers) exts.push(viewMod.lineNumbers())
   if (props.theme === 'dark') exts.push(oneDarkMod.oneDark)
 
@@ -124,7 +177,7 @@ watch(() => props.modelValue, (val) => {
   }
 })
 
-watch([() => props.language, () => props.theme, () => props.readonly, () => props.lineNumbers], createEditor)
+watch([() => props.language, () => props.theme, () => props.readonly, () => props.lineNumbers, () => props.wrap], createEditor)
 
 onBeforeUnmount(() => view?.destroy())
 </script>
@@ -140,7 +193,7 @@ onBeforeUnmount(() => view?.destroy())
     <!-- Editor -->
     <div
       ref="containerRef"
-      class="code-editor-container overflow-auto bg-surface"
+      class="code-editor-container overflow-auto bg-surface text-on-surface"
       :style="{ minHeight, maxHeight }"
     />
   </div>
@@ -150,8 +203,9 @@ onBeforeUnmount(() => view?.destroy())
 .code-editor-container :deep(.cm-editor) {
   height: 100%;
   min-height: inherit;
-  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-  font-size: 0.875rem;
+  font-family: 'Roboto Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.8125rem;
+  line-height: 1.6;
 }
 
 .code-editor-container :deep(.cm-editor.cm-focused) {
@@ -162,14 +216,25 @@ onBeforeUnmount(() => view?.destroy())
   min-height: inherit;
 }
 
+.code-editor-container :deep(.cm-content) {
+  padding: 12px 0;
+}
+
+.code-editor-container :deep(.cm-line) {
+  padding: 0 16px;
+}
+
 .code-editor-container :deep(.cm-gutters) {
   background: var(--color-surface-container);
   border-right: 1px solid var(--color-outline-variant);
-  color: var(--color-on-surface-variant);
+  color: var(--color-outline);
+  font-size: 0.75rem;
+  padding: 0 4px;
 }
 
 .code-editor-container :deep(.cm-activeLineGutter) {
   background: var(--color-surface-container-high);
+  color: var(--color-on-surface-variant);
 }
 
 .code-editor-container :deep(.cm-activeLine) {
@@ -182,11 +247,13 @@ onBeforeUnmount(() => view?.destroy())
 
 .code-editor-container :deep(.cm-cursor) {
   border-left-color: var(--color-primary);
+  border-left-width: 2px;
 }
 
 .code-editor-container :deep(.cm-matchingBracket) {
   background: var(--color-tertiary-container);
   color: var(--color-on-tertiary-container);
+  border-radius: 2px;
 }
 
 .code-editor-container :deep(.cm-foldGutter span) {
