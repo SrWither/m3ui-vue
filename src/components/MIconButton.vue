@@ -5,7 +5,7 @@ import MIcon from './MIcon.vue'
 const props = withDefaults(
   defineProps<{
     icon: string
-    label: string
+    label?: string
     variant?: 'standard' | 'filled' | 'tonal' | 'outlined'
     disabled?: boolean
     size?: number
@@ -43,7 +43,7 @@ const variantClasses = computed(() => {
     :is="tag"
     :to="to || undefined"
     :type="to ? undefined : 'button'"
-    :aria-label="label"
+    :aria-label="label || undefined"
     :disabled="disabled"
     :class="[base, variantClasses]"
     :style="{ width: `${size}px`, height: `${size}px` }"
