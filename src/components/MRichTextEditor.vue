@@ -1,6 +1,11 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount, shallowRef } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount, shallowRef, computed } from 'vue'
 import MIcon from './MIcon.vue'
+import MMenu from './MMenu.vue'
+import MMenuItem from './MMenuItem.vue'
+import MDialog from './MDialog.vue'
+import MTextField from './MTextField.vue'
+import MButton from './MButton.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -29,7 +34,7 @@ const toolGroups = ref<ToolBtn[][]>([])
 
 onMounted(async () => {
   const [
-    { useEditor, EditorContent },
+    { Editor },
     { default: StarterKit },
     { default: Underline },
     { default: TextAlign },
@@ -52,7 +57,8 @@ onMounted(async () => {
     import('@tiptap/extension-color'),
   ])
 
-  const editor = useEditor({
+  const editor = new Editor({
+    element: editorContainer.value!,
     content: props.modelValue,
     editable: !props.disabled,
     extensions: [
@@ -73,58 +79,77 @@ onMounted(async () => {
 
   toolGroups.value = [
     [
-      { icon: 'format_bold', label: 'Negrita', action: () => editor.value?.chain().focus().toggleBold().run(), active: () => !!editor.value?.isActive('bold') },
-      { icon: 'format_italic', label: 'Cursiva', action: () => editor.value?.chain().focus().toggleItalic().run(), active: () => !!editor.value?.isActive('italic') },
-      { icon: 'format_underlined', label: 'Subrayado', action: () => editor.value?.chain().focus().toggleUnderline().run(), active: () => !!editor.value?.isActive('underline') },
-      { icon: 'format_strikethrough', label: 'Tachado', action: () => editor.value?.chain().focus().toggleStrike().run(), active: () => !!editor.value?.isActive('strike') },
-      { icon: 'ink_highlighter', label: 'Resaltar', action: () => editor.value?.chain().focus().toggleHighlight().run(), active: () => !!editor.value?.isActive('highlight') },
+      { icon: 'format_bold', label: 'Negrita', action: () => editor.chain().focus().toggleBold().run(), active: () => !!editor.isActive('bold') },
+      { icon: 'format_italic', label: 'Cursiva', action: () => editor.chain().focus().toggleItalic().run(), active: () => !!editor.isActive('italic') },
+      { icon: 'format_underlined', label: 'Subrayado', action: () => editor.chain().focus().toggleUnderline().run(), active: () => !!editor.isActive('underline') },
+      { icon: 'format_strikethrough', label: 'Tachado', action: () => editor.chain().focus().toggleStrike().run(), active: () => !!editor.isActive('strike') },
+      { icon: 'ink_highlighter', label: 'Resaltar', action: () => editor.chain().focus().toggleHighlight().run(), active: () => !!editor.isActive('highlight') },
     ],
     [
-      { icon: 'format_list_bulleted', label: 'Lista', action: () => editor.value?.chain().focus().toggleBulletList().run(), active: () => !!editor.value?.isActive('bulletList') },
-      { icon: 'format_list_numbered', label: 'Lista numerada', action: () => editor.value?.chain().focus().toggleOrderedList().run(), active: () => !!editor.value?.isActive('orderedList') },
-      { icon: 'format_quote', label: 'Cita', action: () => editor.value?.chain().focus().toggleBlockquote().run(), active: () => !!editor.value?.isActive('blockquote') },
-      { icon: 'code', label: 'Código', action: () => editor.value?.chain().focus().toggleCode().run(), active: () => !!editor.value?.isActive('code') },
+      { icon: 'format_list_bulleted', label: 'Lista', action: () => editor.chain().focus().toggleBulletList().run(), active: () => !!editor.isActive('bulletList') },
+      { icon: 'format_list_numbered', label: 'Lista numerada', action: () => editor.chain().focus().toggleOrderedList().run(), active: () => !!editor.isActive('orderedList') },
+      { icon: 'format_quote', label: 'Cita', action: () => editor.chain().focus().toggleBlockquote().run(), active: () => !!editor.isActive('blockquote') },
+      { icon: 'code', label: 'Código', action: () => editor.chain().focus().toggleCode().run(), active: () => !!editor.isActive('code') },
     ],
     [
-      { icon: 'format_align_left', label: 'Izquierda', action: () => editor.value?.chain().focus().setTextAlign('left').run(), active: () => !!editor.value?.isActive({ textAlign: 'left' }) },
-      { icon: 'format_align_center', label: 'Centro', action: () => editor.value?.chain().focus().setTextAlign('center').run(), active: () => !!editor.value?.isActive({ textAlign: 'center' }) },
-      { icon: 'format_align_right', label: 'Derecha', action: () => editor.value?.chain().focus().setTextAlign('right').run(), active: () => !!editor.value?.isActive({ textAlign: 'right' }) },
+      { icon: 'format_align_left', label: 'Izquierda', action: () => editor.chain().focus().setTextAlign('left').run(), active: () => !!editor.isActive({ textAlign: 'left' }) },
+      { icon: 'format_align_center', label: 'Centro', action: () => editor.chain().focus().setTextAlign('center').run(), active: () => !!editor.isActive({ textAlign: 'center' }) },
+      { icon: 'format_align_right', label: 'Derecha', action: () => editor.chain().focus().setTextAlign('right').run(), active: () => !!editor.isActive({ textAlign: 'right' }) },
     ],
     [
-      { icon: 'undo', label: 'Deshacer', action: () => editor.value?.chain().focus().undo().run() },
-      { icon: 'redo', label: 'Rehacer', action: () => editor.value?.chain().focus().redo().run() },
+      { icon: 'undo', label: 'Deshacer', action: () => editor.chain().focus().undo().run() },
+      { icon: 'redo', label: 'Rehacer', action: () => editor.chain().focus().redo().run() },
     ],
   ]
 
-  // Mount EditorContent manually since we can't use the component from dynamic import in template
-  if (editorContainer.value) {
-    const app = await import('vue')
-    const editorApp = app.createApp(EditorContent, { editor: editor.value })
-    editorApp.mount(editorContainer.value)
-    onBeforeUnmount(() => editorApp.unmount())
-  }
+  onBeforeUnmount(() => editor.destroy())
 
   watch(() => props.modelValue, (val) => {
-    if (editor.value && editor.value.getHTML() !== val) editor.value.commands.setContent(val)
+    if (editor.getHTML() !== val) editor.commands.setContent(val)
   })
 
-  watch(() => props.disabled, (v) => editor.value?.setEditable(!v))
+  watch(() => props.disabled, (v) => editor.setEditable(!v))
 
   ready.value = true
 })
 
-function insertLink() {
-  const url = window.prompt('URL del enlace:')
-  if (url) editorRef.value?.value?.chain().focus().setLink({ href: url }).run()
+const linkDialogOpen = ref(false)
+const linkUrl = ref('')
+const imageDialogOpen = ref(false)
+const imageUrl = ref('')
+
+const headingLabel = computed(() => {
+  const e = editorRef.value
+  if (!e) return 'Párrafo'
+  if (e.isActive('heading', { level: 1 })) return 'Título 1'
+  if (e.isActive('heading', { level: 2 })) return 'Título 2'
+  if (e.isActive('heading', { level: 3 })) return 'Título 3'
+  return 'Párrafo'
+})
+
+function setHeading(level: 0 | 1 | 2 | 3) {
+  if (level === 0) editorRef.value?.chain().focus().setParagraph().run()
+  else editorRef.value?.chain().focus().toggleHeading({ level }).run()
 }
 
-function insertImage() {
-  const url = window.prompt('URL de la imagen:')
-  if (url) editorRef.value?.value?.chain().focus().setImage({ src: url }).run()
+function openLinkDialog() {
+  linkUrl.value = ''
+  linkDialogOpen.value = true
 }
 
-function setHeading(level: 1 | 2 | 3) {
-  editorRef.value?.value?.chain().focus().toggleHeading({ level }).run()
+function confirmLink() {
+  if (linkUrl.value) editorRef.value?.chain().focus().setLink({ href: linkUrl.value }).run()
+  linkDialogOpen.value = false
+}
+
+function openImageDialog() {
+  imageUrl.value = ''
+  imageDialogOpen.value = true
+}
+
+function confirmImage() {
+  if (imageUrl.value) editorRef.value?.chain().focus().setImage({ src: imageUrl.value }).run()
+  imageDialogOpen.value = false
 }
 </script>
 
@@ -135,26 +160,22 @@ function setHeading(level: 1 | 2 | 3) {
   >
     <!-- Toolbar -->
     <div v-if="ready" class="flex flex-wrap items-center gap-0.5 border-b border-outline-variant bg-surface-container px-2 py-1.5">
-      <!-- Heading select -->
-      <select
-        class="h-8 cursor-pointer rounded bg-transparent px-2 text-label-large text-on-surface-variant outline-none hover:bg-on-surface/8"
-        :value="
-          editorRef?.value?.isActive('heading', { level: 1 }) ? '1'
-          : editorRef?.value?.isActive('heading', { level: 2 }) ? '2'
-          : editorRef?.value?.isActive('heading', { level: 3 }) ? '3'
-          : '0'
-        "
-        @change="(e: Event) => {
-          const v = (e.target as HTMLSelectElement).value
-          if (v === '0') editorRef?.value?.chain().focus().setParagraph().run()
-          else setHeading(Number(v) as 1 | 2 | 3)
-        }"
-      >
-        <option value="0">Párrafo</option>
-        <option value="1">Título 1</option>
-        <option value="2">Título 2</option>
-        <option value="3">Título 3</option>
-      </select>
+      <!-- Heading menu -->
+      <MMenu align="left">
+        <template #trigger>
+          <button
+            type="button"
+            class="flex h-8 cursor-pointer items-center gap-1 rounded px-2 text-label-large text-on-surface-variant hover:bg-on-surface/8"
+          >
+            {{ headingLabel }}
+            <MIcon name="arrow_drop_down" :size="20" />
+          </button>
+        </template>
+        <MMenuItem @click="setHeading(0)">Párrafo</MMenuItem>
+        <MMenuItem @click="setHeading(1)">Título 1</MMenuItem>
+        <MMenuItem @click="setHeading(2)">Título 2</MMenuItem>
+        <MMenuItem @click="setHeading(3)">Título 3</MMenuItem>
+      </MMenu>
 
       <div class="mx-1 h-6 w-px bg-outline-variant" />
 
@@ -179,7 +200,7 @@ function setHeading(level: 1 | 2 | 3) {
         type="button"
         title="Enlace"
         class="flex h-8 w-8 cursor-pointer items-center justify-center rounded text-on-surface-variant transition-colors hover:bg-on-surface/8"
-        @click="insertLink"
+        @click="openLinkDialog"
       >
         <MIcon name="link" :size="20" />
       </button>
@@ -187,7 +208,7 @@ function setHeading(level: 1 | 2 | 3) {
         type="button"
         title="Imagen"
         class="flex h-8 w-8 cursor-pointer items-center justify-center rounded text-on-surface-variant transition-colors hover:bg-on-surface/8"
-        @click="insertImage"
+        @click="openImageDialog"
       >
         <MIcon name="image" :size="20" />
       </button>
@@ -199,6 +220,24 @@ function setHeading(level: 1 | 2 | 3) {
       class="rte-content bg-surface px-4 py-3 text-body-large text-on-surface"
       :style="{ minHeight: minHeight }"
     />
+
+    <!-- Link dialog -->
+    <MDialog v-model="linkDialogOpen" title="Insertar enlace">
+      <MTextField v-model="linkUrl" label="URL" placeholder=" " @keydown.enter="confirmLink" />
+      <template #actions>
+        <MButton variant="text" @click="linkDialogOpen = false">Cancelar</MButton>
+        <MButton @click="confirmLink">Insertar</MButton>
+      </template>
+    </MDialog>
+
+    <!-- Image dialog -->
+    <MDialog v-model="imageDialogOpen" title="Insertar imagen">
+      <MTextField v-model="imageUrl" label="URL de la imagen" placeholder=" " @keydown.enter="confirmImage" />
+      <template #actions>
+        <MButton variant="text" @click="imageDialogOpen = false">Cancelar</MButton>
+        <MButton @click="confirmImage">Insertar</MButton>
+      </template>
+    </MDialog>
   </div>
 </template>
 
@@ -221,8 +260,8 @@ function setHeading(level: 1 | 2 | 3) {
 .rte-content :deep(h2) { font-size: var(--text-headline-medium); line-height: var(--text-headline-medium--line-height); font-weight: 600; margin: 0.75em 0 0.25em; }
 .rte-content :deep(h3) { font-size: var(--text-headline-small); line-height: var(--text-headline-small--line-height); font-weight: 600; margin: 0.75em 0 0.25em; }
 .rte-content :deep(p) { margin: 0.5em 0; }
-.rte-content :deep(ul),
-.rte-content :deep(ol) { padding-left: 1.5em; margin: 0.5em 0; }
+.rte-content :deep(ul) { list-style-type: disc; padding-left: 1.5em; margin: 0.5em 0; }
+.rte-content :deep(ol) { list-style-type: decimal; padding-left: 1.5em; margin: 0.5em 0; }
 .rte-content :deep(blockquote) { border-left: 3px solid var(--color-primary); padding-left: 1em; margin: 0.5em 0; color: var(--color-on-surface-variant); }
 .rte-content :deep(code) { background: var(--color-surface-container-highest); padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.875em; }
 .rte-content :deep(pre) { background: var(--color-surface-container-highest); padding: 1em; border-radius: 8px; overflow-x: auto; margin: 0.5em 0; }

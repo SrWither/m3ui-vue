@@ -59,8 +59,8 @@ const rendered = computed(() => md.value ? md.value.render(props.source) : '')
 .m3-markdown :deep(strong) { font-weight: 600; color: var(--color-on-surface); }
 .m3-markdown :deep(em) { font-style: italic; }
 
-.m3-markdown :deep(ul),
-.m3-markdown :deep(ol) { padding-left: 1.5em; margin: 0.5em 0; }
+.m3-markdown :deep(ul) { list-style-type: disc; padding-left: 1.5em; margin: 0.5em 0; }
+.m3-markdown :deep(ol) { list-style-type: decimal; padding-left: 1.5em; margin: 0.5em 0; }
 .m3-markdown :deep(li) { margin: 0.25em 0; }
 .m3-markdown :deep(li::marker) { color: var(--color-on-surface-variant); }
 
