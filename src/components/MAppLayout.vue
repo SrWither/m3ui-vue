@@ -1,14 +1,21 @@
 <script setup lang="ts">
-withDefaults(
+import { computed } from 'vue'
+
+const props = withDefaults(
   defineProps<{
     drawerWidth?: string
+    height?: string
   }>(),
   { drawerWidth: 'auto' },
 )
+
+const style = computed(() => ({
+  height: props.height || '100dvh',
+}))
 </script>
 
 <template>
-  <div class="flex h-dvh w-full overflow-hidden bg-surface text-on-surface">
+  <div class="flex w-full overflow-hidden bg-surface text-on-surface" :style="style">
     <!-- Drawer -->
     <aside v-if="$slots.drawer" class="shrink-0" :style="{ width: drawerWidth !== 'auto' ? drawerWidth : undefined }">
       <slot name="drawer" />

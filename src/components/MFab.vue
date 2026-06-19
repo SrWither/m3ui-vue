@@ -19,12 +19,14 @@ const props = withDefaults(
     items?: SpeedDialItem[]
     direction?: 'up' | 'down' | 'left' | 'right' | 'radial'
     to?: string | Record<string, any>
+    persistent?: boolean
   }>(),
   {
     color: 'primary',
     size: 'regular',
     disabled: false,
     direction: 'up',
+    persistent: false,
   },
 )
 
@@ -167,12 +169,12 @@ function handleFabClick(e: PointerEvent) {
 
 function handleItemClick(e: PointerEvent, item: SpeedDialItem, buttonEl: HTMLElement) {
   createRipple(e, buttonEl)
-  open.value = false
+  if (!props.persistent) open.value = false
   item.onClick?.()
 }
 
 function onDocClick(e: MouseEvent) {
-  if (!open.value) return
+  if (!open.value || props.persistent) return
   if (fabEl.value && !fabEl.value.contains(e.target as Node)) {
     open.value = false
   }
