@@ -15,14 +15,14 @@ withDefaults(
     </aside>
 
     <!-- Main area -->
-    <div class="flex min-w-0 flex-1 flex-col">
+    <div class="relative flex min-w-0 flex-1 flex-col">
       <!-- Header -->
       <header v-if="$slots.header" class="shrink-0">
         <slot name="header" />
       </header>
 
       <!-- Content -->
-      <main class="flex-1 overflow-y-auto">
+      <main class="min-h-0 flex-1 overflow-y-auto">
         <slot />
       </main>
 
@@ -30,6 +30,9 @@ withDefaults(
       <footer v-if="$slots.footer" class="shrink-0">
         <slot name="footer" />
       </footer>
+
+      <!-- Fab / floating elements — rendered outside the scroll area -->
+      <slot name="fab" />
     </div>
   </div>
 </template>

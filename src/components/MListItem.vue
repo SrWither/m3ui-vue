@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, ref, useAttrs } from 'vue'
+import { computed, inject, ref, useAttrs, watch } from 'vue'
 import type { ComputedRef } from 'vue'
 import MIcon from './MIcon.vue'
 import MAvatar from './MAvatar.vue'
@@ -45,7 +45,8 @@ const emit = defineEmits<{
 const attrs = useAttrs()
 
 const internalExpanded = ref(props.expanded ?? false)
-const isExpanded = computed(() => props.expanded ?? internalExpanded.value)
+watch(() => props.expanded, (v) => { if (v !== undefined) internalExpanded.value = v })
+const isExpanded = computed(() => internalExpanded.value)
 
 const list = inject<{
   dense: ComputedRef<boolean>
@@ -104,7 +105,7 @@ const isNav = computed(() => list?.nav.value ?? false)
 const hasDivider = computed(() => list?.dividers.value ?? false)
 
 const containerClasses = computed(() => [
-  'relative flex w-full items-center gap-4 text-left',
+  'mli-row relative flex w-full items-center gap-4 text-left',
   isNav.value ? 'rounded-full px-4' : 'px-4',
   isDense.value
     ? 'py-1'
@@ -119,6 +120,7 @@ const containerClasses = computed(() => [
 const tag = computed(() => {
   if (props.href) return 'a'
   if (props.to) return 'router-link'
+  if (props.expandable) return 'div'
   return 'li'
 })
 
@@ -128,11 +130,18 @@ const linkProps = computed(() => {
   return {}
 })
 
+function toggleExpand(e: MouseEvent) {
+  if (props.disabled) return
+  internalExpanded.value = !internalExpanded.value
+  emit('update:expanded', internalExpanded.value)
+  emit('click', e)
+}
+
 function handleClick(e: MouseEvent) {
   if (props.disabled) return
   if (props.expandable) {
-    internalExpanded.value = !internalExpanded.value
-    emit('update:expanded', internalExpanded.value)
+    toggleExpand(e)
+    return
   }
   if (list?.selectable.value && props.value != null) {
     list.select(props.value)
@@ -146,43 +155,11 @@ function handleTrailingToggle() {
 </script>
 
 <template>
-  <div>
-    <component
-      :is="tag"
-      :class="containerClasses"
-      v-bind="linkProps"
-      role="listitem"
-      @click="handleClick"
-    >
-      <!-- Divider -->
-      <div
-        v-if="hasDivider"
-        class="absolute top-0 right-0 h-px bg-outline-variant"
-        :class="hasDivider === 'inset' ? 'left-16' : 'left-0'"
-      />
-
+  <li v-if="expandable" role="listitem">
+    <div :class="containerClasses" @click="handleClick">
       <!-- Leading -->
       <slot name="leading">
-        <template v-if="resolvedLeading === 'icon'">
-          <MIcon :name="icon!" :size="24" class="shrink-0 text-on-surface-variant" />
-        </template>
-        <template v-else-if="resolvedLeading === 'icon-container'">
-          <div
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-            :class="iconContainerClasses[iconContainerColor || 'primary']"
-          >
-            <MIcon :name="icon!" :size="24" />
-          </div>
-        </template>
-        <template v-else-if="resolvedLeading === 'avatar'">
-          <MAvatar :name="avatarName!" :size="40" class="shrink-0" />
-        </template>
-        <template v-else-if="resolvedLeading === 'image'">
-          <img :src="image" alt="" class="h-14 w-14 shrink-0 rounded-md object-cover">
-        </template>
-        <template v-else-if="resolvedLeading === 'checkbox'">
-          <MCheckbox :model-value="isActive" class="shrink-0" />
-        </template>
+        <MIcon v-if="resolvedLeading === 'icon'" :name="icon!" :size="24" class="shrink-0 text-on-surface-variant" />
       </slot>
 
       <!-- Content -->
@@ -192,52 +169,131 @@ function handleTrailingToggle() {
           <p v-if="subtitle && resolvedLines >= 2" class="text-body-medium text-on-surface-variant" :class="resolvedLines === 2 && 'truncate'">
             {{ subtitle }}
           </p>
-          <p v-if="description && resolvedLines >= 3" class="line-clamp-2 text-body-small text-on-surface-variant">
-            {{ description }}
-          </p>
         </slot>
       </div>
 
-      <!-- Trailing -->
-      <slot name="trailing">
-        <template v-if="resolvedTrailing === 'expand'">
-          <MIcon
-            :name="isExpanded ? 'expand_less' : 'expand_more'"
-            :size="24"
-            class="shrink-0 text-on-surface-variant transition-transform duration-200"
-          />
-        </template>
-        <template v-else-if="resolvedTrailing === 'icon'">
-          <MIcon :name="trailingIcon!" :size="24" class="shrink-0 text-on-surface-variant" />
-        </template>
-        <template v-else-if="resolvedTrailing === 'text'">
-          <span class="shrink-0 text-label-small text-on-surface-variant">{{ trailingText }}</span>
-        </template>
-        <template v-else-if="resolvedTrailing === 'switch'">
-          <MSwitch :model-value="!!trailingValue" @update:model-value="handleTrailingToggle" />
-        </template>
-        <template v-else-if="resolvedTrailing === 'checkbox'">
-          <MCheckbox :model-value="!!trailingValue" @update:model-value="handleTrailingToggle" />
-        </template>
-      </slot>
-    </component>
+      <!-- Expand icon -->
+      <MIcon
+        :name="isExpanded ? 'expand_less' : 'expand_more'"
+        :size="20"
+        class="shrink-0 text-on-surface-variant"
+      />
+    </div>
 
-    <!-- Expandable children -->
-    <Transition
-      enter-active-class="transition-[grid-template-rows] duration-200 ease-out"
-      leave-active-class="transition-[grid-template-rows] duration-150 ease-in"
-      enter-from-class="grid-rows-[0fr]"
-      enter-to-class="grid-rows-[1fr]"
-      leave-from-class="grid-rows-[1fr]"
-      leave-to-class="grid-rows-[0fr]"
-    >
-      <div v-if="expandable && isExpanded" class="grid grid-rows-[1fr]">
-        <div class="overflow-hidden">
-          <div :class="resolvedLeading ? 'pl-14' : 'pl-4'">
-            <slot name="children" />
-          </div>
+    <!-- Children with collapse animation -->
+    <Transition name="mli-expand">
+      <div v-if="isExpanded" class="mli-expand-grid">
+        <div class="mli-expand-body">
+          <slot name="children" />
         </div>
       </div>
     </Transition>
-  </div>
+  </li>
+
+  <component
+    v-else
+    :is="tag"
+    :class="containerClasses"
+    v-bind="linkProps"
+    role="listitem"
+    @click="handleClick"
+  >
+    <!-- Divider -->
+    <div
+      v-if="hasDivider"
+      class="absolute top-0 right-0 h-px bg-outline-variant"
+      :class="hasDivider === 'inset' ? 'left-16' : 'left-0'"
+    />
+
+    <!-- Leading -->
+    <slot name="leading">
+      <template v-if="resolvedLeading === 'icon'">
+        <MIcon :name="icon!" :size="24" class="shrink-0 text-on-surface-variant" />
+      </template>
+      <template v-else-if="resolvedLeading === 'icon-container'">
+        <div
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+          :class="iconContainerClasses[iconContainerColor || 'primary']"
+        >
+          <MIcon :name="icon!" :size="24" />
+        </div>
+      </template>
+      <template v-else-if="resolvedLeading === 'avatar'">
+        <MAvatar :name="avatarName!" :size="40" class="shrink-0" />
+      </template>
+      <template v-else-if="resolvedLeading === 'image'">
+        <img :src="image" alt="" class="h-14 w-14 shrink-0 rounded-md object-cover">
+      </template>
+      <template v-else-if="resolvedLeading === 'checkbox'">
+        <MCheckbox :model-value="isActive" class="shrink-0" />
+      </template>
+    </slot>
+
+    <!-- Content -->
+    <div class="min-w-0 flex-1">
+      <slot>
+        <p class="truncate text-body-large text-on-surface">{{ title }}</p>
+        <p v-if="subtitle && resolvedLines >= 2" class="text-body-medium text-on-surface-variant" :class="resolvedLines === 2 && 'truncate'">
+          {{ subtitle }}
+        </p>
+        <p v-if="description && resolvedLines >= 3" class="line-clamp-2 text-body-small text-on-surface-variant">
+          {{ description }}
+        </p>
+      </slot>
+    </div>
+
+    <!-- Trailing -->
+    <slot name="trailing">
+      <template v-if="resolvedTrailing === 'icon'">
+        <MIcon :name="trailingIcon!" :size="24" class="shrink-0 text-on-surface-variant" />
+      </template>
+      <template v-else-if="resolvedTrailing === 'text'">
+        <span class="shrink-0 text-label-small text-on-surface-variant">{{ trailingText }}</span>
+      </template>
+      <template v-else-if="resolvedTrailing === 'switch'">
+        <MSwitch :model-value="!!trailingValue" @update:model-value="handleTrailingToggle" />
+      </template>
+      <template v-else-if="resolvedTrailing === 'checkbox'">
+        <MCheckbox :model-value="!!trailingValue" @update:model-value="handleTrailingToggle" />
+      </template>
+    </slot>
+  </component>
 </template>
+
+<style>
+.mli-expand-grid {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+.mli-expand-body {
+  min-height: 0;
+  overflow: hidden;
+  padding-left: 2rem;
+}
+
+.mli-expand-enter-active {
+  transition: grid-template-rows 300ms cubic-bezier(0.2, 0, 0, 1);
+}
+.mli-expand-enter-active > .mli-expand-body {
+  transition: opacity 200ms 80ms cubic-bezier(0.2, 0, 0, 1);
+}
+.mli-expand-enter-from {
+  grid-template-rows: 0fr;
+}
+.mli-expand-enter-from > .mli-expand-body {
+  opacity: 0;
+}
+
+.mli-expand-leave-active {
+  transition: grid-template-rows 250ms cubic-bezier(0.4, 0, 1, 1);
+}
+.mli-expand-leave-active > .mli-expand-body {
+  transition: opacity 120ms cubic-bezier(0.4, 0, 1, 1);
+}
+.mli-expand-leave-to {
+  grid-template-rows: 0fr;
+}
+.mli-expand-leave-to > .mli-expand-body {
+  opacity: 0;
+}
+</style>

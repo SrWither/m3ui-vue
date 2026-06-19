@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import type { Placement } from './MAbsolute.vue'
 
 const props = withDefaults(
   defineProps<{
+    placement?: Placement
+    offset?: string | number
     top?: string | number
     right?: string | number
     bottom?: string | number
@@ -10,7 +13,7 @@ const props = withDefaults(
     inset?: boolean
     zIndex?: number
   }>(),
-  { inset: false, zIndex: 50 },
+  { inset: false, zIndex: 50, offset: 0 },
 )
 
 function toUnit(v: string | number | undefined) {
@@ -18,14 +21,40 @@ function toUnit(v: string | number | undefined) {
   return typeof v === 'number' ? `${v}px` : v
 }
 
-const style = computed(() => ({
-  position: 'fixed' as const,
-  top: props.inset ? '0' : toUnit(props.top),
-  right: props.inset ? '0' : toUnit(props.right),
-  bottom: props.inset ? '0' : toUnit(props.bottom),
-  left: props.inset ? '0' : toUnit(props.left),
-  zIndex: props.zIndex,
-}))
+const style = computed(() => {
+  if (props.inset) {
+    return { position: 'fixed' as const, inset: '0', zIndex: props.zIndex }
+  }
+
+  if (props.placement) {
+    const o = toUnit(props.offset)!
+    const [y, x] = props.placement.split('-') as [string, string]
+    const s: Record<string, string | undefined> = {
+      position: 'fixed',
+      zIndex: props.zIndex != null ? String(props.zIndex) : undefined,
+    }
+    if (y === 'top') { s.top = o }
+    else if (y === 'bottom') { s.bottom = o }
+    else { s.top = '50%'; s.transform = 'translateY(-50%)' }
+
+    if (x === 'left') { s.left = o }
+    else if (x === 'right') { s.right = o }
+    else {
+      s.left = '50%'
+      s.transform = s.transform ? 'translate(-50%, -50%)' : 'translateX(-50%)'
+    }
+    return s
+  }
+
+  return {
+    position: 'fixed' as const,
+    top: toUnit(props.top),
+    right: toUnit(props.right),
+    bottom: toUnit(props.bottom),
+    left: toUnit(props.left),
+    zIndex: props.zIndex,
+  }
+})
 </script>
 
 <template>

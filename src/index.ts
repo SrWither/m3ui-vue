@@ -114,6 +114,7 @@ export { default as MTreeTable } from './components/MTreeTable.vue'
 export { default as MVirtualTable } from './components/MVirtualTable.vue'
 
 // Re-export types from components that define them
+export type { Placement } from './components/MAbsolute.vue'
 export type { CalendarEvent } from './components/MCalendar.vue'
 export type { ContextMenuItem } from './components/MContextMenu.vue'
 export type { DataTableColumn } from './components/MDataTable.vue'
