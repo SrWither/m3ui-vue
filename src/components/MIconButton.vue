@@ -44,7 +44,6 @@ const variantClasses = computed(() => {
     :to="to || undefined"
     :type="to ? undefined : 'button'"
     :aria-label="label"
-    :title="label"
     :disabled="disabled"
     :class="[base, variantClasses]"
     :style="{ width: `${size}px`, height: `${size}px` }"
