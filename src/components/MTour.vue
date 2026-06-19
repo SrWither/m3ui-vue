@@ -32,6 +32,24 @@ const step = computed(() => props.steps[currentStep.value])
 const isFirst = computed(() => currentStep.value === 0)
 const isLast = computed(() => currentStep.value === props.steps.length - 1)
 
+let scrollRaf = 0
+
+function onScrollOrResize() {
+  cancelAnimationFrame(scrollRaf)
+  scrollRaf = requestAnimationFrame(positionTooltip)
+}
+
+function startListeners() {
+  window.addEventListener('scroll', onScrollOrResize, true)
+  window.addEventListener('resize', onScrollOrResize)
+}
+
+function stopListeners() {
+  window.removeEventListener('scroll', onScrollOrResize, true)
+  window.removeEventListener('resize', onScrollOrResize)
+  cancelAnimationFrame(scrollRaf)
+}
+
 function positionTooltip() {
   if (!step.value) return
   const el = document.querySelector(step.value.target) as HTMLElement | null
@@ -40,63 +58,83 @@ function positionTooltip() {
   const rect = el.getBoundingClientRect()
   const pad = 12
   const arrowSize = 8
-  const p = step.value.placement ?? 'bottom'
-  placement.value = p
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+  const edge = 8
+  const tooltipW = Math.min(320, vw - edge * 2)
+  const approxH = 220
 
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  let p = step.value.placement ?? 'bottom'
+
+  // Auto-flip if not enough space on the preferred side
+  if (p === 'bottom' && vh - rect.bottom < approxH + pad && rect.top > vh - rect.bottom) p = 'top'
+  else if (p === 'top' && rect.top < approxH + pad && vh - rect.bottom > rect.top) p = 'bottom'
+  else if (p === 'right' && vw - rect.right < tooltipW + pad && rect.left > vw - rect.right) p = 'left'
+  else if (p === 'left' && rect.left < tooltipW + pad && vw - rect.right > rect.left) p = 'right'
+
+  // On narrow screens, force horizontal placements to vertical
+  if ((p === 'left' || p === 'right') && vw < tooltipW + rect.width + pad * 2 + edge * 2) {
+    p = vh - rect.bottom >= rect.top ? 'bottom' : 'top'
+  }
+
+  placement.value = p
 
   const s: Record<string, string> = {}
   const a: Record<string, string> = { position: 'absolute' }
+  const centerX = rect.left + rect.width / 2
+  const centerY = rect.top + rect.height / 2
 
-  switch (p) {
-    case 'bottom':
+  if (p === 'bottom' || p === 'top') {
+    let left = centerX - tooltipW / 2
+    left = Math.max(edge, Math.min(left, vw - tooltipW - edge))
+    s.left = `${left}px`
+    s.width = `${tooltipW}px`
+
+    const arrowLeft = Math.max(arrowSize + 4, Math.min(centerX - left, tooltipW - arrowSize - 4))
+    a.left = `${arrowLeft}px`
+    a.transform = 'translateX(-50%)'
+    a.borderLeft = `${arrowSize}px solid transparent`
+    a.borderRight = `${arrowSize}px solid transparent`
+
+    if (p === 'bottom') {
       s.top = `${rect.bottom + pad}px`
-      s.left = `${rect.left + rect.width / 2}px`
-      s.transform = 'translateX(-50%)'
       a.top = `-${arrowSize}px`
-      a.left = '50%'
-      a.transform = 'translateX(-50%)'
       a.borderBottom = `${arrowSize}px solid var(--color-surface-container-high)`
-      a.borderLeft = `${arrowSize}px solid transparent`
-      a.borderRight = `${arrowSize}px solid transparent`
-      break
-    case 'top':
-      s.bottom = `${window.innerHeight - rect.top + pad}px`
-      s.left = `${rect.left + rect.width / 2}px`
-      s.transform = 'translateX(-50%)'
+    } else {
+      s.bottom = `${vh - rect.top + pad}px`
       a.bottom = `-${arrowSize}px`
-      a.left = '50%'
-      a.transform = 'translateX(-50%)'
       a.borderTop = `${arrowSize}px solid var(--color-surface-container-high)`
-      a.borderLeft = `${arrowSize}px solid transparent`
-      a.borderRight = `${arrowSize}px solid transparent`
-      break
-    case 'left':
-      s.top = `${rect.top + rect.height / 2}px`
-      s.right = `${window.innerWidth - rect.left + pad}px`
-      s.transform = 'translateY(-50%)'
-      a.top = '50%'
-      a.right = `-${arrowSize}px`
-      a.transform = 'translateY(-50%)'
-      a.borderLeft = `${arrowSize}px solid var(--color-surface-container-high)`
-      a.borderTop = `${arrowSize}px solid transparent`
-      a.borderBottom = `${arrowSize}px solid transparent`
-      break
-    case 'right':
-      s.top = `${rect.top + rect.height / 2}px`
+    }
+  } else {
+    let top = centerY
+    top = Math.max(edge + approxH / 2, Math.min(top, vh - edge - approxH / 2))
+    s.top = `${top}px`
+    s.transform = 'translateY(-50%)'
+
+    a.top = `${Math.max(arrowSize + 4, Math.min(centerY - top + approxH / 2, approxH - arrowSize - 4))}px`
+    a.transform = 'translateY(-50%)'
+    a.borderTop = `${arrowSize}px solid transparent`
+    a.borderBottom = `${arrowSize}px solid transparent`
+
+    if (p === 'right') {
       s.left = `${rect.right + pad}px`
-      s.transform = 'translateY(-50%)'
-      a.top = '50%'
       a.left = `-${arrowSize}px`
-      a.transform = 'translateY(-50%)'
       a.borderRight = `${arrowSize}px solid var(--color-surface-container-high)`
-      a.borderTop = `${arrowSize}px solid transparent`
-      a.borderBottom = `${arrowSize}px solid transparent`
-      break
+    } else {
+      s.right = `${vw - rect.left + pad}px`
+      a.right = `-${arrowSize}px`
+      a.borderLeft = `${arrowSize}px solid var(--color-surface-container-high)`
+    }
   }
 
   tooltipStyle.value = s
   arrowStyle.value = a
+}
+
+function scrollToTarget() {
+  if (!step.value) return
+  const el = document.querySelector(step.value.target) as HTMLElement | null
+  el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 }
 
 function highlightTarget() {
@@ -124,6 +162,7 @@ function goPrev() {
 }
 
 function close() {
+  stopListeners()
   clearHighlight()
   currentStep.value = 0
   emit('update:modelValue', false)
@@ -133,16 +172,18 @@ watch([() => props.modelValue, currentStep], () => {
   if (props.modelValue) {
     nextTick(() => {
       highlightTarget()
+      scrollToTarget()
       positionTooltip()
     })
   }
 })
 
 watch(() => props.modelValue, (v) => {
-  if (!v) clearHighlight()
+  if (v) startListeners()
+  else { stopListeners(); clearHighlight() }
 })
 
-onBeforeUnmount(clearHighlight)
+onBeforeUnmount(() => { stopListeners(); clearHighlight() })
 </script>
 
 <template>
@@ -156,7 +197,7 @@ onBeforeUnmount(clearHighlight)
     <Transition name="m3-tour">
       <div
         v-if="modelValue && step"
-        class="fixed z-202 w-80 rounded-xl bg-surface-container-high p-5 shadow-elevation-3"
+        class="fixed z-202 w-80 max-w-[calc(100vw-1rem)] rounded-xl bg-surface-container-high p-5 shadow-elevation-3"
         :style="tooltipStyle"
       >
         <!-- Arrow -->
