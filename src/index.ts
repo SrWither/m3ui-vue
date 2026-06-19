@@ -8,7 +8,7 @@ export type { Theme } from './composables/useTheme'
 export { useColorPalette, palettes } from './composables/useColorPalette'
 export type { Palette } from './composables/useColorPalette'
 export { useToast } from './composables/useToast'
-export type { Toast, ToastVariant, ToastPosition, ToastAction } from './composables/useToast'
+export type { Toast, ToastVariant, ToastPosition, ToastAction, ToastOptions } from './composables/useToast'
 export { useFieldBg } from './composables/useFieldBg'
 
 // Components

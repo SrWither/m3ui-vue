@@ -85,13 +85,14 @@ const getVariantStyle = (variant: string): VariantStyle =>
       <div v-for="t in toasts" :key="t.id" class="toast-row w-full min-w-64 max-w-xs">
         <div
           class="toast-inner pointer-events-auto relative flex items-center gap-3 overflow-hidden rounded-2xl px-4 py-4 shadow-elevation-2"
-          :class="getVariantStyle(t.variant).container"
+          :class="t.color ? 'text-white ring-1 ring-inset ring-white/10' : getVariantStyle(t.variant).container"
+          :style="t.color ? { backgroundColor: t.color } : undefined"
         >
           <MIcon
-            :name="getVariantStyle(t.variant).iconName"
+            :name="t.icon ?? getVariantStyle(t.variant).iconName"
             :size="20"
             class="shrink-0"
-            :class="getVariantStyle(t.variant).icon"
+            :class="t.color ? '' : getVariantStyle(t.variant).icon"
           />
 
           <p class="flex-1 text-body-medium leading-snug">{{ t.message }}</p>
@@ -101,7 +102,7 @@ const getVariantStyle = (variant: string): VariantStyle =>
               v-if="t.action"
               type="button"
               class="cursor-pointer rounded px-2 py-1 text-label-medium font-semibold transition-colors"
-              :class="getVariantStyle(t.variant).action"
+              :class="t.color ? 'text-white/90 hover:bg-white/15' : getVariantStyle(t.variant).action"
               @click="
                 () => {
                   t.action!.onClick();
@@ -115,7 +116,7 @@ const getVariantStyle = (variant: string): VariantStyle =>
             <button
               type="button"
               class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full transition-colors"
-              :class="getVariantStyle(t.variant).close"
+              :class="t.color ? 'text-white/60 hover:bg-white/15' : getVariantStyle(t.variant).close"
               aria-label="Cerrar"
               @click="dismiss(t.id)"
             >
@@ -127,7 +128,7 @@ const getVariantStyle = (variant: string): VariantStyle =>
           <div
             v-if="t.duration > 0"
             class="absolute right-0 bottom-0 left-0 h-0.5 origin-left"
-            :class="getVariantStyle(t.variant).progress"
+            :class="t.color ? 'bg-white/30' : getVariantStyle(t.variant).progress"
             :style="{ animation: `m3-toast-progress ${t.duration}ms linear forwards` }"
           />
         </div>
