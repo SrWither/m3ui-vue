@@ -359,8 +359,8 @@ const hasActions = computed(() => !!slots['row-actions'])
               :key="rowId(row)"
               :class="[
                 'border-t border-outline-variant transition-colors duration-100',
-                'hover:bg-on-surface/[0.04]',
-                selectable && isSelected(row) ? 'bg-primary/[0.06]' : '',
+                'hover:bg-on-surface/4',
+                selectable && isSelected(row) ? 'bg-primary/6' : '',
                 selectable ? 'cursor-pointer' : '',
               ]"
               @click="selectable ? toggleRow(row) : undefined"

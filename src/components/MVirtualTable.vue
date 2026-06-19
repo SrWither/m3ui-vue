@@ -122,7 +122,7 @@ function alignClass(a?: string) { return a === 'center' ? 'text-center' : a === 
         <div
           v-for="{ row, index, top } in visibleRows"
           :key="row[rowKey] ?? index"
-          class="absolute left-0 right-0 flex border-t border-outline-variant transition-colors duration-75 hover:bg-on-surface/[0.04]"
+          class="absolute left-0 right-0 flex border-t border-outline-variant transition-colors duration-75 hover:bg-on-surface/4"
           :class="index % 2 === 0 ? '' : 'bg-surface-container-lowest/50'"
           :style="{ top: `${top}px`, height: `${rowHeight}px` }"
           @click="emit('rowClick', row)"

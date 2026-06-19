@@ -67,7 +67,7 @@ watch(() => props.modelValue, (open) => {
   <!-- ── Modal variant ──────────────────────────────────────── -->
   <Teleport v-if="modal" to="body">
     <Transition name="nd" :duration="{ enter: 300, leave: 280 }">
-      <div v-if="modelValue" class="fixed inset-0 z-[100] flex">
+      <div v-if="modelValue" class="fixed inset-0 z-100 flex">
         <div class="nd-scrim absolute inset-0 bg-black/40" @click="close" />
 
         <nav class="nd-panel relative flex h-full w-72 max-w-[85vw] flex-col bg-surface-container shadow-elevation-3">

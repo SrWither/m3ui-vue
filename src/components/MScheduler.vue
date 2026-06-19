@@ -200,14 +200,14 @@ const eventColors: Record<string, string> = {
               v-for="day in visibleDays"
               :key="fmt(day)"
               class="relative h-14 border-r border-b border-outline-variant/50 p-0 last:border-r-0"
-              :class="fmt(day) === todayIso ? 'bg-primary-container/[0.05]' : ''"
+              :class="fmt(day) === todayIso ? 'bg-primary-container/5' : ''"
               @click="emit('slotClick', { date: fmt(day), hour })"
             >
               <template v-for="ev in eventsForDayHour(day, hour)" :key="ev.id">
                 <button
                   v-if="isEventStart(ev, hour)"
                   type="button"
-                  class="absolute inset-x-0.5 top-0.5 z-[5] cursor-pointer overflow-hidden rounded border-l-[3px] px-2 py-1 text-left transition-opacity hover:opacity-90"
+                  class="absolute inset-x-0.5 top-0.5 z-5 cursor-pointer overflow-hidden rounded border-l-[3px] px-2 py-1 text-left transition-opacity hover:opacity-90"
                   :class="eventColors[ev.color ?? 'primary']"
                   :style="{ height: `calc(${eventDuration(ev) * 100}% - 4px)` }"
                   @click.stop="emit('eventClick', ev)"

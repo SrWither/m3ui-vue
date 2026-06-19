@@ -82,9 +82,9 @@ function onAfterLeave(el: Element) {
           ? 'cursor-not-allowed opacity-38'
           : 'cursor-pointer',
         !node.disabled && isSelected
-          ? 'bg-primary/[0.10]'
+          ? 'bg-primary/10'
           : !node.disabled
-            ? 'hover:bg-on-surface/[0.04]'
+            ? 'hover:bg-on-surface/4'
             : '',
       ]"
       @click="onRowClick"

@@ -78,7 +78,7 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll, true))
       <div
         v-if="visible && text"
         ref="tipEl"
-        class="pointer-events-none fixed z-[400] max-w-[220px] rounded bg-inverse-surface px-3 py-1.5 text-label-medium text-inverse-on-surface shadow-elevation-2"
+        class="pointer-events-none fixed z-400 max-w-[220px] rounded bg-inverse-surface px-3 py-1.5 text-label-medium text-inverse-on-surface shadow-elevation-2"
         :style="tipStyle"
         role="tooltip"
       >

@@ -149,14 +149,14 @@ onBeforeUnmount(clearHighlight)
   <Teleport to="body">
     <!-- Overlay -->
     <Transition name="m3-tour">
-      <div v-if="modelValue && step" class="fixed inset-0 z-[200] bg-black/40" @click="close" />
+      <div v-if="modelValue && step" class="fixed inset-0 z-200 bg-black/40" @click="close" />
     </Transition>
 
     <!-- Tooltip -->
     <Transition name="m3-tour">
       <div
         v-if="modelValue && step"
-        class="fixed z-[202] w-80 rounded-xl bg-surface-container-high p-5 shadow-elevation-3"
+        class="fixed z-202 w-80 rounded-xl bg-surface-container-high p-5 shadow-elevation-3"
         :style="tooltipStyle"
       >
         <!-- Arrow -->

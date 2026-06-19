@@ -114,7 +114,7 @@ function alignClass(a?: string) { return a === 'center' ? 'text-center' : a === 
           <tr
             v-for="(item, i) in flatRows"
             :key="item.row[rowKey] ?? i"
-            class="border-t border-outline-variant transition-colors duration-100 hover:bg-on-surface/[0.04]"
+            class="border-t border-outline-variant transition-colors duration-100 hover:bg-on-surface/4"
             :class="item.depth > 0 ? 'bg-surface-container-lowest/50' : ''"
             @click="emit('rowClick', item.row)"
           >

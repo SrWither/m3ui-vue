@@ -41,13 +41,13 @@ const sheetStyle = computed(() => ({
 <template>
   <Teleport to="body">
     <Transition name="bs" :duration="{ enter: 320, leave: 280 }">
-      <div v-if="modelValue" class="fixed inset-0 z-[200] flex flex-col justify-end">
+      <div v-if="modelValue" class="fixed inset-0 z-200 flex flex-col justify-end">
         <!-- Scrim -->
         <div class="bs-scrim absolute inset-0 bg-black/40" @click="close" />
 
         <!-- Panel -->
         <div
-          class="bs-panel relative flex w-full flex-col rounded-t-[28px] bg-surface-container-low shadow-elevation-3"
+          class="bs-panel relative flex w-full flex-col rounded-t-xl bg-surface-container-low shadow-elevation-3"
           :class="fullHeight ? 'max-h-[92vh]' : 'max-h-[60vh]'"
           :style="sheetStyle"
         >

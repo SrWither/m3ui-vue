@@ -248,7 +248,7 @@ function colStyle(col: DataTableColumn) {
     <!-- Table -->
     <div class="overflow-x-auto">
       <table class="w-full border-collapse">
-        <thead :class="stickyHeader ? 'sticky top-0 z-[1]' : ''">
+        <thead :class="stickyHeader ? 'sticky top-0 z-1' : ''">
           <tr class="bg-surface-container-high">
             <th v-if="hasExpand" class="w-10 px-2" :class="dense ? 'py-2' : 'py-3'" />
             <th v-if="selectable" class="w-12 px-4" :class="dense ? 'py-2' : 'py-3'">
@@ -320,8 +320,8 @@ function colStyle(col: DataTableColumn) {
               <tr
                 :class="[
                   'border-t border-outline-variant transition-colors duration-100',
-                  'hover:bg-on-surface/[0.04]',
-                  selectable && isSelected(row) ? 'bg-primary/[0.06]' : '',
+                  'hover:bg-on-surface/4',
+                  selectable && isSelected(row) ? 'bg-primary/6' : '',
                   striped ? 'even:bg-surface-container-lowest' : '',
                   selectable ? 'cursor-pointer' : '',
                 ]"

@@ -263,7 +263,7 @@ const labelClasses = computed(() => {
       <div
         v-if="open"
         ref="dropdownEl"
-        class="fixed z-[500] max-h-60 overflow-auto rounded-sm bg-surface-container shadow-elevation-2"
+        class="fixed z-500 max-h-60 overflow-auto rounded-sm bg-surface-container shadow-elevation-2"
         :style="dropPos"
       >
         <!-- Search -->

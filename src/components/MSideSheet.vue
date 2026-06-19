@@ -40,7 +40,7 @@ const panelStyle = computed(() => ({
 <template>
   <Teleport to="body">
     <Transition name="ss" :duration="{ enter: 320, leave: 280 }">
-      <div v-if="modelValue" class="fixed inset-0 z-[200] flex justify-end">
+      <div v-if="modelValue" class="fixed inset-0 z-200 flex justify-end">
         <!-- Scrim -->
         <div class="ss-scrim absolute inset-0 bg-black/40" @click="close" />
 

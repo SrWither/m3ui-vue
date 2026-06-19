@@ -66,7 +66,7 @@ function onPanelMouseLeave(e: MouseEvent) {
 <template>
   <div
     ref="panel"
-    class="m3-ctx-panel absolute z-[201] min-w-[200px] rounded-sm bg-surface-container shadow-elevation-2"
+    class="m3-ctx-panel absolute z-201 min-w-[200px] rounded-sm bg-surface-container shadow-elevation-2"
     :style="{ left: `${panelX}px`, top: `${panelY}px` }"
     @mouseleave="onPanelMouseLeave"
   >

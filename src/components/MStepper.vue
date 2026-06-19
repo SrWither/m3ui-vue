@@ -88,7 +88,7 @@ function select(index: number) {
         class="mt-[18px] flex flex-1 items-center px-2"
       >
         <div
-          class="h-[1px] w-full transition-colors duration-300"
+          class="h-px w-full transition-colors duration-300"
           :class="i < modelValue ? 'bg-primary' : 'bg-outline-variant'"
         />
       </div>
@@ -121,7 +121,7 @@ function select(index: number) {
           <!-- Vertical connector -->
           <div
             v-if="i < steps.length - 1"
-            class="my-1 w-[1px] flex-1 transition-colors duration-300"
+            class="my-1 w-px flex-1 transition-colors duration-300"
             :class="i < modelValue ? 'bg-primary' : 'bg-outline-variant'"
             style="min-height: 24px"
           />

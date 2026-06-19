@@ -41,7 +41,7 @@ const dotBg: Record<string, string> = {
         <!-- Line + dot -->
         <div class="flex flex-col items-center">
           <div
-            class="z-[1] flex shrink-0 items-center justify-center rounded-full"
+            class="z-1 flex shrink-0 items-center justify-center rounded-full"
             :class="[item.icon ? 'h-9 w-9' : 'h-3 w-3', dotBg[item.color ?? 'primary']]"
             :style="item.dotColor ? { backgroundColor: item.dotColor } : undefined"
           >
@@ -100,7 +100,7 @@ const dotBg: Record<string, string> = {
         <!-- Center column: dot + continuous line -->
         <div class="flex w-14 shrink-0 flex-col items-center">
           <div
-            class="z-[1] flex shrink-0 items-center justify-center rounded-full"
+            class="z-1 flex shrink-0 items-center justify-center rounded-full"
             :class="[item.icon ? 'h-9 w-9' : 'h-3.5 w-3.5', dotBg[item.color ?? 'primary']]"
             :style="item.dotColor ? { backgroundColor: item.dotColor } : undefined"
           >

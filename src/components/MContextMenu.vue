@@ -51,7 +51,7 @@ defineExpose({ show, showAt, hide })
     >
       <div
         v-if="visible"
-        class="fixed inset-0 z-[200]"
+        class="fixed inset-0 z-200"
         @mousedown.self="hide"
         @contextmenu.prevent
       >

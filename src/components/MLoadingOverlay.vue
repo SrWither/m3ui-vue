@@ -20,7 +20,7 @@ withDefaults(defineProps<{
     >
       <div
         v-if="visible"
-        class="fixed inset-0 z-[300] flex flex-col items-center justify-center gap-4"
+        class="fixed inset-0 z-300 flex flex-col items-center justify-center gap-4"
         :class="opaque ? 'bg-surface' : 'bg-surface/80 backdrop-blur-sm'"
       >
         <MSpinner :size="spinnerSize" class="text-primary" />

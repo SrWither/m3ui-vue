@@ -195,7 +195,7 @@ onUnmounted(() => {
       </button>
       <label
         v-if="label"
-        class="pointer-events-none absolute -top-2.5 left-3 bg-[var(--field-bg)] px-1 text-label-small transition-colors"
+        class="pointer-events-none absolute -top-2.5 left-3 bg-(--field-bg) px-1 text-label-small transition-colors"
         :class="open ? (error ? 'text-error' : 'text-primary') : error ? 'text-error' : 'text-on-surface-variant'"
       >
         {{ label }}
@@ -215,7 +215,7 @@ onUnmounted(() => {
         <div
           v-if="open"
           ref="panelEl"
-          class="fixed z-[500] w-[320px] rounded-lg bg-surface-container p-4 shadow-elevation-3"
+          class="fixed z-500 w-[320px] rounded-lg bg-surface-container p-4 shadow-elevation-3"
           :style="dropPos"
         >
           <p class="mb-2 text-center text-label-medium text-on-surface-variant">

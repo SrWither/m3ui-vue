@@ -125,7 +125,7 @@ const eventColor: Record<string, string> = {
       <div
         v-for="(day, i) in calendarDays"
         :key="i"
-        class="flex min-h-[80px] cursor-pointer flex-col border-b border-r border-outline-variant/50 p-1.5 transition-colors hover:bg-on-surface/[0.03]"
+        class="flex min-h-[80px] cursor-pointer flex-col border-b border-r border-outline-variant/50 p-1.5 transition-colors hover:bg-on-surface/3"
         :class="[
           !day.current ? 'bg-surface-container-lowest/50' : 'bg-surface',
           (i + 1) % 7 === 0 ? 'border-r-0' : '',

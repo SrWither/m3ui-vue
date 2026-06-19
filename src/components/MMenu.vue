@@ -102,7 +102,7 @@ const origin = computed(() =>
       <div
         v-if="open"
         ref="dropdownEl"
-        class="fixed z-[500] min-w-48 overflow-y-auto overflow-x-hidden rounded-xs bg-surface-container py-1 shadow-elevation-2"
+        class="fixed z-500 min-w-48 overflow-y-auto overflow-x-hidden rounded-xs bg-surface-container py-1 shadow-elevation-2"
         :style="{ ...dropStyle, transformOrigin: origin }"
         @click="close"
       >

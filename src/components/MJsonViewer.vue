@@ -62,7 +62,7 @@ function formatValue(val: unknown) {
     <template v-if="isExpandable">
       <button
         type="button"
-        class="group inline-flex cursor-pointer items-center gap-0.5 rounded px-0.5 hover:bg-on-surface/[0.06]"
+        class="group inline-flex cursor-pointer items-center gap-0.5 rounded px-0.5 hover:bg-on-surface/6"
         @click="expanded = !expanded"
       >
         <MIcon
