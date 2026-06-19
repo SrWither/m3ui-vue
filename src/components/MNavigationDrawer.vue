@@ -169,11 +169,11 @@ watch(() => props.modelValue, (open) => {
             @click="toggleSection(section, si)"
           >
             <MIcon v-if="section.icon" :name="section.icon" :size="24" class="shrink-0" />
-            <span class="min-w-0 flex-1 text-left text-title-small font-medium">{{ section.title }}</span>
+            <span class="nd-label min-w-0 flex-1 text-left text-title-small font-medium">{{ section.title }}</span>
             <MIcon
               :name="isSectionOpen(section, si) ? 'expand_less' : 'expand_more'"
               :size="18"
-              class="shrink-0"
+              class="nd-label shrink-0"
             />
           </button>
 
@@ -207,8 +207,8 @@ watch(() => props.modelValue, (open) => {
                   @click="select(item)"
                 >
                   <MIcon v-if="item.icon" :name="item.icon" :size="24" class="shrink-0" />
-                  <span class="min-w-0 flex-1 text-label-large font-medium">{{ item.label }}</span>
-                  <span v-if="item.badge != null" class="text-label-medium text-on-surface-variant">
+                  <span class="nd-label min-w-0 flex-1 text-label-large font-medium">{{ item.label }}</span>
+                  <span v-if="item.badge != null" class="nd-label text-label-medium text-on-surface-variant">
                     {{ item.badge }}
                   </span>
                 </component>
@@ -279,6 +279,25 @@ watch(() => props.modelValue, (open) => {
 /* ── Inline sidebar width transition ───────────────────── */
 .nd-inline {
   transition: width 300ms cubic-bezier(0.2, 0, 0, 1);
+  overflow: hidden;
+}
+
+/* Freeze layout so content clips like a curtain during open/close */
+.nd-inline > * {
+  min-width: 18rem;
+}
+/* Collapse-to-icons: let children adapt to 72px width */
+.nd-inline.nd-collapsed > * {
+  min-width: 0;
+}
+
+/* Collapse-to-icons: fade out labels before width squishes them */
+.nd-label {
+  transition: opacity 200ms 80ms cubic-bezier(0.2, 0, 0, 1);
+}
+.nd-inline.nd-collapsed .nd-label {
+  opacity: 0;
+  transition: opacity 100ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 /* Elements that should collapse to 0 height when sidebar is collapsed */
@@ -288,10 +307,6 @@ watch(() => props.modelValue, (open) => {
 }
 .nd-inline.nd-collapsed .nd-collapse-h {
   max-height: 0;
-}
-
-.nd-inline.nd-hidden {
-  overflow: hidden;
 }
 
 .nd-inline .nd-section-body > * {
