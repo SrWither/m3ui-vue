@@ -354,9 +354,15 @@ function colStyle(col: DataTableColumn) {
                 </td>
               </tr>
               <!-- Expanded content -->
-              <tr v-if="hasExpand && isExpanded(row)">
-                <td :colspan="visibleColumns.length + extraCols" class="border-t border-outline-variant/50 bg-surface-container-lowest px-6 py-4">
-                  <slot name="row-expand" :row="row" />
+              <tr v-if="hasExpand">
+                <td :colspan="visibleColumns.length + extraCols" class="border-t border-outline-variant/50 bg-surface-container-lowest p-0">
+                  <div class="dt-expand-grid" :class="isExpanded(row) ? 'dt-expand-open' : ''">
+                    <div class="dt-expand-body">
+                      <div class="px-6 py-4">
+                        <slot name="row-expand" :row="row" />
+                      </div>
+                    </div>
+                  </div>
                 </td>
               </tr>
             </template>
@@ -374,3 +380,18 @@ function colStyle(col: DataTableColumn) {
     </div>
   </div>
 </template>
+
+<style scoped>
+.dt-expand-grid {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 250ms cubic-bezier(0.2, 0, 0, 1);
+}
+.dt-expand-grid.dt-expand-open {
+  grid-template-rows: 1fr;
+}
+.dt-expand-body {
+  min-height: 0;
+  overflow: hidden;
+}
+</style>
