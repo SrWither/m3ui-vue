@@ -73,6 +73,10 @@
   --shadow-elevation-3: 0px 1px 3px 0px rgb(0 0 0 / 0.3), 0px 4px 8px 3px rgb(0 0 0 / 0.15);
 
   /* Type scale */
+  --text-display-large: 3.5625rem;
+  --text-display-large--line-height: 4rem;
+  --text-display-medium: 2.8125rem;
+  --text-display-medium--line-height: 3.25rem;
   --text-display-small: 2.25rem;
   --text-display-small--line-height: 2.75rem;
 
