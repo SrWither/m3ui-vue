@@ -1,7 +1,7 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
   "include": ["src/**/*", "src/**/*.vue"],
-  "exclude": ["src/components/_MTreeNode.vue"],
+  "exclude": ["src/components/_MTreeNode.vue", "src/__tests__"],
   "compilerOptions": {
     "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,
