@@ -1,66 +1,124 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import MIcon from './MIcon.vue'
+import { ref, reactive, watch, provide, computed } from "vue";
+import MIcon from "./MIcon.vue";
+import MDrawerItemList from "./_MDrawerItemList.vue";
 
 export interface DrawerItem {
-  value: string | number
-  label: string
-  icon?: string
-  badge?: string | number
-  disabled?: boolean
-  to?: string | Record<string, any>
+  value: string | number;
+  label: string;
+  icon?: string;
+  badge?: string | number;
+  disabled?: boolean;
+  to?: string | Record<string, any>;
+  children?: DrawerItem[];
+  iconSize?: number;
+  labelClass?: string;
 }
 
 export interface DrawerSection {
-  title?: string
-  icon?: string
-  items: DrawerItem[]
-  collapsible?: boolean
+  title?: string;
+  icon?: string;
+  items: DrawerItem[];
+  collapsible?: boolean;
 }
 
-const props = withDefaults(defineProps<{
-  modelValue: boolean
-  selected?: string | number
-  sections: DrawerSection[]
-  title?: string
-  modal?: boolean
-  collapsed?: boolean
-}>(), { modal: true })
+const props = withDefaults(
+  defineProps<{
+    modelValue: boolean;
+    selected?: string | number;
+    sections: DrawerSection[];
+    title?: string;
+    modal?: boolean;
+    collapsed?: boolean;
+  }>(),
+  { modal: true },
+);
 
 const emit = defineEmits<{
-  'update:modelValue': [boolean]
-  select: [string | number]
-}>()
+  "update:modelValue": [boolean];
+  select: [string | number];
+}>();
 
-const openSections = ref<Record<string, boolean>>({})
+const openSections = ref<Record<string, boolean>>({});
+const openItems = reactive<Record<string | number, boolean>>({});
 
 function isSectionOpen(section: DrawerSection, index: number) {
-  const key = section.title ?? `__${index}`
-  return openSections.value[key] !== false
+  const key = section.title ?? `__${index}`;
+  return openSections.value[key] !== false;
 }
 
 function toggleSection(section: DrawerSection, index: number) {
-  const key = section.title ?? `__${index}`
-  openSections.value[key] = !isSectionOpen(section, index)
+  const key = section.title ?? `__${index}`;
+  openSections.value[key] = !isSectionOpen(section, index);
 }
 
-function close() { emit('update:modelValue', false) }
-function select(item: DrawerItem) {
-  if (item.disabled) return
-  emit('select', item.value)
-  if (props.modal) close()
+function isItemOpen(item: DrawerItem) {
+  return openItems[item.value] === true;
 }
+
+function toggleItem(item: DrawerItem) {
+  openItems[item.value] = !openItems[item.value];
+}
+
+function close() {
+  emit("update:modelValue", false);
+}
+function select(item: DrawerItem) {
+  if (item.disabled) return;
+  if (item.children?.length) toggleItem(item);
+  emit("select", item.value);
+  if (props.modal && !item.children?.length) close();
+}
+
+function onChildSelect(item: DrawerItem) {
+  if (item.disabled) return;
+  emit("select", item.value);
+  if (props.modal && !item.children?.length) close();
+}
+
+function onChildToggle(item: DrawerItem) {
+  openItems[item.value] = !openItems[item.value];
+}
+
+function subEnter(el: Element, done: () => void) {
+  const e = el as HTMLElement
+  e.style.overflow = 'hidden'
+  const h = e.scrollHeight
+  e.animate(
+    [{ height: '0px' }, { height: h + 'px' }],
+    { duration: 250, easing: 'cubic-bezier(0.2, 0, 0, 1)' },
+  ).onfinish = () => { e.style.overflow = ''; done() }
+}
+function subLeave(el: Element, done: () => void) {
+  const e = el as HTMLElement
+  e.style.overflow = 'hidden'
+  const h = e.scrollHeight
+  e.animate(
+    [{ height: h + 'px' }, { height: '0px' }],
+    { duration: 200, easing: 'cubic-bezier(0.4, 0, 1, 1)' },
+  ).onfinish = done
+}
+
+const collapsedRef = computed(() => props.collapsed ?? false)
+provide("nd-open-items", openItems);
+provide("nd-toggle-item", onChildToggle);
+provide("nd-select-item", onChildSelect);
+provide("nd-collapsed", collapsedRef);
+
+defineExpose({ openItems })
 
 function itemTag(item: DrawerItem) {
-  return item.to && !item.disabled ? 'RouterLink' : 'button'
+  return item.to && !item.disabled ? "RouterLink" : "button";
 }
 
-
-watch(() => props.modelValue, (open) => {
-  if (props.modal) {
-    document.body.style.overflow = open ? 'hidden' : ''
-  }
-})
+watch(
+  () => props.modelValue,
+  (open) => {
+    if (props.modal) {
+      document.body.style.overflow = open ? "hidden" : "";
+    }
+  },
+);
 </script>
 
 <template>
@@ -70,12 +128,16 @@ watch(() => props.modelValue, (open) => {
       <div v-if="modelValue" class="fixed inset-0 z-100 flex">
         <div class="nd-scrim absolute inset-0 bg-black/40" @click="close" />
 
-        <nav class="nd-panel relative flex h-full w-72 max-w-[85vw] flex-col bg-surface-container shadow-elevation-3">
+        <nav
+          class="nd-panel relative flex h-full w-72 max-w-[85vw] flex-col bg-surface-container shadow-elevation-3"
+        >
           <div v-if="$slots.header" class="shrink-0">
             <slot name="header" />
           </div>
           <div v-else-if="title" class="shrink-0 px-5 pt-6 pb-2">
-            <h2 class="text-title-small font-medium text-on-surface-variant">{{ title }}</h2>
+            <h2 class="text-title-small font-medium text-on-surface-variant">
+              {{ title }}
+            </h2>
           </div>
 
           <div class="flex-1 overflow-y-auto px-3 py-2">
@@ -88,48 +150,88 @@ watch(() => props.modelValue, (open) => {
                 class="mt-1 flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-on-surface-variant transition-colors hover:bg-on-surface/8"
                 @click="toggleSection(section, si)"
               >
-                <MIcon v-if="section.icon" :name="section.icon" :size="24" class="shrink-0" />
-                <span class="flex-1 text-left text-title-small font-medium">{{ section.title }}</span>
                 <MIcon
-                  :name="isSectionOpen(section, si) ? 'expand_less' : 'expand_more'"
+                  v-if="section.icon"
+                  :name="section.icon"
+                  :size="24"
+                  class="shrink-0"
+                />
+                <span class="flex-1 text-left text-title-small font-medium">{{
+                  section.title
+                }}</span>
+                <MIcon
+                  :name="
+                    isSectionOpen(section, si) ? 'expand_less' : 'expand_more'
+                  "
                   :size="18"
                   class="shrink-0"
                 />
               </button>
-              <p v-else-if="section.title" class="px-4 pt-4 pb-2 text-title-small font-medium text-on-surface-variant">
+              <p
+                v-else-if="section.title"
+                class="px-4 pt-4 pb-2 text-title-small font-medium text-on-surface-variant"
+              >
                 {{ section.title }}
               </p>
 
               <Transition name="nd-section">
-                <div v-if="!section.collapsible || isSectionOpen(section, si)" class="nd-section-grid">
+                <div
+                  v-if="!section.collapsible || isSectionOpen(section, si)"
+                  class="nd-section-grid"
+                >
                   <div class="nd-section-body">
-                    <component
-                      :is="itemTag(item)"
-                      v-for="item in section.items"
-                      :key="item.value"
-                      :to="item.to && !item.disabled ? item.to : undefined"
-                      :type="item.to ? undefined : 'button'"
-                      class="flex w-full items-center gap-3 rounded-full py-2.5 text-left transition-colors focus-visible:outline-none"
-                      :class="[
-                        section.collapsible ? 'pl-8 pr-3' : 'px-4',
-                        item.disabled
-                          ? 'cursor-not-allowed opacity-[0.38]'
-                          : item.value === selected
-                            ? 'bg-secondary-container text-on-secondary-container'
-                            : 'cursor-pointer text-on-surface-variant hover:bg-on-surface/8',
-                      ]"
-                      :disabled="item.disabled && !item.to"
-                      @click="select(item)"
-                    >
-                      <MIcon v-if="item.icon" :name="item.icon" :size="24" />
-                      <span class="flex-1 text-label-large font-medium">{{ item.label }}</span>
-                      <span
-                        v-if="item.badge != null"
-                        class="text-label-medium text-on-surface-variant"
+                    <template v-for="item in section.items" :key="item.value">
+                      <component
+                        :is="itemTag(item)"
+                        :to="item.to && !item.disabled ? item.to : undefined"
+                        :type="item.to ? undefined : 'button'"
+                        class="flex w-full items-center gap-3 rounded-full py-2.5 text-left transition-colors focus-visible:outline-none"
+                        :class="[
+                          section.collapsible ? 'pl-8 pr-3' : 'px-4',
+                          item.disabled
+                            ? 'cursor-not-allowed opacity-[0.38]'
+                            : item.value === selected
+                              ? 'bg-secondary-container text-on-secondary-container'
+                              : 'cursor-pointer text-on-surface-variant hover:bg-on-surface/8',
+                        ]"
+                        :disabled="item.disabled && !item.to"
+                        @click="select(item)"
                       >
-                        {{ item.badge }}
-                      </span>
-                    </component>
+                        <MIcon v-if="item.icon" :name="item.icon" :size="item.iconSize ?? 24" />
+                        <span class="flex-1 font-medium" :class="item.labelClass ?? 'text-label-large'">{{
+                          item.label
+                        }}</span>
+                        <MIcon
+                          v-if="item.children?.length"
+                          :name="
+                            isItemOpen(item) ? 'expand_less' : 'expand_more'
+                          "
+                          :size="18"
+                          class="shrink-0 text-on-surface-variant"
+                        />
+                        <span
+                          v-else-if="item.badge != null"
+                          class="text-label-medium text-on-surface-variant"
+                        >
+                          {{ item.badge }}
+                        </span>
+                      </component>
+                      <Transition
+                        name="nd-sub"
+                        :css="false"
+                        @enter="subEnter"
+                        @leave="subLeave"
+                      >
+                        <div
+                          v-if="item.children?.length && isItemOpen(item)"
+                        >
+                          <MDrawerItemList
+                            :items="item.children"
+                            :selected="selected"
+                          />
+                        </div>
+                      </Transition>
+                    </template>
                   </div>
                 </div>
               </Transition>
@@ -145,7 +247,11 @@ watch(() => props.modelValue, (open) => {
     <nav
       class="nd-inline flex h-full shrink-0 flex-col border-r border-outline-variant bg-surface"
       :class="[
-        !modelValue ? 'nd-hidden w-0 border-r-0' : collapsed ? 'nd-collapsed w-[72px]' : 'w-72',
+        !modelValue
+          ? 'nd-hidden w-0 border-r-0'
+          : collapsed
+            ? 'nd-collapsed w-[72px]'
+            : 'w-72',
       ]"
     >
       <div v-if="$slots.header" class="shrink-0">
@@ -153,11 +259,17 @@ watch(() => props.modelValue, (open) => {
       </div>
       <div v-else-if="title" class="nd-collapse-h shrink-0 overflow-hidden">
         <div class="px-5 pt-6 pb-2">
-          <h2 class="whitespace-nowrap text-title-small font-medium text-on-surface-variant">{{ title }}</h2>
+          <h2
+            class="whitespace-nowrap text-title-small font-medium text-on-surface-variant"
+          >
+            {{ title }}
+          </h2>
         </div>
       </div>
 
-      <div class="flex flex-col gap-1 overflow-y-auto overflow-x-hidden px-3 py-2">
+      <div
+        class="flex flex-col gap-1 overflow-y-auto overflow-x-hidden px-3 py-2"
+      >
         <template v-for="(section, si) in sections" :key="si">
           <div v-if="si > 0" class="my-1 border-t border-outline-variant" />
 
@@ -169,8 +281,16 @@ watch(() => props.modelValue, (open) => {
             :title="collapsed ? section.title : undefined"
             @click="toggleSection(section, si)"
           >
-            <MIcon v-if="section.icon" :name="section.icon" :size="24" class="shrink-0" />
-            <span class="nd-label min-w-0 flex-1 text-left text-title-small font-medium">{{ section.title }}</span>
+            <MIcon
+              v-if="section.icon"
+              :name="section.icon"
+              :size="24"
+              class="shrink-0"
+            />
+            <span
+              class="nd-label min-w-0 flex-1 text-left text-title-small font-medium"
+              >{{ section.title }}</span
+            >
             <MIcon
               :name="isSectionOpen(section, si) ? 'expand_less' : 'expand_more'"
               :size="18"
@@ -180,46 +300,82 @@ watch(() => props.modelValue, (open) => {
 
           <!-- Static section title -->
           <div v-else-if="section.title" class="nd-collapse-h overflow-hidden">
-            <p class="whitespace-nowrap px-4 pt-4 pb-2 text-title-small font-medium text-on-surface-variant">
+            <p
+              class="whitespace-nowrap px-4 pt-4 pb-2 text-title-small font-medium text-on-surface-variant"
+            >
               {{ section.title }}
             </p>
           </div>
 
           <Transition name="nd-section">
-            <div v-if="!section.collapsible || isSectionOpen(section, si)" class="nd-section-grid">
+            <div
+              v-if="!section.collapsible || isSectionOpen(section, si)"
+              class="nd-section-grid"
+            >
               <div class="nd-section-body">
-                <component
-                  :is="itemTag(item)"
-                  v-for="item in section.items"
-                  :key="item.value"
-                  :to="item.to && !item.disabled ? item.to : undefined"
-                  :type="item.to ? undefined : 'button'"
-                  :title="collapsed ? item.label : undefined"
-                  class="flex w-full shrink-0 items-center gap-3 overflow-hidden whitespace-nowrap rounded-full py-2.5 text-left focus-visible:outline-none"
-                  :class="[
-                    section.collapsible && !collapsed ? 'pl-8 pr-3' : 'px-3',
-                    item.disabled
-                      ? 'cursor-not-allowed opacity-[0.38]'
-                      : item.value === selected
-                        ? 'bg-secondary-container text-on-secondary-container'
-                        : 'cursor-pointer text-on-surface-variant hover:bg-on-surface/8',
-                  ]"
-                  :disabled="item.disabled && !item.to"
-                  @click="select(item)"
-                >
-                  <MIcon v-if="item.icon" :name="item.icon" :size="24" class="shrink-0" />
-                  <span class="nd-label min-w-0 flex-1 text-label-large font-medium">{{ item.label }}</span>
-                  <span v-if="item.badge != null" class="nd-label text-label-medium text-on-surface-variant">
-                    {{ item.badge }}
-                  </span>
-                </component>
+                <template v-for="item in section.items" :key="item.value">
+                  <component
+                    :is="itemTag(item)"
+                    :to="item.to && !item.disabled ? item.to : undefined"
+                    :type="item.to ? undefined : 'button'"
+                    :title="collapsed ? item.label : undefined"
+                    class="flex w-full shrink-0 items-center gap-3 overflow-hidden whitespace-nowrap rounded-full py-2.5 text-left focus-visible:outline-none"
+                    :class="[
+                      section.collapsible && !collapsed ? 'pl-8 pr-3' : 'px-3',
+                      item.disabled
+                        ? 'cursor-not-allowed opacity-[0.38]'
+                        : item.value === selected
+                          ? 'bg-secondary-container text-on-secondary-container'
+                          : 'cursor-pointer text-on-surface-variant hover:bg-on-surface/8',
+                    ]"
+                    :disabled="item.disabled && !item.to"
+                    @click="select(item)"
+                  >
+                    <MIcon
+                      v-if="item.icon"
+                      :name="item.icon"
+                      :size="item.iconSize ?? 24"
+                      class="shrink-0"
+                    />
+                    <span
+                      class="nd-label min-w-0 flex-1 font-medium"
+                      :class="item.labelClass ?? 'text-label-large'"
+                      >{{ item.label }}</span
+                    >
+                    <MIcon
+                      v-if="item.children?.length"
+                      :name="isItemOpen(item) ? 'expand_less' : 'expand_more'"
+                      :size="18"
+                      class="nd-label shrink-0 text-on-surface-variant"
+                    />
+                    <span
+                      v-else-if="item.badge != null"
+                      class="nd-label text-label-medium text-on-surface-variant"
+                    >
+                      {{ item.badge }}
+                    </span>
+                  </component>
+                  <Transition
+                    :css="false"
+                    @enter="subEnter"
+                    @leave="subLeave"
+                  >
+                    <div
+                      v-if="item.children?.length && isItemOpen(item)"
+                    >
+                      <MDrawerItemList
+                        :items="item.children"
+                        :selected="selected"
+                      />
+                    </div>
+                  </Transition>
+                </template>
               </div>
             </div>
           </Transition>
         </template>
       </div>
     </nav>
-
   </template>
 </template>
 
@@ -296,7 +452,8 @@ watch(() => props.modelValue, (open) => {
 .nd-label {
   transition: opacity 200ms 80ms cubic-bezier(0.2, 0, 0, 1);
 }
-.nd-inline.nd-collapsed .nd-label {
+.nd-inline.nd-collapsed .nd-label,
+.nd-inline.nd-collapsed :deep(.nd-label) {
   opacity: 0;
   transition: opacity 100ms cubic-bezier(0.2, 0, 0, 1);
 }
@@ -310,7 +467,9 @@ watch(() => props.modelValue, (open) => {
   max-height: 0;
 }
 
-.nd-inline .nd-section-body > * {
+.nd-inline .nd-section-body > *,
+.nd-inline :deep(.nd-section-body) > * {
   transition: padding 300ms cubic-bezier(0.2, 0, 0, 1);
 }
+
 </style>
