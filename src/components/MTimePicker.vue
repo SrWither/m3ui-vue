@@ -2,10 +2,12 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import MIcon from './MIcon.vue'
 import { useFieldBg } from '../composables/useFieldBg'
+import { useLocale } from '../composables/useLocale'
 
 const props = withDefaults(defineProps<{
   modelValue: string | null
   label?: string
+  placeholder?: string
   disabled?: boolean
   error?: string
   hint?: string
@@ -13,6 +15,8 @@ const props = withDefaults(defineProps<{
   use24h?: boolean
   fieldBg?: string
 }>(), { minuteStep: 5, use24h: true })
+
+const locale = useLocale()
 
 const emit = defineEmits<{ 'update:modelValue': [string | null] }>()
 
@@ -129,7 +133,7 @@ onUnmounted(() => {
       >
         <MIcon name="schedule" :size="20" class="shrink-0 text-on-surface-variant" />
         <span v-if="displayValue" class="flex-1 font-mono text-on-surface">{{ displayValue }}</span>
-        <span v-else class="flex-1 text-on-surface-variant">{{ label || 'Seleccionar hora' }}</span>
+        <span v-else class="flex-1 text-on-surface-variant">{{ label || placeholder || locale.selectTime }}</span>
         <MIcon
           v-if="modelValue"
           name="close"

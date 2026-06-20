@@ -3,6 +3,9 @@ import { ref, computed } from 'vue'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
 import MSpinner from './MSpinner.vue'
+import { useLocale } from '../composables/useLocale'
+
+const locale = useLocale()
 
 export interface UploadFile {
   file: File
@@ -18,8 +21,15 @@ const props = withDefaults(
     multiple?: boolean
     maxSize?: number
     disabled?: boolean
+    dropText?: string
+    selectText?: string
+    maxSizePrefix?: string
+    removeLabel?: string
   }>(),
-  { multiple: false, disabled: false },
+  {
+    multiple: false,
+    disabled: false,
+  },
 )
 
 const emit = defineEmits<{
@@ -128,14 +138,16 @@ function openPicker() {
         class="text-on-surface-variant"
       />
       <div class="text-center">
-        <p class="text-body-large text-on-surface">
-          Arrastra archivos aquí o <span class="font-medium text-primary">selecciona</span>
-        </p>
-        <p v-if="accept || maxSize" class="mt-1 text-body-small text-on-surface-variant">
-          <span v-if="accept">{{ accept }}</span>
-          <span v-if="accept && maxSize"> · </span>
-          <span v-if="maxSize">Máx. {{ formatSize(maxSize) }}</span>
-        </p>
+        <slot name="dropzone">
+          <p class="text-body-large text-on-surface">
+            {{ dropText ?? locale.dropText }} <span class="font-medium text-primary">{{ selectText ?? locale.selectText }}</span>
+          </p>
+          <p v-if="accept || maxSize" class="mt-1 text-body-small text-on-surface-variant">
+            <span v-if="accept">{{ accept }}</span>
+            <span v-if="accept && maxSize"> · </span>
+            <span v-if="maxSize">{{ maxSizePrefix ?? locale.maxSizePrefix }} {{ formatSize(maxSize) }}</span>
+          </p>
+        </slot>
       </div>
     </div>
 
@@ -187,7 +199,7 @@ function openPicker() {
         <MIcon v-else-if="entry.status === 'done'" name="check_circle" :size="20" class="text-success" />
         <MIcon v-else-if="entry.status === 'error'" name="error" :size="20" class="text-error" />
 
-        <MIconButton icon="close" label="Eliminar" :size="32" @click="removeFile(entry)" />
+        <MIconButton icon="close" :label="removeLabel ?? locale.remove" :size="32" @click="removeFile(entry)" />
       </div>
     </TransitionGroup>
   </div>

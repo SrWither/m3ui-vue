@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
 import { useFieldBg } from '../composables/useFieldBg'
+import { useLocale } from '../composables/useLocale'
 
 const props = withDefaults(defineProps<{
   modelValue: string | null
@@ -15,7 +16,13 @@ const props = withDefaults(defineProps<{
   hint?: string
   locale?: string
   fieldBg?: string
-}>(), { locale: 'es-ES' })
+  prevMonthLabel?: string
+  nextMonthLabel?: string
+}>(), {
+  locale: 'es-ES',
+})
+
+const localeStrings = useLocale()
 
 const emit = defineEmits<{ 'update:modelValue': [string | null] }>()
 
@@ -173,7 +180,7 @@ onUnmounted(() => {
       >
         <MIcon name="calendar_today" :size="20" class="shrink-0 text-on-surface-variant" />
         <span v-if="displayValue" class="flex-1 text-on-surface">{{ displayValue }}</span>
-        <span v-else class="flex-1 text-on-surface-variant">{{ placeholder || label || 'Seleccionar fecha' }}</span>
+        <span v-else class="flex-1 text-on-surface-variant">{{ placeholder || label || localeStrings.selectDate }}</span>
         <MIcon
           v-if="modelValue"
           name="close"
@@ -210,9 +217,9 @@ onUnmounted(() => {
         >
           <!-- Header -->
           <div class="mb-3 flex items-center justify-between">
-            <MIconButton icon="chevron_left" label="Mes anterior" :size="36" @click="prevMonth" />
+            <MIconButton icon="chevron_left" :label="prevMonthLabel ?? localeStrings.previousMonth" :size="36" @click="prevMonth" />
             <span class="text-title-small font-medium capitalize text-on-surface">{{ monthLabel }}</span>
-            <MIconButton icon="chevron_right" label="Mes siguiente" :size="36" @click="nextMonth" />
+            <MIconButton icon="chevron_right" :label="nextMonthLabel ?? localeStrings.nextMonth" :size="36" @click="nextMonth" />
           </div>
 
           <!-- Weekday headers -->

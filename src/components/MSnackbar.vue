@@ -2,6 +2,13 @@
 import { computed } from "vue";
 import { useToast } from "../composables/useToast";
 import MIcon from "./MIcon.vue";
+import { useLocale } from '../composables/useLocale';
+
+const props = defineProps<{
+  closeAriaLabel?: string
+}>()
+
+const locale = useLocale()
 
 const { toasts, position, dismiss } = useToast();
 
@@ -117,7 +124,7 @@ const getVariantStyle = (variant: string): VariantStyle =>
               type="button"
               class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full transition-colors"
               :class="t.color ? 'text-white/60 hover:bg-white/15' : getVariantStyle(t.variant).close"
-              aria-label="Cerrar"
+              :aria-label="closeAriaLabel ?? locale.close"
               @click="dismiss(t.id)"
             >
               <MIcon name="close" :size="18" />

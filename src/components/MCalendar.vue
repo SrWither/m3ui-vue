@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
+import { useLocale } from '../composables/useLocale'
 
 export interface CalendarEvent {
   id: string | number
@@ -14,7 +15,15 @@ export interface CalendarEvent {
 const props = withDefaults(defineProps<{
   events?: CalendarEvent[]
   locale?: string
-}>(), { events: () => [], locale: 'es-ES' })
+  todayLabel?: string
+  prevMonthLabel?: string
+  nextMonthLabel?: string
+}>(), {
+  events: () => [],
+  locale: 'es-ES',
+})
+
+const localeStrings = useLocale()
 
 const emit = defineEmits<{
   dateClick: [string]
@@ -96,8 +105,8 @@ const eventColor: Record<string, string> = {
     <!-- Header -->
     <div class="flex items-center justify-between border-b border-outline-variant bg-surface-container px-4 py-3">
       <div class="flex items-center gap-1">
-        <MIconButton icon="chevron_left" label="Mes anterior" :size="36" @click="prevMonth" />
-        <MIconButton icon="chevron_right" label="Mes siguiente" :size="36" @click="nextMonth" />
+        <MIconButton icon="chevron_left" :label="prevMonthLabel ?? localeStrings.previousMonth" :size="36" @click="prevMonth" />
+        <MIconButton icon="chevron_right" :label="nextMonthLabel ?? localeStrings.nextMonth" :size="36" @click="nextMonth" />
       </div>
       <h3 class="text-title-medium font-medium capitalize text-on-surface">{{ monthLabel }}</h3>
       <button
@@ -105,7 +114,7 @@ const eventColor: Record<string, string> = {
         class="cursor-pointer rounded-full border border-outline px-3 py-1 text-label-medium text-on-surface transition-colors hover:bg-on-surface/8"
         @click="goToday"
       >
-        Hoy
+        {{ todayLabel ?? localeStrings.today }}
       </button>
     </div>
 
@@ -164,7 +173,7 @@ const eventColor: Record<string, string> = {
             v-if="day.events.length > 2"
             class="px-1 text-label-small text-on-surface-variant"
           >
-            +{{ day.events.length - 2 }} más
+            +{{ day.events.length - 2 }} {{ localeStrings.more }}
           </span>
         </div>
       </div>

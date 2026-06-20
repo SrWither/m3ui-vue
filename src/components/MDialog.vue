@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { watch } from 'vue'
 import MIconButton from './MIconButton.vue'
+import { useLocale } from '../composables/useLocale'
 
 const props = withDefaults(
   defineProps<{
@@ -8,12 +9,15 @@ const props = withDefaults(
     title?: string
     maxWidth?: string
     persistent?: boolean
+    closeLabel?: string
   }>(),
   {
     maxWidth: 'max-w-md',
     persistent: false,
   },
 )
+
+const locale = useLocale()
 
 const emit = defineEmits<{ 'update:modelValue': [boolean] }>()
 
@@ -56,7 +60,7 @@ watch(
             <h2 class="text-headline-small text-on-surface">
               <slot name="title">{{ title }}</slot>
             </h2>
-            <MIconButton v-if="!persistent" icon="close" label="Cerrar" @click="close" />
+            <MIconButton v-if="!persistent" icon="close" :label="closeLabel ?? locale.close" @click="close" />
           </div>
           <div class="overflow-y-auto px-6 py-2 text-body-medium text-on-surface-variant">
             <slot />

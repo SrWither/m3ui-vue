@@ -2,6 +2,9 @@
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import MIcon from './MIcon.vue'
 import MSpinner from './MSpinner.vue'
+import { useLocale } from '../composables/useLocale'
+
+const locale = useLocale()
 
 export interface SpotlightResult {
   id: string | number
@@ -20,12 +23,13 @@ const props = withDefaults(
     noResultsText?: string
     hotkey?: string
     debounce?: number
+    navigateHint?: string
+    openHint?: string
+    closeHint?: string
   }>(),
   {
     results: () => [],
-    placeholder: 'Buscar...',
     loading: false,
-    noResultsText: 'No se encontraron resultados',
     hotkey: '/',
     debounce: 0,
   },
@@ -148,7 +152,7 @@ onBeforeUnmount(() => {
               ref="inputRef"
               v-model="query"
               type="text"
-              :placeholder="placeholder"
+              :placeholder="placeholder ?? locale.search"
               class="h-14 flex-1 bg-transparent text-title-medium text-on-surface outline-none placeholder:text-on-surface-variant/50"
               @keydown="onKeydown"
             />
@@ -198,20 +202,20 @@ onBeforeUnmount(() => {
             </template>
             <div v-else-if="!loading" class="flex flex-col items-center gap-2 py-10">
               <MIcon name="search_off" :size="40" class="text-on-surface-variant/40" />
-              <p class="text-body-medium text-on-surface-variant">{{ noResultsText }}</p>
+              <p class="text-body-medium text-on-surface-variant">{{ noResultsText ?? locale.noResults }}</p>
             </div>
           </div>
 
           <!-- Hints -->
           <div class="flex items-center gap-4 border-t border-outline-variant px-5 py-2">
             <span class="flex items-center gap-1 text-label-small text-on-surface-variant">
-              <kbd class="rounded bg-surface-container px-1 py-0.5">↑↓</kbd> navegar
+              <kbd class="rounded bg-surface-container px-1 py-0.5">↑↓</kbd> {{ navigateHint ?? locale.navigateHint }}
             </span>
             <span class="flex items-center gap-1 text-label-small text-on-surface-variant">
-              <kbd class="rounded bg-surface-container px-1 py-0.5">↵</kbd> abrir
+              <kbd class="rounded bg-surface-container px-1 py-0.5">↵</kbd> {{ openHint ?? locale.openHint }}
             </span>
             <span class="flex items-center gap-1 text-label-small text-on-surface-variant">
-              <kbd class="rounded bg-surface-container px-1 py-0.5">esc</kbd> cerrar
+              <kbd class="rounded bg-surface-container px-1 py-0.5">esc</kbd> {{ closeHint ?? locale.closeHint }}
             </span>
           </div>
         </div>

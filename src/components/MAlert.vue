@@ -1,17 +1,21 @@
 <script setup lang="ts">
 import MIcon from './MIcon.vue'
+import { useLocale } from '../composables/useLocale'
 
 const props = withDefaults(
   defineProps<{
     type?: 'info' | 'success' | 'warning' | 'error'
     title?: string
     closeable?: boolean
+    closeAriaLabel?: string
   }>(),
   {
     type: 'info',
     closeable: false,
   },
 )
+
+const locale = useLocale()
 
 const emit = defineEmits<{ close: [] }>()
 
@@ -60,7 +64,7 @@ const config = {
       v-if="closeable"
       type="button"
       class="-mr-1 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-on-surface/8"
-      aria-label="Cerrar"
+      :aria-label="closeAriaLabel ?? locale.close"
       @click="emit('close')"
     >
       <MIcon name="close" :size="18" />

@@ -6,6 +6,37 @@ import MMenuItem from './MMenuItem.vue'
 import MDialog from './MDialog.vue'
 import MTextField from './MTextField.vue'
 import MButton from './MButton.vue'
+import { useLocale } from '../composables/useLocale'
+
+export interface RichTextEditorLabels {
+  bold?: string
+  italic?: string
+  underline?: string
+  strikethrough?: string
+  highlight?: string
+  bulletList?: string
+  orderedList?: string
+  blockquote?: string
+  code?: string
+  alignLeft?: string
+  alignCenter?: string
+  alignRight?: string
+  undo?: string
+  redo?: string
+  link?: string
+  image?: string
+  paragraph?: string
+  heading1?: string
+  heading2?: string
+  heading3?: string
+  insertLink?: string
+  insertImage?: string
+  imageUrlLabel?: string
+  cancel?: string
+  insert?: string
+}
+
+const locale = useLocale()
 
 const props = withDefaults(
   defineProps<{
@@ -13,9 +44,39 @@ const props = withDefaults(
     placeholder?: string
     disabled?: boolean
     minHeight?: string
+    labels?: RichTextEditorLabels
   }>(),
-  { placeholder: 'Escribe aquí...', disabled: false, minHeight: '200px' },
+  { disabled: false, minHeight: '200px' },
 )
+
+const l = computed<Required<RichTextEditorLabels>>(() => ({
+  bold: locale.bold,
+  italic: locale.italic,
+  underline: locale.underline,
+  strikethrough: locale.strikethrough,
+  highlight: locale.highlight,
+  bulletList: locale.bulletList,
+  orderedList: locale.orderedList,
+  blockquote: locale.blockquote,
+  code: locale.code,
+  alignLeft: locale.alignLeft,
+  alignCenter: locale.alignCenter,
+  alignRight: locale.alignRight,
+  undo: locale.undo,
+  redo: locale.redo,
+  link: locale.link,
+  image: locale.image,
+  paragraph: locale.paragraph,
+  heading1: locale.heading1,
+  heading2: locale.heading2,
+  heading3: locale.heading3,
+  insertLink: locale.insertLink,
+  insertImage: locale.insertImage,
+  imageUrlLabel: locale.imageUrlLabel,
+  cancel: locale.cancel,
+  insert: locale.insert,
+  ...props.labels,
+}))
 
 const emit = defineEmits<{ 'update:modelValue': [string] }>()
 
@@ -68,7 +129,7 @@ onMounted(async () => {
       Link.configure({ openOnClick: false }),
       Image,
       Highlight.configure({ multicolor: true }),
-      Placeholder.configure({ placeholder: props.placeholder }),
+      Placeholder.configure({ placeholder: props.placeholder ?? 'Start writing...' }),
       TextStyle,
       Color,
     ],
@@ -79,26 +140,26 @@ onMounted(async () => {
 
   toolGroups.value = [
     [
-      { icon: 'format_bold', label: 'Negrita', action: () => editor.chain().focus().toggleBold().run(), active: () => !!editor.isActive('bold') },
-      { icon: 'format_italic', label: 'Cursiva', action: () => editor.chain().focus().toggleItalic().run(), active: () => !!editor.isActive('italic') },
-      { icon: 'format_underlined', label: 'Subrayado', action: () => editor.chain().focus().toggleUnderline().run(), active: () => !!editor.isActive('underline') },
-      { icon: 'format_strikethrough', label: 'Tachado', action: () => editor.chain().focus().toggleStrike().run(), active: () => !!editor.isActive('strike') },
-      { icon: 'ink_highlighter', label: 'Resaltar', action: () => editor.chain().focus().toggleHighlight().run(), active: () => !!editor.isActive('highlight') },
+      { icon: 'format_bold', label: l.value.bold, action: () => editor.chain().focus().toggleBold().run(), active: () => !!editor.isActive('bold') },
+      { icon: 'format_italic', label: l.value.italic, action: () => editor.chain().focus().toggleItalic().run(), active: () => !!editor.isActive('italic') },
+      { icon: 'format_underlined', label: l.value.underline, action: () => editor.chain().focus().toggleUnderline().run(), active: () => !!editor.isActive('underline') },
+      { icon: 'format_strikethrough', label: l.value.strikethrough, action: () => editor.chain().focus().toggleStrike().run(), active: () => !!editor.isActive('strike') },
+      { icon: 'ink_highlighter', label: l.value.highlight, action: () => editor.chain().focus().toggleHighlight().run(), active: () => !!editor.isActive('highlight') },
     ],
     [
-      { icon: 'format_list_bulleted', label: 'Lista', action: () => editor.chain().focus().toggleBulletList().run(), active: () => !!editor.isActive('bulletList') },
-      { icon: 'format_list_numbered', label: 'Lista numerada', action: () => editor.chain().focus().toggleOrderedList().run(), active: () => !!editor.isActive('orderedList') },
-      { icon: 'format_quote', label: 'Cita', action: () => editor.chain().focus().toggleBlockquote().run(), active: () => !!editor.isActive('blockquote') },
-      { icon: 'code', label: 'Código', action: () => editor.chain().focus().toggleCode().run(), active: () => !!editor.isActive('code') },
+      { icon: 'format_list_bulleted', label: l.value.bulletList, action: () => editor.chain().focus().toggleBulletList().run(), active: () => !!editor.isActive('bulletList') },
+      { icon: 'format_list_numbered', label: l.value.orderedList, action: () => editor.chain().focus().toggleOrderedList().run(), active: () => !!editor.isActive('orderedList') },
+      { icon: 'format_quote', label: l.value.blockquote, action: () => editor.chain().focus().toggleBlockquote().run(), active: () => !!editor.isActive('blockquote') },
+      { icon: 'code', label: l.value.code, action: () => editor.chain().focus().toggleCode().run(), active: () => !!editor.isActive('code') },
     ],
     [
-      { icon: 'format_align_left', label: 'Izquierda', action: () => editor.chain().focus().setTextAlign('left').run(), active: () => !!editor.isActive({ textAlign: 'left' }) },
-      { icon: 'format_align_center', label: 'Centro', action: () => editor.chain().focus().setTextAlign('center').run(), active: () => !!editor.isActive({ textAlign: 'center' }) },
-      { icon: 'format_align_right', label: 'Derecha', action: () => editor.chain().focus().setTextAlign('right').run(), active: () => !!editor.isActive({ textAlign: 'right' }) },
+      { icon: 'format_align_left', label: l.value.alignLeft, action: () => editor.chain().focus().setTextAlign('left').run(), active: () => !!editor.isActive({ textAlign: 'left' }) },
+      { icon: 'format_align_center', label: l.value.alignCenter, action: () => editor.chain().focus().setTextAlign('center').run(), active: () => !!editor.isActive({ textAlign: 'center' }) },
+      { icon: 'format_align_right', label: l.value.alignRight, action: () => editor.chain().focus().setTextAlign('right').run(), active: () => !!editor.isActive({ textAlign: 'right' }) },
     ],
     [
-      { icon: 'undo', label: 'Deshacer', action: () => editor.chain().focus().undo().run() },
-      { icon: 'redo', label: 'Rehacer', action: () => editor.chain().focus().redo().run() },
+      { icon: 'undo', label: l.value.undo, action: () => editor.chain().focus().undo().run() },
+      { icon: 'redo', label: l.value.redo, action: () => editor.chain().focus().redo().run() },
     ],
   ]
 
@@ -120,11 +181,11 @@ const imageUrl = ref('')
 
 const headingLabel = computed(() => {
   const e = editorRef.value
-  if (!e) return 'Párrafo'
-  if (e.isActive('heading', { level: 1 })) return 'Título 1'
-  if (e.isActive('heading', { level: 2 })) return 'Título 2'
-  if (e.isActive('heading', { level: 3 })) return 'Título 3'
-  return 'Párrafo'
+  if (!e) return l.value.paragraph
+  if (e.isActive('heading', { level: 1 })) return l.value.heading1
+  if (e.isActive('heading', { level: 2 })) return l.value.heading2
+  if (e.isActive('heading', { level: 3 })) return l.value.heading3
+  return l.value.paragraph
 })
 
 function setHeading(level: 0 | 1 | 2 | 3) {
@@ -171,10 +232,10 @@ function confirmImage() {
             <MIcon name="arrow_drop_down" :size="20" />
           </button>
         </template>
-        <MMenuItem @click="setHeading(0)">Párrafo</MMenuItem>
-        <MMenuItem @click="setHeading(1)">Título 1</MMenuItem>
-        <MMenuItem @click="setHeading(2)">Título 2</MMenuItem>
-        <MMenuItem @click="setHeading(3)">Título 3</MMenuItem>
+        <MMenuItem @click="setHeading(0)">{{ l.paragraph }}</MMenuItem>
+        <MMenuItem @click="setHeading(1)">{{ l.heading1 }}</MMenuItem>
+        <MMenuItem @click="setHeading(2)">{{ l.heading2 }}</MMenuItem>
+        <MMenuItem @click="setHeading(3)">{{ l.heading3 }}</MMenuItem>
       </MMenu>
 
       <div class="mx-1 h-6 w-px bg-outline-variant" />
@@ -198,7 +259,7 @@ function confirmImage() {
 
       <button
         type="button"
-        title="Enlace"
+        :title="l.link"
         class="flex h-8 w-8 cursor-pointer items-center justify-center rounded text-on-surface-variant transition-colors hover:bg-on-surface/8"
         @click="openLinkDialog"
       >
@@ -206,7 +267,7 @@ function confirmImage() {
       </button>
       <button
         type="button"
-        title="Imagen"
+        :title="l.image"
         class="flex h-8 w-8 cursor-pointer items-center justify-center rounded text-on-surface-variant transition-colors hover:bg-on-surface/8"
         @click="openImageDialog"
       >
@@ -222,20 +283,20 @@ function confirmImage() {
     />
 
     <!-- Link dialog -->
-    <MDialog v-model="linkDialogOpen" title="Insertar enlace">
+    <MDialog v-model="linkDialogOpen" :title="l.insertLink">
       <MTextField v-model="linkUrl" label="URL" placeholder=" " @keydown.enter="confirmLink" />
       <template #actions>
-        <MButton variant="text" @click="linkDialogOpen = false">Cancelar</MButton>
-        <MButton @click="confirmLink">Insertar</MButton>
+        <MButton variant="text" @click="linkDialogOpen = false">{{ l.cancel }}</MButton>
+        <MButton @click="confirmLink">{{ l.insert }}</MButton>
       </template>
     </MDialog>
 
     <!-- Image dialog -->
-    <MDialog v-model="imageDialogOpen" title="Insertar imagen">
-      <MTextField v-model="imageUrl" label="URL de la imagen" placeholder=" " @keydown.enter="confirmImage" />
+    <MDialog v-model="imageDialogOpen" :title="l.insertImage">
+      <MTextField v-model="imageUrl" :label="l.imageUrlLabel" placeholder=" " @keydown.enter="confirmImage" />
       <template #actions>
-        <MButton variant="text" @click="imageDialogOpen = false">Cancelar</MButton>
-        <MButton @click="confirmImage">Insertar</MButton>
+        <MButton variant="text" @click="imageDialogOpen = false">{{ l.cancel }}</MButton>
+        <MButton @click="confirmImage">{{ l.insert }}</MButton>
       </template>
     </MDialog>
   </div>

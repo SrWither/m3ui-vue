@@ -3,6 +3,9 @@ import { computed, onMounted, ref, watch } from 'vue'
 import MCheckbox from './MCheckbox.vue'
 import MIcon from './MIcon.vue'
 import MPagination from './MPagination.vue'
+import { useLocale } from '../composables/useLocale'
+
+const locale = useLocale()
 
 export interface TableColumn {
   key: string
@@ -38,10 +41,11 @@ const props = withDefaults(
     serverSide?: boolean
     total?: number
     page?: number
+    searchPlaceholder?: string
+    selectedText?: string
   }>(),
   {
     loading: false,
-    emptyText: 'Sin resultados',
     rowKey: 'id',
     selectable: false,
     modelValue: () => [],
@@ -228,7 +232,7 @@ const hasActions = computed(() => !!slots['row-actions'])
         <input
           v-model="search"
           type="text"
-          placeholder="Buscar..."
+          :placeholder="searchPlaceholder ?? locale.search"
           class="w-full bg-transparent text-body-medium text-on-surface outline-none placeholder:text-on-surface-variant"
         />
         <button
@@ -254,7 +258,7 @@ const hasActions = computed(() => !!slots['row-actions'])
           v-if="selectable && selected.length > 0"
           class="rounded-full bg-primary/12 px-3 py-1 text-label-small font-medium text-primary"
         >
-          {{ selected.length }} seleccionado{{ selected.length !== 1 ? 's' : '' }}
+          {{ selected.length }} {{ selectedText ?? locale.selectedCount }}{{ selected.length !== 1 ? 's' : '' }}
         </span>
       </Transition>
     </div>
@@ -346,7 +350,7 @@ const hasActions = computed(() => !!slots['row-actions'])
               >
                 <slot name="empty">
                   <MIcon name="search_off" :size="36" class="mb-2 text-on-surface-variant opacity-30" />
-                  <p class="text-body-medium text-on-surface-variant">{{ emptyText }}</p>
+                  <p class="text-body-medium text-on-surface-variant">{{ emptyText ?? locale.noResults }}</p>
                 </slot>
               </td>
             </tr>

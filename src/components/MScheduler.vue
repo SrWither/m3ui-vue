@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import MIconButton from './MIconButton.vue'
+import { useLocale } from '../composables/useLocale'
+
+const locale = useLocale()
 
 export interface SchedulerEvent {
   id: string | number
@@ -17,6 +20,11 @@ const props = withDefaults(
     startHour?: number
     endHour?: number
     locale?: string
+    prevLabel?: string
+    nextLabel?: string
+    todayLabel?: string
+    dayViewLabel?: string
+    weekViewLabel?: string
   }>(),
   {
     events: () => [],
@@ -135,14 +143,14 @@ const eventColors: Record<string, string> = {
     <!-- Header -->
     <div class="flex items-center justify-between border-b border-outline-variant bg-surface-container px-4 py-3">
       <div class="flex items-center gap-1">
-        <MIconButton icon="chevron_left" label="Anterior" :size="36" @click="navigate(-1)" />
-        <MIconButton icon="chevron_right" label="Siguiente" :size="36" @click="navigate(1)" />
+        <MIconButton icon="chevron_left" :label="prevLabel ?? locale.previous" :size="36" @click="navigate(-1)" />
+        <MIconButton icon="chevron_right" :label="nextLabel ?? locale.next" :size="36" @click="navigate(1)" />
         <button
           type="button"
           class="ml-2 cursor-pointer rounded-full border border-outline px-3 py-1 text-label-medium text-on-surface transition-colors hover:bg-on-surface/8"
           @click="goToday"
         >
-          Hoy
+          {{ todayLabel ?? locale.today }}
         </button>
       </div>
 
@@ -157,7 +165,7 @@ const eventColors: Record<string, string> = {
           :class="currentView === v ? 'bg-secondary-container text-on-secondary-container shadow-elevation-1' : 'text-on-surface-variant hover:bg-on-surface/8'"
           @click="currentView = v"
         >
-          {{ v === 'day' ? 'Día' : 'Semana' }}
+          {{ v === 'day' ? (dayViewLabel ?? locale.dayView) : (weekViewLabel ?? locale.weekView) }}
         </button>
       </div>
     </div>

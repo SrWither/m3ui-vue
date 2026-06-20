@@ -3,6 +3,9 @@ import { computed, ref, useId, onMounted, onUnmounted, nextTick } from 'vue'
 import MIcon from './MIcon.vue'
 import MCheckbox from './MCheckbox.vue'
 import { useFieldBg } from '../composables/useFieldBg'
+import { useLocale } from '../composables/useLocale'
+
+const locale = useLocale()
 
 export interface MultiSelectOption {
   label: string
@@ -26,6 +29,8 @@ const props = withDefaults(
     searchable?: boolean
     maxChips?: number
     clearable?: boolean
+    searchPlaceholder?: string
+    noResultsText?: string
   }>(),
   {
     modelValue: () => [],
@@ -299,7 +304,7 @@ const labelClasses = computed(() => {
               ref="searchInput"
               v-model="search"
               type="text"
-              placeholder="Buscar..."
+              :placeholder="searchPlaceholder ?? locale.search"
               class="w-full bg-transparent text-body-medium text-on-surface outline-none placeholder:text-on-surface-variant"
             />
           </div>
@@ -319,12 +324,11 @@ const labelClasses = computed(() => {
             />
             <span class="text-body-large text-on-surface">{{ opt.label }}</span>
           </label>
-          <p
-            v-if="filteredOptions.length === 0"
-            class="px-4 py-3 text-center text-body-small text-on-surface-variant"
-          >
-            Sin resultados
-          </p>
+          <slot v-if="filteredOptions.length === 0" name="no-results">
+            <p class="px-4 py-3 text-center text-body-small text-on-surface-variant">
+              {{ noResultsText ?? locale.noResults }}
+            </p>
+          </slot>
         </div>
       </div>
     </Transition>

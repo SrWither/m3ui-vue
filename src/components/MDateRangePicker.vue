@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
 import { useFieldBg } from '../composables/useFieldBg'
+import { useLocale } from '../composables/useLocale'
 
 export interface DateRange {
   start: string | null
@@ -12,6 +13,7 @@ export interface DateRange {
 const props = withDefaults(defineProps<{
   modelValue: DateRange
   label?: string
+  placeholder?: string
   min?: string
   max?: string
   disabled?: boolean
@@ -19,7 +21,15 @@ const props = withDefaults(defineProps<{
   hint?: string
   locale?: string
   fieldBg?: string
-}>(), { locale: 'es-ES' })
+  prevMonthLabel?: string
+  nextMonthLabel?: string
+  pickStartText?: string
+  pickEndText?: string
+}>(), {
+  locale: 'es-ES',
+})
+
+const localeStrings = useLocale()
 
 const emit = defineEmits<{ 'update:modelValue': [DateRange] }>()
 
@@ -184,7 +194,7 @@ onUnmounted(() => {
       >
         <MIcon name="date_range" :size="20" class="shrink-0 text-on-surface-variant" />
         <span v-if="displayValue" class="flex-1 text-on-surface">{{ displayValue }}</span>
-        <span v-else class="flex-1 text-on-surface-variant">{{ label || 'Seleccionar rango' }}</span>
+        <span v-else class="flex-1 text-on-surface-variant">{{ label || placeholder || localeStrings.selectRange }}</span>
         <MIcon
           v-if="modelValue.start || modelValue.end"
           name="close"
@@ -219,13 +229,13 @@ onUnmounted(() => {
           :style="dropPos"
         >
           <p class="mb-2 text-center text-label-medium text-on-surface-variant">
-            {{ picking === 'start' ? 'Selecciona inicio' : 'Selecciona fin' }}
+            {{ picking === 'start' ? (pickStartText ?? localeStrings.pickStart) : (pickEndText ?? localeStrings.pickEnd) }}
           </p>
 
           <div class="mb-3 flex items-center justify-between">
-            <MIconButton icon="chevron_left" label="Anterior" :size="36" @click="prevMonth" />
+            <MIconButton icon="chevron_left" :label="prevMonthLabel ?? localeStrings.previousMonth" :size="36" @click="prevMonth" />
             <span class="text-title-small font-medium capitalize text-on-surface">{{ monthLabel }}</span>
-            <MIconButton icon="chevron_right" label="Siguiente" :size="36" @click="nextMonth" />
+            <MIconButton icon="chevron_right" :label="nextMonthLabel ?? localeStrings.nextMonth" :size="36" @click="nextMonth" />
           </div>
 
           <div class="mb-1 grid grid-cols-7 gap-0.5 text-center">

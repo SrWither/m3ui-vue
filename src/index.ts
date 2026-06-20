@@ -10,6 +10,8 @@ export type { Palette } from './composables/useColorPalette'
 export { useToast } from './composables/useToast'
 export type { Toast, ToastVariant, ToastPosition, ToastAction, ToastOptions } from './composables/useToast'
 export { useFieldBg } from './composables/useFieldBg'
+export { useLocale, defaultLocale } from './composables/useLocale'
+export type { M3Locale } from './composables/useLocale'
 
 // Components
 export { default as MAbsolute } from './components/MAbsolute.vue'

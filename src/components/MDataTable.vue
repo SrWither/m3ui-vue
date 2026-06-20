@@ -5,6 +5,9 @@ import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
 import MPagination from './MPagination.vue'
 import MChip from './MChip.vue'
+import { useLocale } from '../composables/useLocale'
+
+const locale = useLocale()
 
 export interface DataTableColumn {
   key: string
@@ -46,9 +49,15 @@ const props = withDefaults(defineProps<{
   serverSide?: boolean
   total?: number
   page?: number
+  searchPlaceholder?: string
+  selectedText?: string
+  recordsText?: string
+  expandLabel?: string
+  columnsLabel?: string
+  exportLabel?: string
+  noGroupText?: string
 }>(), {
   loading: false,
-  emptyText: 'Sin resultados',
   rowKey: 'id',
   selectable: false,
   modelValue: () => [],
@@ -137,7 +146,7 @@ const groupedRows = computed(() => {
   if (!props.groupBy) return null
   const map = new Map<string, Record<string, any>[]>()
   for (const row of processedRows.value) {
-    const key = String(row[props.groupBy] ?? 'Sin grupo')
+    const key = String(row[props.groupBy] ?? (props.noGroupText ?? locale.noGroup))
     if (!map.has(key)) map.set(key, [])
     map.get(key)!.push(row)
   }
@@ -269,7 +278,7 @@ function colStyle(col: DataTableColumn) {
     >
       <div v-if="searchable" class="flex min-w-48 flex-1 items-center gap-2 rounded-full border border-outline-variant bg-surface-container px-3 py-1.5 transition-[border-color,box-shadow] duration-150 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/30">
         <MIcon name="search" :size="16" class="shrink-0 text-on-surface-variant" />
-        <input v-model="search" type="text" placeholder="Buscar..." class="w-full bg-transparent text-body-medium text-on-surface outline-none placeholder:text-on-surface-variant" />
+        <input v-model="search" type="text" :placeholder="searchPlaceholder ?? locale.search" class="w-full bg-transparent text-body-medium text-on-surface outline-none placeholder:text-on-surface-variant" />
         <button v-if="search" class="text-on-surface-variant transition-colors hover:text-on-surface" @click="search = ''">
           <MIcon name="close" :size="14" />
         </button>
@@ -279,13 +288,13 @@ function colStyle(col: DataTableColumn) {
 
       <Transition enter-active-class="transition-[opacity,transform] duration-150" enter-from-class="opacity-0 scale-90" leave-active-class="transition-[opacity,transform] duration-100" leave-to-class="opacity-0 scale-90">
         <span v-if="selectable && selected.length > 0" class="rounded-full bg-primary/12 px-3 py-1 text-label-small font-medium text-primary">
-          {{ selected.length }} seleccionado{{ selected.length !== 1 ? 's' : '' }}
+          {{ selected.length }} {{ selectedText ?? locale.selectedCount }}{{ selected.length !== 1 ? 's' : '' }}
         </span>
       </Transition>
 
       <!-- Column toggle -->
       <div v-if="columnToggle" class="relative">
-        <MIconButton icon="view_column" label="Columnas" :size="36" @click="showColMenu = !showColMenu" />
+        <MIconButton icon="view_column" :label="columnsLabel ?? locale.columns" :size="36" @click="showColMenu = !showColMenu" />
         <div v-if="showColMenu" class="absolute right-0 top-full z-10 mt-1 min-w-40 rounded-lg bg-surface-container py-2 shadow-elevation-3">
           <label v-for="col in columns" :key="col.key" class="flex cursor-pointer items-center gap-2 px-3 py-1.5 hover:bg-on-surface/4">
             <MCheckbox
@@ -297,7 +306,7 @@ function colStyle(col: DataTableColumn) {
         </div>
       </div>
 
-      <MIconButton v-if="exportable" icon="download" label="Exportar CSV" :size="36" @click="exportCSV" />
+      <MIconButton v-if="exportable" icon="download" :label="exportLabel ?? locale.exportCsv" :size="36" @click="exportCSV" />
     </div>
 
     <!-- Table -->
@@ -363,7 +372,7 @@ function colStyle(col: DataTableColumn) {
               <td :colspan="visibleColumns.length + extraCols" class="border-t border-outline-variant px-4 py-14 text-center">
                 <slot name="empty">
                   <MIcon name="search_off" :size="36" class="mb-2 text-on-surface-variant opacity-30" />
-                  <p class="text-body-medium text-on-surface-variant">{{ emptyText }}</p>
+                  <p class="text-body-medium text-on-surface-variant">{{ emptyText ?? locale.noResults }}</p>
                 </slot>
               </td>
             </tr>
@@ -385,7 +394,7 @@ function colStyle(col: DataTableColumn) {
                 <td v-if="hasExpand" class="px-2" :class="dense ? 'py-1' : 'py-2'" @click.stop>
                   <MIconButton
                     icon="expand_more"
-                    label="Expandir"
+                    :label="expandLabel ?? locale.expand"
                     :size="28"
                     :class="isExpanded(row) ? 'rotate-180' : ''"
                     class="transition-transform duration-200"
@@ -429,7 +438,7 @@ function colStyle(col: DataTableColumn) {
     <!-- Footer -->
     <div class="flex items-center justify-between gap-4 border-t border-outline-variant bg-surface-container-lowest px-4 py-2">
       <span class="text-label-small text-on-surface-variant">
-        {{ totalCount }} registro{{ totalCount !== 1 ? 's' : '' }}
+        {{ totalCount }} {{ recordsText ?? locale.recordCount }}{{ totalCount !== 1 ? 's' : '' }}
       </span>
       <MPagination :page="currentPage" :per-page="perPage" :total="totalCount" @update:page="currentPage = $event" />
     </div>

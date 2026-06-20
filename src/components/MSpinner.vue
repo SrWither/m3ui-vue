@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { useLocale } from '../composables/useLocale';
 
 const props = withDefaults(
   defineProps<{
     size?: number;
     wavy?: boolean;
+    label?: string;
   }>(),
   { size: 20, wavy: false },
 );
+
+const locale = useLocale();
 
 const STROKE = 3;
 const BUMPS = 9;
@@ -56,7 +60,7 @@ const wavyData = computed(() => {
     class="inline-flex shrink-0 items-center justify-center"
     :style="{ width: `${size}px`, height: `${size}px` }"
     role="status"
-    aria-label="Cargando"
+    :aria-label="label ?? locale.loading"
   >
     <!-- Standard circular spinner -->
     <span

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import MDialog from './MDialog.vue'
 import MButton from './MButton.vue'
+import { useLocale } from '../composables/useLocale'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     modelValue: boolean
     title: string
@@ -13,12 +14,12 @@ withDefaults(
     loading?: boolean
   }>(),
   {
-    confirmLabel: 'Confirmar',
-    cancelLabel: 'Cancelar',
     danger: false,
     loading: false,
   },
 )
+
+const locale = useLocale()
 
 const emit = defineEmits<{ 'update:modelValue': [boolean]; confirm: [] }>()
 </script>
@@ -33,10 +34,10 @@ const emit = defineEmits<{ 'update:modelValue': [boolean]; confirm: [] }>()
     <p class="text-body-medium text-on-surface-variant">{{ message }}</p>
     <template #actions>
       <MButton variant="text" :disabled="loading" @click="emit('update:modelValue', false)">
-        {{ cancelLabel }}
+        {{ cancelLabel ?? locale.cancel }}
       </MButton>
       <MButton :color="danger ? 'error' : 'primary'" :loading="loading" @click="emit('confirm')">
-        {{ confirmLabel }}
+        {{ confirmLabel ?? locale.confirm }}
       </MButton>
     </template>
   </MDialog>

@@ -3,6 +3,9 @@ import { computed, ref } from 'vue'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
 import MCheckbox from './MCheckbox.vue'
+import { useLocale } from '../composables/useLocale'
+
+const locale = useLocale()
 
 export interface TransferItem {
   value: string | number
@@ -16,7 +19,15 @@ const props = withDefaults(defineProps<{
   sourceTitle?: string
   targetTitle?: string
   filterable?: boolean
-}>(), { sourceTitle: 'Disponibles', targetTitle: 'Seleccionados', filterable: false })
+  searchPlaceholder?: string
+  emptyText?: string
+  moveAllRightLabel?: string
+  moveRightLabel?: string
+  moveLeftLabel?: string
+  moveAllLeftLabel?: string
+}>(), {
+  filterable: false,
+})
 
 const emit = defineEmits<{ 'update:modelValue': [(string | number)[]] }>()
 
@@ -83,14 +94,14 @@ function moveAllLeft() {
     <!-- Source list -->
     <div class="flex min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-outline-variant">
       <div class="flex items-center justify-between border-b border-outline-variant bg-surface-container px-3 py-2">
-        <span class="text-label-large font-medium text-on-surface">{{ sourceTitle }}</span>
+        <span class="text-label-large font-medium text-on-surface">{{ sourceTitle ?? locale.available }}</span>
         <span class="text-label-small text-on-surface-variant">{{ sourceItems.length }}</span>
       </div>
       <div v-if="filterable" class="border-b border-outline-variant px-3 py-2">
         <input
           v-model="sourceSearch"
           type="text"
-          placeholder="Buscar..."
+          :placeholder="searchPlaceholder ?? locale.search"
           class="w-full bg-transparent text-body-medium text-on-surface outline-none placeholder:text-on-surface-variant/50"
         />
       </div>
@@ -106,9 +117,11 @@ function moveAllLeft() {
           <MIcon v-if="item.icon" :name="item.icon" :size="18" class="shrink-0 text-on-surface-variant" />
           <span class="flex-1 truncate text-body-medium text-on-surface">{{ item.label }}</span>
         </button>
-        <p v-if="!sourceItems.length" class="px-3 py-4 text-center text-body-small text-on-surface-variant">
-          Sin elementos
-        </p>
+        <slot v-if="!sourceItems.length" name="source-empty">
+          <p class="px-3 py-4 text-center text-body-small text-on-surface-variant">
+            {{ emptyText ?? locale.noItems }}
+          </p>
+        </slot>
       </div>
     </div>
 
@@ -116,14 +129,14 @@ function moveAllLeft() {
     <div class="flex flex-col items-center justify-center gap-1">
       <MIconButton
         icon="keyboard_double_arrow_right"
-        label="Mover todos a la derecha"
+        :label="moveAllRightLabel ?? locale.moveAllRight"
         :size="36"
         :disabled="!sourceItems.length"
         @click="moveAllRight"
       />
       <MIconButton
         icon="chevron_right"
-        label="Mover seleccionados a la derecha"
+        :label="moveRightLabel ?? locale.moveRight"
         variant="tonal"
         :size="36"
         :disabled="!checkedSource.size"
@@ -131,7 +144,7 @@ function moveAllLeft() {
       />
       <MIconButton
         icon="chevron_left"
-        label="Mover seleccionados a la izquierda"
+        :label="moveLeftLabel ?? locale.moveLeft"
         variant="tonal"
         :size="36"
         :disabled="!checkedTarget.size"
@@ -139,7 +152,7 @@ function moveAllLeft() {
       />
       <MIconButton
         icon="keyboard_double_arrow_left"
-        label="Mover todos a la izquierda"
+        :label="moveAllLeftLabel ?? locale.moveAllLeft"
         :size="36"
         :disabled="!targetItems.length"
         @click="moveAllLeft"
@@ -149,14 +162,14 @@ function moveAllLeft() {
     <!-- Target list -->
     <div class="flex min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-outline-variant">
       <div class="flex items-center justify-between border-b border-outline-variant bg-surface-container px-3 py-2">
-        <span class="text-label-large font-medium text-on-surface">{{ targetTitle }}</span>
+        <span class="text-label-large font-medium text-on-surface">{{ targetTitle ?? locale.selected }}</span>
         <span class="text-label-small text-on-surface-variant">{{ targetItems.length }}</span>
       </div>
       <div v-if="filterable" class="border-b border-outline-variant px-3 py-2">
         <input
           v-model="targetSearch"
           type="text"
-          placeholder="Buscar..."
+          :placeholder="searchPlaceholder ?? locale.search"
           class="w-full bg-transparent text-body-medium text-on-surface outline-none placeholder:text-on-surface-variant/50"
         />
       </div>
@@ -172,9 +185,11 @@ function moveAllLeft() {
           <MIcon v-if="item.icon" :name="item.icon" :size="18" class="shrink-0 text-on-surface-variant" />
           <span class="flex-1 truncate text-body-medium text-on-surface">{{ item.label }}</span>
         </button>
-        <p v-if="!targetItems.length" class="px-3 py-4 text-center text-body-small text-on-surface-variant">
-          Sin elementos
-        </p>
+        <slot v-if="!targetItems.length" name="target-empty">
+          <p class="px-3 py-4 text-center text-body-small text-on-surface-variant">
+            {{ emptyText ?? locale.noItems }}
+          </p>
+        </slot>
       </div>
     </div>
   </div>

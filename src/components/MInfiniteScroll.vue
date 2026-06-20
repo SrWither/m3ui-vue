@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import MSpinner from './MSpinner.vue'
+import { useLocale } from '../composables/useLocale'
+
+const locale = useLocale()
 
 const props = withDefaults(
   defineProps<{
@@ -15,8 +18,6 @@ const props = withDefaults(
     loading: false,
     disabled: false,
     threshold: 100,
-    loadingText: 'Cargando...',
-    endText: 'No hay más elementos',
     ended: false,
   },
 )
@@ -55,13 +56,17 @@ onBeforeUnmount(() => observer?.disconnect())
     <slot />
 
     <div ref="sentinelRef" class="flex items-center justify-center py-4">
-      <div v-if="loading" class="flex items-center gap-3">
-        <MSpinner :size="20" class="text-primary" />
-        <span class="text-body-medium text-on-surface-variant">{{ loadingText }}</span>
-      </div>
-      <p v-else-if="ended" class="text-body-small text-on-surface-variant">
-        {{ endText }}
-      </p>
+      <slot v-if="loading" name="loading">
+        <div class="flex items-center gap-3">
+          <MSpinner :size="20" class="text-primary" />
+          <span class="text-body-medium text-on-surface-variant">{{ loadingText ?? locale.loadingMore }}</span>
+        </div>
+      </slot>
+      <slot v-else-if="ended" name="end">
+        <p class="text-body-small text-on-surface-variant">
+          {{ endText ?? locale.noMoreItems }}
+        </p>
+      </slot>
       <slot v-else name="idle" />
     </div>
   </div>

@@ -2,6 +2,7 @@
 import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import MButton from './MButton.vue'
 import MIcon from './MIcon.vue'
+import { useLocale } from '../composables/useLocale'
 
 export interface TourStep {
   target: string
@@ -10,13 +11,15 @@ export interface TourStep {
   placement?: 'top' | 'bottom' | 'left' | 'right'
 }
 
-const props = withDefaults(
-  defineProps<{
-    modelValue: boolean
-    steps: TourStep[]
-  }>(),
-  {},
-)
+const props = defineProps<{
+  modelValue: boolean
+  steps: TourStep[]
+  prevLabel?: string
+  nextLabel?: string
+  finishLabel?: string
+}>()
+
+const locale = useLocale()
 
 const emit = defineEmits<{
   'update:modelValue': [boolean]
@@ -237,11 +240,11 @@ onBeforeUnmount(() => { stopListeners(); clearHighlight() })
             variant="text"
             @click="goPrev"
           >
-            Anterior
+            {{ prevLabel ?? locale.previous }}
           </MButton>
           <span v-else />
           <MButton @click="goNext">
-            {{ isLast ? 'Finalizar' : 'Siguiente' }}
+            {{ isLast ? (finishLabel ?? locale.finish) : (nextLabel ?? locale.next) }}
           </MButton>
         </div>
       </div>

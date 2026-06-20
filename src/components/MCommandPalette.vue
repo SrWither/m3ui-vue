@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import MIcon from './MIcon.vue'
+import { useLocale } from '../composables/useLocale'
+
+const locale = useLocale()
 
 export interface CommandItem {
   id: string
@@ -19,10 +22,11 @@ const props = withDefaults(
     placeholder?: string
     noResultsText?: string
     hotkey?: string
+    navigateHint?: string
+    selectHint?: string
+    closeHint?: string
   }>(),
   {
-    placeholder: 'Buscar comando...',
-    noResultsText: 'Sin resultados',
     hotkey: 'k',
   },
 )
@@ -136,7 +140,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onGlobalKeydown))
               ref="inputRef"
               v-model="query"
               type="text"
-              :placeholder="placeholder"
+              :placeholder="placeholder ?? locale.searchCommand"
               class="h-12 flex-1 bg-transparent text-body-large text-on-surface outline-none placeholder:text-on-surface-variant/50"
               @keydown="onKeydown"
             />
@@ -171,20 +175,20 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onGlobalKeydown))
               </template>
             </template>
             <p v-else class="px-4 py-6 text-center text-body-medium text-on-surface-variant">
-              {{ noResultsText }}
+              {{ noResultsText ?? locale.noResults }}
             </p>
           </div>
 
           <!-- Footer -->
           <div class="flex items-center gap-4 border-t border-outline-variant px-4 py-2">
             <span class="flex items-center gap-1 text-label-small text-on-surface-variant">
-              <kbd class="rounded bg-surface-container px-1 py-0.5">↑↓</kbd> navegar
+              <kbd class="rounded bg-surface-container px-1 py-0.5">↑↓</kbd> {{ navigateHint ?? locale.navigateHint }}
             </span>
             <span class="flex items-center gap-1 text-label-small text-on-surface-variant">
-              <kbd class="rounded bg-surface-container px-1 py-0.5">↵</kbd> seleccionar
+              <kbd class="rounded bg-surface-container px-1 py-0.5">↵</kbd> {{ selectHint ?? locale.selectHint }}
             </span>
             <span class="flex items-center gap-1 text-label-small text-on-surface-variant">
-              <kbd class="rounded bg-surface-container px-1 py-0.5">esc</kbd> cerrar
+              <kbd class="rounded bg-surface-container px-1 py-0.5">esc</kbd> {{ closeHint ?? locale.closeHint }}
             </span>
           </div>
         </div>
