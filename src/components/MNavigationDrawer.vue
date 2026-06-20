@@ -71,10 +71,11 @@ watch(() => props.modelValue, (open) => {
         <div class="nd-scrim absolute inset-0 bg-black/40" @click="close" />
 
         <nav class="nd-panel relative flex h-full w-72 max-w-[85vw] flex-col bg-surface-container shadow-elevation-3">
-          <div v-if="title || $slots.header" class="shrink-0 px-5 pt-6 pb-2">
-            <slot name="header">
-              <h2 class="text-title-small font-medium text-on-surface-variant">{{ title }}</h2>
-            </slot>
+          <div v-if="$slots.header" class="shrink-0">
+            <slot name="header" />
+          </div>
+          <div v-else-if="title" class="shrink-0 px-5 pt-6 pb-2">
+            <h2 class="text-title-small font-medium text-on-surface-variant">{{ title }}</h2>
           </div>
 
           <div class="flex-1 overflow-y-auto px-3 py-2">
