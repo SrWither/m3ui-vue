@@ -6,13 +6,13 @@ import { useFieldBg } from '../composables/useFieldBg'
 
 export interface MultiSelectOption {
   label: string
-  value: string | number
+  value: unknown
   disabled?: boolean
 }
 
 const props = withDefaults(
   defineProps<{
-    modelValue: (string | number)[]
+    modelValue: unknown[]
     options: MultiSelectOption[]
     label?: string
     placeholder?: string
@@ -36,7 +36,7 @@ const props = withDefaults(
   },
 )
 
-const emit = defineEmits<{ 'update:modelValue': [(string | number)[]] }>()
+const emit = defineEmits<{ 'update:modelValue': [unknown[]] }>()
 
 const id = useId()
 const open = ref(false)
@@ -46,6 +46,16 @@ const { resolvedFieldBg } = useFieldBg(fieldEl, () => props.fieldBg)
 const dropdownEl = ref<HTMLElement | null>(null)
 const searchInput = ref<HTMLInputElement | null>(null)
 const dropPos = ref({ top: '0px', left: '0px', width: '0px' })
+
+function eq(a: unknown, b: unknown): boolean {
+  if (a === b) return true
+  if (typeof a !== 'object' || typeof b !== 'object' || a == null || b == null) return false
+  return JSON.stringify(a) === JSON.stringify(b)
+}
+
+function includes(arr: unknown[], val: unknown): boolean {
+  return arr.some((v) => eq(v, val))
+}
 
 const hasValue = computed(() => props.modelValue.length > 0)
 
@@ -58,24 +68,24 @@ const filteredOptions = computed(() => {
 const visibleChips = computed(() =>
   props.modelValue.slice(0, props.maxChips).map((v) => ({
     value: v,
-    label: props.options.find((o) => o.value === v)?.label ?? String(v),
+    label: props.options.find((o) => eq(o.value, v))?.label ?? String(v),
   })),
 )
 
 const overflowCount = computed(() => Math.max(0, props.modelValue.length - props.maxChips))
 
-function toggle(value: string | number) {
+function toggle(value: unknown) {
   const current = props.modelValue
-  if (current.includes(value)) {
-    emit('update:modelValue', current.filter((v) => v !== value))
+  if (includes(current, value)) {
+    emit('update:modelValue', current.filter((v) => !eq(v, value)))
   } else {
     emit('update:modelValue', [...current, value])
   }
 }
 
-function removeChip(value: string | number, e: Event) {
+function removeChip(value: unknown, e: Event) {
   e.stopPropagation()
-  emit('update:modelValue', props.modelValue.filter((v) => v !== value))
+  emit('update:modelValue', props.modelValue.filter((v) => !eq(v, value)))
 }
 
 function computeDropPos() {
@@ -208,8 +218,8 @@ const labelClasses = computed(() => {
       >
         <template v-if="hasValue">
           <span
-            v-for="chip in visibleChips"
-            :key="chip.value"
+            v-for="(chip, i) in visibleChips"
+            :key="i"
             class="inline-flex items-center gap-1 rounded-full bg-secondary-container px-2 py-0.5 text-label-small text-on-secondary-container"
           >
             {{ chip.label }}
@@ -282,13 +292,13 @@ const labelClasses = computed(() => {
 
         <div class="flex flex-col py-1">
           <label
-            v-for="opt in filteredOptions"
-            :key="opt.value"
+            v-for="(opt, i) in filteredOptions"
+            :key="i"
             class="flex cursor-pointer items-center gap-3 px-4 py-2 hover:bg-on-surface/8"
             :class="opt.disabled ? 'cursor-not-allowed opacity-38' : ''"
           >
             <MCheckbox
-              :model-value="modelValue.includes(opt.value)"
+              :model-value="includes(modelValue, opt.value)"
               :disabled="opt.disabled"
               @update:model-value="!opt.disabled && toggle(opt.value)"
             />

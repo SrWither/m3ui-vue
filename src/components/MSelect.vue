@@ -3,10 +3,16 @@ import { computed, ref, useId, onMounted, onUnmounted } from 'vue'
 import MIcon from './MIcon.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 
+export interface SelectOption {
+  label: string
+  value: unknown
+  disabled?: boolean
+}
+
 const props = withDefaults(
   defineProps<{
-    modelValue: string | number | null
-    options: { label: string; value: string | number; disabled?: boolean }[]
+    modelValue: unknown
+    options: SelectOption[]
     label?: string
     placeholder?: string
     variant?: 'filled' | 'outlined'
@@ -18,14 +24,14 @@ const props = withDefaults(
     fieldBg?: string
   }>(),
   {
-    modelValue: null,
+    modelValue: undefined,
     variant: 'filled',
     disabled: false,
     required: false,
   },
 )
 
-const emit = defineEmits<{ 'update:modelValue': [string | number] }>()
+const emit = defineEmits<{ 'update:modelValue': [unknown] }>()
 
 const id = useId()
 const open = ref(false)
@@ -34,9 +40,15 @@ const { resolvedFieldBg } = useFieldBg(fieldEl, () => props.fieldBg)
 const dropdownEl = ref<HTMLElement | null>(null)
 const dropPos = ref({ top: '0px', left: '0px', width: '0px' })
 
-const hasValue = computed(() => props.modelValue !== null && props.modelValue !== '')
+function eq(a: unknown, b: unknown): boolean {
+  if (a === b) return true
+  if (typeof a !== 'object' || typeof b !== 'object' || a == null || b == null) return false
+  return JSON.stringify(a) === JSON.stringify(b)
+}
+
+const hasValue = computed(() => props.modelValue != null && props.modelValue !== '')
 const selectedLabel = computed(
-  () => props.options.find((o) => o.value === props.modelValue)?.label ?? '',
+  () => props.options.find((o) => eq(o.value, props.modelValue))?.label ?? '',
 )
 
 function computeDropPos() {
@@ -58,7 +70,7 @@ function toggle() {
   open.value = !open.value
 }
 
-function select(opt: { value: string | number; disabled?: boolean }) {
+function select(opt: SelectOption) {
   if (opt.disabled) return
   emit('update:modelValue', opt.value)
   open.value = false
@@ -89,7 +101,7 @@ function onKeydown(e: KeyboardEvent) {
   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); return }
   if (!open.value) return
   const opts = props.options.filter((o) => !o.disabled)
-  const idx = opts.findIndex((o) => o.value === props.modelValue)
+  const idx = opts.findIndex((o) => eq(o.value, props.modelValue))
   if (e.key === 'ArrowDown') {
     e.preventDefault()
     const next = opts[(idx + 1) % opts.length]
@@ -227,19 +239,19 @@ const labelClasses = computed(() => {
         :style="dropPos"
       >
         <div
-          v-for="opt in options"
-          :key="opt.value"
+          v-for="(opt, i) in options"
+          :key="i"
           class="flex cursor-pointer items-center gap-3 px-4 py-3 text-body-large"
           :class="[
             opt.disabled
               ? 'cursor-not-allowed opacity-38 text-on-surface'
               : 'text-on-surface hover:bg-on-surface/8',
-            opt.value === modelValue ? 'bg-primary/8 text-primary font-medium' : '',
+            eq(opt.value, modelValue) ? 'bg-primary/8 text-primary font-medium' : '',
           ]"
           @click="select(opt)"
         >
           <MIcon
-            v-if="opt.value === modelValue"
+            v-if="eq(opt.value, modelValue)"
             name="check"
             :size="18"
             class="shrink-0 text-primary"
