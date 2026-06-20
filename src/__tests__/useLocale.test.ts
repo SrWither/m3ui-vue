@@ -44,7 +44,7 @@ describe('useLocale', () => {
     const keys = Object.keys(defaultLocale)
     expect(keys.length).toBeGreaterThan(50)
     for (const key of keys) {
-      expect((defaultLocale as Record<string, string>)[key]).toBeTruthy()
+      expect((defaultLocale as unknown as Record<string, string>)[key]).toBeTruthy()
     }
   })
 })
