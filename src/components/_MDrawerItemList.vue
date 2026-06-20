@@ -69,8 +69,9 @@ export default defineComponent({
       :to="item.to && !item.disabled ? item.to : undefined"
       :type="item.to ? undefined : 'button'"
       :title="collapsed ? item.label : undefined"
-      class="flex w-full shrink-0 items-center gap-2.5 overflow-hidden whitespace-nowrap rounded-full py-1.5 text-left transition-colors focus-visible:outline-none"
+      class="flex w-full shrink-0 items-center gap-2.5 overflow-hidden whitespace-nowrap rounded-full text-left transition-colors focus-visible:outline-none"
       :class="[
+        item.py ?? 'py-1.5',
         item.disabled
           ? 'cursor-not-allowed opacity-[0.38]'
           : item.value === selected

@@ -13,6 +13,7 @@ export interface DrawerItem {
   children?: DrawerItem[];
   iconSize?: number;
   labelClass?: string;
+  py?: string;
 }
 
 export interface DrawerSection {
