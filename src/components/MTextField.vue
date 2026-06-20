@@ -135,7 +135,7 @@ function onInput(event: Event) {
       <div
         v-if="leadingIcon"
         class="pointer-events-none absolute left-3.5 text-on-surface-variant"
-        :class="variant === 'filled' ? 'top-[57%] -translate-y-1/2' : 'top-[52%] -translate-y-1/2'"
+        :class="variant === 'filled' ? 'top-[57%] -translate-y-1/2' : 'top-[55%] -translate-y-1/2'"
       >
         <MIcon :name="leadingIcon" :size="20" />
       </div>
@@ -168,14 +168,14 @@ function onInput(event: Event) {
         {{ label }}<span v-if="required" class="text-error">&nbsp;*</span>
       </label>
 
-      <div v-if="$slots.trailing" class="absolute right-2" :class="variant === 'filled' ? 'top-[57%] -translate-y-1/2' : 'top-[52%] -translate-y-1/2'">
+      <div v-if="$slots.trailing" class="absolute right-2" :class="variant === 'filled' ? 'top-[57%] -translate-y-1/2' : 'top-[55%] -translate-y-1/2'">
         <slot name="trailing" />
       </div>
       <button
         v-else-if="showClear"
         type="button"
         class="absolute right-3 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"
-        :class="variant === 'filled' ? 'top-[57%] -translate-y-1/2' : 'top-[52%] -translate-y-1/2'"
+        :class="variant === 'filled' ? 'top-[57%] -translate-y-1/2' : 'top-[55%] -translate-y-1/2'"
         @click="emit('update:modelValue', '')"
       >
         <MIcon name="close" :size="18" />
