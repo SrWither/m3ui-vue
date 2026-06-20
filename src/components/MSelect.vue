@@ -21,6 +21,7 @@ const props = withDefaults(
     hint?: string
     required?: boolean
     leadingIcon?: string
+    clearable?: boolean
     fieldBg?: string
   }>(),
   {
@@ -28,6 +29,7 @@ const props = withDefaults(
     variant: 'filled',
     disabled: false,
     required: false,
+    clearable: false,
   },
 )
 
@@ -207,6 +209,17 @@ const labelClasses = computed(() => {
       <label :for="id" :class="labelClasses">
         {{ label }}<span v-if="required" class="text-error">&nbsp;*</span>
       </label>
+
+      <!-- Clear button -->
+      <button
+        v-if="clearable && hasValue && !disabled"
+        type="button"
+        class="absolute flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"
+        :class="variant === 'filled' ? 'right-9 top-[57%] -translate-y-1/2' : 'right-9 top-[52%] -translate-y-1/2'"
+        @click.stop="emit('update:modelValue', undefined as any); open = false"
+      >
+        <MIcon name="close" :size="18" />
+      </button>
 
       <!-- Arrow icon -->
       <div class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">

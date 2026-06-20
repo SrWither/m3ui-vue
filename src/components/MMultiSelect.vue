@@ -25,6 +25,7 @@ const props = withDefaults(
     fieldBg?: string
     searchable?: boolean
     maxChips?: number
+    clearable?: boolean
   }>(),
   {
     modelValue: () => [],
@@ -33,6 +34,7 @@ const props = withDefaults(
     required: false,
     searchable: true,
     maxChips: 3,
+    clearable: false,
   },
 )
 
@@ -246,6 +248,15 @@ const labelClasses = computed(() => {
       <label :class="labelClasses">
         {{ label }}<span v-if="required" class="text-error">&nbsp;*</span>
       </label>
+
+      <button
+        v-if="clearable && hasValue && !disabled"
+        type="button"
+        class="absolute right-9 top-7 -translate-y-1/2 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"
+        @click.stop="emit('update:modelValue', []); close()"
+      >
+        <MIcon name="close" :size="18" />
+      </button>
 
       <div class="pointer-events-none absolute right-2 top-7 -translate-y-1/2">
         <MIcon

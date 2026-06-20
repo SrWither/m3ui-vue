@@ -17,17 +17,14 @@ const props = withDefaults(
     rows?: number;
     autocomplete?: string;
     leadingIcon?: string;
-    /**
-     * Background color behind the label in outlined variant.
-     * Defaults to the page surface color. Pass e.g. 'var(--color-surface-container-low)'
-     * when the input is inside a card.
-     */
+    clearable?: boolean;
     fieldBg?: string;
   }>(),
   {
     type: "text",
     variant: "filled",
     rows: 3,
+    clearable: false,
   },
 );
 
@@ -39,8 +36,10 @@ const slots = useSlots();
 const fieldBgEl = ref<HTMLElement | null>(null);
 const { resolvedFieldBg } = useFieldBg(fieldBgEl, () => props.fieldBg);
 
+const showClear = computed(() => props.clearable && String(props.modelValue).length > 0 && !props.disabled)
+
 const inputClasses = computed(() => {
-  const hasTrailing = !!slots.trailing;
+  const hasTrailing = !!slots.trailing || props.clearable;
   const pl = props.leadingIcon ? "pl-12" : "pl-4";
   const pr = hasTrailing ? "pr-12" : "pr-4";
   const size = props.multiline ? "resize-y min-h-[56px]" : "h-14";
@@ -133,10 +132,10 @@ function onInput(event: Event) {
       :class="variant === 'outlined' ? 'mt-2' : ''"
       :style="variant === 'outlined' ? { '--field-bg': resolvedFieldBg } : undefined"
     >
-      <!-- Leading icon: centered in the 48px left zone (left-3.5 → center at 24px) -->
       <div
         v-if="leadingIcon"
-        class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant"
+        class="pointer-events-none absolute left-3.5 text-on-surface-variant"
+        :class="variant === 'filled' ? 'top-[57%] -translate-y-1/2' : 'top-[52%] -translate-y-1/2'"
       >
         <MIcon :name="leadingIcon" :size="20" />
       </div>
@@ -169,9 +168,18 @@ function onInput(event: Event) {
         {{ label }}<span v-if="required" class="text-error">&nbsp;*</span>
       </label>
 
-      <div v-if="$slots.trailing" class="absolute top-1/2 right-2 -translate-y-1/2">
+      <div v-if="$slots.trailing" class="absolute right-2" :class="variant === 'filled' ? 'top-[57%] -translate-y-1/2' : 'top-[52%] -translate-y-1/2'">
         <slot name="trailing" />
       </div>
+      <button
+        v-else-if="showClear"
+        type="button"
+        class="absolute right-3 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"
+        :class="variant === 'filled' ? 'top-[57%] -translate-y-1/2' : 'top-[52%] -translate-y-1/2'"
+        @click="emit('update:modelValue', '')"
+      >
+        <MIcon name="close" :size="18" />
+      </button>
     </div>
 
     <p v-if="error" class="px-4 text-body-small text-error">{{ error }}</p>
