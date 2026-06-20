@@ -356,6 +356,7 @@ watch(
                       {{ item.badge }}
                     </span>
                   </component>
+                  <div v-if="item.children?.length && isItemOpen(item)" class="nd-children-divider" />
                   <Transition
                     :css="false"
                     @enter="subEnter"
@@ -370,6 +371,7 @@ watch(
                       />
                     </div>
                   </Transition>
+                  <div v-if="item.children?.length && isItemOpen(item)" class="nd-children-divider" />
                 </template>
               </div>
             </div>
@@ -471,6 +473,18 @@ watch(
 .nd-inline .nd-section-body > *,
 .nd-inline :deep(.nd-section-body) > * {
   transition: padding 300ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Dividers between children groups — only visible in collapsed mode */
+.nd-children-divider {
+  height: 0;
+  margin: 0 0.75rem;
+  border-top: 1px solid transparent;
+  transition: border-color 200ms 150ms, margin 200ms;
+}
+.nd-inline.nd-collapsed .nd-children-divider {
+  border-top-color: var(--color-outline-variant);
+  margin: 0.25rem 0.75rem;
 }
 
 </style>
