@@ -480,11 +480,12 @@ watch(
   height: 0;
   margin: 0 0.75rem;
   border-top: 1px solid transparent;
-  transition: border-color 200ms 150ms, margin 200ms;
+  transition: border-color 100ms, margin 100ms;
 }
 .nd-inline.nd-collapsed .nd-children-divider {
   border-top-color: var(--color-outline-variant);
   margin: 0.25rem 0.75rem;
+  transition: border-color 200ms 300ms, margin 200ms 300ms;
 }
 
 </style>
