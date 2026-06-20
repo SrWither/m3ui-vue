@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, useSlots, watch } from 'vue'
+import { computed, ref, useSlots, watch, onMounted } from 'vue'
 import MCheckbox from './MCheckbox.vue'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
@@ -43,6 +43,9 @@ const props = withDefaults(defineProps<{
   groupBy?: string
   columnToggle?: boolean
   exportable?: boolean
+  serverSide?: boolean
+  total?: number
+  page?: number
 }>(), {
   loading: false,
   emptyText: 'Sin resultados',
@@ -57,11 +60,24 @@ const props = withDefaults(defineProps<{
   stickyHeader: false,
   columnToggle: false,
   exportable: false,
+  serverSide: false,
+  total: 0,
+  page: 1,
 })
+
+export interface DataTableFetchParams {
+  page: number
+  perPage: number
+  search: string
+  sortKey: string
+  sortDir: 'asc' | 'desc' | ''
+}
 
 const emit = defineEmits<{
   'update:modelValue': [Record<string, any>[]]
+  'update:page': [number]
   rowClick: [Record<string, any>]
+  fetch: [DataTableFetchParams]
 }>()
 
 const slots = useSlots()
@@ -87,7 +103,16 @@ function toggleSort(key: string) {
   else { sortKey.value = ''; sortDir.value = '' }
 }
 
+const currentPage = computed({
+  get: () => props.serverSide ? (props.page ?? 1) : internalPage.value,
+  set: (val: number) => {
+    if (props.serverSide) emit('update:page', val)
+    else internalPage.value = val
+  },
+})
+
 const processedRows = computed(() => {
+  if (props.serverSide) return props.rows
   let result = props.rows
   if (search.value.trim()) {
     const q = search.value.toLowerCase()
@@ -119,13 +144,43 @@ const groupedRows = computed(() => {
   return map
 })
 
-const totalCount = computed(() => processedRows.value.length)
+const totalCount = computed(() => props.serverSide ? (props.total ?? 0) : processedRows.value.length)
 const visibleRows = computed(() => {
-  const start = (internalPage.value - 1) * props.perPage
+  if (props.serverSide) return props.rows
+  const start = (currentPage.value - 1) * props.perPage
   return processedRows.value.slice(start, start + props.perPage)
 })
 
-watch([search, sortKey, sortDir], () => { internalPage.value = 1 })
+watch([search, sortKey, sortDir], () => {
+  if (!props.serverSide) internalPage.value = 1
+})
+
+function emitFetch() {
+  emit('fetch', {
+    page: currentPage.value,
+    perPage: props.perPage,
+    search: search.value,
+    sortKey: sortKey.value,
+    sortDir: sortDir.value,
+  })
+}
+
+const mounted = ref(false)
+onMounted(() => {
+  mounted.value = true
+  if (props.serverSide) emitFetch()
+})
+
+watch([search, sortKey, sortDir], () => {
+  if (!props.serverSide || !mounted.value) return
+  internalPage.value = 1
+  emitFetch()
+})
+
+watch(currentPage, () => {
+  if (!props.serverSide || !mounted.value) return
+  emitFetch()
+})
 
 const selected = computed({
   get: () => props.modelValue ?? [],
@@ -376,7 +431,7 @@ function colStyle(col: DataTableColumn) {
       <span class="text-label-small text-on-surface-variant">
         {{ totalCount }} registro{{ totalCount !== 1 ? 's' : '' }}
       </span>
-      <MPagination :page="internalPage" :per-page="perPage" :total="totalCount" @update:page="internalPage = $event" />
+      <MPagination :page="currentPage" :per-page="perPage" :total="totalCount" @update:page="currentPage = $event" />
     </div>
   </div>
 </template>
