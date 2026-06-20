@@ -142,6 +142,9 @@
     "markdown-it": {
       "optional": true
     },
+    "highlight.js": {
+      "optional": true
+    },
     "chart.js": {
       "optional": true
     },
@@ -179,6 +182,7 @@
     "@xterm/xterm": "^6.0.0",
     "chart.js": "^4.5.1",
     "codemirror": "^6.0.2",
+    "highlight.js": "^11.11.1",
     "markdown-it": "^14.2.0",
     "typescript": "~6.0.3",
     "vite": "^8.0.16",
