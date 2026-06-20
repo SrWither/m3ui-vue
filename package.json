@@ -49,7 +49,11 @@
     },
     "./styles": "./dist/styles.css",
     "./theme": "./src/styles/theme.css",
-    "./palettes": "./src/styles/palettes.css"
+    "./palettes": "./src/styles/palettes.css",
+    "./locales": {
+      "types": "./dist/locales/index.d.ts",
+      "import": "./dist/locales/index.js"
+    }
   },
   "files": [
     "dist",
