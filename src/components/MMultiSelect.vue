@@ -176,7 +176,9 @@ const labelClasses = computed(() => {
     ? '-top-2.5 translate-y-0 text-label-small bg-[var(--field-bg)] px-1 right-auto max-w-[calc(100%-1.5rem)]'
     : 'top-2 translate-y-0 text-label-small'
 
-  const unFloated = 'top-1/2 -translate-y-1/2 text-body-large'
+  const unFloated = props.variant === 'filled'
+    ? 'top-[53%] -translate-y-1/2 text-body-large'
+    : 'top-1/2 -translate-y-1/2 text-body-large'
   const active = open.value || hasValue.value
 
   return [
@@ -200,7 +202,8 @@ const labelClasses = computed(() => {
     >
       <div
         v-if="leadingIcon"
-        class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant"
+        class="pointer-events-none absolute left-3.5 text-on-surface-variant"
+        :class="variant === 'filled' ? 'top-[57%] -translate-y-1/2' : 'top-[55%] -translate-y-1/2'"
       >
         <MIcon :name="leadingIcon" :size="20" />
       </div>
@@ -252,13 +255,14 @@ const labelClasses = computed(() => {
       <button
         v-if="clearable && hasValue && !disabled"
         type="button"
-        class="absolute right-9 top-7 -translate-y-1/2 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"
+        class="absolute right-9 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"
+        :class="variant === 'filled' ? 'top-[57%] -translate-y-1/2' : 'top-[55%] -translate-y-1/2'"
         @click.stop="emit('update:modelValue', []); close()"
       >
         <MIcon name="close" :size="18" />
       </button>
 
-      <div class="pointer-events-none absolute right-2 top-7 -translate-y-1/2">
+      <div class="pointer-events-none absolute right-2" :class="variant === 'filled' ? 'top-[57%] -translate-y-1/2' : 'top-[55%] -translate-y-1/2'">
         <MIcon
           :name="open ? 'arrow_drop_up' : 'arrow_drop_down'"
           :size="24"

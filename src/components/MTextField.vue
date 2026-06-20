@@ -80,11 +80,12 @@ const labelClasses = computed(() => {
       ? "left-3"
       : "left-4";
 
+  const unfloatedTop = props.variant === 'filled' ? 'top-[53%]' : 'top-1/2'
   const base = [
     "pointer-events-none absolute truncate transition-all duration-200",
     left,
     "right-4",
-    "top-1/2 -translate-y-1/2 text-body-large",
+    `${unfloatedTop} -translate-y-1/2 text-body-large`,
   ];
 
   if (props.variant === "outlined") {
