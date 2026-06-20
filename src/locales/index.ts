@@ -1,0 +1,8 @@
+export { esLocale } from './es'
+export { frLocale } from './fr'
+export { ptLocale } from './pt'
+export { deLocale } from './de'
+export { jaLocale } from './ja'
+export { zhLocale } from './zh'
+export { koLocale } from './ko'
+export type { M3Locale } from '../composables/useLocale'
