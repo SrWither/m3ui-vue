@@ -64,6 +64,8 @@
     "build:js": "vite build && cp dist/m3ui-vue.css dist/styles.css",
     "build:types": "vue-tsc -p tsconfig.build.json",
     "build:css": "cp -r src/styles dist/",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
@@ -181,15 +183,18 @@
     "@tiptap/vue-3": "^3.26.1",
     "@types/markdown-it": "^14.1.2",
     "@vitejs/plugin-vue": "^6.0.7",
+    "@vue/test-utils": "^2.4.11",
     "@vue/tsconfig": "^0.9.1",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/xterm": "^6.0.0",
     "chart.js": "^4.5.1",
     "codemirror": "^6.0.2",
+    "happy-dom": "^20.10.6",
     "highlight.js": "^11.11.1",
     "markdown-it": "^14.2.0",
     "typescript": "~6.0.3",
     "vite": "^8.0.16",
+    "vitest": "^4.1.9",
     "vue": "^3.5.38",
     "vue-chartjs": "^5.3.3",
     "vue-tsc": "^3.3.5"
