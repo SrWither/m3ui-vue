@@ -199,7 +199,8 @@ onUnmounted(() => {
       class="relative inline-flex cursor-pointer items-center justify-center overflow-hidden shadow-elevation-1 transition-shadow duration-150 hover:shadow-elevation-2 active:shadow-elevation-1 disabled:cursor-not-allowed disabled:opacity-[0.38] before:content-[''] before:pointer-events-none before:absolute before:inset-0 before:bg-current before:opacity-0 before:transition-opacity before:duration-150 hover:before:opacity-[0.08] active:before:opacity-[0.12]"
       :class="[colorMap[color], fabSizeClasses]"
       :disabled="disabled"
-      @pointerdown="(e: PointerEvent) => { createRipple(e); handleFabClick(e) }"
+      @pointerdown="createRipple"
+      @click="handleFabClick"
     >
       <MIcon
         :name="icon"
