@@ -13,6 +13,7 @@ export default defineConfig({
         markdown: resolve(__dirname, 'src/markdown.ts'),
         'rich-text-editor': resolve(__dirname, 'src/rich-text-editor.ts'),
         terminal: resolve(__dirname, 'src/terminal.ts'),
+        'locales/index': resolve(__dirname, 'src/locales/index.ts'),
       },
       formats: ['es'],
     },
