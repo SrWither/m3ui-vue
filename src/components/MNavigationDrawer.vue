@@ -32,8 +32,9 @@ const props = withDefaults(
     modal?: boolean;
     collapsed?: boolean;
     width?: string;
+    side?: 'left' | 'right' | 'top' | 'bottom';
   }>(),
-  { modal: true },
+  { modal: true, side: 'left' },
 );
 
 const emit = defineEmits<{
@@ -101,6 +102,7 @@ function subLeave(el: Element, done: () => void) {
   ).onfinish = done
 }
 
+const inlineSide = computed(() => props.side === 'left' || props.side === 'right' ? props.side : 'left')
 const collapsedRef = computed(() => props.collapsed ?? false)
 provide("nd-open-items", openItems);
 provide("nd-toggle-item", onChildToggle);
@@ -127,13 +129,27 @@ watch(
   <!-- ── Modal variant ──────────────────────────────────────── -->
   <Teleport v-if="modal" to="body">
     <Transition name="nd" :duration="{ enter: 300, leave: 280 }">
-      <div v-if="modelValue" class="fixed inset-0 z-100 flex">
+      <div
+        v-if="modelValue"
+        class="fixed inset-0 z-100 flex"
+        :class="[
+          side === 'right' ? 'justify-end' : '',
+          side === 'bottom' ? 'flex-col justify-end' : '',
+          side === 'top' ? 'flex-col' : '',
+        ]"
+      >
         <div class="nd-scrim absolute inset-0 bg-black/40" @click="close" />
 
         <nav
-          class="nd-panel relative flex h-full max-w-[85vw] flex-col bg-surface-container shadow-elevation-3"
-          :class="width ? '' : 'w-72'"
-          :style="width ? { width } : undefined"
+          :class="[
+            'nd-panel relative flex flex-col bg-surface-container shadow-elevation-3',
+            `nd-panel-${side}`,
+            side === 'top' || side === 'bottom'
+              ? 'w-full max-h-[85vh]'
+              : 'h-full max-w-[85vw]',
+            side === 'top' || side === 'bottom' || width ? '' : 'w-72',
+          ]"
+          :style="side !== 'top' && side !== 'bottom' && width ? { width } : undefined"
         >
           <div v-if="$slots.header" class="shrink-0">
             <slot name="header" />
@@ -249,10 +265,11 @@ watch(
   <!-- ── Standard (inline) variant ──────────────────────────── -->
   <template v-else>
     <nav
-      class="nd-inline flex h-full shrink-0 flex-col border-r border-outline-variant bg-surface"
+      class="nd-inline flex h-full shrink-0 flex-col bg-surface"
       :class="[
+        inlineSide === 'right' ? 'border-l border-outline-variant' : 'border-r border-outline-variant',
         !modelValue
-          ? 'nd-hidden w-0 border-r-0'
+          ? inlineSide === 'right' ? 'nd-hidden w-0 border-l-0' : 'nd-hidden w-0 border-r-0'
           : collapsed
             ? 'nd-collapsed w-[72px]'
             : width ? '' : 'w-72',
@@ -399,9 +416,21 @@ watch(
 .nd-panel {
   transition: transform 300ms cubic-bezier(0.2, 0, 0, 1);
 }
-.nd-enter-from .nd-panel,
-.nd-leave-to .nd-panel {
+.nd-enter-from .nd-panel-left,
+.nd-leave-to .nd-panel-left {
   transform: translateX(-100%);
+}
+.nd-enter-from .nd-panel-right,
+.nd-leave-to .nd-panel-right {
+  transform: translateX(100%);
+}
+.nd-enter-from .nd-panel-top,
+.nd-leave-to .nd-panel-top {
+  transform: translateY(-100%);
+}
+.nd-enter-from .nd-panel-bottom,
+.nd-leave-to .nd-panel-bottom {
+  transform: translateY(100%);
 }
 
 /* ── Section collapse animation ────────────────────────── */
