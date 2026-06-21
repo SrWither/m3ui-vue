@@ -3,6 +3,7 @@ import { computed } from 'vue'
 
 const props = defineProps<{
   height?: string
+  drawerRight?: boolean
 }>()
 
 const style = computed(() => ({
@@ -13,12 +14,12 @@ const style = computed(() => ({
 <template>
   <div class="flex w-full overflow-hidden bg-surface text-on-surface" :style="style">
     <!-- Drawer -->
-    <aside v-if="$slots.drawer" class="shrink-0">
+    <aside v-if="$slots.drawer" class="shrink-0" :class="drawerRight ? 'order-2' : ''">
       <slot name="drawer" />
     </aside>
 
     <!-- Main area -->
-    <div class="relative flex min-w-0 flex-1 flex-col">
+    <div class="relative flex min-w-0 flex-1 flex-col" :class="drawerRight ? 'order-1' : ''">
       <!-- Header -->
       <header v-if="$slots.header" class="shrink-0">
         <slot name="header" />
