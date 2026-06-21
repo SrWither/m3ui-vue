@@ -6,6 +6,8 @@ const props = withDefaults(
   defineProps<{
     placement?: Placement
     offset?: string | number
+    offsetX?: string | number
+    offsetY?: string | number
     top?: string | number
     right?: string | number
     bottom?: string | number
@@ -27,18 +29,19 @@ const style = computed(() => {
   }
 
   if (props.placement) {
-    const o = toUnit(props.offset)!
+    const oy = toUnit(props.offsetY ?? props.offset)!
+    const ox = toUnit(props.offsetX ?? props.offset)!
     const [y, x] = props.placement.split('-') as [string, string]
     const s: Record<string, string | undefined> = {
       position: 'fixed',
       zIndex: props.zIndex != null ? String(props.zIndex) : undefined,
     }
-    if (y === 'top') { s.top = o }
-    else if (y === 'bottom') { s.bottom = o }
+    if (y === 'top') { s.top = oy }
+    else if (y === 'bottom') { s.bottom = oy }
     else { s.top = '50%'; s.transform = 'translateY(-50%)' }
 
-    if (x === 'left') { s.left = o }
-    else if (x === 'right') { s.right = o }
+    if (x === 'left') { s.left = ox }
+    else if (x === 'right') { s.right = ox }
     else {
       s.left = '50%'
       s.transform = s.transform ? 'translate(-50%, -50%)' : 'translateX(-50%)'
