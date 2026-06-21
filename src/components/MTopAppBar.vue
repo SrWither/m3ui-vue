@@ -19,20 +19,22 @@ defineEmits<{ navigation: [] }>()
     :class="[elevated ? 'shadow-elevation-2' : '', bordered ? 'border-b border-outline-variant' : '']"
   >
     <!-- Top row -->
-    <div class="flex h-16 items-center gap-1 px-2">
-      <!-- Navigation icon -->
-      <MIconButton
-        v-if="navigationIcon"
-        :icon="navigationIcon"
-        label="Navegación"
-        @click="$emit('navigation')"
-      />
+    <div class="flex h-16 items-center gap-1 px-4">
+      <!-- Navigation -->
+      <slot name="navigation">
+        <MIconButton
+          v-if="navigationIcon"
+          :icon="navigationIcon"
+          label="Navegación"
+          @click="$emit('navigation')"
+        />
+      </slot>
 
       <!-- Title: center or small variant -->
       <h1
         v-if="variant === 'center' || variant === 'small'"
-        class="flex-1 truncate px-2 text-title-large text-on-surface"
-        :class="variant === 'center' ? 'text-center' : ''"
+        class="flex flex-1 items-center truncate px-4 text-title-large text-on-surface"
+        :class="variant === 'center' ? 'justify-center' : ''"
       >
         <slot name="title">{{ title }}</slot>
       </h1>
