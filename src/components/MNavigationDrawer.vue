@@ -31,6 +31,7 @@ const props = withDefaults(
     title?: string;
     modal?: boolean;
     collapsed?: boolean;
+    width?: string;
   }>(),
   { modal: true },
 );
@@ -130,7 +131,9 @@ watch(
         <div class="nd-scrim absolute inset-0 bg-black/40" @click="close" />
 
         <nav
-          class="nd-panel relative flex h-full w-72 max-w-[85vw] flex-col bg-surface-container shadow-elevation-3"
+          class="nd-panel relative flex h-full max-w-[85vw] flex-col bg-surface-container shadow-elevation-3"
+          :class="width ? '' : 'w-72'"
+          :style="width ? { width } : undefined"
         >
           <div v-if="$slots.header" class="shrink-0">
             <slot name="header" />
@@ -252,8 +255,9 @@ watch(
           ? 'nd-hidden w-0 border-r-0'
           : collapsed
             ? 'nd-collapsed w-[72px]'
-            : 'w-72',
+            : width ? '' : 'w-72',
       ]"
+      :style="{ width: modelValue && !collapsed && width ? width : undefined, '--nd-width': width ?? '18rem' }"
     >
       <div v-if="$slots.header" class="shrink-0">
         <slot name="header" />
@@ -444,7 +448,7 @@ watch(
 
 /* Freeze layout so content clips like a curtain during open/close */
 .nd-inline > * {
-  min-width: 18rem;
+  min-width: var(--nd-width, 18rem);
 }
 /* Collapse-to-icons: let children adapt to 72px width */
 .nd-inline.nd-collapsed > * {

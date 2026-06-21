@@ -1,13 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const props = withDefaults(
-  defineProps<{
-    drawerWidth?: string
-    height?: string
-  }>(),
-  { drawerWidth: 'auto' },
-)
+const props = defineProps<{
+  height?: string
+}>()
 
 const style = computed(() => ({
   height: props.height || '100dvh',
@@ -17,7 +13,7 @@ const style = computed(() => ({
 <template>
   <div class="flex w-full overflow-hidden bg-surface text-on-surface" :style="style">
     <!-- Drawer -->
-    <aside v-if="$slots.drawer" class="shrink-0" :style="{ width: drawerWidth !== 'auto' ? drawerWidth : undefined }">
+    <aside v-if="$slots.drawer" class="shrink-0">
       <slot name="drawer" />
     </aside>
 

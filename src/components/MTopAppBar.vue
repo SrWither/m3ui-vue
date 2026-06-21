@@ -7,6 +7,7 @@ withDefaults(defineProps<{
   variant?: 'center' | 'small' | 'medium' | 'large'
   navigationIcon?: string
   elevated?: boolean
+  bordered?: boolean
 }>(), { variant: 'small' })
 
 defineEmits<{ navigation: [] }>()
@@ -15,7 +16,7 @@ defineEmits<{ navigation: [] }>()
 <template>
   <header
     class="flex w-full flex-col bg-surface transition-shadow"
-    :class="elevated ? 'shadow-elevation-2' : ''"
+    :class="[elevated ? 'shadow-elevation-2' : '', bordered ? 'border-b border-outline-variant' : '']"
   >
     <!-- Top row -->
     <div class="flex h-16 items-center gap-1 px-2">

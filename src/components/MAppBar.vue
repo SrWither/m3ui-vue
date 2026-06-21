@@ -3,6 +3,7 @@ withDefaults(defineProps<{
   color?: 'surface' | 'primary' | 'secondary' | 'tertiary'
   elevated?: boolean
   dense?: boolean
+  bordered?: boolean
 }>(), { color: 'surface' })
 
 const colorMap: Record<string, string> = {
@@ -19,6 +20,7 @@ const colorMap: Record<string, string> = {
     :class="[
       colorMap[color],
       elevated ? 'shadow-elevation-2' : '',
+      bordered ? 'border-b border-outline-variant' : '',
       dense ? 'h-12' : 'h-16',
     ]"
   >
