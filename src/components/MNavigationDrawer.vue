@@ -256,6 +256,7 @@ watch(
                 </div>
               </Transition>
             </template>
+            <slot />
           </div>
         </nav>
       </div>
@@ -403,6 +404,7 @@ watch(
             </div>
           </Transition>
         </template>
+        <slot />
       </div>
     </nav>
   </template>
