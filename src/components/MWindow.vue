@@ -11,6 +11,8 @@ const props = withDefaults(
     height?: string
     minWidth?: number
     minHeight?: number
+    maxWidth?: number
+    maxHeight?: number
     resizable?: boolean
     draggable?: boolean
     closable?: boolean
@@ -141,29 +143,22 @@ function onMouseMove(e: MouseEvent) {
     const parentW = parent ? parent.clientWidth : Infinity
     const parentH = parent ? parent.clientHeight : Infinity
 
+    const clampW = (w: number) => Math.min(props.maxWidth ?? Infinity, Math.max(props.minWidth, w))
+    const clampH = (h: number) => Math.min(props.maxHeight ?? Infinity, Math.max(props.minHeight, h))
+
     // East
     if (dir.includes('e')) {
-      const maxW = parentW - resizeStartPosX
-      winWidth.value = Math.min(maxW, Math.max(props.minWidth, resizeStartW + dx))
+      winWidth.value = Math.min(parentW - resizeStartPosX, clampW(resizeStartW + dx))
     }
     // West
     if (dir.includes('w')) {
-      const maxW = resizeStartPosX + resizeStartW
-      const newW = Math.min(maxW, Math.max(props.minWidth, resizeStartW - dx))
+      const newW = Math.min(resizeStartPosX + resizeStartW, clampW(resizeStartW - dx))
       posX.value = Math.max(0, resizeStartPosX + (resizeStartW - newW))
       winWidth.value = newW
     }
     // South
     if (dir.includes('s')) {
-      const maxH = parentH - resizeStartPosY
-      winHeight.value = Math.min(maxH, Math.max(props.minHeight, resizeStartH + dy))
-    }
-    // North
-    if (dir === 'n' || dir === 'ne' || dir === 'nw') {
-      const maxH = resizeStartPosY + resizeStartH
-      const newH = Math.min(maxH, Math.max(props.minHeight, resizeStartH - dy))
-      posY.value = Math.max(0, resizeStartPosY + (resizeStartH - newH))
-      winHeight.value = newH
+      winHeight.value = Math.min(parentH - resizeStartPosY, clampH(resizeStartH + dy))
     }
   }
 }
@@ -216,12 +211,9 @@ onUnmounted(() => {
 
 // Resize handle definitions
 const resizeHandles: { dir: ResizeDirection; class: string; cursor: string }[] = [
-  { dir: 'n', class: 'top-0 left-[10px] right-[10px] h-[5px]', cursor: 'cursor-ns-resize' },
   { dir: 's', class: 'bottom-0 left-[10px] right-[10px] h-[5px]', cursor: 'cursor-ns-resize' },
   { dir: 'e', class: 'top-[10px] right-0 bottom-[10px] w-[5px]', cursor: 'cursor-ew-resize' },
   { dir: 'w', class: 'top-[10px] left-0 bottom-[10px] w-[5px]', cursor: 'cursor-ew-resize' },
-  { dir: 'ne', class: 'top-0 right-0 w-[12px] h-[12px]', cursor: 'cursor-nesw-resize' },
-  { dir: 'nw', class: 'top-0 left-0 w-[12px] h-[12px]', cursor: 'cursor-nwse-resize' },
   { dir: 'se', class: 'bottom-0 right-0 w-[12px] h-[12px]', cursor: 'cursor-nwse-resize' },
   { dir: 'sw', class: 'bottom-0 left-0 w-[12px] h-[12px]', cursor: 'cursor-nesw-resize' },
 ]
@@ -288,8 +280,3 @@ const resizeHandles: { dir: ResizeDirection; class: string; cursor: string }[] =
   </div>
 </template>
 
-<style scoped>
-.flex-col {
-  transition: height 0.2s ease;
-}
-</style>
