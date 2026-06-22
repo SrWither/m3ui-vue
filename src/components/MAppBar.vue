@@ -16,27 +16,31 @@ const colorMap: Record<string, string> = {
 
 <template>
   <div
-    class="flex w-full items-center gap-2 px-4 transition-shadow"
+    class="w-full transition-shadow"
     :class="[
       colorMap[color],
       elevated ? 'shadow-elevation-2' : '',
       bordered ? 'border-b border-outline-variant' : '',
-      dense ? 'h-12' : 'h-16',
     ]"
   >
-    <!-- Leading -->
-    <div v-if="$slots.leading" class="flex shrink-0 items-center">
-      <slot name="leading" />
-    </div>
+    <div
+      class="flex items-center gap-2 px-4"
+      :class="dense ? 'h-12' : 'h-16'"
+    >
+      <!-- Leading -->
+      <div v-if="$slots.leading" class="flex shrink-0 items-center">
+        <slot name="leading" />
+      </div>
 
-    <!-- Content -->
-    <div class="flex flex-1 items-center overflow-hidden">
-      <slot />
-    </div>
+      <!-- Content -->
+      <div class="flex flex-1 items-center overflow-hidden">
+        <slot />
+      </div>
 
-    <!-- Trailing -->
-    <div v-if="$slots.trailing" class="flex shrink-0 items-center gap-1">
-      <slot name="trailing" />
+      <!-- Trailing -->
+      <div v-if="$slots.trailing" class="flex shrink-0 items-center gap-1">
+        <slot name="trailing" />
+      </div>
     </div>
   </div>
 </template>
