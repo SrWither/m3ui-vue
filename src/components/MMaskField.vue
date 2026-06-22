@@ -157,8 +157,7 @@ const labelClasses = computed(() => {
     >
       <div
         v-if="leadingIcon"
-        class="pointer-events-none absolute left-3.5 text-on-surface-variant"
-        :class="variant === 'filled' ? 'top-[57%] -translate-y-1/2' : 'top-[55%] -translate-y-1/2'"
+        class="pointer-events-none absolute left-3.5 top-4.5 text-on-surface-variant"
       >
         <MIcon :name="leadingIcon" :size="20" />
       </div>
@@ -184,8 +183,7 @@ const labelClasses = computed(() => {
       <button
         v-if="showClear"
         type="button"
-        class="absolute right-3 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"
-        :class="variant === 'filled' ? 'top-[57%] -translate-y-1/2' : 'top-[55%] -translate-y-1/2'"
+        class="absolute right-3 top-1/2 -translate-y-1/2 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"
         @click="emit('update:modelValue', '')"
       >
         <MIcon name="close" :size="18" />

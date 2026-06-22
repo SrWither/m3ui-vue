@@ -128,8 +128,7 @@ const labelClasses = computed(() => {
     >
       <div
         v-if="leadingIcon"
-        class="pointer-events-none absolute left-3.5 text-on-surface-variant"
-        :class="variant === 'filled' ? 'top-[57%] -translate-y-1/2' : 'top-[55%] -translate-y-1/2'"
+        class="pointer-events-none absolute left-3.5 top-4.5 text-on-surface-variant"
       >
         <MIcon :name="leadingIcon" :size="20" />
       </div>
@@ -153,7 +152,7 @@ const labelClasses = computed(() => {
         {{ label }}<span v-if="required" class="text-error">&nbsp;*</span>
       </label>
 
-      <div v-if="stepper" class="absolute right-1 flex items-center gap-0.5" :class="variant === 'filled' ? 'top-[57%] -translate-y-1/2' : 'top-[55%] -translate-y-1/2'">
+      <div v-if="stepper" class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
         <MIconButton icon="remove" label="Decrease" :size="32" :disabled="disabled || (min !== undefined && (modelValue ?? 0) <= min)" @click="decrement" />
         <MIconButton icon="add" label="Increase" :size="32" :disabled="disabled || (max !== undefined && (modelValue ?? 0) >= max)" @click="increment" />
       </div>
