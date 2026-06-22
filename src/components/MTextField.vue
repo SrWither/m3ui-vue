@@ -136,7 +136,7 @@ function onInput(event: Event) {
       <div
         v-if="leadingIcon"
         class="pointer-events-none absolute left-3.5 text-on-surface-variant"
-        :class="multiline ? 'top-[55%] -translate-y-1/2' : 'top-4.5'"
+        :class="multiline ? 'top-[55%] -translate-y-1/2' : variant === 'filled' ? 'top-5' : 'top-4.5'"
       >
         <MIcon :name="leadingIcon" :size="20" />
       </div>

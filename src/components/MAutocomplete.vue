@@ -264,7 +264,8 @@ const labelClasses = computed(() => {
       <!-- Leading icon -->
       <div
         v-if="leadingIcon"
-        class="pointer-events-none absolute left-3.5 top-4.5 text-on-surface-variant"
+        class="pointer-events-none absolute left-3.5 text-on-surface-variant"
+        :class="variant === 'filled' ? 'top-5' : 'top-4.5'"
       >
         <MIcon :name="leadingIcon" :size="20" />
       </div>
