@@ -88,46 +88,69 @@ function bringToFront() {
   zIndex.value = globalZIndex
 }
 
+// ---- Pointer helpers ----
+function getXY(e: MouseEvent | TouchEvent): { x: number; y: number } {
+  if ('touches' in e) {
+    const t = e.touches[0] ?? e.changedTouches[0]
+    return { x: t!.clientX, y: t!.clientY }
+  }
+  return { x: e.clientX, y: e.clientY }
+}
+
+function addListeners() {
+  document.addEventListener('mousemove', onPointerMove)
+  document.addEventListener('mouseup', onPointerUp)
+  document.addEventListener('touchmove', onPointerMove, { passive: false })
+  document.addEventListener('touchend', onPointerUp)
+}
+
+function removeListeners() {
+  document.removeEventListener('mousemove', onPointerMove)
+  document.removeEventListener('mouseup', onPointerUp)
+  document.removeEventListener('touchmove', onPointerMove)
+  document.removeEventListener('touchend', onPointerUp)
+}
+
 // ---- Drag ----
-function onTitleBarMouseDown(e: MouseEvent) {
+function onTitleBarStart(e: MouseEvent | TouchEvent) {
   if (!props.draggable) return
-  // Ignore clicks on buttons inside the title bar
   if ((e.target as HTMLElement).closest('button')) return
   e.preventDefault()
+  const { x, y } = getXY(e)
   isDragging = true
-  dragStartX = e.clientX
-  dragStartY = e.clientY
+  dragStartX = x
+  dragStartY = y
   dragStartPosX = posX.value
   dragStartPosY = posY.value
   bringToFront()
-  document.addEventListener('mousemove', onMouseMove)
-  document.addEventListener('mouseup', onMouseUp)
+  addListeners()
 }
 
 // ---- Resize ----
-function onResizeMouseDown(e: MouseEvent, direction: ResizeDirection) {
+function onResizeStart(e: MouseEvent | TouchEvent, direction: ResizeDirection) {
   if (!props.resizable) return
   e.preventDefault()
   e.stopPropagation()
+  const { x, y } = getXY(e)
   isResizing = true
   resizeDir = direction
-  resizeStartX = e.clientX
-  resizeStartY = e.clientY
+  resizeStartX = x
+  resizeStartY = y
   resizeStartW = winWidth.value
   resizeStartH = winHeight.value
   resizeStartPosX = posX.value
   resizeStartPosY = posY.value
   bringToFront()
-  document.addEventListener('mousemove', onMouseMove)
-  document.addEventListener('mouseup', onMouseUp)
+  addListeners()
 }
 
-function onMouseMove(e: MouseEvent) {
+function onPointerMove(e: MouseEvent | TouchEvent) {
   e.preventDefault()
+  const { x, y } = getXY(e)
 
   if (isDragging) {
-    const dx = e.clientX - dragStartX
-    const dy = e.clientY - dragStartY
+    const dx = x - dragStartX
+    const dy = y - dragStartY
     const parent = windowRef.value?.parentElement
     const maxX = parent ? parent.clientWidth - winWidth.value : Infinity
     const maxY = parent ? parent.clientHeight - (minimized.value ? 40 : winHeight.value) : Infinity
@@ -136,8 +159,8 @@ function onMouseMove(e: MouseEvent) {
   }
 
   if (isResizing) {
-    const dx = e.clientX - resizeStartX
-    const dy = e.clientY - resizeStartY
+    const dx = x - resizeStartX
+    const dy = y - resizeStartY
     const dir = resizeDir
     const parent = windowRef.value?.parentElement
     const parentW = parent ? parent.clientWidth : Infinity
@@ -146,28 +169,24 @@ function onMouseMove(e: MouseEvent) {
     const clampW = (w: number) => Math.min(props.maxWidth ?? Infinity, Math.max(props.minWidth, w))
     const clampH = (h: number) => Math.min(props.maxHeight ?? Infinity, Math.max(props.minHeight, h))
 
-    // East
     if (dir.includes('e')) {
       winWidth.value = Math.min(parentW - resizeStartPosX, clampW(resizeStartW + dx))
     }
-    // West
     if (dir.includes('w')) {
       const newW = Math.min(resizeStartPosX + resizeStartW, clampW(resizeStartW - dx))
       posX.value = Math.max(0, resizeStartPosX + (resizeStartW - newW))
       winWidth.value = newW
     }
-    // South
     if (dir.includes('s')) {
       winHeight.value = Math.min(parentH - resizeStartPosY, clampH(resizeStartH + dy))
     }
   }
 }
 
-function onMouseUp() {
+function onPointerUp() {
   isDragging = false
   isResizing = false
-  document.removeEventListener('mousemove', onMouseMove)
-  document.removeEventListener('mouseup', onMouseUp)
+  removeListeners()
 }
 
 // ---- Actions ----
@@ -205,8 +224,7 @@ watch(
 
 // ---- Cleanup ----
 onUnmounted(() => {
-  document.removeEventListener('mousemove', onMouseMove)
-  document.removeEventListener('mouseup', onMouseUp)
+  removeListeners()
 })
 
 // Resize handle definitions
@@ -231,7 +249,8 @@ const resizeHandles: { dir: ResizeDirection; class: string; cursor: string }[] =
     <div
       class="flex items-center gap-2 px-4 h-10 bg-surface-container select-none shrink-0"
       :class="{ 'cursor-move': draggable }"
-      @mousedown="onTitleBarMouseDown"
+      @mousedown="onTitleBarStart"
+      @touchstart="onTitleBarStart"
     >
       <slot name="header">
         <MIcon v-if="icon" :name="icon" :size="18" class="text-on-surface-variant" />
@@ -274,7 +293,8 @@ const resizeHandles: { dir: ResizeDirection; class: string; cursor: string }[] =
         :key="handle.dir"
         class="absolute"
         :class="[handle.class, handle.cursor]"
-        @mousedown="onResizeMouseDown($event, handle.dir)"
+        @mousedown="onResizeStart($event, handle.dir)"
+        @touchstart="onResizeStart($event, handle.dir)"
       />
     </template>
   </div>
