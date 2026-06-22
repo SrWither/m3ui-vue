@@ -80,6 +80,21 @@ const visibleChips = computed(() =>
 )
 
 const overflowCount = computed(() => Math.max(0, props.modelValue.length - props.maxChips))
+const chipsExpanded = ref(false)
+
+const displayChips = computed(() => {
+  const all = props.modelValue.map((v) => ({
+    value: v,
+    label: props.options.find((o) => eq(o.value, v))?.label ?? String(v),
+  }))
+  return chipsExpanded.value ? all : all.slice(0, props.maxChips)
+})
+
+const overflowLabels = computed(() =>
+  props.modelValue.slice(props.maxChips).map((v) =>
+    props.options.find((o) => eq(o.value, v))?.label ?? String(v),
+  ).join(', '),
+)
 
 function toggle(value: unknown) {
   const current = props.modelValue
@@ -228,7 +243,7 @@ const labelClasses = computed(() => {
       >
         <template v-if="hasValue">
           <span
-            v-for="(chip, i) in visibleChips"
+            v-for="(chip, i) in displayChips"
             :key="i"
             class="inline-flex items-center gap-1 rounded-full bg-secondary-container px-2 py-0.5 text-label-small text-on-secondary-container"
           >
@@ -242,10 +257,19 @@ const labelClasses = computed(() => {
             </button>
           </span>
           <span
-            v-if="overflowCount > 0"
-            class="rounded-full bg-surface-container-high px-2 py-0.5 text-label-small text-on-surface-variant"
+            v-if="overflowCount > 0 && !chipsExpanded"
+            :title="overflowLabels"
+            class="cursor-pointer rounded-full bg-surface-container-high px-2 py-0.5 text-label-small text-on-surface-variant transition-colors hover:bg-on-surface/12"
+            @click.stop="chipsExpanded = true"
           >
             +{{ overflowCount }}
+          </span>
+          <span
+            v-if="chipsExpanded && modelValue.length > maxChips"
+            class="cursor-pointer rounded-full bg-surface-container-high px-2 py-0.5 text-label-small text-on-surface-variant transition-colors hover:bg-on-surface/12"
+            @click.stop="chipsExpanded = false"
+          >
+            <MIcon name="unfold_less" :size="14" />
           </span>
         </template>
         <span v-else-if="!open" class="text-body-large text-on-surface-variant opacity-0">

@@ -315,7 +315,7 @@ const labelClasses = computed(() => {
       >
         <template v-if="hasValue">
           <span
-            v-for="(chip, i) in visibleChips"
+            v-for="(chip, i) in displayChips"
             :key="i"
             class="inline-flex items-center gap-1 rounded-full bg-secondary-container px-2 py-0.5 text-label-small text-on-secondary-container"
           >
@@ -329,10 +329,19 @@ const labelClasses = computed(() => {
             </button>
           </span>
           <span
-            v-if="overflowCount > 0"
-            class="rounded-full bg-surface-container-high px-2 py-0.5 text-label-small text-on-surface-variant"
+            v-if="overflowCount > 0 && !chipsExpanded"
+            :title="overflowLabels"
+            class="cursor-pointer rounded-full bg-surface-container-high px-2 py-0.5 text-label-small text-on-surface-variant transition-colors hover:bg-on-surface/12"
+            @click.stop="chipsExpanded = true"
           >
             +{{ overflowCount }}
+          </span>
+          <span
+            v-if="chipsExpanded && modelValue.length > maxChips"
+            class="cursor-pointer rounded-full bg-surface-container-high px-2 py-0.5 text-label-small text-on-surface-variant transition-colors hover:bg-on-surface/12"
+            @click.stop="chipsExpanded = false"
+          >
+            <MIcon name="unfold_less" :size="14" />
           </span>
         </template>
 
