@@ -31,6 +31,7 @@ const props = withDefaults(
     clearable?: boolean
     searchPlaceholder?: string
     noResultsText?: string
+    hideSelected?: boolean
   }>(),
   {
     modelValue: () => [],
@@ -40,6 +41,7 @@ const props = withDefaults(
     searchable: true,
     maxChips: 3,
     clearable: false,
+    hideSelected: false,
   },
 )
 
@@ -67,9 +69,13 @@ function includes(arr: unknown[], val: unknown): boolean {
 const hasValue = computed(() => props.modelValue.length > 0)
 
 const filteredOptions = computed(() => {
-  if (!search.value) return props.options
+  let opts = props.options
+  if (props.hideSelected) {
+    opts = opts.filter((o) => !includes(props.modelValue, o.value))
+  }
+  if (!search.value) return opts
   const q = search.value.toLowerCase()
-  return props.options.filter((o) => o.label.toLowerCase().includes(q))
+  return opts.filter((o) => o.label.toLowerCase().includes(q))
 })
 
 const visibleChips = computed(() =>
