@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import MIcon from './MIcon.vue'
 
 const props = withDefaults(
@@ -212,6 +212,29 @@ function onWindowMouseDown() {
   bringToFront()
 }
 
+// ---- Clamp to parent ----
+function clampToParent() {
+  const parent = windowRef.value?.parentElement
+  if (!parent) return
+  const pw = parent.clientWidth
+  const ph = parent.clientHeight
+  if (winWidth.value > pw) winWidth.value = Math.max(props.minWidth, pw)
+  if (winHeight.value > ph) winHeight.value = Math.max(props.minHeight, ph)
+  if (posX.value + winWidth.value > pw) posX.value = Math.max(0, pw - winWidth.value)
+  if (posY.value + winHeight.value > ph) posY.value = Math.max(0, ph - winHeight.value)
+}
+
+let resizeObserver: ResizeObserver | null = null
+
+onMounted(() => {
+  clampToParent()
+  const parent = windowRef.value?.parentElement
+  if (parent) {
+    resizeObserver = new ResizeObserver(clampToParent)
+    resizeObserver.observe(parent)
+  }
+})
+
 // ---- Sync initial props ----
 watch(
   () => props.x,
@@ -221,10 +244,15 @@ watch(
   () => props.y,
   (v) => { posY.value = v },
 )
+watch(
+  () => props.modelValue,
+  (v) => { if (v) nextTick(clampToParent) },
+)
 
 // ---- Cleanup ----
 onUnmounted(() => {
   removeListeners()
+  resizeObserver?.disconnect()
 })
 
 // Resize handle definitions
