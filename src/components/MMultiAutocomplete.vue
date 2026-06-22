@@ -22,6 +22,7 @@ const props = withDefaults(
     clearable?: boolean
     maxChips?: number
     noResultsText?: string
+    hideSelected?: boolean
   }>(),
   {
     modelValue: () => [],
@@ -30,6 +31,7 @@ const props = withDefaults(
     required: false,
     clearable: false,
     maxChips: 3,
+    hideSelected: false,
   },
 )
 
@@ -59,9 +61,13 @@ function includes(arr: unknown[], val: unknown): boolean {
 const hasValue = computed(() => props.modelValue.length > 0)
 
 const filteredOptions = computed(() => {
-  if (!search.value) return props.options
+  let opts = props.options
+  if (props.hideSelected) {
+    opts = opts.filter((o) => !includes(props.modelValue, o.value))
+  }
+  if (!search.value) return opts
   const q = search.value.toLowerCase()
-  return props.options.filter((o) => o.label.toLowerCase().includes(q))
+  return opts.filter((o) => o.label.toLowerCase().includes(q))
 })
 
 const resolvedNoResultsText = computed(() => props.noResultsText ?? locale.noResults)
@@ -299,7 +305,8 @@ const labelClasses = computed(() => {
       <!-- Leading icon -->
       <div
         v-if="leadingIcon"
-        class="pointer-events-none absolute left-3.5 top-4.5 text-on-surface-variant"
+        class="pointer-events-none absolute left-3.5 text-on-surface-variant"
+        :class="variant === 'filled' ? 'top-5' : 'top-4.5'"
       >
         <MIcon :name="leadingIcon" :size="20" />
       </div>
