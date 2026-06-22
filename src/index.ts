@@ -127,6 +127,7 @@ export { default as MTransferList } from './components/MTransferList.vue'
 export { default as MTree } from './components/MTree.vue'
 export { default as MTreeTable } from './components/MTreeTable.vue'
 export { default as MVirtualTable } from './components/MVirtualTable.vue'
+export { default as MWindow } from './components/MWindow.vue'
 
 // Re-export types from components that define them
 export type { EmojiCategory } from './data/emojis'
