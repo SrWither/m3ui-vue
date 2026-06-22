@@ -276,6 +276,11 @@ watch(
       ]"
       :style="{ width: modelValue && !collapsed && width ? width : undefined, '--nd-width': width ?? '18rem' }"
     >
+      <div v-if="$slots.toggle" class="nd-toggle shrink-0 border-b border-outline-variant">
+        <div class="nd-toggle-inner">
+          <slot name="toggle" />
+        </div>
+      </div>
       <div v-if="$slots.header" class="shrink-0">
         <slot name="header" />
       </div>
@@ -482,6 +487,20 @@ watch(
 /* Collapse-to-icons: let children adapt to 72px width */
 .nd-inline.nd-collapsed > * {
   min-width: 0;
+}
+
+/* Toggle slot: icon stays anchored while border spans full width */
+.nd-toggle {
+  display: flex;
+  align-items: center;
+}
+.nd-toggle-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 64px;
+  flex-shrink: 0;
 }
 
 /* Collapse-to-icons: fade out labels before width squishes them */
