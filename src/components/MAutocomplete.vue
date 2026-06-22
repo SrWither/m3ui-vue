@@ -1,13 +1,9 @@
 <script setup lang="ts">
-import { computed, ref, useId, onMounted, onUnmounted } from 'vue'
+import { computed, ref, useId, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import MIcon from './MIcon.vue'
 import { useFieldBg } from '../composables/useFieldBg'
-
-export interface SelectOption {
-  label: string
-  value: unknown
-  disabled?: boolean
-}
+import { useLocale } from '../composables/useLocale'
+import type { SelectOption } from './MSelect.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -23,6 +19,7 @@ const props = withDefaults(
     leadingIcon?: string
     clearable?: boolean
     fieldBg?: string
+    noResultsText?: string
   }>(),
   {
     modelValue: undefined,
@@ -35,9 +32,13 @@ const props = withDefaults(
 
 const emit = defineEmits<{ 'update:modelValue': [unknown] }>()
 
+const locale = useLocale()
 const id = useId()
 const open = ref(false)
+const search = ref('')
+const highlightIndex = ref(-1)
 const fieldEl = ref<HTMLElement | null>(null)
+const inputEl = ref<HTMLInputElement | null>(null)
 const { resolvedFieldBg } = useFieldBg(fieldEl, () => props.fieldBg)
 const dropdownEl = ref<HTMLElement | null>(null)
 const dropPos = ref({ top: '0px', left: '0px', width: '0px' })
@@ -53,11 +54,19 @@ const selectedLabel = computed(
   () => props.options.find((o) => eq(o.value, props.modelValue))?.label ?? '',
 )
 
+const filteredOptions = computed(() => {
+  if (!search.value) return props.options
+  const q = search.value.toLowerCase()
+  return props.options.filter((o) => o.label.toLowerCase().includes(q))
+})
+
+const resolvedNoResultsText = computed(() => props.noResultsText ?? locale.noResults)
+
 function computeDropPos() {
   if (!fieldEl.value) return
   const rect = fieldEl.value.getBoundingClientRect()
   const spaceBelow = window.innerHeight - rect.bottom - 8
-  const dropH = Math.min(240, props.options.length * 52 + 8)
+  const dropH = Math.min(240, filteredOptions.value.length * 52 + 8)
   const openAbove = spaceBelow < dropH && rect.top > dropH
   dropPos.value = {
     top: openAbove ? `${rect.top - 4 - dropH}px` : `${rect.bottom + 4}px`,
@@ -66,54 +75,110 @@ function computeDropPos() {
   }
 }
 
-function toggle() {
-  if (props.disabled) return
-  if (!open.value) computeDropPos()
-  open.value = !open.value
+function openDropdown() {
+  if (props.disabled || open.value) return
+  computeDropPos()
+  open.value = true
+  highlightIndex.value = -1
+}
+
+function closeDropdown() {
+  open.value = false
+  search.value = ''
+  highlightIndex.value = -1
 }
 
 function select(opt: SelectOption) {
   if (opt.disabled) return
   emit('update:modelValue', opt.value)
-  open.value = false
+  closeDropdown()
+  nextTick(() => inputEl.value?.blur())
+}
+
+function onInputFocus() {
+  search.value = ''
+  openDropdown()
+}
+
+function onInputBlur(e: FocusEvent) {
+  const related = e.relatedTarget as Node | null
+  if (dropdownEl.value?.contains(related) || fieldEl.value?.contains(related)) return
+  closeDropdown()
+}
+
+function onInput(e: Event) {
+  search.value = (e.target as HTMLInputElement).value
+  if (!open.value) openDropdown()
+  highlightIndex.value = -1
+  nextTick(computeDropPos)
 }
 
 function onOutsideClick(e: MouseEvent) {
   const t = e.target as Node
-  if (!fieldEl.value?.contains(t) && !dropdownEl.value?.contains(t)) open.value = false
+  if (!fieldEl.value?.contains(t) && !dropdownEl.value?.contains(t)) closeDropdown()
 }
 
 function onScroll(e: Event) {
   if (!open.value) return
-  // Scrolling inside the dropdown list itself — do nothing
+  // Scrolling inside the dropdown list itself -- do nothing
   if (dropdownEl.value?.contains(e.target as Node)) return
   // Recompute position to track the trigger element as the page scrolls
   if (!fieldEl.value) return
   const rect = fieldEl.value.getBoundingClientRect()
   // Only close if the trigger has scrolled completely out of the viewport
   if (rect.bottom < 0 || rect.top > window.innerHeight) {
-    open.value = false
+    closeDropdown()
     return
   }
   computeDropPos()
 }
 
 function onKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') { open.value = false; return }
-  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); return }
-  if (!open.value) return
-  const opts = props.options.filter((o) => !o.disabled)
-  const idx = opts.findIndex((o) => eq(o.value, props.modelValue))
+  if (e.key === 'Escape') {
+    closeDropdown()
+    inputEl.value?.blur()
+    return
+  }
+
+  if (!open.value) {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      openDropdown()
+      return
+    }
+    return
+  }
+
+  const opts = filteredOptions.value.filter((o) => !o.disabled)
   if (e.key === 'ArrowDown') {
     e.preventDefault()
-    const next = opts[(idx + 1) % opts.length]
-    if (next) emit('update:modelValue', next.value)
-  }
-  if (e.key === 'ArrowUp') {
+    highlightIndex.value = highlightIndex.value < opts.length - 1 ? highlightIndex.value + 1 : 0
+    scrollToHighlighted()
+  } else if (e.key === 'ArrowUp') {
     e.preventDefault()
-    const prev = opts[(idx - 1 + opts.length) % opts.length]
-    if (prev) emit('update:modelValue', prev.value)
+    highlightIndex.value = highlightIndex.value > 0 ? highlightIndex.value - 1 : opts.length - 1
+    scrollToHighlighted()
+  } else if (e.key === 'Enter') {
+    e.preventDefault()
+    const target = opts[highlightIndex.value]
+    if (highlightIndex.value >= 0 && target) {
+      select(target)
+    }
   }
+}
+
+function scrollToHighlighted() {
+  nextTick(() => {
+    if (!dropdownEl.value) return
+    const items = dropdownEl.value.querySelectorAll('[data-option]')
+    const item = items[highlightIndex.value] as HTMLElement | undefined
+    item?.scrollIntoView({ block: 'nearest' })
+  })
+}
+
+// Map highlight index to the full filteredOptions index (skipping disabled)
+function getEnabledIndex(opt: SelectOption): number {
+  return filteredOptions.value.filter((o) => !o.disabled).indexOf(opt)
 }
 
 onMounted(() => {
@@ -125,10 +190,20 @@ onUnmounted(() => {
   window.removeEventListener('scroll', onScroll, true)
 })
 
+// Recompute dropdown position when filtered options change while open
+watch(filteredOptions, () => {
+  if (open.value) nextTick(computeDropPos)
+})
+
+const displayValue = computed(() => {
+  if (open.value) return search.value
+  return selectedLabel.value
+})
+
 const triggerClasses = computed(() => {
   const pl = props.leadingIcon ? 'pl-12' : 'pl-4'
   const base = [
-    'flex w-full cursor-pointer items-center pr-10 text-body-large transition-[border-color,border-width] duration-150',
+    'flex w-full items-center pr-10 text-body-large transition-[border-color,border-width] duration-150',
     pl,
   ]
 
@@ -194,19 +269,28 @@ const labelClasses = computed(() => {
         <MIcon :name="leadingIcon" :size="20" />
       </div>
 
-      <!-- Custom trigger -->
-      <div
+      <!-- Input trigger -->
+      <input
         :id="id"
-        :tabindex="disabled ? -1 : 0"
+        ref="inputEl"
+        type="text"
+        :value="displayValue"
+        :placeholder="!label ? placeholder : undefined"
+        :disabled="disabled"
+        autocomplete="off"
         role="combobox"
         :aria-expanded="open"
         :aria-disabled="disabled"
-        :class="[triggerClasses, disabled ? 'pointer-events-none opacity-[0.38]' : '']"
-        @click="toggle"
+        :class="[
+          triggerClasses,
+          'outline-none text-on-surface',
+          disabled ? 'pointer-events-none opacity-[0.38]' : 'cursor-text',
+        ]"
+        @focus="onInputFocus"
+        @blur="onInputBlur"
+        @input="onInput"
         @keydown="onKeydown"
-      >
-        <span v-if="hasValue" class="text-on-surface">{{ selectedLabel }}</span>
-      </div>
+      />
 
       <!-- Floating label -->
       <label :for="id" :class="labelClasses">
@@ -219,7 +303,7 @@ const labelClasses = computed(() => {
         type="button"
         class="absolute flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"
         :class="variant === 'filled' ? 'right-9 top-[57%] -translate-y-1/2' : 'right-9 top-[55%] -translate-y-1/2'"
-        @click.stop="emit('update:modelValue', undefined as any); open = false"
+        @click.stop="emit('update:modelValue', undefined as any); closeDropdown()"
       >
         <MIcon name="close" :size="18" />
       </button>
@@ -255,16 +339,18 @@ const labelClasses = computed(() => {
         :style="dropPos"
       >
         <div
-          v-for="(opt, i) in options"
+          v-for="(opt, i) in filteredOptions"
           :key="i"
+          data-option
           class="flex cursor-pointer items-center gap-3 px-4 py-3 text-body-large"
           :class="[
             opt.disabled
               ? 'cursor-not-allowed opacity-38 text-on-surface'
               : 'text-on-surface hover:bg-on-surface/8',
             eq(opt.value, modelValue) ? 'bg-primary/8 text-primary font-medium' : '',
+            getEnabledIndex(opt) === highlightIndex && !opt.disabled ? 'bg-on-surface/12' : '',
           ]"
-          @click="select(opt)"
+          @mousedown.prevent="select(opt)"
         >
           <MIcon
             v-if="eq(opt.value, modelValue)"
@@ -276,10 +362,10 @@ const labelClasses = computed(() => {
           {{ opt.label }}
         </div>
         <p
-          v-if="!options.length"
+          v-if="!filteredOptions.length"
           class="px-4 py-3 text-center text-body-small text-on-surface-variant"
         >
-          Sin opciones
+          {{ resolvedNoResultsText }}
         </p>
       </div>
     </Transition>
