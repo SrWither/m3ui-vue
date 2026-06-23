@@ -1,87 +1,213 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import MIcon from './MIcon.vue'
 
 export interface CarouselItem {
   src: string
   alt?: string
-  title?: string
-  subtitle?: string
+  label?: string
+  supportingText?: string
+  ratio?: number
 }
 
 const props = withDefaults(
   defineProps<{
     items: CarouselItem[]
-    autoplay?: boolean
-    interval?: number
+    layout?: 'hero' | 'multi-browse' | 'uncontained'
+    height?: string
     showArrows?: boolean
     showIndicators?: boolean
-    aspectRatio?: string
-    rounded?: boolean
+    autoplay?: boolean
+    interval?: number
+    gap?: number
+    visibleItems?: number
+    animated?: boolean
   }>(),
   {
-    autoplay: false,
-    interval: 5000,
+    layout: 'hero',
+    height: '320px',
     showArrows: true,
     showIndicators: true,
-    aspectRatio: '16/9',
-    rounded: true,
+    autoplay: false,
+    interval: 5000,
+    gap: 8,
+    visibleItems: 3,
+    animated: false,
   },
 )
 
 const emit = defineEmits<{ change: [index: number] }>()
 
-const current = ref(0)
-const direction = ref<'left' | 'right'>('right')
-const transitioning = ref(false)
-let timer: ReturnType<typeof setInterval> | null = null
-let touchStartX = 0
+const trackEl = ref<HTMLElement>()
+const itemEls = ref<HTMLElement[]>([])
+const activeIndex = ref(0)
+const scrollPos = ref(0)
+const isPageBased = computed(() => props.layout === 'multi-browse' || props.layout === 'uncontained')
 
-const total = computed(() => props.items.length)
-const currentItem = computed(() => props.items[current.value])
+const totalPages = computed(() => {
+  if (!isPageBased.value) return props.items.length
+  if (!trackEl.value) return 1
+  const track = trackEl.value
+  return Math.max(1, Math.ceil(track.scrollWidth / track.clientWidth))
+})
 
-function goTo(index: number) {
-  if (transitioning.value || index === current.value) return
-  direction.value = index > current.value ? 'right' : 'left'
-  transitioning.value = true
-  current.value = ((index % total.value) + total.value) % total.value
-  emit('change', current.value)
+const activePage = computed(() => {
+  if (!isPageBased.value) return activeIndex.value
+  if (!trackEl.value) return 0
+  const track = trackEl.value
+  if (track.scrollWidth <= track.clientWidth) return 0
+  const _ = scrollPos.value
+  return Math.round(track.scrollLeft / track.clientWidth)
+})
+const itemTransforms = ref<string[]>([])
+const imageTransforms = ref<string[]>([])
+let autoTimer: ReturnType<typeof setInterval> | null = null
+let rafId = 0
+let scrollTimeout: ReturnType<typeof setTimeout> | null = null
+
+function setItemRef(el: any, i: number) {
+  if (el) itemEls.value[i] = el as HTMLElement
+}
+
+// ── Scroll handling (only transforms, never layout) ────────────
+function onScroll() {
+  if (rafId) return
+  rafId = requestAnimationFrame(() => {
+    rafId = 0
+    updateTransforms()
+  })
+
+  if (scrollTimeout) clearTimeout(scrollTimeout)
+}
+
+function updateTransforms() {
+  if (!trackEl.value) return
+  const track = trackEl.value
+  scrollPos.value = track.scrollLeft
+  const trackRect = track.getBoundingClientRect()
+  const trackW = trackRect.width
+  const centerX = trackRect.left + trackW / 2
+  const transforms: string[] = []
+  const imgTransforms: string[] = []
+  let closest = 0
+  let closestDist = Infinity
+
+  const refX = props.layout === 'multi-browse' ? trackRect.left : centerX
+
+  for (let i = 0; i < itemEls.value.length; i++) {
+    const el = itemEls.value[i]
+    if (!el) { transforms.push(''); imgTransforms.push(''); continue }
+    const rect = el.getBoundingClientRect()
+    const itemCenterX = rect.left + rect.width / 2
+    const dist = props.layout === 'multi-browse'
+      ? Math.abs(rect.left - refX)
+      : Math.abs(itemCenterX - centerX)
+    const norm = Math.min(dist / (trackW * 0.5), 1)
+
+    if (props.layout === 'hero') {
+      imgTransforms.push(`translateX(${(itemCenterX - centerX) * -0.08}px) scale(1.1)`)
+      transforms.push('')
+    } else if (props.layout === 'uncontained' && props.animated) {
+      const s = 1 - norm * 0.12
+      transforms.push(`scale(${s})`)
+      imgTransforms.push('')
+    } else {
+      transforms.push('')
+      imgTransforms.push('')
+    }
+
+    if (dist < closestDist) {
+      closestDist = dist
+      closest = i
+    }
+  }
+
+  itemTransforms.value = transforms
+  imageTransforms.value = imgTransforms
+
+  if (closest !== activeIndex.value) {
+    activeIndex.value = closest
+    emit('change', closest)
+  }
+}
+
+// ── Fixed item widths (never change during scroll) ─────────────
+function itemWidth(i: number) {
+  switch (props.layout) {
+    case 'hero':
+      return `calc(100% - 48px)`
+    case 'multi-browse':
+      return `calc(${100 / props.visibleItems}% - ${props.gap * (props.visibleItems - 1) / props.visibleItems}px)`
+    case 'uncontained':
+      return `${(props.items[i]?.ratio ?? 1) * 260}px`
+    default:
+      return '80%'
+  }
+}
+
+function itemStyle(i: number) {
+  const style: Record<string, string> = {
+    flexShrink: '0',
+    width: itemWidth(i),
+  }
+  const t = itemTransforms.value[i]
+  if (t) {
+    style.transform = t
+    style.transition = 'transform 120ms ease-out'
+  }
+  return style
+}
+
+function imgStyle(i: number) {
+  const t = imageTransforms.value[i]
+  if (!t) return {}
+  return { transform: t }
+}
+
+// ── Navigation ─────────────────────────────────────────────────
+function scrollToItem(index: number) {
+  const el = itemEls.value[index]
+  if (!el || !trackEl.value) return
+  const track = trackEl.value
+  const scrollLeft = el.offsetLeft - (track.clientWidth - el.offsetWidth) / 2
+  track.scrollTo({ left: scrollLeft, behavior: 'smooth' })
+}
+
+function scrollToPage(page: number) {
+  if (!trackEl.value) return
+  const track = trackEl.value
+  track.scrollTo({ left: page * track.clientWidth, behavior: 'smooth' })
 }
 
 function next() {
-  goTo(current.value + 1)
+  if (isPageBased.value) {
+    if (!trackEl.value) return
+    trackEl.value.scrollBy({ left: trackEl.value.clientWidth, behavior: 'smooth' })
+  } else {
+    const i = activeIndex.value < props.items.length - 1 ? activeIndex.value + 1 : 0
+    scrollToItem(i)
+  }
 }
 
 function prev() {
-  goTo(current.value - 1)
-}
-
-function onTransitionEnd() {
-  transitioning.value = false
+  if (isPageBased.value) {
+    if (!trackEl.value) return
+    trackEl.value.scrollBy({ left: -trackEl.value.clientWidth, behavior: 'smooth' })
+  } else {
+    const i = activeIndex.value > 0 ? activeIndex.value - 1 : props.items.length - 1
+    scrollToItem(i)
+  }
 }
 
 function startAutoplay() {
   stopAutoplay()
-  if (props.autoplay && total.value > 1) {
-    timer = setInterval(next, props.interval)
+  if (props.autoplay && props.items.length > 1) {
+    autoTimer = setInterval(next, props.interval)
   }
 }
 
 function stopAutoplay() {
-  if (timer) { clearInterval(timer); timer = null }
-}
-
-function onTouchStart(e: TouchEvent) {
-  touchStartX = e.touches[0]!.clientX
-  stopAutoplay()
-}
-
-function onTouchEnd(e: TouchEvent) {
-  const dx = e.changedTouches[0]!.clientX - touchStartX
-  if (Math.abs(dx) > 50) {
-    dx < 0 ? next() : prev()
-  }
-  startAutoplay()
+  if (autoTimer) { clearInterval(autoTimer); autoTimer = null }
 }
 
 function onKeydown(e: KeyboardEvent) {
@@ -89,58 +215,65 @@ function onKeydown(e: KeyboardEvent) {
   else if (e.key === 'ArrowLeft') prev()
 }
 
-watch(() => props.autoplay, startAutoplay)
-onMounted(startAutoplay)
-onBeforeUnmount(stopAutoplay)
+const trackPadding = computed(() => {
+  if (props.layout === 'hero') return '0 24px'
+  if (props.layout === 'uncontained') return '0 24px'
+  return '0'
+})
 
-defineExpose({ next, prev, goTo })
+watch(() => props.autoplay, startAutoplay)
+onMounted(() => {
+  startAutoplay()
+  nextTick(() => updateTransforms())
+})
+onBeforeUnmount(() => {
+  stopAutoplay()
+  if (rafId) cancelAnimationFrame(rafId)
+})
+
+defineExpose({ next, prev, scrollToItem, scrollToPage })
 </script>
 
 <template>
   <div
-    class="group relative overflow-hidden bg-surface-container-highest"
-    :class="rounded ? 'rounded-2xl' : ''"
-    :style="{ aspectRatio }"
+    class="group relative overflow-hidden"
     tabindex="0"
     @keydown="onKeydown"
-    @touchstart.passive="onTouchStart"
-    @touchend.passive="onTouchEnd"
     @mouseenter="stopAutoplay"
     @mouseleave="startAutoplay"
   >
-    <!-- Slides -->
-    <TransitionGroup
-      :name="direction === 'right' ? 'm3-carousel-right' : 'm3-carousel-left'"
-      tag="div"
-      class="relative h-full w-full"
-      @after-enter="onTransitionEnd"
-      @after-leave="onTransitionEnd"
+    <div
+      ref="trackEl"
+      class="carousel-track flex overflow-x-auto"
+      :class="layout === 'multi-browse' ? 'snap-start' : 'snap-center'"
+      :style="{ height, gap: `${gap}px`, padding: trackPadding }"
+      @scroll.passive="onScroll"
     >
       <div
         v-for="(item, i) in items"
-        v-show="i === current"
         :key="i"
-        class="absolute inset-0"
+        :ref="(el) => setItemRef(el, i)"
+        class="relative overflow-hidden rounded-2xl"
+        :style="itemStyle(i)"
       >
         <img
           :src="item.src"
-          :alt="item.alt ?? item.title ?? ''"
-          class="h-full w-full object-cover"
+          :alt="item.alt ?? item.label ?? ''"
+          class="pointer-events-none h-full w-full object-cover"
+          :style="imgStyle(i)"
         />
 
-        <!-- Overlay with text -->
         <div
-          v-if="item.title || item.subtitle"
-          class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-6 pb-6 pt-16"
+          v-if="item.label || item.supportingText"
+          class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-5 pb-4 pt-12"
         >
-          <h3 v-if="item.title" class="text-title-large font-medium text-white">{{ item.title }}</h3>
-          <p v-if="item.subtitle" class="mt-1 text-body-medium text-white/80">{{ item.subtitle }}</p>
+          <p v-if="item.label" class="text-title-medium font-medium text-white">{{ item.label }}</p>
+          <p v-if="item.supportingText" class="mt-0.5 text-body-small text-white/80">{{ item.supportingText }}</p>
         </div>
       </div>
-    </TransitionGroup>
+    </div>
 
-    <!-- Arrows -->
-    <template v-if="showArrows && total > 1">
+    <template v-if="showArrows && items.length > 1">
       <button
         type="button"
         class="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-surface/80 text-on-surface shadow-elevation-1 opacity-0 backdrop-blur-sm transition-all duration-200 hover:bg-surface hover:shadow-elevation-2 group-hover:opacity-100"
@@ -157,47 +290,36 @@ defineExpose({ next, prev, goTo })
       </button>
     </template>
 
-    <!-- Indicators -->
+    </div>
+
     <div
-      v-if="showIndicators && total > 1"
-      class="absolute inset-x-0 bottom-0 z-10 flex justify-center gap-2 pb-3"
-      :class="currentItem?.title || currentItem?.subtitle ? 'pb-20' : 'pb-3'"
+      v-if="showIndicators && totalPages > 1"
+      class="flex justify-center gap-1.5 pt-3"
     >
       <button
-        v-for="(_, i) in items"
-        :key="i"
+        v-for="p in totalPages"
+        :key="p"
         type="button"
         class="h-2 cursor-pointer rounded-full transition-all duration-300"
-        :class="i === current ? 'w-6 bg-white' : 'w-2 bg-white/50 hover:bg-white/70'"
-        @click="goTo(i)"
+        :class="(p - 1) === activePage ? 'w-5 bg-on-surface' : 'w-2 bg-on-surface/30 hover:bg-on-surface/50'"
+        @click="isPageBased ? scrollToPage(p - 1) : scrollToItem(p - 1)"
       />
     </div>
-  </div>
 </template>
 
-<style>
-.m3-carousel-right-enter-active,
-.m3-carousel-right-leave-active,
-.m3-carousel-left-enter-active,
-.m3-carousel-left-leave-active {
-  transition: transform 500ms cubic-bezier(0.2, 0, 0, 1), opacity 500ms cubic-bezier(0.2, 0, 0, 1);
+<style scoped>
+.carousel-track {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
-
-.m3-carousel-right-enter-from {
-  transform: translateX(100%);
-  opacity: 0;
+.carousel-track::-webkit-scrollbar {
+  display: none;
 }
-.m3-carousel-right-leave-to {
-  transform: translateX(-100%);
-  opacity: 0;
+.snap-center > * {
+  scroll-snap-align: center;
 }
-
-.m3-carousel-left-enter-from {
-  transform: translateX(-100%);
-  opacity: 0;
-}
-.m3-carousel-left-leave-to {
-  transform: translateX(100%);
-  opacity: 0;
+.snap-start > * {
+  scroll-snap-align: start;
 }
 </style>
