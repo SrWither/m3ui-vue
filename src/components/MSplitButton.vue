@@ -14,13 +14,13 @@ const props = withDefaults(defineProps<{
   icon?: string
   variant?: 'filled' | 'tonal' | 'outlined' | 'elevated'
   color?: 'primary' | 'secondary' | 'tertiary'
-  size?: 'small' | 'medium' | 'large'
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
   disabled?: boolean
   items?: SplitButtonItem[]
 }>(), {
   variant: 'tonal',
   color: 'primary',
-  size: 'medium',
+  size: 'sm',
   disabled: false,
 })
 
@@ -62,11 +62,14 @@ const containerClasses = computed(() => {
 })
 
 const sizeConfig = computed(() => {
-  switch (props.size) {
-    case 'small': return { h: 'h-8', w: 'w-8', px: 'px-3', text: 'text-label-medium', icon: 16, arrow: 18, r: 16, ri: 5 }
-    case 'large': return { h: 'h-12', w: 'w-12', px: 'px-5', text: 'text-label-large', icon: 20, arrow: 22, r: 24, ri: 8 }
-    default: return { h: 'h-10', w: 'w-10', px: 'px-4', text: 'text-label-large', icon: 18, arrow: 20, r: 20, ri: 6 }
+  const map = {
+    xs: { h: 'h-8', w: 'w-8', px: 'px-3', text: 'text-label-medium', icon: 16, arrow: 16, r: 16, ri: 4 },
+    sm: { h: 'h-10', w: 'w-10', px: 'px-4', text: 'text-label-large', icon: 18, arrow: 18, r: 20, ri: 6 },
+    md: { h: 'h-12', w: 'w-12', px: 'px-5', text: 'text-title-medium', icon: 20, arrow: 20, r: 24, ri: 6 },
+    lg: { h: 'h-14', w: 'w-14', px: 'px-6', text: 'text-title-large', icon: 22, arrow: 22, r: 28, ri: 7 },
+    xl: { h: 'h-16', w: 'w-16', px: 'px-7', text: 'text-headline-small', icon: 24, arrow: 24, r: 32, ri: 8 },
   }
+  return map[props.size] ?? map.sm
 })
 
 function computeMenuPos() {

@@ -19,7 +19,8 @@ const props = withDefaults(
     disabled?: boolean
     loading?: boolean
     icon?: string
-    size?: 'small' | 'medium' | 'large'
+    size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+    shape?: 'rounded' | 'squared'
     to?: string | Record<string, any>
   }>(),
   {
@@ -28,7 +29,8 @@ const props = withDefaults(
     type: 'button',
     disabled: false,
     loading: false,
-    size: 'medium',
+    size: 'sm',
+    shape: 'rounded',
   },
 )
 
@@ -51,44 +53,31 @@ const customStyle = computed(() => {
 const isError = computed(() => props.color === 'error')
 
 const base =
-  'relative inline-flex items-center justify-center gap-2 rounded-full font-medium ' +
+  'relative inline-flex items-center justify-center gap-2 font-medium ' +
   'whitespace-nowrap overflow-hidden transition-[box-shadow,background-color,color] duration-150 select-none cursor-pointer ' +
   'disabled:cursor-not-allowed disabled:opacity-[0.38] disabled:shadow-none ' +
   "before:content-[''] before:pointer-events-none before:absolute before:inset-0 " +
   'before:bg-current before:opacity-0 before:transition-opacity before:duration-150 ' +
   'enabled:hover:before:opacity-[0.08] enabled:active:before:opacity-[0.12]'
 
-const sizeClasses = computed(() => {
-  switch (props.size) {
-    case 'small': return 'h-8 text-label-medium'
-    case 'large': return 'h-12 text-label-large'
-    default: return 'h-10 text-label-large'
-  }
-})
+const shapeClass = computed(() => props.shape === 'squared' ? 'rounded-md' : 'rounded-full')
 
-const iconSize = computed(() => {
-  switch (props.size) {
-    case 'small': return 16
-    case 'large': return 22
-    default: return 20
-  }
-})
+const sizeMap = {
+  xs: { h: 'h-8', text: 'text-label-medium', icon: 16, spinner: 14, px: 'px-4', pxIcon: 'pl-3 pr-4', pxText: 'px-2' },
+  sm: { h: 'h-10', text: 'text-label-large', icon: 20, spinner: 16, px: 'px-6', pxIcon: 'pl-4 pr-6', pxText: 'px-3' },
+  md: { h: 'h-12', text: 'text-title-medium', icon: 20, spinner: 18, px: 'px-6', pxIcon: 'pl-5 pr-6', pxText: 'px-3' },
+  lg: { h: 'h-14', text: 'text-title-large', icon: 22, spinner: 20, px: 'px-7', pxIcon: 'pl-6 pr-7', pxText: 'px-4' },
+  xl: { h: 'h-16', text: 'text-headline-small', icon: 24, spinner: 22, px: 'px-8', pxIcon: 'pl-7 pr-8', pxText: 'px-4' },
+}
 
-const spinnerSize = computed(() => {
-  switch (props.size) {
-    case 'small': return 14
-    case 'large': return 20
-    default: return 18
-  }
-})
+const s = computed(() => sizeMap[props.size] ?? sizeMap.sm)
+const sizeClasses = computed(() => `${s.value.h} ${s.value.text}`)
+const iconSize = computed(() => s.value.icon)
+const spinnerSize = computed(() => s.value.spinner)
 
 const px = computed(() => {
-  if (props.variant === 'text') return props.size === 'small' ? 'px-2' : 'px-3'
-  switch (props.size) {
-    case 'small': return 'px-4'
-    case 'large': return 'px-8'
-    default: return 'px-6'
-  }
+  if (props.variant === 'text') return s.value.pxText
+  return (props.icon || props.loading) ? s.value.pxIcon : s.value.px
 })
 
 const variantClasses = computed(() => {
@@ -138,7 +127,7 @@ function createRipple(event: PointerEvent) {
     :to="to || undefined"
     :type="to ? undefined : type"
     :disabled="disabled || loading"
-    :class="[base, sizeClasses, px, variantClasses]"
+    :class="[base, shapeClass, sizeClasses, px, variantClasses]"
     :style="customStyle"
     @pointerdown="createRipple"
   >
