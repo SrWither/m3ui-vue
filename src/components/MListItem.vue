@@ -51,6 +51,7 @@ const isExpanded = computed(() => internalExpanded.value)
 const list = inject<{
   dense: ComputedRef<boolean>
   nav: ComputedRef<boolean>
+  segmented: ComputedRef<boolean>
   selectable: ComputedRef<boolean>
   selected: ComputedRef<string | number | null | undefined>
   dividers: ComputedRef<boolean | 'inset'>
@@ -102,18 +103,23 @@ const iconContainerClasses: Record<string, string> = {
 
 const isDense = computed(() => list?.dense.value ?? false)
 const isNav = computed(() => list?.nav.value ?? false)
+const isSegmented = computed(() => list?.segmented.value ?? false)
 const hasDivider = computed(() => list?.dividers.value ?? false)
 
 const containerClasses = computed(() => [
   'mli-row relative flex w-full items-center gap-4 text-left',
-  isNav.value ? 'rounded-full px-4' : 'px-4',
+  isSegmented.value
+    ? 'rounded-xl bg-surface-container px-4'
+    : isNav.value ? 'rounded-full px-4' : 'px-4',
   isDense.value
     ? 'py-1'
     : resolvedLines.value === 3 ? 'py-3' : 'py-2',
   isClickable.value && !props.disabled && 'cursor-pointer transition-colors duration-150 hover:bg-on-surface/8 active:bg-on-surface/12',
-  isActive.value && (isNav.value
+  isActive.value && (isSegmented.value
     ? 'bg-secondary-container text-on-secondary-container'
-    : 'bg-on-surface/8'),
+    : isNav.value
+      ? 'bg-secondary-container text-on-secondary-container'
+      : 'bg-on-surface/8'),
   props.disabled && 'opacity-[0.38] pointer-events-none',
 ])
 

@@ -6,11 +6,12 @@ const props = withDefaults(
     dense?: boolean
     dividers?: boolean | 'inset'
     nav?: boolean
+    segmented?: boolean
     selectable?: boolean
     selected?: string | number | null
     lines?: 1 | 2 | 3
   }>(),
-  { dense: false, dividers: false, nav: false, selectable: false },
+  { dense: false, dividers: false, nav: false, segmented: false, selectable: false },
 )
 
 const emit = defineEmits<{
@@ -20,6 +21,7 @@ const emit = defineEmits<{
 provide('m-list', {
   dense: computed(() => props.dense),
   nav: computed(() => props.nav),
+  segmented: computed(() => props.segmented),
   selectable: computed(() => props.selectable),
   selected: computed(() => props.selected),
   dividers: computed(() => props.dividers),
@@ -28,8 +30,9 @@ provide('m-list', {
 })
 
 const classes = computed(() => [
-  'flex flex-col py-2',
-  props.nav && 'gap-0.5 px-3',
+  'flex flex-col',
+  props.segmented ? 'gap-2 p-2' : 'py-2',
+  props.nav && !props.segmented && 'gap-0.5 px-3',
 ])
 </script>
 
