@@ -12,6 +12,9 @@ export type { Toast, ToastVariant, ToastPosition, ToastAction, ToastOptions } fr
 export { useFieldBg } from './composables/useFieldBg'
 export { useLocale, defaultLocale } from './composables/useLocale'
 export type { M3Locale } from './composables/useLocale'
+export { useDevice } from './composables/useDevice'
+export { useNotification } from './composables/useNotification'
+export type { Notification, NotificationVariant, NotificationPosition, NotificationOptions } from './composables/useNotification'
 
 // Components
 export { default as MAbsolute } from './components/MAbsolute.vue'

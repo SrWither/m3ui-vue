@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import { useToast } from "../composables/useToast";
 import MIcon from "./MIcon.vue";
+import MSpinner from "./MSpinner.vue";
 import { useLocale } from '../composables/useLocale';
 
 const props = defineProps<{
@@ -95,7 +96,9 @@ const getVariantStyle = (variant: string): VariantStyle =>
           :class="t.color ? 'text-white ring-1 ring-inset ring-white/10' : getVariantStyle(t.variant).container"
           :style="t.color ? { backgroundColor: t.color } : undefined"
         >
+          <MSpinner v-if="t.loading" :size="20" class="shrink-0" />
           <MIcon
+            v-else
             :name="t.icon ?? getVariantStyle(t.variant).iconName"
             :size="20"
             class="shrink-0"
