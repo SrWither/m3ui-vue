@@ -146,10 +146,9 @@ function itemStyle(index: number): Record<string, string> {
 
 const showLabel = computed(() => props.direction === 'up' || props.direction === 'down')
 
-// Force re-render to recalculate positions on scroll
-const scrollTick = ref(0)
 function onScroll() {
-  if (open.value) scrollTick.value++
+  if (!open.value) return
+  open.value = false
 }
 
 function createRipple(event: PointerEvent | MouseEvent, target?: HTMLElement) {
@@ -163,9 +162,11 @@ function createRipple(event: PointerEvent | MouseEvent, target?: HTMLElement) {
   el.addEventListener('animationend', () => el.remove(), { once: true })
 }
 
-const contentStyle = computed(() => {
+const contentStyle = ref<Record<string, string>>({})
+
+function computeContentPos() {
   const rect = fabEl.value?.getBoundingClientRect()
-  if (!rect) return {}
+  if (!rect) return
   const gap = 8
   const base: Record<string, string> = { position: 'fixed', zIndex: '1000' }
   switch (props.direction) {
@@ -188,8 +189,8 @@ const contentStyle = computed(() => {
       base.left = `${rect.right + gap}px`
       break
   }
-  return base
-})
+  contentStyle.value = base
+}
 
 const contentTransformOrigin = computed(() => {
   switch (props.direction) {
@@ -203,6 +204,7 @@ const contentTransformOrigin = computed(() => {
 
 function handleFabClick(e: PointerEvent) {
   if (isExpandable.value) {
+    if (!open.value) computeContentPos()
     open.value = !open.value
   } else {
     emit('click', e)
@@ -223,13 +225,22 @@ function onDocClick(e: MouseEvent) {
   open.value = false
 }
 
+let observer: IntersectionObserver | null = null
+
 onMounted(() => {
   document.addEventListener('click', onDocClick, true)
   window.addEventListener('scroll', onScroll, true)
+  if (fabEl.value) {
+    observer = new IntersectionObserver(([entry]) => {
+      if (entry && !entry.isIntersecting && open.value) open.value = false
+    }, { threshold: 0 })
+    observer.observe(fabEl.value)
+  }
 })
 onUnmounted(() => {
   document.removeEventListener('click', onDocClick, true)
   window.removeEventListener('scroll', onScroll, true)
+  observer?.disconnect()
 })
 </script>
 
@@ -257,8 +268,6 @@ onUnmounted(() => {
 
   <Teleport to="body">
     <template v-if="hasItems">
-      <!-- hidden dep on scrollTick to force style recalc -->
-      <span :data-tick="scrollTick" class="hidden" />
       <div
         v-for="(item, i) in items"
         :key="i"
