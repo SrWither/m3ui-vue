@@ -65,9 +65,9 @@ const shapeClass = computed(() => props.shape === 'squared' ? 'rounded-md' : 'ro
 const sizeMap = {
   xs: { h: 'h-8', text: 'text-label-medium', icon: 16, spinner: 14, px: 'px-4', pxIcon: 'pl-3 pr-4', pxText: 'px-2' },
   sm: { h: 'h-10', text: 'text-label-large', icon: 20, spinner: 16, px: 'px-6', pxIcon: 'pl-4 pr-6', pxText: 'px-3' },
-  md: { h: 'h-12', text: 'text-title-medium', icon: 20, spinner: 18, px: 'px-6', pxIcon: 'pl-5 pr-6', pxText: 'px-3' },
-  lg: { h: 'h-14', text: 'text-title-large', icon: 22, spinner: 20, px: 'px-7', pxIcon: 'pl-6 pr-7', pxText: 'px-4' },
-  xl: { h: 'h-16', text: 'text-headline-small', icon: 24, spinner: 22, px: 'px-8', pxIcon: 'pl-7 pr-8', pxText: 'px-4' },
+  md: { h: 'h-14', text: 'text-title-medium', icon: 20, spinner: 18, px: 'px-6', pxIcon: 'pl-5 pr-6', pxText: 'px-3' },
+  lg: { h: 'h-16', text: 'text-title-large', icon: 22, spinner: 20, px: 'px-7', pxIcon: 'pl-6 pr-7', pxText: 'px-4' },
+  xl: { h: 'h-20', text: 'text-headline-small', icon: 24, spinner: 22, px: 'px-8', pxIcon: 'pl-7 pr-8', pxText: 'px-4' },
 }
 
 const s = computed(() => sizeMap[props.size] ?? sizeMap.sm)
