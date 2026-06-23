@@ -155,10 +155,7 @@ function onOut(e: MouseEvent) {
 function onScroll(e: Event) {
   if (!open.value) return
   if (panelEl.value?.contains(e.target as Node)) return
-  if (!triggerEl.value) return
-  const rect = triggerEl.value.getBoundingClientRect()
-  if (rect.bottom < 0 || rect.top > window.innerHeight) { open.value = false; return }
-  computeDropPos()
+  open.value = false
 }
 
 watch(open, (v) => {

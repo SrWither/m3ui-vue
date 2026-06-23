@@ -143,17 +143,8 @@ function onOutsideClick(e: MouseEvent) {
 
 function onScroll(e: Event) {
   if (!open.value) return
-  // Scrolling inside the dropdown list itself -- do nothing
   if (dropdownEl.value?.contains(e.target as Node)) return
-  // Recompute position to track the trigger element as the page scrolls
-  if (!fieldEl.value) return
-  const rect = fieldEl.value.getBoundingClientRect()
-  // Only close if the trigger has scrolled completely out of the viewport
-  if (rect.bottom < 0 || rect.top > window.innerHeight) {
-    closeDropdown()
-    return
-  }
-  computeDropPos()
+  closeDropdown()
 }
 
 function onKeydown(e: KeyboardEvent) {
@@ -335,9 +326,10 @@ const labelClasses = computed(() => {
       <!-- Arrow icon -->
       <div class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 flex h-6 items-center">
         <MIcon
-          :name="open || modalOpen ? 'arrow_drop_up' : 'arrow_drop_down'"
+          name="arrow_drop_down"
           :size="24"
           class="text-on-surface-variant transition-transform duration-200"
+          :class="open || modalOpen ? 'rotate-180' : ''"
         />
       </div>
     </div>

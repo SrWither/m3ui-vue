@@ -175,13 +175,7 @@ function onOutsideClick(e: MouseEvent) {
 function onScroll(e: Event) {
   if (!open.value) return
   if (dropdownEl.value?.contains(e.target as Node)) return
-  if (!fieldEl.value) return
-  const rect = fieldEl.value.getBoundingClientRect()
-  if (rect.bottom < 0 || rect.top > window.innerHeight) {
-    close()
-    return
-  }
-  computeDropPos()
+  close()
 }
 
 onMounted(() => {
@@ -326,9 +320,10 @@ const labelClasses = computed(() => {
 
       <div class="pointer-events-none absolute right-2 top-4">
         <MIcon
-          :name="open || modalOpen ? 'arrow_drop_up' : 'arrow_drop_down'"
+          name="arrow_drop_down"
           :size="24"
-          class="text-on-surface-variant"
+          class="text-on-surface-variant transition-transform duration-200"
+          :class="open || modalOpen ? 'rotate-180' : ''"
         />
       </div>
     </div>
