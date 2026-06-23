@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch, nextTick } from 'vue'
+import { computed, onMounted, onUnmounted, ref, useSlots } from 'vue'
 import MIcon from './MIcon.vue'
 
 export interface SpeedDialItem {
@@ -34,10 +34,14 @@ const fabTag = computed(() => props.to ? 'RouterLink' : 'button')
 
 const emit = defineEmits<{ click: [MouseEvent] }>()
 
+const slots = useSlots()
 const open = ref(false)
 const fabEl = ref<HTMLElement>()
+const contentEl = ref<HTMLElement>()
 
 const hasItems = computed(() => !!props.items?.length)
+const hasContent = computed(() => !!slots.content)
+const isExpandable = computed(() => hasItems.value || hasContent.value)
 
 const colorMap: Record<string, string> = {
   primary: 'bg-primary-container text-on-primary-container',
@@ -159,8 +163,46 @@ function createRipple(event: PointerEvent | MouseEvent, target?: HTMLElement) {
   el.addEventListener('animationend', () => el.remove(), { once: true })
 }
 
+const contentStyle = computed(() => {
+  const rect = fabEl.value?.getBoundingClientRect()
+  if (!rect) return {}
+  const gap = 8
+  const base: Record<string, string> = { position: 'fixed', zIndex: '1000' }
+  switch (props.direction) {
+    case 'up':
+      base.bottom = `${window.innerHeight - rect.top + gap}px`
+      base.left = `${rect.left}px`
+      base.minWidth = `${rect.width}px`
+      break
+    case 'down':
+      base.top = `${rect.bottom + gap}px`
+      base.left = `${rect.left}px`
+      base.minWidth = `${rect.width}px`
+      break
+    case 'left':
+      base.top = `${rect.top}px`
+      base.right = `${window.innerWidth - rect.left + gap}px`
+      break
+    case 'right':
+      base.top = `${rect.top}px`
+      base.left = `${rect.right + gap}px`
+      break
+  }
+  return base
+})
+
+const contentTransformOrigin = computed(() => {
+  switch (props.direction) {
+    case 'up': return 'bottom center'
+    case 'down': return 'top center'
+    case 'left': return 'center right'
+    case 'right': return 'center left'
+    default: return 'bottom center'
+  }
+})
+
 function handleFabClick(e: PointerEvent) {
-  if (hasItems.value) {
+  if (isExpandable.value) {
     open.value = !open.value
   } else {
     emit('click', e)
@@ -175,9 +217,10 @@ function handleItemClick(e: PointerEvent, item: SpeedDialItem, buttonEl: HTMLEle
 
 function onDocClick(e: MouseEvent) {
   if (!open.value || props.persistent) return
-  if (fabEl.value && !fabEl.value.contains(e.target as Node)) {
-    open.value = false
-  }
+  const t = e.target as Node
+  if (fabEl.value?.contains(t)) return
+  if (contentEl.value?.contains(t)) return
+  open.value = false
 }
 
 onMounted(() => {
@@ -206,7 +249,7 @@ onUnmounted(() => {
         :name="icon"
         :size="fabIconSize"
         class="transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
-        :class="hasItems && open ? 'rotate-45' : ''"
+        :class="isExpandable && open ? 'rotate-45' : ''"
       />
       <span v-if="label" class="text-label-large font-medium">{{ label }}</span>
     </component>
@@ -243,5 +286,34 @@ onUnmounted(() => {
         </component>
       </div>
     </template>
+
+    <!-- Custom content panel -->
+    <Transition name="m3-fab-content">
+      <div
+        v-if="hasContent && open"
+        ref="contentEl"
+        class=""
+        :style="{ ...contentStyle, transformOrigin: contentTransformOrigin }"
+      >
+        <slot name="content" :close="() => open = false" />
+      </div>
+    </Transition>
   </Teleport>
 </template>
+
+<style scoped>
+.m3-fab-content-enter-active {
+  transition: opacity 200ms ease, transform 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+.m3-fab-content-leave-active {
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+.m3-fab-content-enter-from {
+  opacity: 0;
+  transform: scale(0.85);
+}
+.m3-fab-content-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
+</style>
