@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, ref, useId, onMounted, onUnmounted, nextTick } from 'vue'
+import { computed, ref, useId, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import MIcon from './MIcon.vue'
+import MIconButton from './MIconButton.vue'
 import MCheckbox from './MCheckbox.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 import { useLocale } from '../composables/useLocale'
@@ -20,6 +21,7 @@ const props = withDefaults(
     label?: string
     placeholder?: string
     variant?: 'filled' | 'outlined'
+    mode?: 'docked' | 'modal'
     disabled?: boolean
     error?: string
     hint?: string
@@ -36,6 +38,7 @@ const props = withDefaults(
   {
     modelValue: () => [],
     variant: 'filled',
+    mode: 'docked',
     disabled: false,
     required: false,
     searchable: true,
@@ -49,6 +52,8 @@ const emit = defineEmits<{ 'update:modelValue': [unknown[]] }>()
 
 const id = useId()
 const open = ref(false)
+const modalOpen = ref(false)
+const modalSearch = ref('')
 const search = ref('')
 const fieldEl = ref<HTMLElement | null>(null)
 const { resolvedFieldBg } = useFieldBg(fieldEl, () => props.fieldBg)
@@ -128,6 +133,11 @@ function computeDropPos() {
 
 async function openDropdown() {
   if (props.disabled) return
+  if (props.mode === 'modal') {
+    modalOpen.value = true
+    modalSearch.value = ''
+    return
+  }
   computeDropPos()
   open.value = true
   search.value = ''
@@ -137,10 +147,27 @@ async function openDropdown() {
 
 function close() {
   open.value = false
+  modalOpen.value = false
   search.value = ''
+  modalSearch.value = ''
 }
 
+const modalFilteredOptions = computed(() => {
+  let opts = props.options
+  if (props.hideSelected) {
+    opts = opts.filter((o) => !includes(props.modelValue, o.value))
+  }
+  if (!modalSearch.value) return opts
+  const q = modalSearch.value.toLowerCase()
+  return opts.filter((o) => o.label.toLowerCase().includes(q))
+})
+
+watch(modalOpen, (v) => {
+  document.body.style.overflow = v ? 'hidden' : ''
+})
+
 function onOutsideClick(e: MouseEvent) {
+  if (modalOpen.value) return
   const t = e.target as Node
   if (!fieldEl.value?.contains(t) && !dropdownEl.value?.contains(t)) close()
 }
@@ -164,6 +191,7 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('mousedown', onOutsideClick)
   window.removeEventListener('scroll', onScroll, true)
+  document.body.style.overflow = ''
 })
 
 const triggerClasses = computed(() => {
@@ -298,7 +326,7 @@ const labelClasses = computed(() => {
 
       <div class="pointer-events-none absolute right-2 top-4">
         <MIcon
-          :name="open ? 'arrow_drop_up' : 'arrow_drop_down'"
+          :name="open || modalOpen ? 'arrow_drop_up' : 'arrow_drop_down'"
           :size="24"
           class="text-on-surface-variant"
         />
@@ -309,7 +337,7 @@ const labelClasses = computed(() => {
     <p v-else-if="hint" class="px-4 text-body-small text-on-surface-variant">{{ hint }}</p>
   </div>
 
-  <!-- Dropdown teleported to body to escape overflow clipping -->
+  <!-- Docked dropdown -->
   <Teleport to="body">
     <Transition
       enter-active-class="transition-[opacity,transform] duration-150"
@@ -320,12 +348,11 @@ const labelClasses = computed(() => {
       leave-to-class="opacity-0 -translate-y-1 scale-[0.98]"
     >
       <div
-        v-if="open"
+        v-if="open && mode === 'docked'"
         ref="dropdownEl"
         class="fixed z-500 max-h-60 overflow-auto rounded-sm bg-surface-container shadow-elevation-2"
         :style="dropPos"
       >
-        <!-- Search -->
         <div v-if="searchable" class="sticky top-0 bg-surface-container px-3 py-2">
           <div class="flex items-center gap-2 rounded-full bg-surface-container-high px-3 py-1.5">
             <MIcon name="search" :size="16" class="shrink-0 text-on-surface-variant" />
@@ -361,5 +388,76 @@ const labelClasses = computed(() => {
         </div>
       </div>
     </Transition>
+
+    <!-- Modal -->
+    <Transition name="m3-ms-modal">
+      <div
+        v-if="modalOpen && mode === 'modal'"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+        @click.self="close"
+      >
+        <div class="ms-modal-box flex max-h-[80vh] w-full max-w-sm flex-col overflow-hidden rounded-[28px] bg-surface-container-high shadow-elevation-3">
+          <div class="flex items-center justify-between px-6 pt-6 pb-4">
+            <h2 class="text-headline-small text-on-surface">{{ label || placeholder }}</h2>
+            <MIconButton icon="close" :label="locale.close" @click="close" />
+          </div>
+
+          <div v-if="searchable" class="px-6 pb-3">
+            <div class="flex items-center gap-2 rounded-full bg-surface-container-highest px-3 py-2">
+              <MIcon name="search" :size="16" class="shrink-0 text-on-surface-variant" />
+              <input
+                v-model="modalSearch"
+                type="text"
+                :placeholder="searchPlaceholder ?? locale.search"
+                class="w-full bg-transparent text-body-medium text-on-surface outline-none placeholder:text-on-surface-variant"
+              />
+            </div>
+          </div>
+
+          <div class="h-px bg-outline-variant" />
+
+          <div class="flex-1 overflow-y-auto py-2">
+            <label
+              v-for="(opt, i) in modalFilteredOptions"
+              :key="i"
+              class="flex cursor-pointer items-center gap-4 px-6 py-3 transition-colors hover:bg-on-surface/8"
+              :class="opt.disabled ? 'cursor-not-allowed opacity-38' : ''"
+            >
+              <MCheckbox
+                :model-value="includes(modelValue, opt.value)"
+                :disabled="opt.disabled"
+                @update:model-value="!opt.disabled && toggle(opt.value)"
+              />
+              <span class="text-body-large text-on-surface">{{ opt.label }}</span>
+            </label>
+            <p
+              v-if="!modalFilteredOptions.length"
+              class="px-6 py-4 text-center text-body-medium text-on-surface-variant"
+            >
+              {{ noResultsText ?? locale.noResults }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </Teleport>
 </template>
+
+<style scoped>
+.m3-ms-modal-enter-active,
+.m3-ms-modal-leave-active {
+  transition: opacity 0.15s ease;
+}
+.m3-ms-modal-enter-from,
+.m3-ms-modal-leave-to {
+  opacity: 0;
+}
+.m3-ms-modal-enter-active .ms-modal-box,
+.m3-ms-modal-leave-active .ms-modal-box {
+  transition: transform 0.15s ease;
+}
+.m3-ms-modal-enter-from .ms-modal-box,
+.m3-ms-modal-leave-to .ms-modal-box {
+  transform: scale(0.95);
+}
+</style>
