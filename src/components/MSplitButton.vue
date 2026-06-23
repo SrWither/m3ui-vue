@@ -82,6 +82,17 @@ function toggleMenu() {
   open.value = !open.value
 }
 
+function createRipple(event: PointerEvent) {
+  const button = event.currentTarget as HTMLElement
+  const rect = button.getBoundingClientRect()
+  const d = Math.max(rect.width, rect.height) * 2
+  const el = document.createElement('span')
+  el.className = 'm3-ripple'
+  el.style.cssText = `width:${d}px;height:${d}px;top:${event.clientY - rect.top - d / 2}px;left:${event.clientX - rect.left - d / 2}px`
+  button.appendChild(el)
+  el.addEventListener('animationend', () => el.remove(), { once: true })
+}
+
 function selectItem(item: SplitButtonItem) {
   if (item.disabled) return
   item.onClick?.()
@@ -116,7 +127,7 @@ onUnmounted(() => {
     <!-- Main action -->
     <button
       type="button"
-      class="flex h-10 cursor-pointer items-center gap-2 px-4 text-label-large font-medium transition-colors"
+      class="relative flex h-10 cursor-pointer items-center gap-2 overflow-hidden px-4 text-label-large font-medium transition-colors"
       style="border-radius: 20px 6px 6px 20px"
       :class="[
         colorStyles.bg,
@@ -127,6 +138,7 @@ onUnmounted(() => {
         disabled ? 'pointer-events-none opacity-[0.38]' : '',
       ]"
       :disabled="disabled"
+      @pointerdown="createRipple"
       @click="emit('click', $event)"
     >
       <MIcon v-if="icon" :name="icon" :size="18" />
@@ -136,7 +148,7 @@ onUnmounted(() => {
     <!-- Toggle -->
     <button
       type="button"
-      class="toggle-btn flex h-10 w-10 cursor-pointer items-center justify-center"
+      class="toggle-btn relative flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden"
       :style="{ borderRadius: open ? '20px' : '6px 20px 20px 6px' }"
       :class="[
         colorStyles.bg,
@@ -147,6 +159,7 @@ onUnmounted(() => {
         disabled ? 'pointer-events-none opacity-[0.38]' : '',
       ]"
       :disabled="disabled"
+      @pointerdown="createRipple"
       @click="toggleMenu"
     >
       <MIcon
