@@ -19,6 +19,7 @@ const props = withDefaults(
     disabled?: boolean
     loading?: boolean
     icon?: string
+    size?: 'small' | 'medium' | 'large'
     to?: string | Record<string, any>
   }>(),
   {
@@ -27,6 +28,7 @@ const props = withDefaults(
     type: 'button',
     disabled: false,
     loading: false,
+    size: 'medium',
   },
 )
 
@@ -48,39 +50,70 @@ const customStyle = computed(() => {
 
 const isError = computed(() => props.color === 'error')
 
-// State-layer overlay: before: pseudo-element uses currentColor (the button's text color)
-// so it's always the correct M3 state-layer color for every variant automatically.
 const base =
-  'relative inline-flex items-center justify-center gap-2 h-10 rounded-full text-label-large font-medium ' +
+  'relative inline-flex items-center justify-center gap-2 rounded-full font-medium ' +
   'whitespace-nowrap overflow-hidden transition-[box-shadow,background-color,color] duration-150 select-none cursor-pointer ' +
   'disabled:cursor-not-allowed disabled:opacity-[0.38] disabled:shadow-none ' +
   "before:content-[''] before:pointer-events-none before:absolute before:inset-0 " +
   'before:bg-current before:opacity-0 before:transition-opacity before:duration-150 ' +
   'enabled:hover:before:opacity-[0.08] enabled:active:before:opacity-[0.12]'
 
+const sizeClasses = computed(() => {
+  switch (props.size) {
+    case 'small': return 'h-8 text-label-medium'
+    case 'large': return 'h-12 text-label-large'
+    default: return 'h-10 text-label-large'
+  }
+})
+
+const iconSize = computed(() => {
+  switch (props.size) {
+    case 'small': return 16
+    case 'large': return 22
+    default: return 20
+  }
+})
+
+const spinnerSize = computed(() => {
+  switch (props.size) {
+    case 'small': return 14
+    case 'large': return 20
+    default: return 18
+  }
+})
+
+const px = computed(() => {
+  if (props.variant === 'text') return props.size === 'small' ? 'px-2' : 'px-3'
+  switch (props.size) {
+    case 'small': return 'px-4'
+    case 'large': return 'px-8'
+    default: return 'px-6'
+  }
+})
+
 const variantClasses = computed(() => {
   const err = isError.value
   switch (props.variant) {
     case 'filled':
       return err
-        ? 'px-6 bg-error text-on-error enabled:hover:shadow-elevation-1 enabled:active:shadow-none'
-        : 'px-6 bg-primary text-on-primary enabled:hover:shadow-elevation-1 enabled:active:shadow-none'
+        ? 'bg-error text-on-error enabled:hover:shadow-elevation-1 enabled:active:shadow-none'
+        : 'bg-primary text-on-primary enabled:hover:shadow-elevation-1 enabled:active:shadow-none'
     case 'tonal':
       return err
-        ? 'px-6 bg-error-container text-on-error-container enabled:hover:shadow-elevation-1 enabled:active:shadow-none'
-        : 'px-6 bg-secondary-container text-on-secondary-container enabled:hover:shadow-elevation-1 enabled:active:shadow-none'
+        ? 'bg-error-container text-on-error-container enabled:hover:shadow-elevation-1 enabled:active:shadow-none'
+        : 'bg-secondary-container text-on-secondary-container enabled:hover:shadow-elevation-1 enabled:active:shadow-none'
     case 'elevated':
       return err
-        ? 'px-6 bg-surface-container-low text-error shadow-elevation-1 enabled:hover:shadow-elevation-2'
-        : 'px-6 bg-surface-container-low text-primary shadow-elevation-1 enabled:hover:shadow-elevation-2'
+        ? 'bg-surface-container-low text-error shadow-elevation-1 enabled:hover:shadow-elevation-2'
+        : 'bg-surface-container-low text-primary shadow-elevation-1 enabled:hover:shadow-elevation-2'
     case 'outlined':
       return err
-        ? 'px-6 border border-error text-error'
-        : 'px-6 border border-outline text-primary'
+        ? 'border border-error text-error'
+        : 'border border-outline text-primary'
     case 'text':
       return err
-        ? 'px-3 text-error'
-        : 'px-3 text-primary'
+        ? 'text-error'
+        : 'text-primary'
     default:
       return ''
   }
@@ -105,12 +138,12 @@ function createRipple(event: PointerEvent) {
     :to="to || undefined"
     :type="to ? undefined : type"
     :disabled="disabled || loading"
-    :class="[base, variantClasses]"
+    :class="[base, sizeClasses, px, variantClasses]"
     :style="customStyle"
     @pointerdown="createRipple"
   >
-    <MSpinner v-if="loading" :size="18" />
-    <MIcon v-else-if="icon" :name="icon" :size="20" />
+    <MSpinner v-if="loading" :size="spinnerSize" />
+    <MIcon v-else-if="icon" :name="icon" :size="iconSize" />
     <slot />
   </component>
 </template>

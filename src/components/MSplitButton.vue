@@ -14,11 +14,13 @@ const props = withDefaults(defineProps<{
   icon?: string
   variant?: 'filled' | 'tonal' | 'outlined' | 'elevated'
   color?: 'primary' | 'secondary' | 'tertiary'
+  size?: 'small' | 'medium' | 'large'
   disabled?: boolean
   items?: SplitButtonItem[]
 }>(), {
   variant: 'tonal',
   color: 'primary',
+  size: 'medium',
   disabled: false,
 })
 
@@ -57,6 +59,14 @@ const colorStyles = computed(() => {
 
 const containerClasses = computed(() => {
   return 'inline-flex items-center gap-0.5'
+})
+
+const sizeConfig = computed(() => {
+  switch (props.size) {
+    case 'small': return { h: 'h-8', w: 'w-8', px: 'px-3', text: 'text-label-medium', icon: 16, arrow: 18, r: 16, ri: 5 }
+    case 'large': return { h: 'h-12', w: 'w-12', px: 'px-5', text: 'text-label-large', icon: 20, arrow: 22, r: 24, ri: 8 }
+    default: return { h: 'h-10', w: 'w-10', px: 'px-4', text: 'text-label-large', icon: 18, arrow: 20, r: 20, ri: 6 }
+  }
 })
 
 function computeMenuPos() {
@@ -127,9 +137,9 @@ onUnmounted(() => {
     <!-- Main action -->
     <button
       type="button"
-      class="relative flex h-10 cursor-pointer items-center gap-2 overflow-hidden px-4 text-label-large font-medium transition-colors"
-      style="border-radius: 20px 6px 6px 20px"
+      class="relative flex cursor-pointer items-center gap-2 overflow-hidden font-medium transition-colors"
       :class="[
+        sizeConfig.h, sizeConfig.px, sizeConfig.text,
         colorStyles.bg,
         colorStyles.text,
         colorStyles.hover,
@@ -137,20 +147,21 @@ onUnmounted(() => {
         variant === 'elevated' ? 'shadow-elevation-1' : '',
         disabled ? 'pointer-events-none opacity-[0.38]' : '',
       ]"
+      :style="{ borderRadius: `${sizeConfig.r}px ${sizeConfig.ri}px ${sizeConfig.ri}px ${sizeConfig.r}px` }"
       :disabled="disabled"
       @pointerdown="createRipple"
       @click="emit('click', $event)"
     >
-      <MIcon v-if="icon" :name="icon" :size="18" />
+      <MIcon v-if="icon" :name="icon" :size="sizeConfig.icon" />
       {{ label }}
     </button>
 
     <!-- Toggle -->
     <button
       type="button"
-      class="toggle-btn relative flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden"
-      :style="{ borderRadius: open ? '20px' : '6px 20px 20px 6px' }"
+      class="toggle-btn relative flex cursor-pointer items-center justify-center overflow-hidden"
       :class="[
+        sizeConfig.h, sizeConfig.w,
         colorStyles.bg,
         colorStyles.text,
         colorStyles.hover,
@@ -158,13 +169,14 @@ onUnmounted(() => {
         variant === 'elevated' ? 'shadow-elevation-1' : '',
         disabled ? 'pointer-events-none opacity-[0.38]' : '',
       ]"
+      :style="{ borderRadius: open ? `${sizeConfig.r}px` : `${sizeConfig.ri}px ${sizeConfig.r}px ${sizeConfig.r}px ${sizeConfig.ri}px` }"
       :disabled="disabled"
       @pointerdown="createRipple"
       @click="toggleMenu"
     >
       <MIcon
         name="arrow_drop_down"
-        :size="20"
+        :size="sizeConfig.arrow"
         class="transition-transform duration-200"
         :class="open ? 'rotate-180' : ''"
       />
