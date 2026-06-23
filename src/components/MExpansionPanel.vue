@@ -9,7 +9,7 @@ const props = withDefaults(defineProps<{
   modelValue?: boolean
   disabled?: boolean
   variant?: 'outlined' | 'filled' | 'elevated'
-}>(), { disabled: false, variant: 'outlined' })
+}>(), { modelValue: undefined, disabled: false, variant: 'outlined' })
 
 const emit = defineEmits<{ 'update:modelValue': [boolean] }>()
 
@@ -60,13 +60,13 @@ const wrapperClass = computed(() => {
     </button>
 
     <!-- Content with height animation -->
-    <Transition name="expand">
-      <div v-if="isOpen" class="expand-grid">
-        <div class="expand-body border-t border-outline-variant/60 px-5 py-4">
+    <div class="expand-grid" :class="isOpen ? 'expand-open' : ''">
+      <div class="expand-body">
+        <div class="border-t border-outline-variant/60 px-5 py-4">
           <slot />
         </div>
       </div>
-    </Transition>
+    </div>
   </div>
 </template>
 
@@ -77,36 +77,14 @@ const wrapperClass = computed(() => {
 */
 .expand-grid {
   display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 300ms ease-in-out;
+}
+.expand-grid.expand-open {
   grid-template-rows: 1fr;
 }
 .expand-body {
-  min-height: 0; /* required for 0fr to actually collapse */
+  min-height: 0;
   overflow: hidden;
-}
-
-.expand-enter-active {
-  transition: grid-template-rows 280ms cubic-bezier(0.2, 0, 0, 1);
-}
-.expand-enter-active > .expand-body {
-  transition: opacity 220ms ease;
-}
-.expand-enter-from {
-  grid-template-rows: 0fr;
-}
-.expand-enter-from > .expand-body {
-  opacity: 0;
-}
-
-.expand-leave-active {
-  transition: grid-template-rows 220ms cubic-bezier(0.4, 0, 1, 1);
-}
-.expand-leave-active > .expand-body {
-  transition: opacity 150ms ease;
-}
-.expand-leave-to {
-  grid-template-rows: 0fr;
-}
-.expand-leave-to > .expand-body {
-  opacity: 0;
 }
 </style>
