@@ -9,11 +9,13 @@ const props = withDefaults(
     title?: string
     maxWidth?: string
     persistent?: boolean
+    fullscreen?: boolean
     closeLabel?: string
   }>(),
   {
     maxWidth: 'max-w-md',
     persistent: false,
+    fullscreen: false,
   },
 )
 
@@ -46,7 +48,8 @@ watch(
 
 <template>
   <Teleport to="body">
-    <Transition name="m3-dialog">
+    <!-- Basic dialog -->
+    <Transition v-if="!fullscreen" name="m3-dialog">
       <div
         v-if="modelValue"
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
@@ -71,6 +74,27 @@ watch(
         </div>
       </div>
     </Transition>
+
+    <!-- Fullscreen dialog -->
+    <Transition v-else name="m3-dialog-fs">
+      <div
+        v-if="modelValue"
+        class="dialog-fs fixed inset-0 z-50 flex flex-col bg-surface"
+      >
+        <div class="flex h-14 shrink-0 items-center gap-2 px-2">
+          <MIconButton v-if="!persistent" icon="close" :label="closeLabel ?? locale.close" @click="close" />
+          <h2 class="flex-1 text-title-large font-medium text-on-surface">
+            <slot name="title">{{ title }}</slot>
+          </h2>
+          <div v-if="$slots.actions" class="flex items-center gap-2">
+            <slot name="actions" />
+          </div>
+        </div>
+        <div class="flex-1 overflow-y-auto px-6 py-4 text-body-medium text-on-surface-variant">
+          <slot />
+        </div>
+      </div>
+    </Transition>
   </Teleport>
 </template>
 
@@ -90,5 +114,18 @@ watch(
 .m3-dialog-enter-from .dialog-box,
 .m3-dialog-leave-to .dialog-box {
   transform: scale(0.95);
+}
+
+.m3-dialog-fs-enter-active,
+.m3-dialog-fs-leave-active {
+  transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1), opacity 0.15s ease;
+}
+.m3-dialog-fs-enter-from {
+  transform: translateY(100%);
+  opacity: 0;
+}
+.m3-dialog-fs-leave-to {
+  transform: translateY(100%);
+  opacity: 0;
 }
 </style>
