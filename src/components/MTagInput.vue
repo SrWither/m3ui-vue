@@ -91,6 +91,14 @@ function onPaste(e: ClipboardEvent) {
   }
 }
 
+function onBlur() {
+  if (inputValue.value.trim()) {
+    addTag(inputValue.value)
+    inputValue.value = ''
+  }
+  focused.value = false
+}
+
 function focusInput() {
   if (!props.disabled) {
     inputEl.value?.focus()
@@ -191,6 +199,8 @@ const labelClasses = computed(() => {
           ref="inputEl"
           :value="inputValue"
           type="text"
+          enterkeyhint="done"
+          autocomplete="off"
           class="min-w-[60px] flex-1 bg-transparent text-body-large text-on-surface outline-none placeholder:text-on-surface-variant"
           :placeholder="!hasValue && (!label || focused) ? placeholder : ''"
           :disabled="disabled"
@@ -199,7 +209,7 @@ const labelClasses = computed(() => {
           @keydown="onKeydown"
           @paste="onPaste"
           @focus="focused = true"
-          @blur="focused = false"
+          @blur="onBlur"
         />
       </div>
 
