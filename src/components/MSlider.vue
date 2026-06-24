@@ -280,24 +280,31 @@ const tooltipPct = computed(() => {
 
           <!-- Centered: active from center -->
           <template v-else-if="variant === 'centered'">
+            <!-- Active: from center to thumb (with gap from thumb) -->
             <div class="absolute" :style="{
               ...(isVertical
-                ? { left: 0, right: 0, bottom: `${Math.min(pctLo, centerPct)}%`, height: `${Math.abs(pctLo - centerPct)}%` }
-                : { top: 0, bottom: 0, left: `${Math.min(pctLo, centerPct)}%`, width: `${Math.abs(pctLo - centerPct)}%` }
+                ? pctLo >= centerPct
+                  ? { left: 0, right: 0, bottom: `${centerPct}%`, height: `calc(${pctLo - centerPct}% - ${s.gap}px)` }
+                  : { left: 0, right: 0, bottom: `calc(${pctLo}% + ${s.gap}px)`, height: `calc(${centerPct - pctLo}% - ${s.gap}px)` }
+                : pctLo >= centerPct
+                  ? { top: 0, bottom: 0, left: `${centerPct}%`, width: `calc(${pctLo - centerPct}% - ${s.gap}px)` }
+                  : { top: 0, bottom: 0, left: `calc(${pctLo}% + ${s.gap}px)`, width: `calc(${centerPct - pctLo}% - ${s.gap}px)` }
               ),
               borderRadius: `${r}px`, backgroundColor: ct.active, transition: `all ${tr}`,
             }" />
+            <!-- Inactive: above/right of thumb -->
             <div class="absolute" :style="{
               ...(isVertical
-                ? { left: 0, right: 0, top: 0, height: `${100 - Math.max(pctLo, centerPct)}%` }
-                : { top: 0, bottom: 0, right: 0, width: `${100 - Math.max(pctLo, centerPct)}%` }
+                ? { left: 0, right: 0, top: 0, height: `calc(${100 - Math.max(pctLo, centerPct)}% - ${s.gap}px)` }
+                : { top: 0, bottom: 0, right: 0, width: `calc(${100 - Math.max(pctLo, centerPct)}% - ${s.gap}px)` }
               ),
               borderRadius: `${r}px`, backgroundColor: ct.inactive, transition: `all ${tr}`,
             }" />
+            <!-- Inactive: below/left of thumb -->
             <div class="absolute" :style="{
               ...(isVertical
-                ? { left: 0, right: 0, bottom: 0, height: `${Math.min(pctLo, centerPct)}%` }
-                : { top: 0, bottom: 0, left: 0, width: `${Math.min(pctLo, centerPct)}%` }
+                ? { left: 0, right: 0, bottom: 0, height: `calc(${Math.min(pctLo, centerPct)}% - ${s.gap}px)` }
+                : { top: 0, bottom: 0, left: 0, width: `calc(${Math.min(pctLo, centerPct)}% - ${s.gap}px)` }
               ),
               borderRadius: `${r}px`, backgroundColor: ct.inactive, transition: `all ${tr}`,
             }" />
