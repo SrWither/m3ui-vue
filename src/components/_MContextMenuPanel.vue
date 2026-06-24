@@ -66,11 +66,11 @@ function onPanelMouseLeave(e: MouseEvent) {
 <template>
   <div
     ref="panel"
-    class="m3-ctx-panel absolute z-201 min-w-[200px] rounded-sm bg-surface-container shadow-elevation-2"
+    class="m3-ctx-panel absolute z-201 min-w-[200px] overflow-hidden rounded-lg bg-surface-container shadow-elevation-2"
     :style="{ left: `${panelX}px`, top: `${panelY}px` }"
     @mouseleave="onPanelMouseLeave"
   >
-    <div class="overflow-hidden rounded-sm py-1">
+    <div class="py-1">
       <template v-for="(item, i) in items" :key="i">
         <hr v-if="item.divider" class="my-1 border-outline-variant" />
 

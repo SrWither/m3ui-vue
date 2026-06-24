@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, provide, ref } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -48,11 +48,15 @@ function close() {
   open.value = false
 }
 
+provide('m-menu-close', close)
 defineExpose({ close, open })
 
 function onOutsideClick(e: MouseEvent) {
   const t = e.target as Node
-  if (!triggerEl.value?.contains(t) && !dropdownEl.value?.contains(t)) close()
+  if (triggerEl.value?.contains(t)) return
+  if (dropdownEl.value?.contains(t)) return
+  if ((t as Element).closest?.('.m3-submenu')) return
+  close()
 }
 
 function onScroll(e: Event) {
@@ -102,11 +106,12 @@ const origin = computed(() =>
       <div
         v-if="open"
         ref="dropdownEl"
-        class="fixed z-500 min-w-48 overflow-y-auto overflow-x-hidden rounded-xs bg-surface-container py-1 shadow-elevation-2"
+        class="fixed z-500 min-w-48 overflow-hidden rounded-lg bg-surface-container shadow-elevation-2"
         :style="{ ...dropStyle, transformOrigin: origin }"
-        @click="close"
       >
-        <slot />
+        <div class="overflow-y-auto py-1" :style="{ maxHeight: dropStyle.maxHeight }">
+          <slot :close="close" />
+        </div>
       </div>
     </Transition>
   </Teleport>

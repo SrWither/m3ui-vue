@@ -103,7 +103,7 @@ function select(tab: Tab) {
           width: `${indicatorWidth}px`,
           transition: stretching
             ? 'left 150ms cubic-bezier(0.4, 0, 0.2, 1), width 150ms cubic-bezier(0.4, 0, 0.2, 1)'
-            : 'left 200ms cubic-bezier(0.2, 0, 0, 1), width 200ms cubic-bezier(0.2, 0, 0, 1)',
+            : 'left 250ms cubic-bezier(0.34, 1.56, 0.64, 1), width 250ms cubic-bezier(0.34, 1.56, 0.64, 1)',
         }"
       />
     </div>
