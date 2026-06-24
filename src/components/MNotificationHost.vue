@@ -49,9 +49,9 @@ const getStyle = (variant: string) => variantStyles[variant] ?? variantStyles.in
 <template>
   <div :class="containerClass">
     <TransitionGroup :name="isTop ? 'm3-notif-top' : 'm3-notif-bot'">
-      <div v-for="n in notifications" :key="n.id" class="notif-row w-full">
+      <div v-for="n in notifications" :key="n.id" class="notif-row w-full min-w-56 max-w-sm">
         <div
-          class="notif-inner pointer-events-auto flex items-center gap-2 rounded-full px-4 py-2.5 shadow-elevation-2"
+          class="notif-inner pointer-events-auto flex items-center gap-2.5 rounded px-4 py-3 shadow-elevation-2"
           :class="getStyle(n.variant).bg"
         >
           <MSpinner v-if="n.loading" :size="18" class="shrink-0" />
@@ -62,14 +62,25 @@ const getStyle = (variant: string) => variantStyles[variant] ?? variantStyles.in
             class="shrink-0"
             :class="getStyle(n.variant).icon"
           />
-          <p class="flex-1 text-body-small leading-snug">{{ n.message }}</p>
-          <button
-            type="button"
-            class="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-inverse-on-surface/50 transition-colors hover:bg-inverse-on-surface/10"
-            @click="dismiss(n.id)"
-          >
-            <MIcon name="close" :size="14" />
-          </button>
+          <p class="flex-1 text-body-medium leading-snug">{{ n.message }}</p>
+          <div class="flex shrink-0 items-center gap-1">
+            <button
+              v-if="n.action"
+              type="button"
+              class="cursor-pointer rounded px-2 py-1 text-label-medium font-semibold text-inverse-primary transition-colors hover:bg-inverse-on-surface/10"
+              @click="n.action!.onClick(); dismiss(n.id)"
+            >
+              {{ n.action.label }}
+            </button>
+            <button
+              v-if="n.closable !== false"
+              type="button"
+              class="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-inverse-on-surface/50 transition-colors hover:bg-inverse-on-surface/10"
+              @click="dismiss(n.id)"
+            >
+              <MIcon name="close" :size="16" />
+            </button>
+          </div>
         </div>
       </div>
     </TransitionGroup>

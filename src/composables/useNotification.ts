@@ -6,6 +6,8 @@ export type NotificationPosition =
   | 'top-left' | 'top-center' | 'top-right'
   | 'bottom-left' | 'bottom-center' | 'bottom-right'
 
+export interface NotificationAction { label: string; onClick: () => void }
+
 export interface Notification {
   id: number
   message: string
@@ -13,6 +15,8 @@ export interface Notification {
   duration: number
   loading?: boolean
   icon?: string
+  closable?: boolean
+  action?: NotificationAction
 }
 
 let nextId = 1
@@ -41,6 +45,8 @@ export interface NotificationOptions {
   duration?: number
   loading?: boolean
   icon?: string
+  closable?: boolean
+  action?: NotificationAction
 }
 
 function show(
@@ -52,7 +58,8 @@ function show(
   const id = nextId++
   const isLoading = options.loading ?? false
   const duration = isLoading ? 0 : (options.duration ?? 3000)
-  notifications.value.push({ id, message, variant, duration, loading: isLoading, icon: options.icon })
+  const closable = options.closable ?? true
+  notifications.value.push({ id, message, variant, duration, loading: isLoading, icon: options.icon, closable, action: options.action })
   if (duration > 0) timers.set(id, setTimeout(() => dismiss(id), duration))
   return id
 }
@@ -73,7 +80,7 @@ function update(id: number, patch: Partial<Omit<Notification, 'id'>>) {
 }
 
 function loading(msg: string, opts?: Omit<NotificationOptions, 'loading'>) {
-  return show(msg, 'info', { ...opts, loading: true })
+  return show(msg, 'info', { ...opts, loading: true, closable: opts?.closable ?? false })
 }
 
 const success = (msg: string, opts?: NotificationOptions) => show(msg, 'success', opts ?? {})
