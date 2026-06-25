@@ -1,4 +1,4 @@
-import { inject, type InjectionKey } from 'vue'
+import { inject, reactive, watchEffect, toValue, type InjectionKey, type MaybeRef } from 'vue'
 
 export interface M3Locale {
   // Common
@@ -173,9 +173,15 @@ export const defaultLocale: M3Locale = {
   insert: 'Insert',
 }
 
-export const M3_LOCALE_KEY: InjectionKey<Partial<M3Locale>> = Symbol('m3-locale')
+export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')
 
 export function useLocale(): M3Locale {
   const provided = inject(M3_LOCALE_KEY, {})
-  return { ...defaultLocale, ...provided }
+  const locale = reactive({ ...defaultLocale }) as M3Locale
+
+  watchEffect(() => {
+    Object.assign(locale, defaultLocale, toValue(provided))
+  })
+
+  return locale
 }

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, ref, nextTick } from 'vue'
 import { useLocale, defaultLocale, M3_LOCALE_KEY } from '../composables/useLocale'
 
 function withSetup<T>(fn: () => T, provide?: Record<symbol, unknown>): T {
@@ -38,6 +38,22 @@ describe('useLocale', () => {
     expect(locale.close).toBe('Cerrar')
     expect(locale.cancel).toBe('Cancel')
     expect(locale.next).toBe('Next')
+  })
+
+  it('reacts to ref-based locale changes', async () => {
+    const localeRef = ref<Partial<typeof defaultLocale>>({ search: 'Buscar...' })
+    const locale = withSetup(
+      () => useLocale(),
+      { [M3_LOCALE_KEY as symbol]: localeRef },
+    )
+    expect(locale.search).toBe('Buscar...')
+    expect(locale.close).toBe('Close')
+
+    localeRef.value = { search: 'Rechercher...', close: 'Fermer' }
+    await nextTick()
+    expect(locale.search).toBe('Rechercher...')
+    expect(locale.close).toBe('Fermer')
+    expect(locale.cancel).toBe('Cancel')
   })
 
   it('defaultLocale has all keys defined', () => {
