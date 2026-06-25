@@ -15,6 +15,7 @@ export type { M3Locale } from './composables/useLocale'
 export { useDevice } from './composables/useDevice'
 export { useNotification } from './composables/useNotification'
 export type { Notification, NotificationVariant, NotificationPosition, NotificationOptions } from './composables/useNotification'
+export { useDebounce } from './composables/useDebounce'
 
 // Components
 export { default as MAbsolute } from './components/MAbsolute.vue'

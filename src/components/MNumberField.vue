@@ -3,6 +3,7 @@ import { computed, ref, useId } from 'vue'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
 import { useFieldBg } from '../composables/useFieldBg'
+import { useDebounce } from '../composables/useDebounce'
 
 const props = withDefaults(
   defineProps<{
@@ -19,20 +20,24 @@ const props = withDefaults(
     leadingIcon?: string
     stepper?: boolean
     fieldBg?: string
+    debounce?: number
   }>(),
   {
     variant: 'filled',
     step: 1,
     stepper: true,
     modelValue: null,
+    debounce: 0,
   },
 )
 
-const emit = defineEmits<{ 'update:modelValue': [number | null] }>()
+const emit = defineEmits<{ 'update:modelValue': [number | null]; debounced: [number | null] }>()
 
 const id = useId()
 const fieldBgEl = ref<HTMLElement | null>(null)
 const { resolvedFieldBg } = useFieldBg(fieldBgEl, () => props.fieldBg)
+
+const { debounced: emitDebounced } = useDebounce((v: number | null) => emit('debounced', v), props.debounce)
 
 const hasValue = computed(() => props.modelValue !== null && props.modelValue !== undefined)
 
@@ -44,21 +49,31 @@ function clamp(val: number): number {
 
 function onInput(e: Event) {
   const raw = (e.target as HTMLInputElement).value
-  if (raw === '') { emit('update:modelValue', null); return }
+  if (raw === '') {
+    emit('update:modelValue', null)
+    if (props.debounce > 0) emitDebounced(null)
+    return
+  }
   const n = Number(raw)
-  if (!Number.isNaN(n)) emit('update:modelValue', clamp(n))
+  if (!Number.isNaN(n)) {
+    const v = clamp(n)
+    emit('update:modelValue', v)
+    if (props.debounce > 0) emitDebounced(v)
+  }
 }
 
 function increment() {
   if (props.disabled) return
-  const current = props.modelValue ?? 0
-  emit('update:modelValue', clamp(current + props.step))
+  const v = clamp((props.modelValue ?? 0) + props.step)
+  emit('update:modelValue', v)
+  if (props.debounce > 0) emitDebounced(v)
 }
 
 function decrement() {
   if (props.disabled) return
-  const current = props.modelValue ?? 0
-  emit('update:modelValue', clamp(current - props.step))
+  const v = clamp((props.modelValue ?? 0) - props.step)
+  emit('update:modelValue', v)
+  if (props.debounce > 0) emitDebounced(v)
 }
 
 function onKeydown(e: KeyboardEvent) {

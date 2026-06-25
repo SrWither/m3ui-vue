@@ -2,6 +2,7 @@
 import { computed, ref, useId, useSlots } from "vue";
 import MIcon from "./MIcon.vue";
 import { useFieldBg } from "../composables/useFieldBg";
+import { useDebounce } from "../composables/useDebounce";
 
 const props = withDefaults(
   defineProps<{
@@ -19,22 +20,26 @@ const props = withDefaults(
     leadingIcon?: string;
     clearable?: boolean;
     fieldBg?: string;
+    debounce?: number;
   }>(),
   {
     type: "text",
     variant: "filled",
     rows: 3,
     clearable: false,
+    debounce: 0,
   },
 );
 
-const emit = defineEmits<{ "update:modelValue": [string] }>();
+const emit = defineEmits<{ "update:modelValue": [string]; debounced: [string] }>();
 
 const id = useId();
 const slots = useSlots();
 
 const fieldBgEl = ref<HTMLElement | null>(null);
 const { resolvedFieldBg } = useFieldBg(fieldBgEl, () => props.fieldBg);
+
+const { debounced: emitDebounced, cancel: cancelDebounce } = useDebounce((v: string) => emit("debounced", v), props.debounce)
 
 const showClear = computed(() => props.clearable && String(props.modelValue).length > 0 && !props.disabled)
 
@@ -117,6 +122,7 @@ const labelClasses = computed(() => {
 function onInput(event: Event) {
   const target = event.target as HTMLInputElement | HTMLTextAreaElement;
   emit("update:modelValue", target.value);
+  if (props.debounce > 0) emitDebounced(target.value)
 }
 </script>
 
@@ -176,7 +182,7 @@ function onInput(event: Event) {
         v-else-if="showClear"
         type="button"
         class="absolute right-3 top-1/2 -translate-y-1/2 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"
-        @click="emit('update:modelValue', '')"
+        @click="cancelDebounce(); emit('update:modelValue', '')"
       >
         <MIcon name="close" :size="18" />
       </button>

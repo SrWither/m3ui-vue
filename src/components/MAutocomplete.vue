@@ -4,6 +4,7 @@ import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 import { useLocale } from '../composables/useLocale'
+import { useDebounce } from '../composables/useDebounce'
 import type { SelectOption } from './MSelect.vue'
 
 const props = withDefaults(
@@ -22,6 +23,7 @@ const props = withDefaults(
     clearable?: boolean
     fieldBg?: string
     noResultsText?: string
+    debounce?: number
   }>(),
   {
     modelValue: undefined,
@@ -30,10 +32,11 @@ const props = withDefaults(
     disabled: false,
     required: false,
     clearable: false,
+    debounce: 0,
   },
 )
 
-const emit = defineEmits<{ 'update:modelValue': [unknown] }>()
+const emit = defineEmits<{ 'update:modelValue': [unknown]; debounced: [string] }>()
 
 const locale = useLocale()
 const id = useId()
@@ -47,6 +50,23 @@ const inputEl = ref<HTMLInputElement | null>(null)
 const { resolvedFieldBg } = useFieldBg(fieldEl, () => props.fieldBg)
 const dropdownEl = ref<HTMLElement | null>(null)
 const dropPos = ref({ top: '0px', left: '0px', width: '0px' })
+const filterQuery = ref('')
+const modalFilterQuery = ref('')
+
+const { debounced: setFilterQuery } = useDebounce((v: string) => { filterQuery.value = v; emit('debounced', v) }, props.debounce)
+const { debounced: setModalFilterQuery } = useDebounce((v: string) => { modalFilterQuery.value = v; emit('debounced', v) }, props.debounce)
+
+function updateSearch(v: string) {
+  search.value = v
+  if (props.debounce > 0) setFilterQuery(v)
+  else filterQuery.value = v
+}
+
+function updateModalSearch(v: string) {
+  modalSearch.value = v
+  if (props.debounce > 0) setModalFilterQuery(v)
+  else modalFilterQuery.value = v
+}
 
 function eq(a: unknown, b: unknown): boolean {
   if (a === b) return true
@@ -60,8 +80,8 @@ const selectedLabel = computed(
 )
 
 const filteredOptions = computed(() => {
-  if (!search.value) return props.options
-  const q = search.value.toLowerCase()
+  if (!filterQuery.value) return props.options
+  const q = filterQuery.value.toLowerCase()
   return props.options.filter((o) => o.label.toLowerCase().includes(q))
 })
 
@@ -81,8 +101,8 @@ function computeDropPos() {
 }
 
 const modalFilteredOptions = computed(() => {
-  if (!modalSearch.value) return props.options
-  const q = modalSearch.value.toLowerCase()
+  if (!modalFilterQuery.value) return props.options
+  const q = modalFilterQuery.value.toLowerCase()
   return props.options.filter((o) => o.label.toLowerCase().includes(q))
 })
 
@@ -103,6 +123,8 @@ function closeDropdown() {
   modalOpen.value = false
   search.value = ''
   modalSearch.value = ''
+  filterQuery.value = ''
+  modalFilterQuery.value = ''
   highlightIndex.value = -1
 }
 
@@ -130,7 +152,7 @@ function onInputBlur(e: FocusEvent) {
 }
 
 function onInput(e: Event) {
-  search.value = (e.target as HTMLInputElement).value
+  updateSearch((e.target as HTMLInputElement).value)
   if (!open.value) openDropdown()
   highlightIndex.value = -1
   nextTick(computeDropPos)
@@ -404,10 +426,11 @@ const labelClasses = computed(() => {
             <div class="flex items-center gap-2 rounded-full bg-surface-container-highest px-3 py-2">
               <MIcon name="search" :size="16" class="shrink-0 text-on-surface-variant" />
               <input
-                v-model="modalSearch"
+                :value="modalSearch"
                 type="text"
                 :placeholder="locale.search"
                 class="w-full bg-transparent text-body-medium text-on-surface outline-none placeholder:text-on-surface-variant"
+                @input="updateModalSearch(($event.target as HTMLInputElement).value)"
               />
             </div>
           </div>

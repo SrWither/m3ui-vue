@@ -2,6 +2,7 @@
 import { computed, ref, useId, watch } from 'vue'
 import MIcon from './MIcon.vue'
 import { useFieldBg } from '../composables/useFieldBg'
+import { useDebounce } from '../composables/useDebounce'
 
 export type MaskPreset = 'credit-card' | 'phone' | 'date' | 'time' | 'cpf' | 'cnpj' | 'zip'
 
@@ -28,14 +29,16 @@ const props = withDefaults(
     leadingIcon?: string
     clearable?: boolean
     fieldBg?: string
+    debounce?: number
   }>(),
   {
     variant: 'filled',
     clearable: false,
+    debounce: 0,
   },
 )
 
-const emit = defineEmits<{ 'update:modelValue': [string] }>()
+const emit = defineEmits<{ 'update:modelValue': [string]; debounced: [string] }>()
 
 const id = useId()
 const fieldBgEl = ref<HTMLElement | null>(null)
@@ -43,6 +46,8 @@ const { resolvedFieldBg } = useFieldBg(fieldBgEl, () => props.fieldBg)
 const inputEl = ref<HTMLInputElement | null>(null)
 
 const resolvedMask = computed(() => PRESETS[props.mask as MaskPreset] ?? props.mask)
+
+const { debounced: emitDebounced, cancel: cancelDebounce } = useDebounce((v: string) => emit('debounced', v), props.debounce)
 
 const showClear = computed(() => props.clearable && props.modelValue.length > 0 && !props.disabled)
 
@@ -74,6 +79,7 @@ function onInput(e: Event) {
   const raw = input.value.replace(/[^\d]/g, '')
   const masked = rawToMasked(raw, resolvedMask.value)
   emit('update:modelValue', masked)
+  if (props.debounce > 0) emitDebounced(masked)
 
   requestAnimationFrame(() => {
     if (inputEl.value) inputEl.value.value = masked
@@ -88,6 +94,7 @@ function onKeydown(e: KeyboardEvent) {
       const newRaw = raw.slice(0, -1)
       const masked = rawToMasked(newRaw, resolvedMask.value)
       emit('update:modelValue', masked)
+      if (props.debounce > 0) emitDebounced(masked)
       requestAnimationFrame(() => {
         if (inputEl.value) inputEl.value.value = masked
       })
@@ -185,7 +192,7 @@ const labelClasses = computed(() => {
         v-if="showClear"
         type="button"
         class="absolute right-3 top-1/2 -translate-y-1/2 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"
-        @click="emit('update:modelValue', '')"
+        @click="cancelDebounce(); emit('update:modelValue', '')"
       >
         <MIcon name="close" :size="18" />
       </button>

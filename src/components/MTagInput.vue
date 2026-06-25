@@ -2,6 +2,7 @@
 import { computed, ref, useId } from 'vue'
 import MIcon from './MIcon.vue'
 import { useFieldBg } from '../composables/useFieldBg'
+import { useDebounce } from '../composables/useDebounce'
 
 const props = withDefaults(
   defineProps<{
@@ -18,6 +19,7 @@ const props = withDefaults(
     maxTags?: number
     duplicates?: boolean
     clearable?: boolean
+    debounce?: number
   }>(),
   {
     modelValue: () => [],
@@ -26,10 +28,11 @@ const props = withDefaults(
     required: false,
     duplicates: false,
     clearable: false,
+    debounce: 0,
   },
 )
 
-const emit = defineEmits<{ 'update:modelValue': [string[]] }>()
+const emit = defineEmits<{ 'update:modelValue': [string[]]; debounced: [string[]] }>()
 
 const id = useId()
 const focused = ref(false)
@@ -37,6 +40,8 @@ const inputValue = ref('')
 const fieldEl = ref<HTMLElement | null>(null)
 const inputEl = ref<HTMLInputElement | null>(null)
 const { resolvedFieldBg } = useFieldBg(fieldEl, () => props.fieldBg)
+
+const { debounced: emitDebounced, cancel: cancelDebounce } = useDebounce((v: string[]) => emit('debounced', v), props.debounce)
 
 const hasValue = computed(() => props.modelValue.length > 0)
 const canAddMore = computed(() => props.maxTags == null || props.modelValue.length < props.maxTags)
@@ -46,7 +51,9 @@ function addTag(raw: string) {
   if (!tag) return
   if (!props.duplicates && props.modelValue.includes(tag)) return
   if (!canAddMore.value) return
-  emit('update:modelValue', [...props.modelValue, tag])
+  const next = [...props.modelValue, tag]
+  emit('update:modelValue', next)
+  if (props.debounce > 0) emitDebounced(next)
 }
 
 function removeTag(index: number, e?: Event) {
@@ -54,6 +61,7 @@ function removeTag(index: number, e?: Event) {
   const next = [...props.modelValue]
   next.splice(index, 1)
   emit('update:modelValue', next)
+  if (props.debounce > 0) emitDebounced(next)
 }
 
 function onKeydown(e: KeyboardEvent) {
@@ -221,7 +229,7 @@ const labelClasses = computed(() => {
         v-if="clearable && hasValue && !disabled"
         type="button"
         class="absolute right-2 top-4 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"
-        @click.stop="emit('update:modelValue', []); inputValue = ''"
+        @click.stop="cancelDebounce(); emit('update:modelValue', []); inputValue = ''"
       >
         <MIcon name="close" :size="18" />
       </button>
