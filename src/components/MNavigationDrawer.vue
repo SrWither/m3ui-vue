@@ -14,6 +14,7 @@ export interface DrawerItem {
   iconSize?: number;
   labelClass?: string;
   py?: string;
+  click?: () => void;
 }
 
 export interface DrawerSection {
@@ -69,12 +70,14 @@ function close() {
 function select(item: DrawerItem) {
   if (item.disabled) return;
   if (item.children?.length) toggleItem(item);
+  item.click?.()
   emit("select", item.value);
   if (props.modal && !item.children?.length) close();
 }
 
 function onChildSelect(item: DrawerItem) {
   if (item.disabled) return;
+  item.click?.()
   emit("select", item.value);
   if (props.modal && !item.children?.length) close();
 }
