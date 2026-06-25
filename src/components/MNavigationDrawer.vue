@@ -299,7 +299,7 @@ watch(
       </div>
 
       <div
-        class="flex flex-col gap-1 overflow-y-auto overflow-x-hidden px-3 py-2"
+        class="flex flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden px-3 py-2"
       >
         <template v-for="(section, si) in sections" :key="si">
           <div v-if="si > 0" class="my-1 border-t border-outline-variant" />
