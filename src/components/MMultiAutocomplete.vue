@@ -170,6 +170,7 @@ function onInputFocus() {
 }
 
 function onInputBlur(e: FocusEvent) {
+  if (modalOpen.value) return
   const related = e.relatedTarget as Node | null
   if (dropdownEl.value?.contains(related) || fieldEl.value?.contains(related)) return
   closeDropdown()
