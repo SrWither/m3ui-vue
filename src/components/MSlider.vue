@@ -170,7 +170,7 @@ const stopPositions = computed(() => {
 
 const r = computed(() => s.value.radius)
 const nd = computed(() => !dragging.value)
-const tr = computed(() => nd.value ? '75ms ease' : 'none')
+const tr = computed(() => nd.value ? '75ms ease' : '0s')
 
 function thumbPos(pct: number) {
   const tw = isVertical.value ? s.value.thumbH : s.value.thumbW
