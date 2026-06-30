@@ -171,7 +171,7 @@ function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') cancel() }
           <div
             ref="satBrightEl"
             class="relative mb-3 h-44 w-full cursor-crosshair overflow-hidden rounded-lg"
-            :style="{ background: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, ${hueColor})` }"
+            :style="{ background: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, ${hueColor})`, touchAction: 'none' }"
             @pointerdown="onSBPointerDown"
             @pointermove="onSBPointerMove"
             @pointerup="onSBPointerUp"
