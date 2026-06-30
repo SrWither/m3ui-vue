@@ -4,6 +4,7 @@ import MIcon from './MIcon.vue'
 
 const props = withDefaults(defineProps<{
   icon?: string
+  shortcut?: string
   to?: string | Record<string, any>
   disabled?: boolean
   danger?: boolean
@@ -78,6 +79,7 @@ function onSubLeave(e: MouseEvent) {
     >
       <MIcon v-if="icon" :name="icon" :size="20" class="shrink-0" :class="danger ? 'text-error' : 'text-on-surface-variant'" />
       <span class="flex-1"><slot /></span>
+      <span v-if="shortcut && !hasChildren" class="ml-4 shrink-0 text-label-small text-on-surface-variant opacity-60">{{ shortcut }}</span>
       <MIcon v-if="hasChildren" name="chevron_right" :size="18" class="shrink-0 text-on-surface-variant" />
     </component>
 

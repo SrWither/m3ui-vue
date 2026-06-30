@@ -1,66 +1,79 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import MContextMenuPanel from './_MContextMenuPanel.vue'
-
-export interface ContextMenuItem {
-  label?: string
-  icon?: string
-  shortcut?: string
-  disabled?: boolean
-  danger?: boolean
-  divider?: boolean
-  to?: string | Record<string, any>
-  children?: ContextMenuItem[]
-  onClick?: () => void
-}
-
-defineProps<{ items: ContextMenuItem[] }>()
+import { nextTick, onMounted, onUnmounted, provide, ref } from 'vue'
 
 const visible = ref(false)
-const position = ref({ x: 0, y: 0 })
+const adjustedPos = ref({ x: 0, y: 0 })
+const panelEl = ref<HTMLElement | null>(null)
+
+async function showAt(x: number, y: number) {
+  adjustedPos.value = { x, y }
+  visible.value = true
+  await nextTick()
+  if (!panelEl.value) return
+  const el = panelEl.value
+  adjustedPos.value = {
+    x: Math.min(x, window.innerWidth - el.offsetWidth - 8),
+    y: Math.min(y, window.innerHeight - el.offsetHeight - 8),
+  }
+}
 
 function show(e: MouseEvent) {
   e.preventDefault()
-  e.stopPropagation()
   showAt(e.clientX, e.clientY)
-}
-
-function showAt(x: number, y: number) {
-  position.value = { x, y }
-  visible.value = true
 }
 
 function hide() {
   visible.value = false
 }
 
+provide('m-menu-close', hide)
 defineExpose({ show, showAt, hide })
+
+function onDocMouseDown(e: MouseEvent) {
+  if (!visible.value) return
+  const t = e.target as Node
+  if (panelEl.value?.contains(t)) return
+  if ((t as Element).closest?.('.m3-submenu')) return
+  hide()
+}
+
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') hide()
+}
+
+onMounted(() => {
+  document.addEventListener('mousedown', onDocMouseDown)
+  document.addEventListener('keydown', onKeydown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('mousedown', onDocMouseDown)
+  document.removeEventListener('keydown', onKeydown)
+})
 </script>
 
 <template>
-  <slot :show="show" />
+  <div @contextmenu="show">
+    <slot name="trigger" />
+  </div>
 
   <Teleport to="body">
     <Transition
-      enter-active-class="transition-opacity duration-100"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition-opacity duration-75"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
+      enter-active-class="transition-[opacity,transform] duration-100 ease-out"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition-[opacity,transform] duration-75 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
     >
       <div
         v-if="visible"
-        class="fixed inset-0 z-200"
-        @mousedown.self="hide"
+        ref="panelEl"
+        class="fixed z-[500] min-w-48 overflow-hidden rounded-lg bg-surface-container py-1 shadow-elevation-2"
+        :style="{ left: `${adjustedPos.x}px`, top: `${adjustedPos.y}px`, transformOrigin: 'top left' }"
         @contextmenu.prevent
       >
-        <MContextMenuPanel
-          :items="items"
-          :x="position.x"
-          :y="position.y"
-          @close="hide"
-        />
+        <slot />
       </div>
     </Transition>
   </Teleport>
