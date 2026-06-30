@@ -216,83 +216,87 @@ const maskId = useId();
   <div class="inline-flex flex-col items-center gap-1">
     <span v-if="label" class="text-label-small text-on-surface-variant">{{ label }}</span>
 
-    <svg
-      :width="size" :height="size"
-      viewBox="0 0 100 100"
-      fill="none"
-      role="progressbar"
-      :aria-valuenow="clampedValue"
-      aria-valuemin="0" aria-valuemax="100"
-    >
-      <!-- ── Wavy variant ──────────────────────────────────────────────── -->
-      <template v-if="variant === 'wavy'">
-        <defs>
-          <mask :id="maskId" maskUnits="userSpaceOnUse">
-            <rect x="0" y="0" width="100" height="100" fill="black" />
-            <!--
-              stroke-dasharray and transform are written directly by tick() via
-              setAttribute — no Vue binding needed, no CSS transition conflict.
-              Initial values will be overwritten on the first rAF frame.
-            -->
-            <circle
-              ref="maskCircleEl"
-              cx="50" cy="50" :r="R"
-              fill="none" :stroke-width="MASK_SW" stroke="white"
-              stroke-dasharray="0 251"
-              transform="rotate(-90, 50, 50)"
-            />
-          </mask>
-        </defs>
+    <div class="relative">
+      <svg
+        :width="size" :height="size"
+        viewBox="0 0 100 100"
+        fill="none"
+        role="progressbar"
+        :aria-valuenow="clampedValue"
+        aria-valuemin="0" aria-valuemax="100"
+      >
+        <!-- ── Wavy variant ────────────────────────────────────────────── -->
+        <template v-if="variant === 'wavy'">
+          <defs>
+            <mask :id="maskId" maskUnits="userSpaceOnUse">
+              <rect x="0" y="0" width="100" height="100" fill="black" />
+              <circle
+                ref="maskCircleEl"
+                cx="50" cy="50" :r="R"
+                fill="none" :stroke-width="MASK_SW" stroke="white"
+                stroke-dasharray="0 251"
+                transform="rotate(-90, 50, 50)"
+              />
+            </mask>
+          </defs>
 
-        <!-- Track ring — stroke-dasharray/offset written by tick() -->
-        <circle
-          ref="trackCircleEl"
-          cx="50" cy="50" :r="R"
-          fill="none" :stroke-width="STROKE"
-          :style="{ stroke: svgColor.track }"
-          stroke-dasharray="251 0"
-          transform="rotate(-90, 50, 50)"
-        />
+          <circle
+            ref="trackCircleEl"
+            cx="50" cy="50" :r="R"
+            fill="none" :stroke-width="STROKE"
+            :style="{ stroke: svgColor.track }"
+            stroke-dasharray="251 0"
+            transform="rotate(-90, 50, 50)"
+          />
 
-        <!-- Wave ring — d written by tick() via wavePath ref -->
-        <path
-          :d="wavePath"
-          fill="none" :stroke-width="STROKE"
-          stroke-linecap="round" stroke-linejoin="round"
-          :mask="`url(#${maskId})`"
-          :style="{ stroke: svgColor.fill }"
-        />
-      </template>
+          <path
+            :d="wavePath"
+            fill="none" :stroke-width="STROKE"
+            stroke-linecap="round" stroke-linejoin="round"
+            :mask="`url(#${maskId})`"
+            :style="{ stroke: svgColor.fill }"
+          />
+        </template>
 
-      <!-- ── Circle (smooth) variant ──────────────────────────────────── -->
-      <template v-else>
-        <circle cx="50" cy="50" :r="R" fill="none"
-          :stroke-width="STROKE" :style="{ stroke: svgColor.track }"
-        />
-        <circle cx="50" cy="50" :r="R" fill="none"
-          :stroke-width="STROKE"
-          stroke-linecap="round"
+        <!-- ── Circle variant ────────────────────────────────────────── -->
+        <template v-else>
+          <circle cx="50" cy="50" :r="R" fill="none"
+            :stroke-width="STROKE" :style="{ stroke: svgColor.track }"
+          />
+          <circle cx="50" cy="50" :r="R" fill="none"
+            :stroke-width="STROKE"
+            stroke-linecap="round"
+            :style="{
+              stroke: svgColor.fill,
+              strokeDasharray: `${arcLen.toFixed(2)} ${CIRC}`,
+              transform: 'rotate(-90deg)',
+              transformOrigin: '50px 50px',
+              transition: 'stroke-dasharray 300ms ease',
+            }"
+          />
+        </template>
+
+        <!-- Percentage label — hidden when slot content is provided -->
+        <text
+          v-if="!$slots.default"
+          x="50" y="50"
+          text-anchor="middle" dominant-baseline="middle"
           :style="{
-            stroke: svgColor.fill,
-            strokeDasharray: `${arcLen.toFixed(2)} ${CIRC}`,
-            transform: 'rotate(-90deg)',
-            transformOrigin: '50px 50px',
-            transition: 'stroke-dasharray 300ms ease',
+            fill: svgColor.fill,
+            fontSize: `${size < 60 ? 11 : 14}px`,
+            fontWeight: '600',
+            fontFamily: 'Roboto, sans-serif',
           }"
-        />
-      </template>
+        >{{ clampedValue }}%</text>
+      </svg>
 
-      <!-- Percentage label -->
-      <text
-        x="50" y="50"
-        text-anchor="middle" dominant-baseline="middle"
-        :style="{
-          fill: svgColor.fill,
-          fontSize: `${size < 60 ? 11 : 14}px`,
-          fontWeight: '600',
-          fontFamily: 'Roboto, sans-serif',
-        }"
-      >{{ clampedValue }}%</text>
-    </svg>
+      <!-- Slot content centered inside the ring -->
+      <div
+        v-if="$slots.default"
+        class="absolute inset-0 flex items-center justify-center"
+      >
+        <slot />
+      </div>
+    </div>
   </div>
 </template>
