@@ -5,6 +5,29 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.5.0] - 2026-06-30
+
+### Added
+- New component: `MMenuDivider` — horizontal divider for use inside `MMenu` and `MContextMenu`
+- `shortcut` prop on `MMenuItem` — displays a keyboard shortcut label aligned to the right of the item
+- `MContextMenu` fully rewritten to slot-based composition — uses `MMenuItem` and `#children` slots just like `MMenu`, replacing the old `items: ContextMenuItem[]` prop
+- `MTreeTable` expand/collapse animation — height + opacity JS transition hooks matching `MTree` and `MExpansionPanel`
+- `errorLabel` prop on all input components — separates the error message string from the boolean `error` state
+
+### Changed
+- `error` prop on all input components (`MTextField`, `MNumberField`, `MMaskField`, `MSelect`, `MAutocomplete`, `MMultiAutocomplete`, `MMultiSelect`, `MTagInput`, `MTimePicker`, `MDatePicker`, `MDateRangePicker`, `MColorPicker`) changed from `string` to `boolean`; use new `errorLabel` for the message
+- `MAbsolute` now defaults to `top: 8px; left: 8px` when no position props are provided
+- `MWindow` corner resize handles enlarged from 12 px to 20 px and edge handles from 5 px to 8 px for easier grabbing
+
+### Fixed
+- `MSlider` range variant: moving one thumb past the other and then clicking near the crossed position caused the wrong thumb to jump — now tracks array index instead of logical position
+- `MCircleProgressBar` indeterminate: trailing end trembled/shook at minimum arc size — fixed by animating `stroke-dashoffset` alongside `stroke-dasharray` so both ends never converge
+
+### Removed
+- `ContextMenuItem` type export (replaced by slot-based API)
+
+---
+
 ## [0.4.7] - 2026-06-30
 
 ### Added
