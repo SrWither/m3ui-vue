@@ -37,7 +37,7 @@ const props = withDefaults(
 const emit = defineEmits<{ 'update:modelValue': [number | [number, number]] }>()
 
 const trackEl = ref<HTMLElement>()
-const dragging = ref<false | 'single' | 'lo' | 'hi'>(false)
+const dragging = ref<false | 'single' | 0 | 1>(false)
 const isVertical = computed(() => props.orientation === 'vertical')
 const isRange = computed(() => props.variant === 'range')
 const isCentered = computed(() => props.variant === 'centered')
@@ -100,11 +100,14 @@ function onPointerDown(e: PointerEvent) {
   e.preventDefault()
   const v = valueFromEvent(e)
   if (isRange.value) {
-    const distLo = Math.abs(v - val.value.lo)
-    const distHi = Math.abs(v - val.value.hi)
-    dragging.value = distLo <= distHi ? 'lo' : 'hi'
     const cur = props.modelValue as [number, number]
-    emit('update:modelValue', dragging.value === 'lo' ? [v, cur[1]] : [cur[0], v])
+    const dist0 = Math.abs(v - cur[0])
+    const dist1 = Math.abs(v - cur[1])
+    const idx: 0 | 1 = dist0 <= dist1 ? 0 : 1
+    dragging.value = idx
+    const next: [number, number] = [cur[0], cur[1]]
+    next[idx] = v
+    emit('update:modelValue', next)
   } else {
     dragging.value = 'single'
     emit('update:modelValue', v)
@@ -115,11 +118,13 @@ function onPointerDown(e: PointerEvent) {
 }
 
 function onPointerMove(e: PointerEvent) {
-  if (!dragging.value) return
+  if (dragging.value === false) return
   const v = valueFromEvent(e)
   if (isRange.value) {
     const cur = props.modelValue as [number, number]
-    emit('update:modelValue', dragging.value === 'lo' ? [v, cur[1]] : [cur[0], v])
+    const next: [number, number] = [cur[0], cur[1]]
+    next[dragging.value as 0 | 1] = v
+    emit('update:modelValue', next)
   } else {
     emit('update:modelValue', v)
   }
@@ -169,7 +174,7 @@ const stopPositions = computed(() => {
 })
 
 const r = computed(() => s.value.radius)
-const nd = computed(() => !dragging.value)
+const nd = computed(() => dragging.value === false)
 const tr = computed(() => nd.value ? '75ms ease' : '0s')
 
 function thumbPos(pct: number) {
@@ -188,11 +193,11 @@ function thumbPos(pct: number) {
   if (isVertical.value) {
     base.left = '50%'
     base.bottom = `${pct}%`
-    base.transform = `translateX(-50%) translateY(50%) scaleX(${dragging.value ? 1.08 : 1})`
+    base.transform = `translateX(-50%) translateY(50%) scaleX(${dragging.value !== false ? 1.08 : 1})`
   } else {
     base.left = `${pct}%`
     base.top = '50%'
-    base.transform = `translateX(-50%) translateY(-50%) scaleY(${dragging.value ? 1.08 : 1})`
+    base.transform = `translateX(-50%) translateY(-50%) scaleY(${dragging.value !== false ? 1.08 : 1})`
   }
   return base
 }
@@ -212,15 +217,14 @@ const displayValue = computed(() => {
 })
 
 const tooltipValue = computed(() => {
-  if (isRange.value) {
-    if (dragging.value === 'lo') return val.value.lo
-    return val.value.hi
-  }
+  if (isRange.value && typeof dragging.value === 'number')
+    return (props.modelValue as [number, number])[dragging.value]
   return props.modelValue
 })
 
 const tooltipPct = computed(() => {
-  if (isRange.value) return dragging.value === 'lo' ? pctLo.value : pctHi.value
+  if (isRange.value && typeof dragging.value === 'number')
+    return toPct((props.modelValue as [number, number])[dragging.value])
   return pctLo.value
 })
 </script>
@@ -408,7 +412,7 @@ const tooltipPct = computed(() => {
           leave-to-class="opacity-0"
         >
           <div
-            v-if="showTooltip && dragging"
+            v-if="showTooltip && dragging !== false"
             class="pointer-events-none absolute z-10 flex h-7 min-w-7 items-center justify-center rounded-full bg-inverse-surface px-2 text-label-small tabular-nums text-inverse-on-surface"
             :style="tooltipPos(tooltipPct)"
           >
