@@ -49,14 +49,25 @@ const getStyle = (variant: string) => variantStyles[variant] ?? variantStyles.in
 <template>
   <div :class="containerClass">
     <TransitionGroup :name="isTop ? 'm3-notif-top' : 'm3-notif-bot'">
-      <div v-for="n in notifications" :key="n.id" class="notif-row w-full min-w-56 max-w-sm">
+      <div v-for="n in notifications" :key="n.id" class="notif-row relative w-full min-w-56 max-w-sm">
+        <Transition name="m3-badge">
+          <span
+            v-if="n.count >= 2"
+            class="absolute -top-1.5 -right-1.5 z-10 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-on-primary shadow-elevation-1"
+          >
+            <Transition name="m3-count" mode="out-in">
+              <span :key="n.count">{{ n.count }}</span>
+            </Transition>
+          </span>
+        </Transition>
+
         <div
           class="notif-inner pointer-events-auto flex items-center gap-2.5 rounded px-4 py-3 shadow-elevation-2"
           :class="getStyle(n.variant).bg"
         >
           <MSpinner v-if="n.loading" :size="18" class="shrink-0" />
           <MIcon
-            v-else
+            v-else-if="n.icon !== null"
             :name="n.icon ?? getStyle(n.variant).iconName"
             :size="18"
             class="shrink-0"
@@ -160,4 +171,13 @@ const getStyle = (variant: string) => variantStyles[variant] ?? variantStyles.in
   opacity: 0;
   transform: scale(0.93);
 }
+
+.m3-badge-enter-active { transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.m3-badge-leave-active  { transition: opacity 0.15s ease, transform 0.15s ease; }
+.m3-badge-enter-from, .m3-badge-leave-to { opacity: 0; transform: scale(0.5); }
+
+.m3-count-enter-active { transition: opacity 0.12s ease, transform 0.12s ease; }
+.m3-count-leave-active  { transition: opacity 0.08s ease, transform 0.08s ease; }
+.m3-count-enter-from    { opacity: 0; transform: scale(1.5) translateY(-3px); }
+.m3-count-leave-to      { opacity: 0; transform: scale(0.6) translateY(2px); }
 </style>

@@ -15,8 +15,9 @@ export interface Toast {
   duration: number
   loading?: boolean
   action?: ToastAction
-  icon?: string
+  icon?: string | null  // null = suppress icon entirely
   color?: string
+  count: number         // ≥ 2 → show badge
 }
 
 let nextId = 1
@@ -45,7 +46,7 @@ export interface ToastOptions {
   duration?: number
   loading?: boolean
   action?: ToastAction
-  icon?: string
+  icon?: string | null
   color?: string
 }
 
@@ -55,11 +56,27 @@ function show(
   options: number | ToastOptions = {},
 ) {
   ensureMounted()
-  const id = nextId++
   const opts = typeof options === 'number' ? { duration: options } : options
   const isLoading = opts.loading ?? false
+
+  // Dedup: identical non-loading, non-action toasts increment count instead of stacking
+  if (!isLoading && !opts.action) {
+    const existing = toasts.value.find(
+      t => t.message === message && t.variant === variant && !t.loading && !t.action,
+    )
+    if (existing) {
+      existing.count++
+      const old = timers.get(existing.id)
+      if (old) clearTimeout(old)
+      if (existing.duration > 0)
+        timers.set(existing.id, setTimeout(() => dismiss(existing.id), existing.duration))
+      return existing.id
+    }
+  }
+
+  const id = nextId++
   const duration = isLoading ? 0 : (opts.duration ?? (variant === 'error' ? 6000 : 4000))
-  toasts.value.push({ id, message, variant, duration, loading: isLoading, action: opts.action, icon: opts.icon, color: opts.color })
+  toasts.value.push({ id, message, variant, duration, loading: isLoading, action: opts.action, icon: opts.icon, color: opts.color, count: 1 })
   if (duration > 0) timers.set(id, setTimeout(() => dismiss(id), duration))
   return id
 }

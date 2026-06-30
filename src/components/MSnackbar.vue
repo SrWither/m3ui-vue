@@ -90,7 +90,18 @@ const getVariantStyle = (variant: string): VariantStyle =>
 <template>
   <div :class="containerClass">
     <TransitionGroup :name="isTop ? 'm3-toast-top' : 'm3-toast-bot'">
-      <div v-for="t in toasts" :key="t.id" class="toast-row w-full min-w-64 max-w-xs">
+      <div v-for="t in toasts" :key="t.id" class="toast-row relative w-full min-w-64 max-w-xs">
+        <Transition name="m3-badge">
+          <span
+            v-if="t.count >= 2"
+            class="absolute -top-1.5 -right-1.5 z-10 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-on-primary shadow-elevation-1"
+          >
+            <Transition name="m3-count" mode="out-in">
+              <span :key="t.count">{{ t.count }}</span>
+            </Transition>
+          </span>
+        </Transition>
+
         <div
           class="toast-inner pointer-events-auto relative flex items-center gap-3 overflow-hidden rounded-2xl px-4 py-4 shadow-elevation-2"
           :class="t.color ? 'text-white ring-1 ring-inset ring-white/10' : getVariantStyle(t.variant).container"
@@ -98,7 +109,7 @@ const getVariantStyle = (variant: string): VariantStyle =>
         >
           <MSpinner v-if="t.loading" :size="20" class="shrink-0" />
           <MIcon
-            v-else
+            v-else-if="t.icon !== null"
             :name="t.icon ?? getVariantStyle(t.variant).iconName"
             :size="20"
             class="shrink-0"
@@ -243,6 +254,17 @@ const getVariantStyle = (variant: string): VariantStyle =>
   opacity: 0;
   transform: scale(0.92);
 }
+
+/* badge appear/disappear */
+.m3-badge-enter-active { transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.m3-badge-leave-active  { transition: opacity 0.15s ease, transform 0.15s ease; }
+.m3-badge-enter-from, .m3-badge-leave-to { opacity: 0; transform: scale(0.5); }
+
+/* count number bump when incrementing */
+.m3-count-enter-active { transition: opacity 0.12s ease, transform 0.12s ease; }
+.m3-count-leave-active  { transition: opacity 0.08s ease, transform 0.08s ease; }
+.m3-count-enter-from    { opacity: 0; transform: scale(1.5) translateY(-3px); }
+.m3-count-leave-to      { opacity: 0; transform: scale(0.6) translateY(2px); }
 
 @keyframes m3-toast-progress {
   from {

@@ -14,9 +14,10 @@ export interface Notification {
   variant: NotificationVariant
   duration: number
   loading?: boolean
-  icon?: string
+  icon?: string | null  // null = suppress icon entirely
   closable?: boolean
   action?: NotificationAction
+  count: number         // ≥ 2 → show badge
 }
 
 let nextId = 1
@@ -44,7 +45,7 @@ function dismiss(id: number) {
 export interface NotificationOptions {
   duration?: number
   loading?: boolean
-  icon?: string
+  icon?: string | null
   closable?: boolean
   action?: NotificationAction
 }
@@ -55,11 +56,27 @@ function show(
   options: NotificationOptions = {},
 ) {
   ensureMounted()
-  const id = nextId++
   const isLoading = options.loading ?? false
+
+  // Dedup: identical non-loading, non-action notifications increment count
+  if (!isLoading && !options.action) {
+    const existing = notifications.value.find(
+      n => n.message === message && n.variant === variant && !n.loading && !n.action,
+    )
+    if (existing) {
+      existing.count++
+      const old = timers.get(existing.id)
+      if (old) clearTimeout(old)
+      if (existing.duration > 0)
+        timers.set(existing.id, setTimeout(() => dismiss(existing.id), existing.duration))
+      return existing.id
+    }
+  }
+
+  const id = nextId++
   const duration = isLoading ? 0 : (options.duration ?? 3000)
   const closable = options.closable ?? true
-  notifications.value.push({ id, message, variant, duration, loading: isLoading, icon: options.icon, closable, action: options.action })
+  notifications.value.push({ id, message, variant, duration, loading: isLoading, icon: options.icon, closable, action: options.action, count: 1 })
   if (duration > 0) timers.set(id, setTimeout(() => dismiss(id), duration))
   return id
 }
