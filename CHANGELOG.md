@@ -5,6 +5,24 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.4.7] - 2026-06-30
+
+### Added
+- New component: `MCircleProgressBar` — animated ring progress with `wavy` (bumpy wave) and `circle` (smooth arc) variants
+- `MCircleProgressBar` default slot — embed any content (icon, image, text) centered inside the ring; hides the percentage label automatically
+- `MCircleProgressBar` indeterminate state — M3-style spinning arc with subtle grow/shrink breathing animation
+- `thickness` prop for both `MCircleProgressBar` and `MProgressBar` to control stroke width (defaults: 3 for wavy/circle, 4 for linear)
+- `MProgressBar` wavy variant — wave smoothly appears when progress crosses 10 % and fades out at 100 %, with margin that appears/disappears in sync
+- Toast and notification deduplication — identical messages stack into a single item showing a count badge instead of flooding the UI
+- `icon: null` option in `useToast` and `useNotification` to suppress the icon entirely
+
+### Fixed
+- `MColorPicker` and `MColorPickerModal`: drag-to-pick not working on mobile/touch (added `touch-action: none`)
+- `MCircleProgressBar`: edge gap between wave and track now scales sub-linearly with `thickness` to stay proportional at large values
+- `MProgressBar` wavy variant: inactive track bar was overlapping the wave due to a Vue reactive style / rAF conflict on `left`
+
+---
+
 ## [0.4.6] - 2026-06-25
 
 ### Fixed
