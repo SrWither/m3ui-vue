@@ -8,6 +8,7 @@ const props = withDefaults(
     color?: "primary" | "secondary" | "tertiary" | "error";
     variant?: "linear" | "wavy";
     label?: string;
+    thickness?: number;
   }>(),
   { color: "primary", variant: "linear" },
 );
@@ -28,20 +29,26 @@ const colorMap: Record<
 // ── Wave geometry ─────────────────────────────────────────────────────────
 const PERIOD     = 20;
 const AMP        = 2.5;
-const MID        = 4;
-const VIEW_H     = 8;
 const PERIODS    = 80;
 const STEP       = 2;
 const MARGIN_PX  = 4;   // gap between wave right-end and track start
 const WAVE_START = 10;  // threshold % below which wave collapses to line
 
+// thickness-derived (computed so they react to prop changes)
+const effectiveThickness = computed(() =>
+  props.thickness ?? (props.variant === "wavy" ? 3 : 4),
+);
+const waveMid  = computed(() => AMP + effectiveThickness.value / 2);
+const waveViewH = computed(() => 2 * AMP + effectiveThickness.value);
+
 const waveWidth = PERIOD * PERIODS; // 1600px — covers any container width
 
-// Static path for indeterminate (phase=0, factor=1). Built once.
+// Static path for indeterminate — built once with the wavy default (thickness=3)
+const STATIC_MID = AMP + 3 / 2; // = 4
 const staticWavePath = (() => {
   let d = "";
   for (let x = 0; x <= waveWidth; x += STEP) {
-    const y = MID - AMP * Math.sin((x / PERIOD) * Math.PI * 2);
+    const y = STATIC_MID - AMP * Math.sin((x / PERIOD) * Math.PI * 2);
     d += `${x === 0 ? "M" : "L"}${x},${y.toFixed(2)} `;
   }
   return d.trim();
@@ -89,9 +96,10 @@ const PHASE_PER_MS = (2 * Math.PI) / 800; // one full PERIOD scroll per 800ms
 const VALUE_TAU    = 130;                  // exponential τ → ~300ms 90%-settle
 
 function buildWavePath(factor: number, ph: number): string {
+  const mid = waveMid.value;
   const pts: string[] = [];
   for (let x = 0; x <= waveWidth; x += STEP) {
-    const y = MID - AMP * factor * Math.sin((x / PERIOD) * Math.PI * 2 + ph);
+    const y = mid - AMP * factor * Math.sin((x / PERIOD) * Math.PI * 2 + ph);
     pts.push(`${x === 0 ? "M" : "L"}${x},${y.toFixed(2)}`);
   }
   return pts.join(" ");
@@ -120,8 +128,10 @@ function tick(now: number) {
   if (waveClipEl.value)
     waveClipEl.value.style.clipPath = `inset(0 ${(100 - dv).toFixed(3)}% 0 0)`;
 
-  if (trackEl.value)
-    trackEl.value.style.left = `calc(${dv.toFixed(3)}% + ${margin.toFixed(2)}px)`;
+  if (trackEl.value) {
+    trackEl.value.style.left   = `calc(${dv.toFixed(3)}% + ${margin.toFixed(2)}px)`;
+    trackEl.value.style.height = `${effectiveThickness.value}px`;
+  }
 
   // 5. Rebuild wave path (drives :d via Vue ref)
   wavePath.value = buildWavePath(appearanceF, animPhase);
@@ -151,8 +161,10 @@ function initAndStart() {
   const margin = MARGIN_PX * appearanceF;
   if (waveClipEl.value)
     waveClipEl.value.style.clipPath = `inset(0 ${(100 - v).toFixed(3)}% 0 0)`;
-  if (trackEl.value)
-    trackEl.value.style.left = `calc(${v.toFixed(3)}% + ${margin.toFixed(2)}px)`;
+  if (trackEl.value) {
+    trackEl.value.style.left   = `calc(${v.toFixed(3)}% + ${margin.toFixed(2)}px)`;
+    trackEl.value.style.height = `${effectiveThickness.value}px`;
+  }
   wavePath.value = buildWavePath(appearanceF, animPhase);
 
   if (!rafId) rafId = requestAnimationFrame(tick);
@@ -186,8 +198,9 @@ watch(isIndeterminate, async (v) => {
     <!-- ── Linear variant ────────────────────────────────────────────────── -->
     <div
       v-if="variant === 'linear'"
-      class="relative h-1 w-full overflow-hidden rounded-full"
+      class="relative w-full overflow-hidden rounded-full"
       :class="colorMap[color].track"
+      :style="{ height: `${effectiveThickness}px` }"
       role="progressbar"
       :aria-valuenow="isIndeterminate ? undefined : clampedValue"
       aria-valuemin="0"
@@ -209,7 +222,8 @@ watch(isIndeterminate, async (v) => {
     <!-- ── Wavy variant ───────────────────────────────────────────────────── -->
     <div
       v-else
-      class="relative h-2 w-full overflow-visible"
+      class="relative w-full overflow-visible"
+      :style="{ height: `${waveViewH}px` }"
       role="progressbar"
       :aria-valuenow="isIndeterminate ? undefined : clampedValue"
       aria-valuemin="0"
@@ -227,32 +241,38 @@ watch(isIndeterminate, async (v) => {
             class="absolute top-0 left-0 h-full"
             :class="colorMap[color].text"
             :width="waveWidth"
-            :height="VIEW_H"
-            :viewBox="`0 0 ${waveWidth} ${VIEW_H}`"
+            :height="waveViewH"
+            :viewBox="`0 0 ${waveWidth} ${waveViewH}`"
           >
             <path
               :d="wavePath"
               fill="none"
               stroke="currentColor"
-              stroke-width="3"
+              :stroke-width="effectiveThickness"
               stroke-linecap="round"
             />
           </svg>
         </div>
 
-        <!-- Inactive track — rAF sets left -->
+        <!-- Inactive track — rAF owns left and height; no Vue-managed left -->
         <div
           ref="trackEl"
           class="absolute right-0"
           :class="colorMap[color].track"
-          style="border-radius: 9999px; height: 4px; top: 50%; transform: translateY(-50%); left: 0"
+          style="border-radius: 9999px; top: 50%; transform: translateY(-50%);"
         />
 
         <!-- Stop dot at far right -->
         <div
           class="absolute rounded-full"
           :class="colorMap[color].bar"
-          style="right: 0; top: 50%; transform: translateY(-50%); width: 4px; height: 4px"
+          :style="{
+            right: '0',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: `${effectiveThickness}px`,
+            height: `${effectiveThickness}px`,
+          }"
         />
       </template>
 
@@ -265,8 +285,8 @@ watch(isIndeterminate, async (v) => {
         >
           <svg
             :width="waveWidth"
-            :height="VIEW_H"
-            :viewBox="`0 0 ${waveWidth} ${VIEW_H}`"
+            :height="waveViewH"
+            :viewBox="`0 0 ${waveWidth} ${waveViewH}`"
             class="h-full"
             xmlns="http://www.w3.org/2000/svg"
           >
@@ -274,7 +294,7 @@ watch(isIndeterminate, async (v) => {
               :d="staticWavePath"
               fill="none"
               stroke="currentColor"
-              stroke-width="3"
+              :stroke-width="effectiveThickness"
               stroke-linecap="round"
             />
           </svg>

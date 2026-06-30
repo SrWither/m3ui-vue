@@ -9,11 +9,13 @@ const props = withDefaults(
     variant?: "circle" | "wavy";
     label?: string;
     size?: number;
+    thickness?: number;
   }>(),
   {
     color: "primary",
     variant: "wavy",
     size: 80,
+    thickness: 3,
   },
 );
 
@@ -29,14 +31,17 @@ const svgColor = computed(() => svgColorMap[props.color]);
 
 // ── Geometry ─────────────────────────────────────────────────────────────
 const R        = 40;
-const STROKE   = 3;
 const CIRC     = 2 * Math.PI * R;
 const BUMPS    = 12;
 const SEGS     = BUMPS * 20;
 const AMP_FRAC = 0.055;
-const MASK_SW  = 10;
-const EDGE_GAP = 3;
 const WAVE_START = 10;
+
+// thickness-derived values (all scale together)
+const strokeW = computed(() => props.thickness);
+// mask must cover: stroke/2 + wave amplitude (R*AMP_FRAC) on each side + small padding
+const maskSW  = computed(() => props.thickness + Math.ceil(2 * R * AMP_FRAC) + 2); // ≥ stroke+7
+const edgeGap = computed(() => props.thickness); // gap scales 1:1 with stroke
 
 // Vue computed — the TARGET arc length the animation follows
 const arcLen = computed(() => (clampedValue.value / 100) * CIRC);
@@ -151,7 +156,7 @@ function tick(now: number) {
 
   // 6. Compute derived visual values
   const combined = appearanceF * collapseF;
-  const gap      = EDGE_GAP * combined * gapF;
+  const gap      = edgeGap.value * combined * gapF;
   const disp     = displayedArcLen;
   const dispGap  = CIRC - disp;
 
@@ -243,10 +248,10 @@ const maskId = useId();
       >
         <!-- ── Indeterminate — same for both variants ─────────────────── -->
         <template v-if="indeterminate">
-          <circle cx="50" cy="50" :r="R" fill="none" :stroke-width="STROKE"
+          <circle cx="50" cy="50" :r="R" fill="none" :stroke-width="strokeW"
             :style="{ stroke: svgColor.track }"
           />
-          <circle cx="50" cy="50" :r="R" fill="none" :stroke-width="STROKE"
+          <circle cx="50" cy="50" :r="R" fill="none" :stroke-width="strokeW"
             stroke-linecap="round"
             :style="{ stroke: svgColor.fill, transformOrigin: '50px 50px', animation: 'm3-cpb-spin 1.4s linear infinite, m3-cpb-arc 3s ease-in-out infinite' }"
           />
@@ -260,7 +265,7 @@ const maskId = useId();
               <circle
                 ref="maskCircleEl"
                 cx="50" cy="50" :r="R"
-                fill="none" :stroke-width="MASK_SW" stroke="white"
+                fill="none" :stroke-width="maskSW" stroke="white"
                 stroke-dasharray="0 251"
                 transform="rotate(-90, 50, 50)"
               />
@@ -270,7 +275,7 @@ const maskId = useId();
           <circle
             ref="trackCircleEl"
             cx="50" cy="50" :r="R"
-            fill="none" :stroke-width="STROKE"
+            fill="none" :stroke-width="strokeW"
             :style="{ stroke: svgColor.track }"
             stroke-dasharray="251 0"
             transform="rotate(-90, 50, 50)"
@@ -278,7 +283,7 @@ const maskId = useId();
 
           <path
             :d="wavePath"
-            fill="none" :stroke-width="STROKE"
+            fill="none" :stroke-width="strokeW"
             stroke-linecap="round" stroke-linejoin="round"
             :mask="`url(#${maskId})`"
             :style="{ stroke: svgColor.fill }"
@@ -288,10 +293,10 @@ const maskId = useId();
         <!-- ── Circle variant ────────────────────────────────────────── -->
         <template v-else-if="!indeterminate">
           <circle cx="50" cy="50" :r="R" fill="none"
-            :stroke-width="STROKE" :style="{ stroke: svgColor.track }"
+            :stroke-width="strokeW" :style="{ stroke: svgColor.track }"
           />
           <circle cx="50" cy="50" :r="R" fill="none"
-            :stroke-width="STROKE"
+            :stroke-width="strokeW"
             stroke-linecap="round"
             :style="{
               stroke: svgColor.fill,
