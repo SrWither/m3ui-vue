@@ -20,7 +20,8 @@ const props = withDefaults(
     variant?: 'filled' | 'outlined'
     mode?: 'docked' | 'modal'
     disabled?: boolean
-    error?: string
+    error?: boolean
+    errorLabel?: string
     hint?: string
     required?: boolean
     leadingIcon?: string
@@ -247,7 +248,7 @@ const labelClasses = computed(() => {
       </div>
     </div>
 
-    <p v-if="error" class="px-4 text-body-small text-error">{{ error }}</p>
+    <p v-if="error && errorLabel" class="px-4 text-body-small text-error">{{ errorLabel }}</p>
     <p v-else-if="hint" class="px-4 text-body-small text-on-surface-variant">{{ hint }}</p>
   </div>
 

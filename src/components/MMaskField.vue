@@ -22,7 +22,8 @@ const props = withDefaults(
     label: string
     mask: string | MaskPreset
     variant?: 'filled' | 'outlined'
-    error?: string
+    error?: boolean
+    errorLabel?: string
     hint?: string
     disabled?: boolean
     required?: boolean
@@ -198,7 +199,7 @@ const labelClasses = computed(() => {
       </button>
     </div>
 
-    <p v-if="error" class="px-4 text-body-small text-error">{{ error }}</p>
+    <p v-if="error && errorLabel" class="px-4 text-body-small text-error">{{ errorLabel }}</p>
     <p v-else-if="hint" class="px-4 text-body-small text-on-surface-variant">{{ hint }}</p>
   </div>
 </template>

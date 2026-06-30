@@ -13,7 +13,8 @@ const props = withDefaults(
     min?: number
     max?: number
     step?: number
-    error?: string
+    error?: boolean
+    errorLabel?: string
     hint?: string
     disabled?: boolean
     required?: boolean
@@ -174,7 +175,7 @@ const labelClasses = computed(() => {
       </div>
     </div>
 
-    <p v-if="error" class="px-4 text-body-small text-error">{{ error }}</p>
+    <p v-if="error && errorLabel" class="px-4 text-body-small text-error">{{ errorLabel }}</p>
     <p v-else-if="hint" class="px-4 text-body-small text-on-surface-variant">{{ hint }}</p>
   </div>
 </template>
