@@ -3,7 +3,8 @@ import { computed, ref, watch, onMounted, onUnmounted, useId } from "vue";
 
 const props = withDefaults(
   defineProps<{
-    value: number;
+    value?: number;
+    indeterminate?: boolean;
     color?: "primary" | "secondary" | "tertiary" | "error";
     variant?: "circle" | "wavy";
     label?: string;
@@ -16,7 +17,7 @@ const props = withDefaults(
   },
 );
 
-const clampedValue = computed(() => Math.min(100, Math.max(0, props.value)));
+const clampedValue = computed(() => Math.min(100, Math.max(0, props.value ?? 0)));
 
 const svgColorMap: Record<"primary" | "secondary" | "tertiary" | "error", { fill: string; track: string }> = {
   primary:   { fill: "var(--color-primary)",   track: "var(--color-primary-container)"   },
@@ -82,6 +83,7 @@ function tickAnim(a: Anim, now: number): number {
 
 // ── Watchers — write to plain JS anim objects, NOT to Vue refs ────────────
 watch(clampedValue, (v, prev) => {
+  if (props.indeterminate) return;
   if (prev <= WAVE_START && v  >  WAVE_START) startAnim(appearAnim, appearanceF, 1, performance.now());
   if (prev >  WAVE_START && v <= WAVE_START)  startAnim(appearAnim, appearanceF, 0, performance.now());
 
@@ -197,17 +199,31 @@ function stopRaf() {
   appearAnim.t0 = gapAnim.t0 = collapseAnim.t0 = restoreAnim.t0 = -1;
 }
 
+function initWavy() {
+  const v = clampedValue.value;
+  displayedArcLen = arcLen.value;
+  appearanceF = 0; gapF = 1; collapseF = 1;
+  appearAnim.t0 = gapAnim.t0 = collapseAnim.t0 = restoreAnim.t0 = -1;
+  appearAnim.to = 0; gapAnim.to = 1; collapseAnim.to = 1;
+  if (v === 100) { appearanceF = 1; gapF = 0; collapseF = 0; gapAnim.to = 0; collapseAnim.to = 0; }
+  else if (v > WAVE_START) { appearanceF = 1; appearAnim.to = 1; }
+}
+
 onMounted(() => {
-  if (props.variant === "wavy") {
-    const v = clampedValue.value;
-    displayedArcLen = arcLen.value;
-    if (v === 100) { appearanceF = 1; gapF = 0; collapseF = 0; gapAnim.to = 0; collapseAnim.to = 0; }
-    else if (v > WAVE_START) { appearanceF = 1; appearAnim.to = 1; }
+  if (props.variant === "wavy" && !props.indeterminate) {
+    initWavy();
     startRaf();
   }
 });
 onUnmounted(stopRaf);
-watch(() => props.variant, (v) => (v === "wavy" ? startRaf() : stopRaf()));
+watch(() => props.variant, (v) => {
+  if (v === "wavy" && !props.indeterminate) { initWavy(); startRaf(); }
+  else stopRaf();
+});
+watch(() => props.indeterminate, (v) => {
+  if (v) stopRaf();
+  else if (props.variant === "wavy") { initWavy(); startRaf(); }
+});
 
 const maskId = useId();
 </script>
@@ -222,11 +238,22 @@ const maskId = useId();
         viewBox="0 0 100 100"
         fill="none"
         role="progressbar"
-        :aria-valuenow="clampedValue"
+        :aria-valuenow="indeterminate ? undefined : clampedValue"
         aria-valuemin="0" aria-valuemax="100"
       >
+        <!-- ── Indeterminate — same for both variants ─────────────────── -->
+        <template v-if="indeterminate">
+          <circle cx="50" cy="50" :r="R" fill="none" :stroke-width="STROKE"
+            :style="{ stroke: svgColor.track }"
+          />
+          <circle cx="50" cy="50" :r="R" fill="none" :stroke-width="STROKE"
+            stroke-linecap="round"
+            :style="{ stroke: svgColor.fill, transformOrigin: '50px 50px', animation: 'm3-cpb-spin 1.4s linear infinite, m3-cpb-arc 3s ease-in-out infinite' }"
+          />
+        </template>
+
         <!-- ── Wavy variant ────────────────────────────────────────────── -->
-        <template v-if="variant === 'wavy'">
+        <template v-else-if="variant === 'wavy'">
           <defs>
             <mask :id="maskId" maskUnits="userSpaceOnUse">
               <rect x="0" y="0" width="100" height="100" fill="black" />
@@ -259,7 +286,7 @@ const maskId = useId();
         </template>
 
         <!-- ── Circle variant ────────────────────────────────────────── -->
-        <template v-else>
+        <template v-else-if="!indeterminate">
           <circle cx="50" cy="50" :r="R" fill="none"
             :stroke-width="STROKE" :style="{ stroke: svgColor.track }"
           />
@@ -276,9 +303,9 @@ const maskId = useId();
           />
         </template>
 
-        <!-- Percentage label — hidden when slot content is provided -->
+        <!-- Percentage label — hidden when indeterminate or slot content provided -->
         <text
-          v-if="!$slots.default"
+          v-if="!indeterminate && !$slots.default"
           x="50" y="50"
           text-anchor="middle" dominant-baseline="middle"
           :style="{
@@ -300,3 +327,21 @@ const maskId = useId();
     </div>
   </div>
 </template>
+
+<style>
+/* Continuous rotation — linear so speed never changes */
+@keyframes m3-cpb-spin {
+  from { transform: rotate(-90deg); }
+  to   { transform: rotate(270deg); }
+}
+
+/*
+  Arc size oscillates between ~7 % and ~70 % of the circumference (CIRC ≈ 251.3).
+  Combined with the spin at a different period (1.4 s vs 1.05 s, ratio 4:3),
+  head and tail appear to move independently — matching the M3 indeterminate feel.
+*/
+@keyframes m3-cpb-arc {
+  0%, 100% { stroke-dasharray: 18.8 232.5; }
+  50%      { stroke-dasharray: 176  75.3;  }
+}
+</style>
