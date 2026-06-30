@@ -257,11 +257,11 @@ onUnmounted(() => {
 
 // Resize handle definitions
 const resizeHandles: { dir: ResizeDirection; class: string; cursor: string }[] = [
-  { dir: 's', class: 'bottom-0 left-[10px] right-[10px] h-[5px]', cursor: 'cursor-ns-resize' },
-  { dir: 'e', class: 'top-[10px] right-0 bottom-[10px] w-[5px]', cursor: 'cursor-ew-resize' },
-  { dir: 'w', class: 'top-[10px] left-0 bottom-[10px] w-[5px]', cursor: 'cursor-ew-resize' },
-  { dir: 'se', class: 'bottom-0 right-0 w-[12px] h-[12px]', cursor: 'cursor-nwse-resize' },
-  { dir: 'sw', class: 'bottom-0 left-0 w-[12px] h-[12px]', cursor: 'cursor-nesw-resize' },
+  { dir: 's', class: 'bottom-0 left-[20px] right-[20px] h-[8px]', cursor: 'cursor-ns-resize' },
+  { dir: 'e', class: 'top-[20px] right-0 bottom-[20px] w-[8px]', cursor: 'cursor-ew-resize' },
+  { dir: 'w', class: 'top-[20px] left-0 bottom-[20px] w-[8px]', cursor: 'cursor-ew-resize' },
+  { dir: 'se', class: 'bottom-0 right-0 w-[20px] h-[20px]', cursor: 'cursor-nwse-resize' },
+  { dir: 'sw', class: 'bottom-0 left-0 w-[20px] h-[20px]', cursor: 'cursor-nesw-resize' },
 ]
 </script>
 
