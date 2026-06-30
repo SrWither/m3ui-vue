@@ -41,7 +41,7 @@ const WAVE_START = 10;
 const strokeW = computed(() => props.thickness);
 // mask must cover: stroke/2 + wave amplitude (R*AMP_FRAC) on each side + small padding
 const maskSW  = computed(() => props.thickness + Math.ceil(2 * R * AMP_FRAC) + 2); // ≥ stroke+7
-const edgeGap = computed(() => props.thickness); // gap scales 1:1 with stroke
+const edgeGap = computed(() => 0.75 + props.thickness * 0.25);
 
 // Vue computed — the TARGET arc length the animation follows
 const arcLen = computed(() => (clampedValue.value / 100) * CIRC);
