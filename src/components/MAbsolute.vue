@@ -53,12 +53,13 @@ const style = computed(() => {
     return s
   }
 
+  const hasAny = props.top !== undefined || props.right !== undefined || props.bottom !== undefined || props.left !== undefined
   return {
     position: 'absolute' as const,
-    top: toUnit(props.top),
+    top: hasAny ? toUnit(props.top) : '8px',
     right: toUnit(props.right),
     bottom: toUnit(props.bottom),
-    left: toUnit(props.left),
+    left: hasAny ? toUnit(props.left) : '8px',
     zIndex: props.zIndex,
   }
 })
