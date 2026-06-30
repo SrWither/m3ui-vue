@@ -341,12 +341,14 @@ const maskId = useId();
 }
 
 /*
-  Arc size oscillates between ~7 % and ~70 % of the circumference (CIRC ≈ 251.3).
-  Combined with the spin at a different period (1.4 s vs 1.05 s, ratio 4:3),
-  head and tail appear to move independently — matching the M3 indeterminate feel.
+  Head and tail are animated independently via dasharray + dashoffset.
+  dashoffset drifts the arc's start point backward one full circumference (251.3)
+  per cycle, so the trailing end never catches the leading end — eliminating
+  the shaking artifact that occurs when both caps converge at minimum arc size.
 */
 @keyframes m3-cpb-arc {
-  0%, 100% { stroke-dasharray: 18.8 232.5; }
-  50%      { stroke-dasharray: 176  75.3;  }
+  0%   { stroke-dasharray:   5 246.3; stroke-dashoffset:    0; }
+  50%  { stroke-dasharray: 176  75.3; stroke-dashoffset:  -70; }
+  100% { stroke-dasharray:   5 246.3; stroke-dashoffset: -251.3; }
 }
 </style>
