@@ -90,6 +90,7 @@ const currentHex = computed(() => hsvToHex(hue.value, sat.value, bright.value))
 const hueColor = computed(() => `hsl(${hue.value}, 100%, 50%)`)
 
 function onSBPointerDown(e: PointerEvent) {
+  e.preventDefault()
   draggingSB.value = true
   updateSB(e)
   ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)

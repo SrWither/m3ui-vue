@@ -89,6 +89,7 @@ function syncHex() {
 
 // ── Saturation / Brightness ────────────────────────────────────────
 function onSBPointerDown(e: PointerEvent) {
+  e.preventDefault()
   draggingSB.value = true
   updateSB(e)
   ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
