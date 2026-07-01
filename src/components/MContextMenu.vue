@@ -41,14 +41,20 @@ function onKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') hide()
 }
 
+function onScroll() {
+  if (visible.value) hide()
+}
+
 onMounted(() => {
   document.addEventListener('mousedown', onDocMouseDown)
   document.addEventListener('keydown', onKeydown)
+  window.addEventListener('scroll', onScroll, true)
 })
 
 onUnmounted(() => {
   document.removeEventListener('mousedown', onDocMouseDown)
   document.removeEventListener('keydown', onKeydown)
+  window.removeEventListener('scroll', onScroll, true)
 })
 </script>
 
