@@ -94,7 +94,7 @@ const getVariantStyle = (variant: string): VariantStyle =>
         <Transition name="m3-badge">
           <span
             v-if="t.count >= 2"
-            class="absolute -top-1.5 -right-1.5 z-10 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-on-primary shadow-elevation-1"
+            class="toast-count-badge absolute -top-1.5 -right-1.5 z-10 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-on-primary shadow-elevation-1"
           >
             <Transition name="m3-count" mode="out-in">
               <span :key="t.count">{{ t.count }}</span>
@@ -178,7 +178,6 @@ const getVariantStyle = (variant: string): VariantStyle =>
   transition:
     grid-template-rows 220ms cubic-bezier(0.2, 0, 0, 1),
     padding-bottom 220ms cubic-bezier(0.2, 0, 0, 1);
-  overflow: hidden;
 }
 .m3-toast-bot-enter-active > .toast-inner {
   transition:
@@ -198,7 +197,6 @@ const getVariantStyle = (variant: string): VariantStyle =>
   transition:
     grid-template-rows 300ms cubic-bezier(0.2, 0, 0, 1),
     padding-bottom 300ms cubic-bezier(0.2, 0, 0, 1);
-  overflow: hidden;
 }
 .m3-toast-bot-leave-active > .toast-inner {
   transition:
@@ -213,13 +211,19 @@ const getVariantStyle = (variant: string): VariantStyle =>
   opacity: 0;
   transform: scale(0.92);
 }
+.m3-toast-bot-leave-active > .toast-count-badge {
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+.m3-toast-bot-leave-to > .toast-count-badge {
+  opacity: 0;
+  transform: scale(0.5);
+}
 
 /* ─── Top toasts ────────────────────────────────────────────────── */
 .m3-toast-top-enter-active {
   transition:
     grid-template-rows 220ms cubic-bezier(0.2, 0, 0, 1),
     padding-bottom 220ms cubic-bezier(0.2, 0, 0, 1);
-  overflow: hidden;
 }
 .m3-toast-top-enter-active > .toast-inner {
   transition:
@@ -239,7 +243,6 @@ const getVariantStyle = (variant: string): VariantStyle =>
   transition:
     grid-template-rows 300ms cubic-bezier(0.2, 0, 0, 1),
     padding-bottom 300ms cubic-bezier(0.2, 0, 0, 1);
-  overflow: hidden;
 }
 .m3-toast-top-leave-active > .toast-inner {
   transition:
@@ -253,6 +256,13 @@ const getVariantStyle = (variant: string): VariantStyle =>
 .m3-toast-top-leave-to > .toast-inner {
   opacity: 0;
   transform: scale(0.92);
+}
+.m3-toast-top-leave-active > .toast-count-badge {
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+.m3-toast-top-leave-to > .toast-count-badge {
+  opacity: 0;
+  transform: scale(0.5);
 }
 
 /* badge appear/disappear */

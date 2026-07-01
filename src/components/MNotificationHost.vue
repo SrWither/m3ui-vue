@@ -53,7 +53,7 @@ const getStyle = (variant: string) => variantStyles[variant] ?? variantStyles.in
         <Transition name="m3-badge">
           <span
             v-if="n.count >= 2"
-            class="absolute -top-1.5 -right-1.5 z-10 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-on-primary shadow-elevation-1"
+            class="notif-count-badge absolute -top-1.5 -right-1.5 z-10 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-on-primary shadow-elevation-1"
           >
             <Transition name="m3-count" mode="out-in">
               <span :key="n.count">{{ n.count }}</span>
@@ -110,10 +110,10 @@ const getStyle = (variant: string) => variantStyles[variant] ?? variantStyles.in
 
 .m3-notif-bot-enter-active {
   transition: grid-template-rows 200ms ease, padding-bottom 200ms ease;
-  overflow: hidden;
 }
 .m3-notif-bot-enter-active > .notif-inner {
   transition: opacity 150ms ease, transform 200ms ease;
+  overflow: hidden;
 }
 .m3-notif-bot-enter-from {
   grid-template-rows: 0fr;
@@ -126,10 +126,10 @@ const getStyle = (variant: string) => variantStyles[variant] ?? variantStyles.in
 
 .m3-notif-bot-leave-active {
   transition: grid-template-rows 250ms ease, padding-bottom 250ms ease;
-  overflow: hidden;
 }
 .m3-notif-bot-leave-active > .notif-inner {
   transition: opacity 150ms ease, transform 150ms ease;
+  overflow: hidden;
 }
 .m3-notif-bot-leave-to {
   grid-template-rows: 0fr;
@@ -139,13 +139,20 @@ const getStyle = (variant: string) => variantStyles[variant] ?? variantStyles.in
   opacity: 0;
   transform: scale(0.93);
 }
+.m3-notif-bot-leave-active > .notif-count-badge {
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+.m3-notif-bot-leave-to > .notif-count-badge {
+  opacity: 0;
+  transform: scale(0.5);
+}
 
 .m3-notif-top-enter-active {
   transition: grid-template-rows 200ms ease, padding-bottom 200ms ease;
-  overflow: hidden;
 }
 .m3-notif-top-enter-active > .notif-inner {
   transition: opacity 150ms ease, transform 200ms ease;
+  overflow: hidden;
 }
 .m3-notif-top-enter-from {
   grid-template-rows: 0fr;
@@ -158,10 +165,10 @@ const getStyle = (variant: string) => variantStyles[variant] ?? variantStyles.in
 
 .m3-notif-top-leave-active {
   transition: grid-template-rows 250ms ease, padding-bottom 250ms ease;
-  overflow: hidden;
 }
 .m3-notif-top-leave-active > .notif-inner {
   transition: opacity 150ms ease, transform 150ms ease;
+  overflow: hidden;
 }
 .m3-notif-top-leave-to {
   grid-template-rows: 0fr;
@@ -170,6 +177,13 @@ const getStyle = (variant: string) => variantStyles[variant] ?? variantStyles.in
 .m3-notif-top-leave-to > .notif-inner {
   opacity: 0;
   transform: scale(0.93);
+}
+.m3-notif-top-leave-active > .notif-count-badge {
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+.m3-notif-top-leave-to > .notif-count-badge {
+  opacity: 0;
+  transform: scale(0.5);
 }
 
 .m3-badge-enter-active { transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
