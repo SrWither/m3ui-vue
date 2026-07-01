@@ -5,6 +5,15 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.5.1] - 2026-07-01
+
+### Fixed
+- `MContextMenu` now closes when the page is scrolled instead of staying anchored to a stale position
+- Toast and notification duplicate-count badge no longer gets clipped mid-animation when the item is dismissed, and now fades out in sync with the item instead of popping off abruptly
+- `MColorPicker` and `MColorPickerModal`: dragging on the saturation/brightness area past its edge no longer triggers native text selection on the surrounding page
+
+---
+
 ## [0.5.0] - 2026-06-30
 
 ### Added
