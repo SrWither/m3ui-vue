@@ -96,4 +96,8 @@ export const frLocale: M3Locale = {
   jsonInvalid: 'Invalide',
   jsonFormat: 'Formater',
   jsonMinify: 'Minifier',
+
+  // JSON viewer
+  jsonElements: 'éléments',
+  jsonFields: 'champs',
 }

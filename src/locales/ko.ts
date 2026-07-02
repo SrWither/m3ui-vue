@@ -96,4 +96,8 @@ export const koLocale: M3Locale = {
   jsonInvalid: '유효하지 않음',
   jsonFormat: '서식 지정',
   jsonMinify: '압축',
+
+  // JSON viewer
+  jsonElements: '요소',
+  jsonFields: '필드',
 }

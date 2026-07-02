@@ -96,4 +96,8 @@ export const zhLocale: M3Locale = {
   jsonInvalid: '无效',
   jsonFormat: '格式化',
   jsonMinify: '压缩',
+
+  // JSON viewer
+  jsonElements: '个元素',
+  jsonFields: '个字段',
 }

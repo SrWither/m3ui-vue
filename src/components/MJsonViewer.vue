@@ -1,17 +1,32 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import MIcon from './MIcon.vue'
+import { useLocale } from '../composables/useLocale'
+
+export interface JsonViewerLabels {
+  elements?: string
+  fields?: string
+}
+
+const locale = useLocale()
 
 const props = withDefaults(
   defineProps<{
     data: unknown
     rootName?: string
     expandDepth?: number
+    labels?: JsonViewerLabels
     /** @internal — used by recursive instances */
     _depth?: number
   }>(),
   { rootName: 'root', expandDepth: 2, _depth: 0 },
 )
+
+const l = computed<Required<JsonViewerLabels>>(() => ({
+  elements: locale.jsonElements,
+  fields: locale.jsonFields,
+  ...props.labels,
+}))
 
 const expanded = ref(props._depth < props.expandDepth)
 
@@ -73,7 +88,7 @@ function formatValue(val: unknown) {
         <span v-if="_depth === 0 || rootName" class="text-tertiary">{{ _depth === 0 ? rootName : '' }}</span>
         <span class="text-on-surface-variant">{{ bracketOpen }}</span>
         <span v-if="!expanded" class="text-on-surface-variant/60">
-          {{ childCount }} {{ dataType === 'array' ? 'elementos' : 'campos' }}
+          {{ childCount }} {{ dataType === 'array' ? l.elements : l.fields }}
         </span>
         <span v-if="!expanded" class="text-on-surface-variant">{{ bracketClose }}</span>
       </button>
@@ -89,6 +104,7 @@ function formatValue(val: unknown) {
             :data="entry.value"
             :root-name="entry.key"
             :expand-depth="expandDepth"
+            :labels="labels"
             :_depth="_depth + 1"
           />
           <!-- Primitive value -->

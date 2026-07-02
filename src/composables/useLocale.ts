@@ -96,6 +96,10 @@ export interface M3Locale {
   jsonInvalid: string
   jsonFormat: string
   jsonMinify: string
+
+  // JSON viewer
+  jsonElements: string
+  jsonFields: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -182,6 +186,9 @@ export const defaultLocale: M3Locale = {
   jsonInvalid: 'Invalid',
   jsonFormat: 'Format',
   jsonMinify: 'Minify',
+
+  jsonElements: 'elements',
+  jsonFields: 'fields',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')

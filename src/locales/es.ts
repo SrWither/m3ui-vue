@@ -96,4 +96,8 @@ export const esLocale: M3Locale = {
   jsonInvalid: 'Inválido',
   jsonFormat: 'Formatear',
   jsonMinify: 'Minificar',
+
+  // JSON viewer
+  jsonElements: 'elementos',
+  jsonFields: 'campos',
 }

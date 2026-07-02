@@ -96,4 +96,8 @@ export const jaLocale: M3Locale = {
   jsonInvalid: '無効',
   jsonFormat: '整形',
   jsonMinify: '圧縮',
+
+  // JSON viewer
+  jsonElements: '要素',
+  jsonFields: 'フィールド',
 }

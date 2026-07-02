@@ -96,4 +96,8 @@ export const deLocale: M3Locale = {
   jsonInvalid: 'Ungültig',
   jsonFormat: 'Formatieren',
   jsonMinify: 'Minimieren',
+
+  // JSON viewer
+  jsonElements: 'Elemente',
+  jsonFields: 'Felder',
 }
