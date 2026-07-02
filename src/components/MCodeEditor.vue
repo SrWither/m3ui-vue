@@ -146,6 +146,7 @@ function buildExtensions(mods: any) {
     languageMod.bracketMatching(),
     languageMod.indentOnInput(),
     languageMod.foldGutter(),
+    viewMod.drawSelection(),
     viewMod.highlightActiveLine(),
     viewMod.highlightActiveLineGutter(),
     languageMod.syntaxHighlighting(m3Style),
