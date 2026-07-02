@@ -90,4 +90,10 @@ export const zhLocale: M3Locale = {
   insertImage: '插入图片',
   imageUrlLabel: '图片 URL',
   insert: '插入',
+
+  // JSON editor
+  jsonValid: '有效',
+  jsonInvalid: '无效',
+  jsonFormat: '格式化',
+  jsonMinify: '压缩',
 }

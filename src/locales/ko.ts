@@ -90,4 +90,10 @@ export const koLocale: M3Locale = {
   insertImage: '이미지 삽입',
   imageUrlLabel: '이미지 URL',
   insert: '삽입',
+
+  // JSON editor
+  jsonValid: '유효함',
+  jsonInvalid: '유효하지 않음',
+  jsonFormat: '서식 지정',
+  jsonMinify: '압축',
 }

@@ -90,6 +90,12 @@ export interface M3Locale {
   insertImage: string
   imageUrlLabel: string
   insert: string
+
+  // JSON editor
+  jsonValid: string
+  jsonInvalid: string
+  jsonFormat: string
+  jsonMinify: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -171,6 +177,11 @@ export const defaultLocale: M3Locale = {
   insertImage: 'Insert image',
   imageUrlLabel: 'Image URL',
   insert: 'Insert',
+
+  jsonValid: 'Valid',
+  jsonInvalid: 'Invalid',
+  jsonFormat: 'Format',
+  jsonMinify: 'Minify',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')

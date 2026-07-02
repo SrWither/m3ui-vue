@@ -90,4 +90,10 @@ export const jaLocale: M3Locale = {
   insertImage: '画像を挿入',
   imageUrlLabel: '画像 URL',
   insert: '挿入',
+
+  // JSON editor
+  jsonValid: '有効',
+  jsonInvalid: '無効',
+  jsonFormat: '整形',
+  jsonMinify: '圧縮',
 }

@@ -2,6 +2,16 @@
 import { ref, computed, watch } from 'vue'
 import MCodeEditor from './MCodeEditor.vue'
 import MIcon from './MIcon.vue'
+import { useLocale } from '../composables/useLocale'
+
+export interface JsonEditorLabels {
+  valid?: string
+  invalid?: string
+  format?: string
+  minify?: string
+}
+
+const locale = useLocale()
 
 const props = withDefaults(
   defineProps<{
@@ -9,6 +19,7 @@ const props = withDefaults(
     readonly?: boolean
     minHeight?: string
     maxHeight?: string
+    labels?: JsonEditorLabels
   }>(),
   {
     readonly: false,
@@ -16,6 +27,14 @@ const props = withDefaults(
     maxHeight: '600px',
   },
 )
+
+const l = computed<Required<JsonEditorLabels>>(() => ({
+  valid: locale.jsonValid,
+  invalid: locale.jsonInvalid,
+  format: locale.jsonFormat,
+  minify: locale.jsonMinify,
+  ...props.labels,
+}))
 
 const emit = defineEmits<{ 'update:modelValue': [unknown] }>()
 
@@ -25,11 +44,18 @@ const parseError = ref<string | null>(null)
 const isValid = computed(() => !parseError.value)
 
 watch(() => props.modelValue, (val) => {
-  const incoming = JSON.stringify(val, null, 2)
-  if (incoming !== rawText.value) {
-    rawText.value = incoming
-    parseError.value = null
+  let current: unknown
+  try {
+    current = JSON.parse(rawText.value)
+  } catch {
+    current = undefined
   }
+  // Only resync from outside when the actual data changed, not just its formatting —
+  // otherwise the round-trip from formatJson/minifyJson emitting would immediately
+  // overwrite the newly (re)formatted text with a pretty-printed copy.
+  if (JSON.stringify(current) === JSON.stringify(val)) return
+  rawText.value = JSON.stringify(val, null, 2)
+  parseError.value = null
 })
 
 function onTextUpdate(text: string) {
@@ -84,28 +110,28 @@ function minifyJson() {
             :class="isValid ? 'bg-success-container text-on-success-container' : 'bg-error-container text-on-error-container'"
           >
             <MIcon :name="isValid ? 'check_circle' : 'error'" :size="14" />
-            {{ isValid ? 'Válido' : 'Inválido' }}
+            {{ isValid ? l.valid : l.invalid }}
           </span>
 
           <button
             v-if="!readonly"
             type="button"
-            title="Formatear"
+            :title="l.format"
             class="flex h-7 cursor-pointer items-center gap-1 rounded px-2 text-label-medium text-on-surface-variant transition-colors hover:bg-on-surface/8"
             @click="formatJson"
           >
             <MIcon name="format_indent_increase" :size="16" />
-            Formatear
+            {{ l.format }}
           </button>
           <button
             v-if="!readonly"
             type="button"
-            title="Minificar"
+            :title="l.minify"
             class="flex h-7 cursor-pointer items-center gap-1 rounded px-2 text-label-medium text-on-surface-variant transition-colors hover:bg-on-surface/8"
             @click="minifyJson"
           >
             <MIcon name="compress" :size="16" />
-            Minificar
+            {{ l.minify }}
           </button>
         </div>
       </template>

@@ -90,4 +90,10 @@ export const deLocale: M3Locale = {
   insertImage: 'Bild einfügen',
   imageUrlLabel: 'Bild-URL',
   insert: 'Einfügen',
+
+  // JSON editor
+  jsonValid: 'Gültig',
+  jsonInvalid: 'Ungültig',
+  jsonFormat: 'Formatieren',
+  jsonMinify: 'Minimieren',
 }
