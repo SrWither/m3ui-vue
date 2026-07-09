@@ -123,8 +123,8 @@ function tick(now: number) {
   const dt = lastTime !== null ? now - lastTime : 0;
   lastTime = now;
 
-  // 1. Advance wave phase
-  animPhase -= dt * PHASE_PER_MS;
+  // 1. Advance wave phase (crest travels right-to-left along the ring, matching Material)
+  animPhase += dt * PHASE_PER_MS;
 
   // 2. Smooth arc (exponential: 90% in ≈300ms, equivalent feel to CSS ease-out)
   if (dt > 0) {
