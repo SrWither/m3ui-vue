@@ -330,7 +330,7 @@ watch(
           </button>
 
           <!-- Static section title -->
-          <div v-else-if="section.title" class="nd-collapse-h overflow-hidden">
+          <div v-else-if="section.title" class="nd-collapse-h shrink-0 overflow-hidden">
             <p
               class="whitespace-nowrap px-4 pt-4 pb-2 text-title-small font-medium text-on-surface-variant"
             >
