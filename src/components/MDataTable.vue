@@ -253,21 +253,39 @@ function parseRemOrPx(value: string): number | null {
  * empty or has just a few rows (e.g. a single day's agenda), this made the skeleton noticeably
  * taller than the real content, causing a jarring height jump/collapse the instant data arrives.
  *
- * Prefers the last known row count (still sitting in `rows` while `loading` is true, since
- * callers typically don't clear it before re-fetching) so the skeleton matches what's about to
- * reappear. With no prior data (first load ever), fills `minHeight` dynamically instead of a
- * flat guess — so the skeleton's own height already matches the reserved space exactly, with no
- * gap below the last skeleton row and no separate height jump when data replaces it.
+ * Always fills `minHeight` dynamically — deliberately does NOT look at the previous page's row
+ * count (an earlier version of this fix did, and that was itself a bug: if a *previous* load had
+ * more rows than fit in `minHeight`, the table had already grown taller than the floor to show
+ * them; switching to a day/filter with fewer or zero rows then used the OLD count for the
+ * skeleton too, kept the table inflated during loading, and only shrank back to the `minHeight`
+ * floor once the real, smaller data replaced it — a visible grow-then-shrink exactly like the
+ * original unfixed bug, just delayed by one navigation). Always sizing the skeleton to `minHeight`
+ * itself means loading state height is constant and independent of whatever came before; it can
+ * never inflate past the floor, so there's nothing to shrink back down from.
  */
 const skeletonRowCount = computed(() => {
-  const known = props.rows.length
-  if (known > 0) return Math.min(known, props.perPage)
   const minHeightPx = parseRemOrPx(props.minHeight)
   if (minHeightPx !== null) {
     const rows = Math.ceil((minHeightPx - HEADER_HEIGHT_PX.value) / ROW_HEIGHT_PX.value)
     return Math.min(Math.max(rows, 1), props.perPage)
   }
   return Math.min(3, props.perPage)
+})
+
+/**
+ * Min-height for the *content* of the empty-state cell (not the `<table>` itself — deliberately
+ * not applied there: giving a `<table>` its own `min-height` makes browsers distribute the extra
+ * space across table layout inconsistently. Confirmed live in Firefox: it grows *every* row
+ * including `<thead>`, visibly thickening the column-header bar, where Chromium only grows the
+ * one data row). Centers via flexbox on a plain `<div>` inside the cell instead, entirely
+ * independent of the table's own row-height algorithm, so this can never touch the header in any
+ * browser. `undefined` (→ no forced min-height, just the small `py-6` breathing room) if
+ * `minHeight` isn't a plain rem/px value we can subtract the header estimate from.
+ */
+const emptyStateMinHeight = computed(() => {
+  const minHeightPx = parseRemOrPx(props.minHeight)
+  if (minHeightPx === null) return undefined
+  return `${Math.max(minHeightPx - HEADER_HEIGHT_PX.value, 0)}px`
 })
 
 let resizeCol: string | null = null
@@ -359,7 +377,7 @@ function colStyle(col: DataTableColumn) {
 
     <!-- Table -->
     <div class="overflow-x-auto" :style="{ minHeight }">
-      <table class="w-full border-collapse" :style="{ minHeight }">
+      <table class="w-full border-collapse">
         <thead :class="stickyHeader ? 'sticky top-0 z-1' : ''">
           <tr class="bg-surface-container-high">
             <th v-if="hasExpand" class="w-10 px-2" :class="dense ? 'py-2' : 'py-3'" />
@@ -417,11 +435,16 @@ function colStyle(col: DataTableColumn) {
           <!-- Empty -->
           <template v-else-if="visibleRows.length === 0">
             <tr>
-              <td :colspan="visibleColumns.length + extraCols" class="border-t border-outline-variant px-4 py-6 text-center align-middle">
-                <slot name="empty">
-                  <MIcon name="search_off" :size="36" class="mb-2 text-on-surface-variant opacity-30" />
-                  <p class="text-body-medium text-on-surface-variant">{{ emptyText ?? locale.noResults }}</p>
-                </slot>
+              <td :colspan="visibleColumns.length + extraCols" class="border-t border-outline-variant px-4 text-center">
+                <div
+                  class="flex flex-col items-center justify-center py-6"
+                  :style="{ minHeight: emptyStateMinHeight }"
+                >
+                  <slot name="empty">
+                    <MIcon name="search_off" :size="36" class="mb-2 text-on-surface-variant opacity-30" />
+                    <p class="text-body-medium text-on-surface-variant">{{ emptyText ?? locale.noResults }}</p>
+                  </slot>
+                </div>
               </td>
             </tr>
           </template>
