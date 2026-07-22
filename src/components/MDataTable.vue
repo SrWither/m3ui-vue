@@ -222,6 +222,20 @@ const extraCols = computed(() =>
 function alignClass(a?: string) { return a === 'center' ? 'text-center' : a === 'right' ? 'text-right' : 'text-left' }
 function skelWidth(ri: number, ci: number) { return `${SKEL[(ri * 3 + ci) % SKEL.length]}%` }
 
+/**
+ * How many skeleton rows to draw while `loading`. Previously always `perPage` (default 10),
+ * regardless of how many rows the table actually tends to hold — for a table that's usually
+ * empty or has just a few rows (e.g. a single day's agenda), this made the skeleton noticeably
+ * taller than the real content, causing a jarring height jump/collapse the instant data arrives.
+ * Uses the last known row count (still sitting in `rows` while `loading` is true, since callers
+ * typically don't clear it before re-fetching) so the skeleton matches what's about to reappear;
+ * falls back to a small guess (3) only when there's no prior data yet (first load ever).
+ */
+const skeletonRowCount = computed(() => {
+  const known = props.rows.length
+  return Math.min(known > 0 ? known : 3, props.perPage)
+})
+
 let resizeCol: string | null = null
 let resizeStart = 0
 let resizeInitial = 0
@@ -352,7 +366,7 @@ function colStyle(col: DataTableColumn) {
         <tbody>
           <!-- Loading -->
           <template v-if="loading">
-            <tr v-for="ri in perPage" :key="`sk-${ri}`" class="border-t border-outline-variant">
+            <tr v-for="ri in skeletonRowCount" :key="`sk-${ri}`" class="border-t border-outline-variant">
               <td v-if="hasExpand" :class="dense ? 'px-2 py-2' : 'px-2 py-3'" />
               <td v-if="selectable" :class="dense ? 'px-4 py-2' : 'px-4 py-3.5'">
                 <div class="h-4 w-4 animate-pulse rounded bg-on-surface/10" />
