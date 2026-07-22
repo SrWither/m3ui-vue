@@ -58,8 +58,13 @@ const props = withDefaults(defineProps<{
   noGroupText?: string
   /** Alto mínimo del área de la tabla (cualquier valor CSS válido para `min-height`) — reserva
    * espacio fijo para que pasar de "cargando" (skeleton) a "pocos o cero resultados" (o
-   * viceversa, al cambiar de filtro/página) no encoja/agrande la tabla visiblemente. Poné `'0'`
-   * para desactivarlo en una tabla puntual que sí deba ser compacta siempre. */
+   * viceversa, al cambiar de filtro/página) no encoja/agrande la tabla visiblemente. Sin valor
+   * (default), la tabla vuelve a su comportamiento natural: alto según la cantidad real de filas,
+   * sin piso reservado — usalo sólo en tablas puntuales que necesiten ese piso (p. ej. una agenda
+   * diaria que suele tener pocos o cero elementos y no debería verse minúscula al filtrar a un día
+   * vacío). El estado vacío siempre reserva un mínimo propio independientemente de este prop, ver
+   * `emptyStateMinHeight`.
+   */
   minHeight?: string
 }>(), {
   loading: false,
@@ -77,7 +82,6 @@ const props = withDefaults(defineProps<{
   serverSide: false,
   total: 0,
   page: 1,
-  minHeight: '20rem',
 })
 
 export interface DataTableFetchParams {
@@ -247,29 +251,27 @@ function parseRemOrPx(value: string): number | null {
   return null
 }
 
+/** Fallback min-height (px) for the empty-state message when no `minHeight` prop was given —
+ * keeps "sin resultados" from looking like a collapsed one-line sliver even on a table that
+ * never opted into a reserved floor. Roughly matches the icon + text + breathing room this
+ * component always renders in that state. */
+const DEFAULT_EMPTY_STATE_MIN_HEIGHT_PX = 200
+
 /**
- * How many skeleton rows to draw while `loading`. Previously always `perPage` (default 10),
- * regardless of how many rows the table actually tends to hold — for a table that's usually
- * empty or has just a few rows (e.g. a single day's agenda), this made the skeleton noticeably
- * taller than the real content, causing a jarring height jump/collapse the instant data arrives.
- *
- * Always fills `minHeight` dynamically — deliberately does NOT look at the previous page's row
- * count (an earlier version of this fix did, and that was itself a bug: if a *previous* load had
- * more rows than fit in `minHeight`, the table had already grown taller than the floor to show
- * them; switching to a day/filter with fewer or zero rows then used the OLD count for the
- * skeleton too, kept the table inflated during loading, and only shrank back to the `minHeight`
- * floor once the real, smaller data replaced it — a visible grow-then-shrink exactly like the
- * original unfixed bug, just delayed by one navigation). Always sizing the skeleton to `minHeight`
- * itself means loading state height is constant and independent of whatever came before; it can
- * never inflate past the floor, so there's nothing to shrink back down from.
+ * How many skeleton rows to draw while `loading`. Without an explicit `minHeight`, this is just
+ * `perPage` — the table's natural, content-driven size, same as before this component ever grew
+ * a floor-height feature. Only a caller that explicitly passes `minHeight` (opting into a
+ * reserved floor, e.g. a day-agenda table that's often near-empty and shouldn't look tiny) gets
+ * the skeleton sized to dynamically fill it instead — `Math.ceil((minHeightPx - headerPx) /
+ * rowPx)` using rough per-row/header height constants (36/40px dense, 48/48px normal).
  */
 const skeletonRowCount = computed(() => {
-  const minHeightPx = parseRemOrPx(props.minHeight)
+  const minHeightPx = props.minHeight ? parseRemOrPx(props.minHeight) : null
   if (minHeightPx !== null) {
     const rows = Math.ceil((minHeightPx - HEADER_HEIGHT_PX.value) / ROW_HEIGHT_PX.value)
     return Math.min(Math.max(rows, 1), props.perPage)
   }
-  return Math.min(3, props.perPage)
+  return props.perPage
 })
 
 /**
@@ -279,12 +281,14 @@ const skeletonRowCount = computed(() => {
  * including `<thead>`, visibly thickening the column-header bar, where Chromium only grows the
  * one data row). Centers via flexbox on a plain `<div>` inside the cell instead, entirely
  * independent of the table's own row-height algorithm, so this can never touch the header in any
- * browser. `undefined` (→ no forced min-height, just the small `py-6` breathing room) if
- * `minHeight` isn't a plain rem/px value we can subtract the header estimate from.
+ * browser. Always resolves to *some* minimum (falls back to `DEFAULT_EMPTY_STATE_MIN_HEIGHT_PX`
+ * when `minHeight` wasn't passed or isn't a plain rem/px value) — unlike the loading/loaded
+ * states, the empty state always reserves a floor so it never looks collapsed, regardless of
+ * whether the caller opted into the general `minHeight` floor.
  */
 const emptyStateMinHeight = computed(() => {
-  const minHeightPx = parseRemOrPx(props.minHeight)
-  if (minHeightPx === null) return undefined
+  const minHeightPx = props.minHeight ? parseRemOrPx(props.minHeight) : null
+  if (minHeightPx === null) return `${DEFAULT_EMPTY_STATE_MIN_HEIGHT_PX}px`
   return `${Math.max(minHeightPx - HEADER_HEIGHT_PX.value, 0)}px`
 })
 
