@@ -56,6 +56,11 @@ const props = withDefaults(defineProps<{
   columnsLabel?: string
   exportLabel?: string
   noGroupText?: string
+  /** Alto mínimo del área de la tabla (cualquier valor CSS válido para `min-height`) — reserva
+   * espacio fijo para que pasar de "cargando" (skeleton) a "pocos o cero resultados" (o
+   * viceversa, al cambiar de filtro/página) no encoja/agrande la tabla visiblemente. Poné `'0'`
+   * para desactivarlo en una tabla puntual que sí deba ser compacta siempre. */
+  minHeight?: string
 }>(), {
   loading: false,
   rowKey: 'id',
@@ -72,6 +77,7 @@ const props = withDefaults(defineProps<{
   serverSide: false,
   total: 0,
   page: 1,
+  minHeight: '20rem',
 })
 
 export interface DataTableFetchParams {
@@ -222,18 +228,46 @@ const extraCols = computed(() =>
 function alignClass(a?: string) { return a === 'center' ? 'text-center' : a === 'right' ? 'text-right' : 'text-left' }
 function skelWidth(ri: number, ci: number) { return `${SKEL[(ri * 3 + ci) % SKEL.length]}%` }
 
+// Alto aproximado de una fila de datos y del thead, en px — usado sólo para calcular cuántas
+// filas de skeleton hacen falta para llenar `minHeight` (ver `skeletonRowCount` abajo). No
+// necesita ser exacto: subestimar deja un renglón de menos, sobreestimar uno de más, ninguno de
+// los dos casos es visualmente grave.
+const ROW_HEIGHT_PX = computed(() => (props.dense ? 36 : 48))
+const HEADER_HEIGHT_PX = computed(() => (props.dense ? 40 : 48))
+
+/** Convierte un valor de `minHeight` en rem/px a píxeles. `null` si el formato no es alguno de
+ * esos dos (p. ej. "50vh", "0", "auto") — en ese caso `skeletonRowCount` cae al viejo heurístico
+ * de "3 filas" en vez de intentar adivinar. */
+function parseRemOrPx(value: string): number | null {
+  const trimmed = value.trim()
+  const rem = /^(\d+(?:\.\d+)?)rem$/.exec(trimmed)
+  if (rem) return parseFloat(rem[1]!) * 16
+  const px = /^(\d+(?:\.\d+)?)px$/.exec(trimmed)
+  if (px) return parseFloat(px[1]!)
+  return null
+}
+
 /**
  * How many skeleton rows to draw while `loading`. Previously always `perPage` (default 10),
  * regardless of how many rows the table actually tends to hold — for a table that's usually
  * empty or has just a few rows (e.g. a single day's agenda), this made the skeleton noticeably
  * taller than the real content, causing a jarring height jump/collapse the instant data arrives.
- * Uses the last known row count (still sitting in `rows` while `loading` is true, since callers
- * typically don't clear it before re-fetching) so the skeleton matches what's about to reappear;
- * falls back to a small guess (3) only when there's no prior data yet (first load ever).
+ *
+ * Prefers the last known row count (still sitting in `rows` while `loading` is true, since
+ * callers typically don't clear it before re-fetching) so the skeleton matches what's about to
+ * reappear. With no prior data (first load ever), fills `minHeight` dynamically instead of a
+ * flat guess — so the skeleton's own height already matches the reserved space exactly, with no
+ * gap below the last skeleton row and no separate height jump when data replaces it.
  */
 const skeletonRowCount = computed(() => {
   const known = props.rows.length
-  return Math.min(known > 0 ? known : 3, props.perPage)
+  if (known > 0) return Math.min(known, props.perPage)
+  const minHeightPx = parseRemOrPx(props.minHeight)
+  if (minHeightPx !== null) {
+    const rows = Math.ceil((minHeightPx - HEADER_HEIGHT_PX.value) / ROW_HEIGHT_PX.value)
+    return Math.min(Math.max(rows, 1), props.perPage)
+  }
+  return Math.min(3, props.perPage)
 })
 
 let resizeCol: string | null = null
@@ -324,8 +358,8 @@ function colStyle(col: DataTableColumn) {
     </div>
 
     <!-- Table -->
-    <div class="overflow-x-auto">
-      <table class="w-full border-collapse">
+    <div class="overflow-x-auto" :style="{ minHeight }">
+      <table class="w-full border-collapse" :style="{ minHeight }">
         <thead :class="stickyHeader ? 'sticky top-0 z-1' : ''">
           <tr class="bg-surface-container-high">
             <th v-if="hasExpand" class="w-10 px-2" :class="dense ? 'py-2' : 'py-3'" />
@@ -383,7 +417,7 @@ function colStyle(col: DataTableColumn) {
           <!-- Empty -->
           <template v-else-if="visibleRows.length === 0">
             <tr>
-              <td :colspan="visibleColumns.length + extraCols" class="border-t border-outline-variant px-4 py-14 text-center">
+              <td :colspan="visibleColumns.length + extraCols" class="border-t border-outline-variant px-4 py-6 text-center align-middle">
                 <slot name="empty">
                   <MIcon name="search_off" :size="36" class="mb-2 text-on-surface-variant opacity-30" />
                   <p class="text-body-medium text-on-surface-variant">{{ emptyText ?? locale.noResults }}</p>
