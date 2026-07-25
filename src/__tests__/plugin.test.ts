@@ -24,4 +24,13 @@ describe('createM3UI', () => {
     app.use(createM3UI({ palette: 'purple' }))
     expect(document.documentElement.hasAttribute('data-palette')).toBe(false)
   })
+
+  it('does not override a palette the user already picked', () => {
+    localStorage.setItem('m3-palette', 'teal')
+    document.documentElement.setAttribute('data-palette', 'teal')
+    const app = createApp(defineComponent({ render: () => h('div') }))
+    app.use(createM3UI({ palette: 'iron' }))
+    expect(document.documentElement.getAttribute('data-palette')).toBe('teal')
+    expect(localStorage.getItem('m3-palette')).toBe('teal')
+  })
 })

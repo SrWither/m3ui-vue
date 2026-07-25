@@ -12,7 +12,10 @@ export interface M3UIOptions {
 export function createM3UI(options: M3UIOptions = {}) {
   return {
     install(app: App) {
-      if (options.palette && options.palette !== 'purple') {
+      // `options.palette` is only the first-visit default — once the user picks a palette via
+      // `useColorPalette().set()` it's persisted to localStorage, and that choice must win on
+      // every later boot instead of being clobbered back to the plugin's static default.
+      if (options.palette && options.palette !== 'purple' && !localStorage.getItem('m3-palette')) {
         document.documentElement.setAttribute('data-palette', options.palette)
         localStorage.setItem('m3-palette', options.palette)
       }
