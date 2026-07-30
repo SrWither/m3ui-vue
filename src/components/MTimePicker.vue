@@ -53,6 +53,7 @@ function pad(n: number) { return String(n).padStart(2, '0') }
 function selectHour(h: number) {
   selectedHour.value = h
   mode.value = 'minute'
+  emit('update:modelValue', `${pad(h)}:${pad(selectedMinute.value)}`)
 }
 
 function selectMinute(m: number) {
