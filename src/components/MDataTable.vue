@@ -100,8 +100,16 @@ const emit = defineEmits<{
 }>()
 
 const slots = useSlots()
-const hasActions = computed(() => !!slots['row-actions'])
-const hasExpand = computed(() => props.expandable && !!slots['row-expand'])
+// Funciones planas, no `computed`: `slots` no es reactivo (Vue lo muta in-place
+// en vez de reemplazar la referencia), así que un `computed` que lea
+// `slots['row-actions']` queda cacheado con el primer valor para siempre y
+// nunca se reevalúa si el padre agrega/quita el slot dinámicamente (p.ej.
+// `<template v-if="isEditable" #row-actions>`), aunque el padre sí fuerza un
+// re-render de este componente en ese caso (slot dinámico = slots no
+// estables). Al ser funciones evaluadas en cada render en vez de cacheadas,
+// siempre ven el valor actual de `slots` en ese re-render.
+function hasActions() { return !!slots['row-actions'] }
+function hasExpand() { return props.expandable && !!slots['row-expand'] }
 
 const search = ref('')
 const sortKey = ref('')
@@ -226,9 +234,11 @@ function toggleExpand(row: Record<string, any>) {
 }
 function isExpanded(row: Record<string, any>) { return expanded.value.has(rowId(row)) }
 
-const extraCols = computed(() =>
-  (props.selectable ? 1 : 0) + (hasActions.value ? 1 : 0) + (hasExpand.value ? 1 : 0)
-)
+// Función plana por la misma razón que `hasActions`/`hasExpand` arriba: si
+// fuera `computed`, quedaría cacheada con el primer valor de esas dos.
+function extraCols() {
+  return (props.selectable ? 1 : 0) + (hasActions() ? 1 : 0) + (hasExpand() ? 1 : 0)
+}
 function alignClass(a?: string) { return a === 'center' ? 'text-center' : a === 'right' ? 'text-right' : 'text-left' }
 function skelWidth(ri: number, ci: number) { return `${SKEL[(ri * 3 + ci) % SKEL.length]}%` }
 
@@ -384,7 +394,7 @@ function colStyle(col: DataTableColumn) {
       <table class="w-full border-collapse">
         <thead :class="stickyHeader ? 'sticky top-0 z-1' : ''">
           <tr class="bg-surface-container-high">
-            <th v-if="hasExpand" class="w-10 px-2" :class="dense ? 'py-2' : 'py-3'" />
+            <th v-if="hasExpand()" class="w-10 px-2" :class="dense ? 'py-2' : 'py-3'" />
             <th v-if="selectable" class="w-12 px-4" :class="dense ? 'py-2' : 'py-3'">
               <MCheckbox :model-value="allOnPageSelected" :indeterminate="someOnPageSelected" @update:model-value="toggleAll" />
             </th>
@@ -415,7 +425,7 @@ function colStyle(col: DataTableColumn) {
                 @pointerdown="onResizeDown($event, col)"
               />
             </th>
-            <th v-if="hasActions" class="w-1 px-4" :class="dense ? 'py-2' : 'py-3'" />
+            <th v-if="hasActions()" class="w-1 px-4" :class="dense ? 'py-2' : 'py-3'" />
           </tr>
         </thead>
 
@@ -423,14 +433,14 @@ function colStyle(col: DataTableColumn) {
           <!-- Loading -->
           <template v-if="loading">
             <tr v-for="ri in skeletonRowCount" :key="`sk-${ri}`" class="border-t border-outline-variant">
-              <td v-if="hasExpand" :class="dense ? 'px-2 py-2' : 'px-2 py-3'" />
+              <td v-if="hasExpand()" :class="dense ? 'px-2 py-2' : 'px-2 py-3'" />
               <td v-if="selectable" :class="dense ? 'px-4 py-2' : 'px-4 py-3.5'">
                 <div class="h-4 w-4 animate-pulse rounded bg-on-surface/10" />
               </td>
               <td v-for="(col, ci) in visibleColumns" :key="col.key" :class="dense ? 'px-3 py-2' : 'px-4 py-3.5'">
                 <div class="h-4 animate-pulse rounded-full bg-on-surface/10" :style="{ width: skelWidth(ri, ci) }" />
               </td>
-              <td v-if="hasActions" :class="dense ? 'px-4 py-2' : 'px-4 py-3.5'">
+              <td v-if="hasActions()" :class="dense ? 'px-4 py-2' : 'px-4 py-3.5'">
                 <div class="ml-auto h-4 w-16 animate-pulse rounded-full bg-on-surface/10" />
               </td>
             </tr>
@@ -439,7 +449,7 @@ function colStyle(col: DataTableColumn) {
           <!-- Empty -->
           <template v-else-if="visibleRows.length === 0">
             <tr>
-              <td :colspan="visibleColumns.length + extraCols" class="border-t border-outline-variant px-4 text-center">
+              <td :colspan="visibleColumns.length + extraCols()" class="border-t border-outline-variant px-4 text-center">
                 <div
                   class="flex flex-col items-center justify-center py-6"
                   :style="{ minHeight: emptyStateMinHeight }"
@@ -466,7 +476,7 @@ function colStyle(col: DataTableColumn) {
                 ]"
                 @click="selectable ? toggleRow(row) : emit('rowClick', row)"
               >
-                <td v-if="hasExpand" class="px-2" :class="dense ? 'py-1' : 'py-2'" @click.stop>
+                <td v-if="hasExpand()" class="px-2" :class="dense ? 'py-1' : 'py-2'" @click.stop>
                   <MIconButton
                     icon="expand_more"
                     :label="expandLabel ?? locale.expand"
@@ -488,13 +498,13 @@ function colStyle(col: DataTableColumn) {
                     {{ row[col.key] ?? '—' }}
                   </slot>
                 </td>
-                <td v-if="hasActions" class="text-right" :class="dense ? 'px-4 py-1' : 'px-4 py-3'" @click.stop>
+                <td v-if="hasActions()" class="text-right" :class="dense ? 'px-4 py-1' : 'px-4 py-3'" @click.stop>
                   <slot name="row-actions" :row="row" />
                 </td>
               </tr>
               <!-- Expanded content -->
-              <tr v-if="hasExpand">
-                <td :colspan="visibleColumns.length + extraCols" class="border-t border-outline-variant/50 bg-surface-container-lowest p-0">
+              <tr v-if="hasExpand()">
+                <td :colspan="visibleColumns.length + extraCols()" class="border-t border-outline-variant/50 bg-surface-container-lowest p-0">
                   <div class="dt-expand-grid" :class="isExpanded(row) ? 'dt-expand-open' : ''">
                     <div class="dt-expand-body">
                       <div class="px-6 py-4">
