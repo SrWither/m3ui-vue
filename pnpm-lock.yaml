@@ -90,6 +90,9 @@ importers:
       '@vue/tsconfig':
         specifier: ^0.9.1
         version: 0.9.1(typescript@6.0.3)(vue@3.5.38(typescript@6.0.3))
+      '@webgpu/types':
+        specifier: ^0.1.71
+        version: 0.1.71
       '@xterm/addon-fit':
         specifier: ^0.11.0
         version: 0.11.0
@@ -667,6 +670,9 @@ packages:
         optional: true
       vue:
         optional: true
+
+  '@webgpu/types@0.1.71':
+    resolution: {integrity: sha512-mMy8/ODcKhab808co15eW+yN+HgXoQxRQHTiBV9Mrvl1r0ufnid7YOcI+gi4eUWSWl9ezD6TW2KXccrL8HCh2A==}
 
   '@xterm/addon-fit@0.11.0':
     resolution: {integrity: sha512-jYcgT6xtVYhnhgxh3QgYDnnNMYTcf8ElbxxFzX0IZo+vabQqSPAjC3c1wJrKB5E19VwQei89QCiZZP86DCPF7g==}
@@ -1901,6 +1907,8 @@ snapshots:
     optionalDependencies:
       typescript: 6.0.3
       vue: 3.5.38(typescript@6.0.3)
+
+  '@webgpu/types@0.1.71': {}
 
   '@xterm/addon-fit@0.11.0': {}
 
