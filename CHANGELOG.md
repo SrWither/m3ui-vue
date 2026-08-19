@@ -5,6 +5,75 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.5.9] - 2026-08-19
+
+### Added
+- New component: `MShader` — renders a Shadertoy-style GLSL fragment shader (`code` prop) on WebGL2, with an optional WGSL module (`wgsl` prop) rendered on WebGPU when available (`renderer: 'auto' | 'webgpu' | 'webgl'`)
+- `MShader` custom `uniforms` prop alongside the built-in `iTime`, `iResolution`, `iMouse`, and `iFrame` uniforms
+- `MShader` `paused` and `pixelRatio` props, `#loading` / `#fallback` / `#error` slots, and `ready` / `error` events
+
+---
+
+## [0.5.8] - 2026-07-30
+
+### Fixed
+- `MDataTable`: the `#row-actions` and `#row-expand` slots are now re-evaluated on every render instead of being cached in a `computed` — Vue doesn't make `slots` reactive, so adding or removing either slot dynamically (e.g. `v-if` around `#row-actions`) no longer left the actions/expand column stuck showing (or hiding) stale state until a full remount
+
+---
+
+## [0.5.7] - 2026-07-30
+
+### Added
+- `MTimePicker`: picking an hour now emits `update:modelValue` immediately using the currently selected minute, instead of waiting until a minute is also picked
+
+### Fixed
+- `createM3UI({ palette })` no longer overwrites a palette the user already chose via `useColorPalette().set()` on every app boot — `palette` is now applied only as the first-visit default
+
+---
+
+## [0.5.6] - 2026-07-21
+
+### Changed
+- `MDataTable` `minHeight` no longer defaults to `20rem` — tables use their natural, content-driven height unless a caller explicitly passes `minHeight` to opt into a reserved floor (e.g. a day-agenda table that's often near-empty and shouldn't look tiny while filtering)
+- `MDataTable` skeleton row count falls back to `perPage` when `minHeight` isn't set, and only fills it dynamically when a caller opts in
+
+### Fixed
+- `MDataTable` empty state now reserves a 200px minimum height by default even without `minHeight`, so "no results" no longer renders as a squashed one-line sliver
+
+---
+
+## [0.5.5] - 2026-07-21
+
+### Changed
+- `MDataTable` skeleton row count while loading is now sized to fill `minHeight` (rows needed to reach it, capped at `perPage`) instead of always rendering `perPage` rows — avoids a visible height jump when a table with a `minHeight` floor (e.g. a mostly-empty day agenda) finishes loading
+- `MDataTable` empty-state message ("no results") is now vertically centered within the reserved height instead of sitting flush at the top; `minHeight` is applied only to the table's wrapper, not the `<table>` itself, avoiding inconsistent header growth across browsers
+
+---
+
+## [0.5.4] - 2026-07-18
+
+### Fixed
+- `MNavigationDrawer` static section titles no longer get compressed when the drawer runs short on vertical space
+
+---
+
+## [0.5.3] - 2026-07-18
+
+### Fixed
+- `MNavigationDrawer` long content no longer overflows its scrollable sections — flex children now shrink correctly (`min-height: 0`) instead of forcing the drawer taller
+
+---
+
+## [0.5.2] - 2026-07-09
+
+### Fixed
+- `MJsonEditor` and `MJsonViewer`: UI strings (valid/invalid badge, format/minify buttons, element/field counts) now come from the locale system instead of being hardcoded in Spanish
+- `MJsonEditor`: formatting or minifying no longer gets immediately overwritten by a stale `modelValue` resync — the editor now only resyncs from outside when the actual data changes, not just its formatting
+- `MCodeEditor`: text selection is now visibly highlighted
+- `MCircleProgressBar` wavy variant: wave crest now travels right-to-left along the ring, matching Material's motion spec (was reversed)
+
+---
+
 ## [0.5.1] - 2026-07-01
 
 ### Fixed
