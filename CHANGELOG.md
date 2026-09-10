@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.5.10] - 2026-09-09
+
+### Changed
+- Bumped `vue` devDependency to `^3.5.42` and `vue-tsc` to `^3.3.11` (latest stable)
+- `typescript` devDependency stays pinned at `~6.0.3` — TypeScript 7 (the new native/Go-based compiler) drops the classic JS Compiler API (`typescript/lib/tsc`) that `vue-tsc` relies on for `.vue` type-checking, so `pnpm build:types` fails against it until Vue tooling catches up
+
+---
+
 ## [0.5.9] - 2026-08-19
 
 ### Added
