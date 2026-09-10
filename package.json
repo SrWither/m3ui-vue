@@ -156,6 +156,9 @@
     },
     "vue-chartjs": {
       "optional": true
+    },
+    "material-symbols": {
+      "optional": true
     }
   },
   "devDependencies": {

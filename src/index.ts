@@ -94,6 +94,7 @@ export { default as MNavigationDrawer } from './components/MNavigationDrawer.vue
 export { default as MNavigationRail } from './components/MNavigationRail.vue'
 export { default as MOverlay } from './components/MOverlay.vue'
 export { default as MPagination } from './components/MPagination.vue'
+export { default as MPinInput } from './components/MPinInput.vue'
 export { default as MProgressBar } from './components/MProgressBar.vue'
 export { default as MCircleProgressBar } from './components/MCircleProgressBar.vue'
 export { default as MRadio } from './components/MRadio.vue'

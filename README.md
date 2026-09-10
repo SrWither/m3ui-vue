@@ -28,7 +28,9 @@ pnpm add @m3ui-vue/m3ui-vue
 
 ### Fonts
 
-Add to your `index.html` `<head>`:
+`MIcon` and every component that renders an icon just apply the `material-symbols-outlined` class from `theme.css` — the library ships the CSS rule (sizing, `font-feature-settings`, etc.) but **not** the font file itself, so you need to supply `Material Symbols Outlined` (and `Roboto`) yourself, via one of two options:
+
+**Option A — Google Fonts CDN (default, simplest).** Add to your `index.html` `<head>`:
 
 ```html
 <link
@@ -36,6 +38,18 @@ Add to your `index.html` `<head>`:
   rel="stylesheet"
 />
 ```
+
+**Option B — self-hosted (offline / no third-party requests).** The CDN link needs network access to `fonts.googleapis.com`, which won't work offline or behind a restrictive firewall. Install [`material-symbols`](https://www.npmjs.com/package/material-symbols) (ships the `.woff2` files locally) and import it from your main stylesheet instead of the CDN link:
+
+```bash
+pnpm add material-symbols
+```
+
+```css
+@import 'material-symbols/outlined.css';
+```
+
+`material-symbols` is listed as an optional peer dependency for this reason. Note this only covers the icon font — if you want `Roboto` offline too, pair it with something like `@fontsource/roboto`.
 
 ### CSS
 
@@ -102,6 +116,7 @@ const name = ref('')
 | `MTextField` | Text input with label, icons, validation |
 | `MNumberField` | Numeric input with stepper |
 | `MMaskField` | Input with mask presets (phone, currency, etc.) |
+| `MPinInput` | OTP/PIN code input with N boxes, optional grouping/separators |
 | `MTagInput` | Tag/chip input |
 | `MSelect` | Single select dropdown |
 | `MMultiSelect` | Multi-select with chips |
