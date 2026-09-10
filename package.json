@@ -51,6 +51,10 @@
       "types": "./dist/qrcode.d.ts",
       "import": "./dist/qrcode.js"
     },
+    "./barcode": {
+      "types": "./dist/barcode.d.ts",
+      "import": "./dist/barcode.js"
+    },
     "./styles": "./dist/styles.css",
     "./theme": "./src/styles/theme.css",
     "./palettes": "./src/styles/palettes.css",
@@ -166,6 +170,9 @@
     },
     "qrcode-generator": {
       "optional": true
+    },
+    "jsbarcode": {
+      "optional": true
     }
   },
   "devDependencies": {
@@ -191,6 +198,7 @@
     "@tiptap/extension-underline": "^3.26.1",
     "@tiptap/starter-kit": "^3.26.1",
     "@tiptap/vue-3": "^3.26.1",
+    "@types/jsbarcode": "^3.11.4",
     "@types/markdown-it": "^14.1.2",
     "@vitejs/plugin-vue": "^6.0.7",
     "@vue/test-utils": "^2.4.11",
@@ -202,6 +210,7 @@
     "codemirror": "^6.0.2",
     "happy-dom": "^20.10.6",
     "highlight.js": "^11.11.1",
+    "jsbarcode": "^3.12.3",
     "markdown-it": "^14.2.0",
     "qrcode-generator": "^2.0.4",
     "typescript": "~6.0.3",

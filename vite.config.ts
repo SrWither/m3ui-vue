@@ -14,6 +14,7 @@ export default defineConfig({
         'rich-text-editor': resolve(__dirname, 'src/rich-text-editor.ts'),
         terminal: resolve(__dirname, 'src/terminal.ts'),
         qrcode: resolve(__dirname, 'src/qrcode.ts'),
+        barcode: resolve(__dirname, 'src/barcode.ts'),
         'locales/index': resolve(__dirname, 'src/locales/index.ts'),
       },
       formats: ['es'],
@@ -29,6 +30,7 @@ export default defineConfig({
         'chart.js',
         'vue-chartjs',
         'qrcode-generator',
+        'jsbarcode',
       ],
       output: {
         globals: { vue: 'Vue' },
