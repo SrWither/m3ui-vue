@@ -13,6 +13,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MPinInput` `groups` prop (segment sizes, e.g. `[2, 4, 2, 3, 1, 3]`) with a configurable `separator` for license/activation-key style layouts — `length` is derived as the sum of the groups
 - `MPinInput` `complete` event, fired once with the full value as soon as every box is filled
 - `material-symbols` listed as an optional peer dependency, and documented as a self-hosted/offline alternative to the Google Fonts CDN for Material Symbols Outlined (see README "Fonts" section)
+- New component: `MCopyButton` — copy-to-clipboard icon button with temporary success feedback, `copied`/`error` events
+- New component: `MPasswordMeter` — password strength meter (length + character variety heuristic), 5 levels with customizable labels, emits `score`
+- New component: `MRelativeTime` — auto-updating "3 minutes ago" / "in 2 hours" text using the native `Intl.RelativeTimeFormat`, with an adaptive refresh cadence
+- `M3Locale` gained a `lang` field (BCP-47 tag, e.g. `'es'`) set by every packaged locale — `MRelativeTime` reads it via `useLocale()` to auto-match the app's configured locale (from `createM3UI({ locale })`) without needing a `locale` prop on every instance; the prop still overrides it when set
+- New component: `MQRCode` — QR code generator rendered as inline SVG, available from the `@m3ui-vue/m3ui-vue/qrcode` entry point with `qrcode-generator` as an optional peer dependency (follows the same dedicated-entry pattern as `MChart`/`MMarkdown`)
+- `MQRCode` `rounded` prop (default `true`) rounds the outer container corners for a softer, more M3-like frame — independent of the scannable pattern itself
+- `MQRCode` `moduleStyle` prop (`'square' | 'dots'`, default `'square'`): `'dots'` rounds each module's corners individually based on its neighbors, so connected runs (the finder-pattern squares especially) merge into smooth shapes instead of showing notches; both styles scan identically
 
 ---
 
