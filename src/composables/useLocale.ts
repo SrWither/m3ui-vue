@@ -1,6 +1,9 @@
 import { inject, reactive, watchEffect, toValue, type InjectionKey, type MaybeRef } from 'vue'
 
 export interface M3Locale {
+  /** BCP-47 language tag (e.g. 'en', 'es', 'pt') — read by locale-aware components (MRelativeTime) that use Intl formatting. */
+  lang: string
+
   // Common
   search: string
   noResults: string
@@ -103,6 +106,8 @@ export interface M3Locale {
 }
 
 export const defaultLocale: M3Locale = {
+  lang: 'en',
+
   search: 'Search...',
   noResults: 'No results',
   close: 'Close',

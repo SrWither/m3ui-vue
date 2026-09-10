@@ -1,6 +1,8 @@
 import type { M3Locale } from '../composables/useLocale'
 
 export const jaLocale: M3Locale = {
+  lang: 'ja',
+
   // Common
   search: '検索...',
   noResults: '結果なし',

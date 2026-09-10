@@ -1,6 +1,8 @@
 import type { M3Locale } from '../composables/useLocale'
 
 export const koLocale: M3Locale = {
+  lang: 'ko',
+
   // Common
   search: '검색...',
   noResults: '결과 없음',

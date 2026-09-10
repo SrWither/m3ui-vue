@@ -158,6 +158,7 @@ const name = ref('')
 | `MCalendar` | Event calendar |
 | `MCarousel` | Image/content carousel |
 | `MJsonViewer` | JSON tree viewer |
+| `MRelativeTime` | Auto-updating "3 minutes ago" / "in 2 hours" text, locale-aware via `Intl.RelativeTimeFormat` |
 
 ### Feedback
 

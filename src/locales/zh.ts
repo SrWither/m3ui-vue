@@ -1,6 +1,8 @@
 import type { M3Locale } from '../composables/useLocale'
 
 export const zhLocale: M3Locale = {
+  lang: 'zh',
+
   // Common
   search: '搜索...',
   noResults: '无结果',

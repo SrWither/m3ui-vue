@@ -1,6 +1,8 @@
 import type { M3Locale } from '../composables/useLocale'
 
 export const deLocale: M3Locale = {
+  lang: 'de',
+
   // Common
   search: 'Suchen...',
   noResults: 'Keine Ergebnisse',
