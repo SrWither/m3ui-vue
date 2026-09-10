@@ -5,17 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.5.12] - 2026-09-09
-
-### Added
-- New component: `MExportButton` — exports an array of objects to CSV or JSON with one click (triggers a real browser download), `exported`/`error` events, no dependencies
-- New component: `MSignaturePad` — canvas signature capture with pointer events, `clear()`/`undo()`/`isEmpty()`/`toDataURL()` exposed via template ref, `begin`/`end`/`change` events
-- New component: `MKbd` — keyboard-shortcut hint chip; accepts a `'+'`-delimited string or an array of keys, with a customizable `separator`
-- New component: `MBarcode` — barcode generator (Code128, EAN13, UPC, CODE39, and other symbologies) rendered as inline SVG, available from the `@m3ui-vue/m3ui-vue/barcode` entry point with `jsbarcode` as an optional peer dependency (same dedicated-entry pattern as `MChart`/`MQRCode`), with an `error` slot for values invalid in the given format
-
----
-
-## [0.5.11] - 2026-09-09
+## [0.6.0] - 2026-09-09
 
 ### Added
 - New component: `MPinInput` — OTP/PIN code input with one box per character, auto-advance on type, smart backspace, arrow-key navigation, and full-code paste support
@@ -30,6 +20,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - New component: `MQRCode` — QR code generator rendered as inline SVG, available from the `@m3ui-vue/m3ui-vue/qrcode` entry point with `qrcode-generator` as an optional peer dependency (follows the same dedicated-entry pattern as `MChart`/`MMarkdown`)
 - `MQRCode` `rounded` prop (default `true`) rounds the outer container corners for a softer, more M3-like frame — independent of the scannable pattern itself
 - `MQRCode` `moduleStyle` prop (`'square' | 'dots'`, default `'square'`): `'dots'` rounds each module's corners individually based on its neighbors, so connected runs (the finder-pattern squares especially) merge into smooth shapes instead of showing notches; both styles scan identically
+- New component: `MExportButton` — exports an array of objects to CSV or JSON with one click (triggers a real browser download), `exported`/`error` events, no dependencies
+- New component: `MSignaturePad` — canvas signature capture with pointer events, `clear()`/`undo()`/`isEmpty()`/`toDataURL()` exposed via template ref, `begin`/`end`/`change` events
+- New component: `MKbd` — keyboard-shortcut hint chip; accepts a `'+'`-delimited string or an array of keys, with a customizable `separator`
+- New component: `MBarcode` — barcode generator (Code128, EAN13, UPC, CODE39, and other symbologies) rendered as inline SVG, available from the `@m3ui-vue/m3ui-vue/barcode` entry point with `jsbarcode` as an optional peer dependency (same dedicated-entry pattern as `MChart`/`MQRCode`), with an `error` slot for values invalid in the given format
 
 ---
 
