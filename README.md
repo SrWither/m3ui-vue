@@ -108,6 +108,7 @@ const name = ref('')
 | `MButtonGroup` | Grouped button options |
 | `MSplitButton` | Button with dropdown actions |
 | `MSegmentedButton` | Toggleable segmented options |
+| `MCopyButton` | Copy-to-clipboard icon button with success feedback |
 
 ### Inputs
 
