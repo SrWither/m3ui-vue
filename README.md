@@ -137,6 +137,7 @@ const name = ref('')
 | `MColorPicker` | Inline color picker |
 | `MColorPickerModal` | Modal color picker |
 | `MFileUpload` | Drag & drop file upload |
+| `MPasswordMeter` | Password strength meter (pair with `MTextField type="password"`) |
 
 ### Data Display
 
