@@ -5,6 +5,17 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.5.11] - 2026-09-09
+
+### Added
+- New component: `MPinInput` — OTP/PIN code input with one box per character, auto-advance on type, smart backspace, arrow-key navigation, and full-code paste support
+- `MPinInput` `type` prop (`'numeric' | 'alphanumeric'`) and `masked` prop (password-style dots) for PIN vs. verification-code use cases
+- `MPinInput` `groups` prop (segment sizes, e.g. `[2, 4, 2, 3, 1, 3]`) with a configurable `separator` for license/activation-key style layouts — `length` is derived as the sum of the groups
+- `MPinInput` `complete` event, fired once with the full value as soon as every box is filled
+- `material-symbols` listed as an optional peer dependency, and documented as a self-hosted/offline alternative to the Google Fonts CDN for Material Symbols Outlined (see README "Fonts" section)
+
+---
+
 ## [0.5.10] - 2026-09-09
 
 ### Changed
