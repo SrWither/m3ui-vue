@@ -109,6 +109,7 @@ const name = ref('')
 | `MSplitButton` | Button with dropdown actions |
 | `MSegmentedButton` | Toggleable segmented options |
 | `MCopyButton` | Copy-to-clipboard icon button with success feedback |
+| `MExportButton` | Export an array of objects to CSV or JSON |
 
 ### Inputs
 
