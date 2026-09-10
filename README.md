@@ -264,6 +264,7 @@ import { MCodeEditor, MJsonEditor } from '@m3ui-vue/m3ui-vue/code-editor'
 import { MMarkdown } from '@m3ui-vue/m3ui-vue/markdown'
 import { MTerminal } from '@m3ui-vue/m3ui-vue/terminal'
 import { MChart } from '@m3ui-vue/m3ui-vue/chart'
+import { MQRCode } from '@m3ui-vue/m3ui-vue/qrcode'
 ```
 
 ## Composables
@@ -331,6 +332,7 @@ Install only the packages you need:
 | `MTerminal` | `@xterm/xterm @xterm/addon-fit` |
 | `MMarkdown` | `markdown-it` (+ optional `highlight.js` for syntax highlighting) |
 | `MChart` | `chart.js vue-chartjs` |
+| `MQRCode` | `qrcode-generator` |
 
 ## License
 

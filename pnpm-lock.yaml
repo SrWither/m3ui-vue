@@ -114,6 +114,9 @@ importers:
       markdown-it:
         specifier: ^14.2.0
         version: 14.2.0
+      qrcode-generator:
+        specifier: ^2.0.4
+        version: 2.0.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -1050,6 +1053,9 @@ packages:
   punycode.js@2.3.1:
     resolution: {integrity: sha512-uxFIHU0YlHYhDQtV4R9J6a52SLx28BCjT+4ieh7IGbgwVJWO+km431c4yRlREUAsAmt/uMjQUyQHNEPf0M39CA==}
     engines: {node: '>=6'}
+
+  qrcode-generator@2.0.4:
+    resolution: {integrity: sha512-mZSiP6RnbHl4xL2Ap5HfkjLnmxfKcPWpWe/c+5XxCuetEenqmNFf1FH/ftXPCtFG5/TDobjsjz6sSNL0Sr8Z9g==}
 
   rolldown@1.0.3:
     resolution: {integrity: sha512-i00lAJ2ks1BYr7rjNjKC7BcqAS7nVfiT3QX1SI5aY+AFHblCmaUf9OE9dbdzDvW6dJxbi2ZCZiy9v3CcwOiX3g==}
@@ -2275,6 +2281,8 @@ snapshots:
   proto-list@1.2.4: {}
 
   punycode.js@2.3.1: {}
+
+  qrcode-generator@2.0.4: {}
 
   rolldown@1.0.3:
     dependencies:

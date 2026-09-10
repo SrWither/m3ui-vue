@@ -47,6 +47,10 @@
       "types": "./dist/terminal.d.ts",
       "import": "./dist/terminal.js"
     },
+    "./qrcode": {
+      "types": "./dist/qrcode.d.ts",
+      "import": "./dist/qrcode.js"
+    },
     "./styles": "./dist/styles.css",
     "./theme": "./src/styles/theme.css",
     "./palettes": "./src/styles/palettes.css",
@@ -159,6 +163,9 @@
     },
     "material-symbols": {
       "optional": true
+    },
+    "qrcode-generator": {
+      "optional": true
     }
   },
   "devDependencies": {
@@ -196,6 +203,7 @@
     "happy-dom": "^20.10.6",
     "highlight.js": "^11.11.1",
     "markdown-it": "^14.2.0",
+    "qrcode-generator": "^2.0.4",
     "typescript": "~6.0.3",
     "vite": "^8.0.16",
     "vitest": "^4.1.9",
