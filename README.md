@@ -139,6 +139,7 @@ const name = ref('')
 | `MColorPickerModal` | Modal color picker |
 | `MFileUpload` | Drag & drop file upload |
 | `MPasswordMeter` | Password strength meter (pair with `MTextField type="password"`) |
+| `MSignaturePad` | Canvas signature capture with undo/clear |
 
 ### Data Display
 
