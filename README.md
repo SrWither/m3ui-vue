@@ -227,6 +227,7 @@ const name = ref('')
 | `MText` | Body text with variants |
 | `MTitle` | Section title |
 | `MSubtitle` | Section subtitle |
+| `MKbd` | Keyboard shortcut hint (e.g. `Ctrl+K`) |
 
 ### Emoji
 
