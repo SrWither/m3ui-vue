@@ -76,6 +76,14 @@ app.mount('#app')
 
 Without the plugin the default `purple` palette is used.
 
+`palette` only seeds the *first visit* — once a user switches palettes (e.g. via `useColorPalette().set()`), that choice is persisted to `localStorage` and wins over `palette` on every later boot. To force a fixed palette that always wins regardless of `localStorage`, pass `persistPalette: false`:
+
+```ts
+app.use(createM3UI({ palette: 'teal', persistPalette: false }))
+```
+
+`useColorPalette().set()` still works live within the session (e.g. for a per-page/temporary palette), it just stops persisting — nothing is written to `localStorage` while `persistPalette` is disabled. Toggle it at runtime with `useColorPalette().setPersistPalette(true | false)`.
+
 ## Usage
 
 ```vue
@@ -307,7 +315,7 @@ const { palette, palettes, set } = useColorPalette()
 </template>
 ```
 
-Selection is persisted to `localStorage`.
+Selection is persisted to `localStorage`, unless persistence was disabled via `createM3UI({ persistPalette: false })` or `useColorPalette().setPersistPalette(false)` — `set()` still applies the palette live either way.
 
 ## Dark Mode
 

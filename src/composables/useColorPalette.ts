@@ -41,10 +41,15 @@ export const palettes: Palette[] = [
 
 const current = ref(localStorage.getItem('m3-palette') ?? 'purple')
 
+// Whether palette changes are written to localStorage. Defaults to true (existing behavior).
+// An app can disable it via `createM3UI({ persistPalette: false })` or `useColorPalette().setPersistPalette(false)`
+// so its chosen palette can't be overridden by a stored value on the next boot.
+const persistEnabled = ref(true)
+
 export function useColorPalette() {
   watchEffect(() => {
     const id = current.value
-    localStorage.setItem('m3-palette', id)
+    if (persistEnabled.value) localStorage.setItem('m3-palette', id)
 
     if (id === 'purple') {
       document.documentElement.removeAttribute('data-palette')
@@ -60,11 +65,33 @@ export function useColorPalette() {
     setTimeout(() => document.documentElement.classList.remove('theme-transitioning'), 300)
   }
 
-  return { palette: current, palettes, set }
+  function setPersistPalette(enabled: boolean) {
+    persistEnabled.value = enabled
+    if (enabled) localStorage.setItem('m3-palette', current.value)
+  }
+
+  return { palette: current, palettes, set, persistPalette: persistEnabled, setPersistPalette }
 }
 
 // Apply on module load so palette is visible before any component mounts
 const saved = localStorage.getItem('m3-palette')
 if (saved && saved !== 'purple') {
   document.documentElement.setAttribute('data-palette', saved)
+}
+
+/**
+ * Internal: used by `createM3UI({ palette, persistPalette: false })` to force a palette on boot,
+ * bypassing whatever is already in localStorage, without waiting for a component to call
+ * `useColorPalette()` (which is what actually reacts to `current` via the watchEffect above).
+ * Not exported from the package's public entry points.
+ */
+export function __forcePalette(id: string, persist: boolean) {
+  persistEnabled.value = persist
+  current.value = id
+  if (id === 'purple') {
+    document.documentElement.removeAttribute('data-palette')
+  } else {
+    document.documentElement.setAttribute('data-palette', id)
+  }
+  if (persist) localStorage.setItem('m3-palette', id)
 }

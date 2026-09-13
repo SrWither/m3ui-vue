@@ -68,4 +68,26 @@ describe('useColorPalette', () => {
     await nextTick()
     expect(localStorage.getItem('m3-palette')).toBe('blue')
   })
+
+  it('setPersistPalette(false) stops set() from persisting, but still applies live', async () => {
+    const { set, setPersistPalette } = withSetup()
+    await nextTick()
+    setPersistPalette(false)
+    const before = localStorage.getItem('m3-palette')
+    set('crimson')
+    await nextTick()
+    expect(document.documentElement.getAttribute('data-palette')).toBe('crimson')
+    expect(localStorage.getItem('m3-palette')).toBe(before)
+    setPersistPalette(true)
+  })
+
+  it('setPersistPalette(true) resumes persisting immediately', async () => {
+    const { set, setPersistPalette } = withSetup()
+    setPersistPalette(false)
+    set('sand')
+    await nextTick()
+    setPersistPalette(true)
+    await nextTick()
+    expect(localStorage.getItem('m3-palette')).toBe('sand')
+  })
 })
