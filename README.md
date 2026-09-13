@@ -167,6 +167,7 @@ const name = ref('')
 | `MTimeline` | Vertical timeline |
 | `MCalendar` | Event calendar |
 | `MCarousel` | Image/content carousel |
+| `MLightbox` | Fullscreen image lightbox with gallery navigation, swipe, and auto-detected `<img>` scanning |
 | `MJsonViewer` | JSON tree viewer |
 | `MRelativeTime` | Auto-updating "3 minutes ago" / "in 2 hours" text, locale-aware via `Intl.RelativeTimeFormat` |
 

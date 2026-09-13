@@ -5,6 +5,20 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.6.1] - 2026-09-13
+
+### Added
+- New component: `MLightbox` — Material 3 fullscreen image lightbox with prev/next arrow navigation, keyboard arrow-key navigation, and swipe/drag-to-navigate via Pointer Events (mouse and touch)
+- `MLightbox` auto-detects `<img>` elements rendered in its default slot (opt an image out with `data-lightbox="false"`) and wires click-to-open automatically, so wrapping arbitrary content — including `MMarkdown` output — makes every image in it clickable without building an `items` array by hand; pass an explicit `items` array instead for full programmatic control (`modelValue`/`index` v-models, `open()`/`close()`/`next()`/`prev()` exposed via template ref)
+- `MLightbox` opens with a Discord-style animation: when opened from a detected/clicked thumbnail, the image visibly expands from that thumbnail's on-screen position and size to fullscreen; falls back to a plain scale-up when there's no originating element (e.g. opened programmatically without a source click)
+- `MLightbox` `showThumbnails` prop (default `false`) shows a row of clickable thumbnails at the bottom for jumping directly to an image
+- `MLightbox` `rounded` prop (default `true`) rounds the corners of the main opened image
+- `MLightbox` `loop` prop (default `true`) controls whether navigating past the first/last image wraps around
+- `createM3UI` gained a `persistPalette` option (default `true`, matching prior behavior) — set to `false` to make `palette` a hard default that always wins on boot regardless of what's already stored in `localStorage`, and to stop later `useColorPalette().set()` calls from persisting either (they still apply live)
+- `useColorPalette()` gained `setPersistPalette(enabled)` to toggle `localStorage` persistence at runtime, plus a `persistPalette` ref reflecting the current state
+
+---
+
 ## [0.6.0] - 2026-09-09
 
 ### Added
