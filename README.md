@@ -182,6 +182,7 @@ const name = ref('')
 | `MBottomSheet` | Bottom sheet |
 | `MSideSheet` | Side sheet |
 | `MProgressBar` | Linear progress |
+| `MPageProgress` | Top/bottom page-loading bar, auto-wired to vue-router when present, or driven by hand via `usePageProgress()` |
 | `MSpinner` | Circular spinner |
 | `MLoadingOverlay` | Full-area loading |
 | `MSkeleton` | Content skeleton loader |
@@ -291,6 +292,7 @@ import { MBarcode } from '@m3ui-vue/m3ui-vue/barcode'
 | `useFieldBg()` | Context-aware field background color |
 | `useLocale()` | i18n locale switching |
 | `useDevice()` | Responsive breakpoint detection |
+| `usePageProgress()` | Shared state for `MPageProgress`'s `start()`/`set()`/`done()` — drive it by hand or let the component auto-wire vue-router |
 
 ## Color Palettes
 

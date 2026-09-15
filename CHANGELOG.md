@@ -5,6 +5,17 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.6.2] - 2026-09-14
+
+### Added
+- New component: `MPageProgress` — thin top loading bar for page/route transitions (YouTube/NProgress style), fixed to the top of the viewport with a trickle-then-complete animation
+- `MPageProgress` auto-detects vue-router (via `$router` on the current app instance, without adding `vue-router` as a dependency) and wires itself to `beforeEach`/`afterEach`/`onError` automatically — drop it once in your app layout and it just works if a router is present
+- New composable `usePageProgress()` — shared, module-level `progress`/`isActive` state with `start()`, `set(pct)`, and `done()`, the same API `MPageProgress` uses internally, so it can also be driven by hand (a manual fetch, an app without vue-router, or on top of the router auto-wiring) instead of or alongside route navigation
+- `MPageProgress` `auto` prop (default `true`) — set to `false` to disable the vue-router auto-wiring and drive it entirely through `usePageProgress()`
+- `MPageProgress` `position` prop (`'top' | 'bottom'`, default `'top'`) — pins the bar to either edge of the viewport
+
+---
+
 ## [0.6.1] - 2026-09-13
 
 ### Added
