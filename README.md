@@ -228,6 +228,7 @@ const name = ref('')
 | `MResponsive` | Responsive breakpoint slots |
 | `MOverlay` | Overlay backdrop |
 | `MWindow` | Window/panel container |
+| `MBar` | Draggable Electron title bar with minimize/maximize/close, for frameless windows |
 | `MFooter` | Page footer |
 
 ### Typography

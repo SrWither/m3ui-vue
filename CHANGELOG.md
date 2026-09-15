@@ -13,6 +13,17 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - New composable `usePageProgress()` — shared, module-level `progress`/`isActive` state with `start()`, `set(pct)`, and `done()`, the same API `MPageProgress` uses internally, so it can also be driven by hand (a manual fetch, an app without vue-router, or on top of the router auto-wiring) instead of or alongside route navigation
 - `MPageProgress` `auto` prop (default `true`) — set to `false` to disable the vue-router auto-wiring and drive it entirely through `usePageProgress()`
 - `MPageProgress` `position` prop (`'top' | 'bottom'`, default `'top'`) — pins the bar to either edge of the viewport
+- New component: `MBar` — a draggable Electron title bar (`-webkit-app-region: drag`, with `no-drag` carved out around interactive areas), for frameless (`frame: false`) Electron windows. `icon`/`title` (or `#icon`/`#title` slots), `titleAlign` (`'start' | 'center'`), and `#trailing`/default slots for extra content before the window controls
+- `MBar` `platform` prop (`'windows' | 'macos'`, default `'windows'`) — on `'macos'` it reserves space for the OS's native traffic lights and hides the drawn controls by default (still overridable via `controls`)
+- `MBar` `icon` accepts an image src (URL, data URI, or a path with a file extension) as well as a Material Symbol name — auto-detected, so an app logo works without a separate prop
+- `MBar` draws minimize/maximize/close buttons matching native title bar conventions (full-height, close turns error-red on hover) and emits `minimize`/`maximize`/`close` events — it has no way to actually control the OS window itself, the host app wires these to its Electron main-process IPC; a `maximized` prop (driven by that same IPC state) swaps the maximize icon for restore. `minimizable`/`maximizable`/`closable` toggle each button independently; double-clicking empty drag space emits `maximize` by default (`doubleClickMaximize` to disable)
+- `MSlider`: corner "stop" dots (start/end) now truly hide once the fill has passed them instead of just swapping tint; `standard` variant no longer shows a start indicator at all (matches the official M3 slider — only the far/unreached end is ever marked)
+- `MSlider` thumb now keeps a real, constant margin from the track ends — it never touches the very edge, and the fill keeps a matching gap around it even at 0%/100% (previously the gap could visually disappear at the extremes)
+- `MSlider` `standard` variant's fill pill corners: the outer end (away from the thumb) stays fully rounded, the end facing the thumb goes square, matching the official M3 slider's track segments
+- `MSlider` gained `fillColor`/`thumbColor` props — custom CSS colors (hex, `rgb()`, a var…) for the filled track/dot and the thumb respectively, independent from `color` and not limited to the four M3 roles; the unfilled shade for a custom `fillColor` is derived automatically via `color-mix()`
+- `MSlider` gained a `thumbIcon` prop to replace the draggable bar thumb with a Material Symbol icon (own size, grows slightly on press instead of pinching thin)
+- `MSlider`'s corner `icon` prop now sits at its own edge inset (scaled to the thumb, not the tiny plain-dot inset) and is naturally covered by the thumb when it's on top of it, instead of a fragile percentage-based hide threshold
+- `MSlider` `stops` variant: the dot for the step currently under the thumb now hides (checked against both thumbs in `range`)
 
 ---
 
