@@ -16,7 +16,7 @@
 
 ---
 
-120+ tree-shakeable components following [Material Design 3](https://m3.material.io/) guidelines. Ships with 20 color palettes, dark mode, i18n support, and full TypeScript coverage.
+135+ tree-shakeable components following [Material Design 3](https://m3.material.io/) guidelines. Ships with 30 color palettes, dark mode, i18n support, and full TypeScript coverage.
 
 ## Getting Started
 
@@ -58,7 +58,7 @@ In your main stylesheet (e.g. `src/style.css`):
 ```css
 @import 'tailwindcss';
 @import '@m3ui-vue/m3ui-vue/theme';
-@import '@m3ui-vue/m3ui-vue/palettes'; /* 20 color palettes */
+@import '@m3ui-vue/m3ui-vue/palettes'; /* 30 color palettes */
 @import '@m3ui-vue/m3ui-vue/styles';   /* component transitions & animations */
 ```
 
@@ -182,6 +182,7 @@ const name = ref('')
 | `MBottomSheet` | Bottom sheet |
 | `MSideSheet` | Side sheet |
 | `MProgressBar` | Linear progress |
+| `MCircleProgressBar` | Circular progress (circle or wavy variant) |
 | `MPageProgress` | Top/bottom page-loading bar, auto-wired to vue-router when present, or driven by hand via `usePageProgress()` |
 | `MSpinner` | Circular spinner |
 | `MLoadingOverlay` | Full-area loading |
@@ -195,7 +196,7 @@ const name = ref('')
 | | |
 |---|---|
 | `MTabs` | Tab navigation |
-| `MMenu` / `MMenuItem` | Dropdown menus |
+| `MMenu` / `MMenuItem` / `MMenuDivider` | Dropdown menus |
 | `MContextMenu` | Right-click context menu |
 | `MBreadcrumbs` | Breadcrumb trail |
 | `MStepper` | Step-by-step wizard |
@@ -267,6 +268,7 @@ const name = ref('')
 | `MTransferList` | Dual-list transfer |
 | `MInfiniteScroll` | Infinite scroll wrapper |
 | `MTour` | Feature tour / onboarding |
+| `MShader` | Shadertoy-style GLSL/WGSL fragment shader renderer (WebGPU with WebGL2 fallback) |
 
 ### Separate Entry Points
 
@@ -287,7 +289,7 @@ import { MBarcode } from '@m3ui-vue/m3ui-vue/barcode'
 | | |
 |---|---|
 | `useTheme()` | Light / dark / system theme with `cycle()` |
-| `useColorPalette()` | Switch between 20 palettes at runtime |
+| `useColorPalette()` | Switch between 30 palettes at runtime |
 | `useToast()` | Programmatic toast notifications |
 | `useNotification()` | Rich notifications with actions |
 | `useFieldBg()` | Context-aware field background color |
@@ -297,9 +299,9 @@ import { MBarcode } from '@m3ui-vue/m3ui-vue/barcode'
 
 ## Color Palettes
 
-20 built-in palettes with light and dark variants:
+30 built-in palettes with light and dark variants:
 
-`purple` (default) `indigo` `navy` `blue` `cyan` `teal` `green` `lime` `olive` `amber` `sand` `orange` `deep-orange` `brown` `red` `coral` `crimson` `pink` `violet` `slate`
+`purple` (default) `indigo` `navy` `blue` `cyan` `teal` `green` `lime` `olive` `amber` `sand` `orange` `deep-orange` `brown` `red` `coral` `crimson` `pink` `violet` `slate` `graphite` `charcoal` `steel` `ash` `iron` `fog` `pewter` `smoke` `stone` `zinc`
 
 ### Switch at Runtime
 
