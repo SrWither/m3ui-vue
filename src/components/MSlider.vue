@@ -234,12 +234,62 @@ function fillInactiveSize(pct: number) {
   return `calc(100% - ${clampedPos(pct)} - ${gap.value}px)`
 }
 
+// Range & centered variants: same fix as above — any fill edge that sits at a
+// real draggable thumb must anchor to its clamped (thumbInset-aware) position,
+// not the raw pct, or the fill creeps past a thumb pinned near 0%/100% and
+// swallows the gap that's supposed to stay visible there.
+
+// Range: both pctLo and pctHi are thumbs.
+function rangeInactiveBeforeSize() {
+  return `calc(${clampedPos(pctLo.value)} - ${gap.value}px)`
+}
+function rangeActiveStart() {
+  return `calc(${clampedPos(pctLo.value)} + ${gap.value}px)`
+}
+function rangeActiveSize() {
+  return `calc(${clampedPos(pctHi.value)} - ${clampedPos(pctLo.value)} - ${gap.value * 2}px)`
+}
+function rangeInactiveAfterSize() {
+  return `calc(100% - ${clampedPos(pctHi.value)} - ${gap.value}px)`
+}
+
+// Centered: only pctLo is a thumb — centerPct is a fixed anchor, never inset.
+function centeredActiveStart() {
+  return pctLo.value >= centerPct.value
+    ? `${centerPct.value}%`
+    : `calc(${clampedPos(pctLo.value)} + ${gap.value}px)`
+}
+function centeredActiveSize() {
+  return pctLo.value >= centerPct.value
+    ? `calc(${clampedPos(pctLo.value)} - ${centerPct.value}% - ${gap.value}px)`
+    : `calc(${centerPct.value}% - ${clampedPos(pctLo.value)} - ${gap.value}px)`
+}
+function centeredFarInactiveSize() {
+  return pctLo.value >= centerPct.value
+    ? `calc(100% - ${clampedPos(pctLo.value)} - ${gap.value}px)`
+    : `calc(100% - ${centerPct.value}% - ${gap.value}px)`
+}
+function centeredNearInactiveSize() {
+  return pctLo.value <= centerPct.value
+    ? `calc(${clampedPos(pctLo.value)} - ${gap.value}px)`
+    : `calc(${centerPct.value}% - ${gap.value}px)`
+}
+
 const r = computed(() => s.value.radius)
 const smallR = computed(() => Math.max(2, r.value / 4))
 
-// Standard variant only: the pill's outer end (away from the thumb) stays
-// fully rounded like a cap; the end facing the thumb-gap goes square, matching
-// the official M3 slider's track segments.
+// A segment bounded by a gap on *both* sides — range's middle (active)
+// segment between the two thumbs, and centered's active segment (its far
+// side sits at the fixed center junction, its near side at the thumb gap;
+// it never touches a real track end since the near/far inactive segments
+// always cover those) — goes square on every corner, never a rounded cap.
+function pillRadiusSquareBoth() {
+  return `${smallR.value}px`
+}
+
+// The pill's outer end (away from the thumb/gap) stays fully rounded like a
+// cap; the end facing a thumb-gap goes square, matching the official M3
+// slider's track segments.
 function pillRadiusOuterStart() {
   return isVertical.value
     ? `${smallR.value}px ${smallR.value}px ${r.value}px ${r.value}px`
@@ -397,58 +447,54 @@ const tooltipPct = computed(() => {
 
           <!-- Centered: active from center -->
           <template v-else-if="variant === 'centered'">
-            <!-- Active: from center to thumb (with gap from thumb) -->
+            <!-- Active: from center to thumb (thumb edge uses its clamped position) -->
             <div class="absolute" :style="{
               ...(isVertical
-                ? pctLo >= centerPct
-                  ? { left: 0, right: 0, bottom: `${centerPct}%`, height: `calc(${pctLo - centerPct}% - ${gap}px)` }
-                  : { left: 0, right: 0, bottom: `calc(${pctLo}% + ${gap}px)`, height: `calc(${centerPct - pctLo}% - ${gap}px)` }
-                : pctLo >= centerPct
-                  ? { top: 0, bottom: 0, left: `${centerPct}%`, width: `calc(${pctLo - centerPct}% - ${gap}px)` }
-                  : { top: 0, bottom: 0, left: `calc(${pctLo}% + ${gap}px)`, width: `calc(${centerPct - pctLo}% - ${gap}px)` }
+                ? { left: 0, right: 0, bottom: centeredActiveStart(), height: centeredActiveSize() }
+                : { top: 0, bottom: 0, left: centeredActiveStart(), width: centeredActiveSize() }
               ),
-              borderRadius: `${r}px`, backgroundColor: ct.active, transition: `all ${tr}`,
+              borderRadius: pillRadiusSquareBoth(), backgroundColor: ct.active, transition: `all ${tr}`,
             }" />
             <!-- Inactive: above/right of thumb -->
             <div class="absolute" :style="{
               ...(isVertical
-                ? { left: 0, right: 0, top: 0, height: `calc(${100 - Math.max(pctLo, centerPct)}% - ${gap}px)` }
-                : { top: 0, bottom: 0, right: 0, width: `calc(${100 - Math.max(pctLo, centerPct)}% - ${gap}px)` }
+                ? { left: 0, right: 0, top: 0, height: centeredFarInactiveSize() }
+                : { top: 0, bottom: 0, right: 0, width: centeredFarInactiveSize() }
               ),
-              borderRadius: `${r}px`, backgroundColor: ct.inactive, transition: `all ${tr}`,
+              borderRadius: pillRadiusOuterEnd(), backgroundColor: ct.inactive, transition: `all ${tr}`,
             }" />
             <!-- Inactive: below/left of thumb -->
             <div class="absolute" :style="{
               ...(isVertical
-                ? { left: 0, right: 0, bottom: 0, height: `calc(${Math.min(pctLo, centerPct)}% - ${gap}px)` }
-                : { top: 0, bottom: 0, left: 0, width: `calc(${Math.min(pctLo, centerPct)}% - ${gap}px)` }
+                ? { left: 0, right: 0, bottom: 0, height: centeredNearInactiveSize() }
+                : { top: 0, bottom: 0, left: 0, width: centeredNearInactiveSize() }
               ),
-              borderRadius: `${r}px`, backgroundColor: ct.inactive, transition: `all ${tr}`,
+              borderRadius: pillRadiusOuterStart(), backgroundColor: ct.inactive, transition: `all ${tr}`,
             }" />
           </template>
 
-          <!-- Range: active between thumbs -->
+          <!-- Range: active between thumbs (both edges use their clamped position) -->
           <template v-else-if="variant === 'range'">
             <div class="absolute" :style="{
               ...(isVertical
-                ? { left: 0, right: 0, bottom: 0, height: `calc(${pctLo}% - ${gap}px)` }
-                : { top: 0, bottom: 0, left: 0, width: `calc(${pctLo}% - ${gap}px)` }
+                ? { left: 0, right: 0, bottom: 0, height: rangeInactiveBeforeSize() }
+                : { top: 0, bottom: 0, left: 0, width: rangeInactiveBeforeSize() }
               ),
-              borderRadius: `${r}px`, backgroundColor: ct.inactive, transition: `all ${tr}`,
+              borderRadius: pillRadiusOuterStart(), backgroundColor: ct.inactive, transition: `all ${tr}`,
             }" />
             <div class="absolute" :style="{
               ...(isVertical
-                ? { left: 0, right: 0, bottom: `calc(${pctLo}% + ${gap}px)`, height: `calc(${pctHi - pctLo}% - ${gap * 2}px)` }
-                : { top: 0, bottom: 0, left: `calc(${pctLo}% + ${gap}px)`, width: `calc(${pctHi - pctLo}% - ${gap * 2}px)` }
+                ? { left: 0, right: 0, bottom: rangeActiveStart(), height: rangeActiveSize() }
+                : { top: 0, bottom: 0, left: rangeActiveStart(), width: rangeActiveSize() }
               ),
-              borderRadius: `${r}px`, backgroundColor: ct.active, transition: `all ${tr}`,
+              borderRadius: pillRadiusSquareBoth(), backgroundColor: ct.active, transition: `all ${tr}`,
             }" />
             <div class="absolute" :style="{
               ...(isVertical
-                ? { left: 0, right: 0, top: 0, height: `calc(${100 - pctHi}% - ${gap}px)` }
-                : { top: 0, bottom: 0, right: 0, width: `calc(${100 - pctHi}% - ${gap}px)` }
+                ? { left: 0, right: 0, top: 0, height: rangeInactiveAfterSize() }
+                : { top: 0, bottom: 0, right: 0, width: rangeInactiveAfterSize() }
               ),
-              borderRadius: `${r}px`, backgroundColor: ct.inactive, transition: `all ${tr}`,
+              borderRadius: pillRadiusOuterEnd(), backgroundColor: ct.inactive, transition: `all ${tr}`,
             }" />
           </template>
 
