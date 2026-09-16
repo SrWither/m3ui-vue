@@ -277,6 +277,9 @@ function centeredNearInactiveSize() {
 
 const r = computed(() => s.value.radius)
 const smallR = computed(() => Math.max(2, r.value / 4))
+// Outer track-end corners: the original `r` shape-scale token, just a touch
+// softer/rounder than the plain token value.
+const fullR = computed(() => r.value * 1.3)
 
 // A segment bounded by a gap on *both* sides — range's middle (active)
 // segment between the two thumbs, and centered's active segment (its far
@@ -287,18 +290,18 @@ function pillRadiusSquareBoth() {
   return `${smallR.value}px`
 }
 
-// The pill's outer end (away from the thumb/gap) stays fully rounded like a
-// cap; the end facing a thumb-gap goes square, matching the official M3
-// slider's track segments.
+// The pill's outer end (away from the thumb/gap) stays a full stadium cap;
+// the end facing a thumb-gap goes square, matching the official M3 slider's
+// track segments.
 function pillRadiusOuterStart() {
   return isVertical.value
-    ? `${smallR.value}px ${smallR.value}px ${r.value}px ${r.value}px`
-    : `${r.value}px ${smallR.value}px ${smallR.value}px ${r.value}px`
+    ? `${smallR.value}px ${smallR.value}px ${fullR.value}px ${fullR.value}px`
+    : `${fullR.value}px ${smallR.value}px ${smallR.value}px ${fullR.value}px`
 }
 function pillRadiusOuterEnd() {
   return isVertical.value
-    ? `${r.value}px ${r.value}px ${smallR.value}px ${smallR.value}px`
-    : `${smallR.value}px ${r.value}px ${r.value}px ${smallR.value}px`
+    ? `${fullR.value}px ${fullR.value}px ${smallR.value}px ${smallR.value}px`
+    : `${smallR.value}px ${fullR.value}px ${fullR.value}px ${smallR.value}px`
 }
 const nd = computed(() => dragging.value === false)
 const tr = computed(() => nd.value ? '75ms ease' : '0s')
@@ -423,8 +426,8 @@ const tooltipPct = computed(() => {
         <div
           class="absolute"
           :style="isVertical
-            ? { left: '50%', top: '0', bottom: '0', width: `${s.track}px`, transform: 'translateX(-50%)', borderRadius: `${r}px` }
-            : { top: '50%', left: '0', right: '0', height: `${s.track}px`, transform: 'translateY(-50%)', borderRadius: `${r}px` }
+            ? { left: '50%', top: '0', bottom: '0', width: `${s.track}px`, transform: 'translateX(-50%)', borderRadius: `${fullR}px` }
+            : { top: '50%', left: '0', right: '0', height: `${s.track}px`, transform: 'translateY(-50%)', borderRadius: `${fullR}px` }
           "
         >
           <!-- Standard: active from left/bottom -->
