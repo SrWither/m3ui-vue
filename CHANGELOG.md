@@ -5,6 +5,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.6.4] - 2026-09-16
+
+### Fixed
+- `MSlider` `centered` and `range` variants: fill edges next to a real draggable thumb now anchor to that thumb's clamped (thumbInset-aware) position instead of the raw value percentage — previously, near 0%/100%, the fill could creep past a thumb pinned by `thumbInset` and swallow the gap that's supposed to stay visible there. `standard` already had this fix (`fillActiveSize`/`fillInactiveSize`); `centered`/`range` were still using raw `pctLo`/`pctHi`/`centerPct`
+- `MSlider` `centered` and `range` variants' fill segment corners now match `standard`'s official M3 track-segment shape: the end touching the real track edge stays a rounded cap, the end facing a thumb/gap goes square. A segment flanked by a thumb-gap on *both* sides (range's middle segment between the two thumbs; centered's active segment, which never touches a real track end) is now square on every corner instead of using a uniform full-pill radius
+- `MSlider` outer fill-corner radius (the track-end cap, all variants) nudged slightly rounder/softer than the plain shape-scale token
+
 ## [0.6.3] - 2026-09-15
 
 ### Fixed
