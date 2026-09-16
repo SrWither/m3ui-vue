@@ -1,3 +1,10 @@
+<script lang="ts">
+// Module-scoped so it's actually shared across every MWindow instance.
+// Kept below the app-level overlay scale (dialogs/spotlight/command palette use z-50)
+// so windows never render on top of a real modal.
+let sharedZIndex = 10
+</script>
+
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import MIcon from './MIcon.vue'
@@ -48,10 +55,7 @@ const posY = ref(props.y)
 const winWidth = ref(parseInt(props.width) || 400)
 const winHeight = ref(parseInt(props.height) || 300)
 const minimized = ref(false)
-const zIndex = ref(100)
-
-// Global z-index counter shared across instances
-let globalZIndex = 100
+const zIndex = ref(sharedZIndex)
 
 const windowRef = ref<HTMLElement | null>(null)
 
@@ -84,8 +88,8 @@ const windowStyle = computed(() => ({
 
 // ---- Bring to front ----
 function bringToFront() {
-  globalZIndex++
-  zIndex.value = globalZIndex
+  sharedZIndex++
+  zIndex.value = sharedZIndex
 }
 
 // ---- Pointer helpers ----
