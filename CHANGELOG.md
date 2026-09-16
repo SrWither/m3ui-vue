@@ -5,6 +5,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.6.3] - 2026-09-15
+
+### Fixed
+- `MWindow`'s internal bring-to-front z-index counter is now module-scoped and truly shared across every instance — previously each window kept its own independent counter (despite a comment claiming otherwise), so with 3+ windows open, clicking one to bring it to the front could tie with another window's z-index and fail to actually come to the top
+- `MWindow`'s z-index range now starts at `10` instead of `100`, keeping it below the app-level overlay scale (`MDialog` and every `*Modal` picker, `MSelect`/`MAutocomplete`/`MMultiSelect`/`MMultiAutocomplete`, `MSpotlightSearch`, `MCommandPalette` all use `z-50`) — windows no longer render on top of a real modal/spotlight/command palette
+- `MTerminal`: the last line of the initial `lines` prop (and of any later update to it) is now written without a trailing newline, so the cursor sits right after that line's content instead of dropping to an empty line below it — matters for building an interactive shell-style demo where the last line is a prompt
+
 ## [0.6.2] - 2026-09-14
 
 ### Added
