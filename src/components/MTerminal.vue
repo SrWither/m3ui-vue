@@ -28,6 +28,16 @@ let fitAddon: any = null
 let resizeObserver: ResizeObserver | null = null
 let lineBuffer = ''
 
+function writeLines(lines: string[]) {
+  lines.forEach((line, i) => {
+    if (i === lines.length - 1) {
+      terminal!.write(line)
+    } else {
+      terminal!.writeln(line)
+    }
+  })
+}
+
 function getThemeColors() {
   const style = getComputedStyle(document.documentElement)
   return {
@@ -74,9 +84,7 @@ onMounted(async () => {
 
   try { fitAddon.fit() } catch { /* container might not be visible yet */ }
 
-  for (const line of props.lines) {
-    terminal.writeln(line)
-  }
+  writeLines(props.lines)
 
   if (!props.readonly) {
     terminal.onData((data: string) => {
@@ -107,9 +115,7 @@ onMounted(async () => {
 watch(() => props.lines, (newLines) => {
   if (!terminal) return
   terminal.clear()
-  for (const line of newLines) {
-    terminal.writeln(line)
-  }
+  writeLines(newLines)
 })
 
 onBeforeUnmount(() => {
