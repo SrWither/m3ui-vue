@@ -185,6 +185,7 @@ const name = ref('')
 | `MCircleProgressBar` | Circular progress (circle or wavy variant) |
 | `MPageProgress` | Top/bottom page-loading bar, auto-wired to vue-router when present, or driven by hand via `usePageProgress()` |
 | `MSpinner` | Circular spinner |
+| `MLoadingIndicator` | M3 expressive loading indicator — morphs between rounded shapes (circle, cookie, pentagon, sunny, clover, ellipse); optional contained variant |
 | `MLoadingOverlay` | Full-area loading |
 | `MSkeleton` | Content skeleton loader |
 | `MEmptyState` | Empty state placeholder |
