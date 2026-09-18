@@ -31,6 +31,15 @@ const fieldBgByVariant: Record<string, string> = {
   filled: 'var(--color-surface-container-highest)',
   outlined: 'var(--color-surface)',
 }
+
+// State layer (8% hover / 12% active), same before:-pseudo pattern as MButton/MFab.
+// Needed because the card has a real background to preserve underneath — unlike
+// MListItem, a plain hover:bg-on-surface/8 here would replace the card's own tone.
+const clickableClasses =
+  'relative cursor-pointer hover:shadow-elevation-2 active:shadow-elevation-1 ' +
+  "before:content-[''] before:pointer-events-none before:absolute before:inset-0 " +
+  'before:bg-on-surface before:opacity-0 before:transition-opacity before:duration-150 ' +
+  'hover:before:opacity-[0.08] active:before:opacity-[0.12]'
 </script>
 
 <template>
@@ -38,7 +47,7 @@ const fieldBgByVariant: Record<string, string> = {
     class="overflow-hidden rounded-md transition-shadow duration-150"
     :class="[
       variantClasses[resolvedVariant],
-      clickable ? 'cursor-pointer hover:shadow-elevation-2 active:shadow-elevation-1' : '',
+      clickable ? clickableClasses : '',
     ]"
     :style="{ '--field-bg': fieldBgByVariant[resolvedVariant] }"
   >
