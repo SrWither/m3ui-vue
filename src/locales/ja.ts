@@ -7,6 +7,7 @@ export const jaLocale: M3Locale = {
   search: '検索...',
   noResults: '結果なし',
   close: '閉じる',
+  menu: 'メニュー',
   cancel: 'キャンセル',
   confirm: '確認',
   loading: '読み込み中',

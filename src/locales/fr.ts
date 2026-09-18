@@ -7,6 +7,7 @@ export const frLocale: M3Locale = {
   search: 'Rechercher...',
   noResults: 'Aucun résultat',
   close: 'Fermer',
+  menu: 'Menu',
   cancel: 'Annuler',
   confirm: 'Confirmer',
   loading: 'Chargement',

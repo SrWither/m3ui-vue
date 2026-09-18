@@ -7,6 +7,7 @@ export const deLocale: M3Locale = {
   search: 'Suchen...',
   noResults: 'Keine Ergebnisse',
   close: 'Schließen',
+  menu: 'Menü',
   cancel: 'Abbrechen',
   confirm: 'Bestätigen',
   loading: 'Laden',

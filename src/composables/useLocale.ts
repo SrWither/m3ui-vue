@@ -11,6 +11,7 @@ export interface M3Locale {
   cancel: string
   confirm: string
   loading: string
+  menu: string
 
   // Navigation
   previous: string
@@ -111,6 +112,7 @@ export const defaultLocale: M3Locale = {
   search: 'Search...',
   noResults: 'No results',
   close: 'Close',
+  menu: 'Menu',
   cancel: 'Cancel',
   confirm: 'Confirm',
   loading: 'Loading',

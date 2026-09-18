@@ -7,6 +7,7 @@ export const koLocale: M3Locale = {
   search: '검색...',
   noResults: '결과 없음',
   close: '닫기',
+  menu: '메뉴',
   cancel: '취소',
   confirm: '확인',
   loading: '로딩 중',

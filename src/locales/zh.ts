@@ -7,6 +7,7 @@ export const zhLocale: M3Locale = {
   search: '搜索...',
   noResults: '无结果',
   close: '关闭',
+  menu: '菜单',
   cancel: '取消',
   confirm: '确认',
   loading: '加载中',

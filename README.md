@@ -208,6 +208,7 @@ const name = ref('')
 | `MNavigationRail` | Side navigation rail |
 | `MNavigationDrawer` | Collapsible side drawer |
 | `MTopAppBar` / `MAppBar` | Top app bar |
+| `MSearchBar` | M3 search bar — docked (dropdown-style) or fullscreen expansion, drop it anywhere including a `MTopAppBar` title slot |
 | `MToolbar` | Action toolbar |
 
 ### Layout

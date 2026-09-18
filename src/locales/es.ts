@@ -7,6 +7,7 @@ export const esLocale: M3Locale = {
   search: 'Buscar...',
   noResults: 'Sin resultados',
   close: 'Cerrar',
+  menu: 'Menú',
   cancel: 'Cancelar',
   confirm: 'Confirmar',
   loading: 'Cargando',

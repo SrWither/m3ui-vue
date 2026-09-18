@@ -7,6 +7,7 @@ export const ptLocale: M3Locale = {
   search: 'Pesquisar...',
   noResults: 'Sem resultados',
   close: 'Fechar',
+  menu: 'Menu',
   cancel: 'Cancelar',
   confirm: 'Confirmar',
   loading: 'Carregando',
