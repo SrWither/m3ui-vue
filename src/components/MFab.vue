@@ -20,6 +20,25 @@ const props = withDefaults(
     direction?: 'up' | 'down' | 'left' | 'right' | 'radial'
     to?: string | Record<string, any>
     persistent?: boolean
+    /** For the `up`/`down` #content panel only: which edge it anchors to when
+     *  it's wider than the FAB itself. 'start' (default) keeps its left edge
+     *  aligned with the FAB's left edge (existing behavior); 'end' aligns the
+     *  right edges instead, which keeps a wide panel from running off-screen
+     *  when the FAB sits in the bottom-right corner, a common placement. */
+    align?: 'start' | 'end'
+    /** Dims the rest of the screen behind the #content panel while open (has
+     *  no effect on the `items` speed dial). A plain sibling with its own
+     *  fade transition, independent of the panel's enter/leave transform, so
+     *  it doesn't visually shrink/lag along with it. */
+    scrim?: boolean
+    /** How the #content panel itself animates open/closed. 'scale' (default)
+     *  is the original fade+scale. 'fade' drops the scale — use this when the
+     *  slot content already animates its own entrance (e.g. a staggered
+     *  per-item reveal), so the panel doesn't *also* scale as a group on top
+     *  of that; it still gives Vue a real transition to wait for on close, so
+     *  the content's own leave animation has time to play instead of just
+     *  vanishing. 'none' skips any panel-level transition entirely. */
+    contentTransition?: 'scale' | 'fade' | 'none'
   }>(),
   {
     color: 'primary',
@@ -27,6 +46,9 @@ const props = withDefaults(
     disabled: false,
     direction: 'up',
     persistent: false,
+    align: 'start',
+    scrim: false,
+    contentTransition: 'scale',
   },
 )
 
@@ -172,12 +194,14 @@ function computeContentPos() {
   switch (props.direction) {
     case 'up':
       base.bottom = `${window.innerHeight - rect.top + gap}px`
-      base.left = `${rect.left}px`
+      if (props.align === 'end') base.right = `${window.innerWidth - rect.right}px`
+      else base.left = `${rect.left}px`
       base.minWidth = `${rect.width}px`
       break
     case 'down':
       base.top = `${rect.bottom + gap}px`
-      base.left = `${rect.left}px`
+      if (props.align === 'end') base.right = `${window.innerWidth - rect.right}px`
+      else base.left = `${rect.left}px`
       base.minWidth = `${rect.width}px`
       break
     case 'left':
@@ -193,12 +217,13 @@ function computeContentPos() {
 }
 
 const contentTransformOrigin = computed(() => {
+  const side = props.align === 'end' ? 'right' : 'center'
   switch (props.direction) {
-    case 'up': return 'bottom center'
-    case 'down': return 'top center'
+    case 'up': return `bottom ${side}`
+    case 'down': return `top ${side}`
     case 'left': return 'center right'
     case 'right': return 'center left'
-    default: return 'bottom center'
+    default: return `bottom ${side}`
   }
 })
 
@@ -296,8 +321,18 @@ onUnmounted(() => {
       </div>
     </template>
 
+    <!-- Scrim — a plain sibling of the content panel below, never nested
+         inside it, so its own opacity fade never inherits the panel's
+         enter/leave transform (which would otherwise make it look like it
+         shrinks/lags instead of just covering the screen). -->
+    <Transition name="m3-fab-scrim">
+      <div v-if="scrim && hasContent && open" class="fixed inset-0 bg-black/40" style="z-index: 999" />
+    </Transition>
+
     <!-- Custom content panel -->
-    <Transition name="m3-fab-content">
+    <Transition
+      :name="contentTransition === 'none' ? undefined : `m3-fab-content-${contentTransition}`"
+    >
       <div
         v-if="hasContent && open"
         ref="contentEl"
@@ -311,18 +346,36 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.m3-fab-content-enter-active {
+.m3-fab-content-scale-enter-active {
   transition: opacity 200ms ease, transform 200ms cubic-bezier(0.2, 0, 0, 1);
 }
-.m3-fab-content-leave-active {
+.m3-fab-content-scale-leave-active {
   transition: opacity 150ms ease, transform 150ms ease;
 }
-.m3-fab-content-enter-from {
+.m3-fab-content-scale-enter-from {
   opacity: 0;
   transform: scale(0.85);
 }
-.m3-fab-content-leave-to {
+.m3-fab-content-scale-leave-to {
   opacity: 0;
   transform: scale(0.9);
+}
+.m3-fab-content-fade-enter-active,
+.m3-fab-content-fade-leave-active {
+  /* Long enough to cover MFabMenu's own item-level close animation, which
+     plays inside this panel and needs it to still be mounted while it runs. */
+  transition: opacity 220ms ease;
+}
+.m3-fab-content-fade-enter-from,
+.m3-fab-content-fade-leave-to {
+  opacity: 0;
+}
+.m3-fab-scrim-enter-active,
+.m3-fab-scrim-leave-active {
+  transition: opacity 200ms ease;
+}
+.m3-fab-scrim-enter-from,
+.m3-fab-scrim-leave-to {
+  opacity: 0;
 }
 </style>

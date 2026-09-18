@@ -113,6 +113,7 @@ const name = ref('')
 | `MButton` | Primary, outlined, tonal, text, elevated variants |
 | `MIconButton` | Icon-only actions |
 | `MFab` | Floating action button with optional speed dial |
+| `MFabMenu` | M3 FAB Menu — expands into a labeled action list (built on `MFab`'s `#content` slot) |
 | `MButtonGroup` | Grouped button options |
 | `MSplitButton` | Button with dropdown actions |
 | `MSegmentedButton` | Toggleable segmented options |
