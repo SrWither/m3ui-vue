@@ -7,11 +7,20 @@ withDefaults(
     indeterminate?: boolean;
     disabled?: boolean;
     label?: string;
+    color?: "primary" | "secondary" | "tertiary" | "error";
   }>(),
-  { indeterminate: false, disabled: false },
+  { indeterminate: false, disabled: false, color: "primary" },
 );
 
 const emit = defineEmits<{ "update:modelValue": [boolean] }>();
+
+// Same 4 named colors + fallback shape as MRadio's checkedColor map.
+const checkedClasses: Record<string, string> = {
+  primary: "border-primary bg-primary text-on-primary",
+  secondary: "border-secondary bg-secondary text-on-secondary",
+  tertiary: "border-tertiary bg-tertiary text-on-tertiary",
+  error: "border-error bg-error text-on-error",
+};
 </script>
 
 <template>
@@ -25,7 +34,7 @@ const emit = defineEmits<{ "update:modelValue": [boolean] }>();
         :class="
           disabled
             ? (modelValue || indeterminate ? 'border-on-surface/38 bg-on-surface/38 text-surface' : 'border-on-surface/38 text-transparent')
-            : (modelValue || indeterminate ? 'border-primary bg-primary text-on-primary' : 'border-on-surface-variant text-transparent')
+            : (modelValue || indeterminate ? checkedClasses[color] : 'border-on-surface-variant text-transparent')
         "
       >
         <input

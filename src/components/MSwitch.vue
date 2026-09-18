@@ -3,11 +3,36 @@ import { computed } from 'vue'
 import MIcon from './MIcon.vue'
 
 const props = withDefaults(
-  defineProps<{ modelValue: boolean; disabled?: boolean; label?: string }>(),
-  { disabled: false },
+  defineProps<{
+    modelValue: boolean
+    disabled?: boolean
+    label?: string
+    color?: 'primary' | 'secondary' | 'tertiary' | 'error'
+  }>(),
+  { disabled: false, color: 'primary' },
 )
 
 const emit = defineEmits<{ 'update:modelValue': [boolean] }>()
+
+// Same 4 named colors as MRadio/MCheckbox's color prop.
+const trackClasses: Record<string, string> = {
+  primary: 'border-primary bg-primary',
+  secondary: 'border-secondary bg-secondary',
+  tertiary: 'border-tertiary bg-tertiary',
+  error: 'border-error bg-error',
+}
+const thumbClasses: Record<string, string> = {
+  primary: 'bg-on-primary',
+  secondary: 'bg-on-secondary',
+  tertiary: 'bg-on-tertiary',
+  error: 'bg-on-error',
+}
+const iconClasses: Record<string, string> = {
+  primary: 'text-primary',
+  secondary: 'text-secondary',
+  tertiary: 'text-tertiary',
+  error: 'text-error',
+}
 
 // All thumb transforms live here so each direction can use its own easing curve.
 // translateY(-50%) vertically centres the 24px thumb in the 32px track.
@@ -31,7 +56,7 @@ const thumbStyle = computed(() => ({
     <span class="relative -my-2 inline-flex h-12 shrink-0 items-center">
       <span
         class="relative inline-flex h-8 w-[52px] items-center rounded-full border-2 transition-colors duration-200"
-        :class="modelValue ? 'border-primary bg-primary' : 'border-outline bg-surface-container-highest'"
+        :class="modelValue ? trackClasses[color] : 'border-outline bg-surface-container-highest'"
       >
         <input
           type="checkbox"
@@ -44,7 +69,7 @@ const thumbStyle = computed(() => ({
         <!-- Thumb: position + size animated via inline style (allows per-direction easing) -->
         <span
           class="absolute left-1 top-1/2 flex h-6 w-6 items-center justify-center rounded-full will-change-transform"
-          :class="modelValue ? 'bg-on-primary shadow-sm' : 'bg-outline'"
+          :class="modelValue ? [thumbClasses[color], 'shadow-sm'] : 'bg-outline'"
           :style="thumbStyle"
         >
           <Transition
@@ -55,7 +80,7 @@ const thumbStyle = computed(() => ({
             leave-from-class="opacity-100"
             leave-to-class="opacity-0"
           >
-            <MIcon v-if="modelValue" name="check" :size="14" class="text-primary" />
+            <MIcon v-if="modelValue" name="check" :size="14" :class="iconClasses[color]" />
           </Transition>
         </span>
       </span>
