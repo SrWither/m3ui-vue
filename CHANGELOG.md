@@ -5,6 +5,22 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.7.1] - 2026-09-18
+
+### Added
+- New `--color-scrim` design token in `theme.css`. M3 defines `scrim` as a role distinct from `shadow`, even though both resolve to black in the baseline scheme — previously only `shadow` was exposed. 17 components that render a backdrop now use `bg-scrim` instead of a hardcoded `bg-black/40`/`bg-black/50`: `MDialog`, `MBottomSheet`, `MSideSheet`, `MNavigationDrawer`, `MOverlay`, `MFab`, `MTour`, `MCommandPalette`, `MSpotlightSearch`, `MColorPickerModal`, `MDatePickerModal`, `MDateRangePickerModal`, `MTimePickerModal`, `MSelect`, `MAutocomplete`, `MMultiSelect`, `MMultiAutocomplete`. `MLightbox`'s black backgrounds were left untouched — they're the viewer's own persistent chrome (fullscreen backdrop, control pills), not a scrim over other page content
+- `MCheckbox`/`MSwitch` gained a `color` prop (`'primary' | 'secondary' | 'tertiary' | 'error'`, default `'primary'`), matching the prop `MRadio` already had — the checked/on-state fill, border, and check icon now follow it instead of being hardcoded to primary
+
+### Fixed
+- `MCheckbox`, `MRadio`, `MSwitch` now have an invisible 48×48px hit area centered on their visual control (18px/20px/32px respectively, via negative-margin wrappers), matching M3's minimum touch target. Previously the visible control itself was the only clickable/hoverable area, well under the minimum
+- Disabled state on `MButton`, `MIconButton`, `MChip`, `MCheckbox` no longer applies a single blanket `opacity-[0.38]` to the whole element, which just rendered each variant's own color as translucent (a disabled filled-primary button still read as visibly blue). Now matches M3's actual token split: content (label/icon) at on-surface 38% opacity, container (background for filled/tonal/elevated, border for outlined) at on-surface 12%
+- `MCard`'s `clickable` state now shows an M3 state-layer overlay (8% hover / 12% pressed, over `on-surface`) in addition to the elevation change it already had, matching the pattern already used by `MButton`/`MIconButton`/`MFab`/`MListItem`/`MChip`
+- `MFab`'s extended (icon+label) layout used symmetric 16px padding on both sides; now matches the real `ExtendedFloatingActionButton` composable exactly — 16dp leading / 12dp icon-to-label gap (already correct) / 20dp trailing — plus the missing 80dp minimum width (`ExtendedFabMinimumWidth`)
+- `MSlider`'s inactive track and stop-indicator color no longer derives from the active/`color` prop's own container tone (e.g. `color="tertiary"` tinting the unfilled track tertiary-container). M3's `SliderTokens` fix `InactiveTrackColor`/`StopIndicatorColor` to `secondary-container` regardless of the active color
+- `MSlider`'s disabled state is no longer a single blanket opacity — active track/handle at on-surface 38%, inactive track at on-surface 12%, matching `SliderTokens.DisabledActiveTrackOpacity`/`DisabledInactiveTrackOpacity`
+- `MSlider` had no visible focus indicator at all when tabbed to via keyboard (`outline-none` with nothing in its place). It now narrows the handle to 2dp on focus — the same treatment it already had for an active pointer drag, matching `SliderTokens.FocusHandleWidth`/`PressedHandleWidth` — plus a visible ring around the handle for keyboard navigation
+- `MSlider`'s default (`xs`) size corrected against `SliderTokens`/`Slider.kt`: handle height 32px → 44dp (`HandleHeight`), the pressed/focused narrow ratio ×0.6 → the exact ×0.5 (`PressedHandleWidth`/`FocusHandleWidth` = 2dp), thumb-to-track gap 7px → 6dp (`ActiveHandleLeadingSpace`). The touch-target height (`hitArea`) was bumped from 38 to 46px as a consequence, so the now-taller handle stays contained instead of overflowing it
+
 ## [0.7.0] - 2026-09-17
 
 ### Fixed
