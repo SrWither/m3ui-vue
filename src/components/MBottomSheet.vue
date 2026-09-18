@@ -43,7 +43,7 @@ const sheetStyle = computed(() => ({
     <Transition name="bs" :duration="{ enter: 320, leave: 280 }">
       <div v-if="modelValue" class="fixed inset-0 z-200 flex flex-col justify-end">
         <!-- Scrim -->
-        <div class="bs-scrim absolute inset-0 bg-black/40" @click="close" />
+        <div class="bs-scrim absolute inset-0 bg-scrim/40" @click="close" />
 
         <!-- Panel -->
         <div

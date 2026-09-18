@@ -141,7 +141,7 @@ watch(
           side === 'top' ? 'flex-col' : '',
         ]"
       >
-        <div class="nd-scrim absolute inset-0 bg-black/40" @click="close" />
+        <div class="nd-scrim absolute inset-0 bg-scrim/40" @click="close" />
 
         <nav
           :class="[

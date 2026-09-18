@@ -129,7 +129,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onGlobalKeydown))
     <Transition name="m3-cmd">
       <div
         v-if="modelValue"
-        class="fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-[15vh]"
+        class="fixed inset-0 z-50 flex items-start justify-center bg-scrim/40 pt-[15vh]"
         @click.self="close"
       >
         <div class="cmd-box flex w-full max-w-lg flex-col overflow-hidden rounded-xl bg-surface-container-high shadow-elevation-3">

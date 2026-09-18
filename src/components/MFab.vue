@@ -326,7 +326,7 @@ onUnmounted(() => {
          enter/leave transform (which would otherwise make it look like it
          shrinks/lags instead of just covering the screen). -->
     <Transition name="m3-fab-scrim">
-      <div v-if="scrim && hasContent && open" class="fixed inset-0 bg-black/40" style="z-index: 999" />
+      <div v-if="scrim && hasContent && open" class="fixed inset-0 bg-scrim/40" style="z-index: 999" />
     </Transition>
 
     <!-- Custom content panel -->

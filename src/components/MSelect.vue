@@ -302,7 +302,7 @@ const labelClasses = computed(() => {
     <Transition name="m3-select-modal">
       <div
         v-if="modalOpen && mode === 'modal'"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-scrim/40 p-4"
         @click.self="closeModal"
       >
         <div class="select-modal-box flex max-h-[80vh] w-full max-w-sm flex-col overflow-hidden rounded-[28px] bg-surface-container-high shadow-elevation-3">
