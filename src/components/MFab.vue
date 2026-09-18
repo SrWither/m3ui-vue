@@ -73,7 +73,9 @@ const colorMap: Record<string, string> = {
 }
 
 const fabSizeClasses = computed(() => {
-  if (props.label) return 'h-14 rounded-2xl px-4 gap-3'
+  // Extended FAB (androidx FloatingActionButton.kt): 16dp start padding, 12dp
+  // icon-to-label gap, 20dp end padding, 80dp minimum width.
+  if (props.label) return 'h-14 min-w-20 rounded-2xl pl-4 pr-5 gap-3'
   switch (props.size) {
     case 'small': return 'h-10 w-10 rounded-lg'
     case 'large': return 'h-24 w-24 rounded-[28px]'
