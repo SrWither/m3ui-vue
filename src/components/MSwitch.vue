@@ -28,34 +28,36 @@ const thumbStyle = computed(() => ({
     class="inline-flex items-center gap-3 select-none"
     :class="disabled ? 'cursor-not-allowed opacity-[0.38]' : 'cursor-pointer'"
   >
-    <span
-      class="relative inline-flex h-8 w-[52px] shrink-0 items-center rounded-full border-2 transition-colors duration-200"
-      :class="modelValue ? 'border-primary bg-primary' : 'border-outline bg-surface-container-highest'"
-    >
-      <input
-        type="checkbox"
-        class="sr-only"
-        :checked="modelValue"
-        :disabled="disabled"
-        @change="emit('update:modelValue', !modelValue)"
-      />
-
-      <!-- Thumb: position + size animated via inline style (allows per-direction easing) -->
+    <span class="relative -my-2 inline-flex h-12 shrink-0 items-center">
       <span
-        class="absolute left-1 top-1/2 flex h-6 w-6 items-center justify-center rounded-full will-change-transform"
-        :class="modelValue ? 'bg-on-primary shadow-sm' : 'bg-outline'"
-        :style="thumbStyle"
+        class="relative inline-flex h-8 w-[52px] items-center rounded-full border-2 transition-colors duration-200"
+        :class="modelValue ? 'border-primary bg-primary' : 'border-outline bg-surface-container-highest'"
       >
-        <Transition
-          enter-active-class="transition-opacity duration-150 delay-[120ms]"
-          enter-from-class="opacity-0"
-          enter-to-class="opacity-100"
-          leave-active-class="transition-opacity duration-75"
-          leave-from-class="opacity-100"
-          leave-to-class="opacity-0"
+        <input
+          type="checkbox"
+          class="sr-only"
+          :checked="modelValue"
+          :disabled="disabled"
+          @change="emit('update:modelValue', !modelValue)"
+        />
+
+        <!-- Thumb: position + size animated via inline style (allows per-direction easing) -->
+        <span
+          class="absolute left-1 top-1/2 flex h-6 w-6 items-center justify-center rounded-full will-change-transform"
+          :class="modelValue ? 'bg-on-primary shadow-sm' : 'bg-outline'"
+          :style="thumbStyle"
         >
-          <MIcon v-if="modelValue" name="check" :size="14" class="text-primary" />
-        </Transition>
+          <Transition
+            enter-active-class="transition-opacity duration-150 delay-[120ms]"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition-opacity duration-75"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+          >
+            <MIcon v-if="modelValue" name="check" :size="14" class="text-primary" />
+          </Transition>
+        </span>
       </span>
     </span>
     <span v-if="label" class="text-body-large text-on-surface">{{ label }}</span>

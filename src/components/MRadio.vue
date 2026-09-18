@@ -31,45 +31,47 @@ const checkedColor: Record<string, string> = {
     class="inline-flex items-center gap-3 select-none"
     :class="disabled ? 'cursor-not-allowed opacity-[0.38]' : 'cursor-pointer'"
   >
-    <span class="relative flex h-5 w-5 shrink-0">
-      <input
-        :id="id"
-        type="radio"
-        class="sr-only"
-        :checked="isChecked"
-        :disabled="disabled"
-        @change="emit('update:modelValue', value)"
-      />
-
-      <!--
-        SVG radio: vector circles sharing center (10,10) stay round + concentric
-        at any zoom. Outer ring uses r=8 (not 9) so the 2px stroke (7..9) leaves
-        ~1px of clearance to the viewBox edge — prevents the border getting
-        clipped at certain zoom levels.
-      -->
-      <svg
-        viewBox="0 0 20 20"
-        class="h-full w-full transition-colors duration-150"
-        :class="isChecked ? checkedColor[color] : 'text-on-surface-variant'"
-        aria-hidden="true"
-      >
-        <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="2" />
-        <!--
-          Dot scaled via CSS, but the transform-origin is pinned to the circle's
-          own bounding box center (transform-box: fill-box). Without this, the SVG
-          element origin is (0,0) of the viewBox, so scale() grows from a corner
-          and the dot visibly slides to the center. fill-box fixes the origin to
-          the dot itself, so it grows symmetrically in place.
-        -->
-        <circle
-          class="m3-radio-dot"
-          :class="{ 'is-checked': isChecked }"
-          cx="10"
-          cy="10"
-          r="4.5"
-          fill="currentColor"
+    <span class="relative -m-3.5 flex h-12 w-12 shrink-0 items-center justify-center">
+      <span class="relative flex h-5 w-5">
+        <input
+          :id="id"
+          type="radio"
+          class="sr-only"
+          :checked="isChecked"
+          :disabled="disabled"
+          @change="emit('update:modelValue', value)"
         />
-      </svg>
+
+        <!--
+          SVG radio: vector circles sharing center (10,10) stay round + concentric
+          at any zoom. Outer ring uses r=8 (not 9) so the 2px stroke (7..9) leaves
+          ~1px of clearance to the viewBox edge — prevents the border getting
+          clipped at certain zoom levels.
+        -->
+        <svg
+          viewBox="0 0 20 20"
+          class="h-full w-full transition-colors duration-150"
+          :class="isChecked ? checkedColor[color] : 'text-on-surface-variant'"
+          aria-hidden="true"
+        >
+          <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="2" />
+          <!--
+            Dot scaled via CSS, but the transform-origin is pinned to the circle's
+            own bounding box center (transform-box: fill-box). Without this, the SVG
+            element origin is (0,0) of the viewBox, so scale() grows from a corner
+            and the dot visibly slides to the center. fill-box fixes the origin to
+            the dot itself, so it grows symmetrically in place.
+          -->
+          <circle
+            class="m3-radio-dot"
+            :class="{ 'is-checked': isChecked }"
+            cx="10"
+            cy="10"
+            r="4.5"
+            fill="currentColor"
+          />
+        </svg>
+      </span>
     </span>
 
     <span v-if="label" class="text-body-large text-on-surface">{{ label }}</span>
