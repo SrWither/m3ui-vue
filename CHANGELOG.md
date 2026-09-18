@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.6.5] - 2026-09-17
+
+### Added
+- New component: `MLoadingIndicator` — M3 Expressive loading indicator that continuously morphs through a cycle of rounded shapes (soft burst, cookie, pentagon, pill, sunny, cookie, oval) while rotating. Timing/physics mirror `androidx.compose.material3.LoadingIndicator`: an underdamped spring (dampingRatio 0.6, stiffness 200, ~650ms per shape) drives both the morph and a synced +90° rotation swing on top of a slow constant spin, so the turn visually carries the shape change instead of the two reading as separate animations
+- `MLoadingIndicator` `contained` prop wraps the active shape in a filled container circle (M3's "contained" variant)
+- `MLoadingIndicator` `size` (default `48`) and `color` (`'primary' | 'secondary' | 'tertiary' | 'error'`, default `'primary'`) props, matching the conventions of `MProgressBar`/`MCircleProgressBar`
+- New component (beta): `MPullToRefresh` — wraps its own scrollable container and lets the user drag down from the top (mouse or touch, via Pointer Events) past a `threshold` to trigger a refresh; shows an `MLoadingIndicator` (contained variant) that scales/fades in with the pull and settles in place, inside the container with a gap from its edge, while `refreshing` is true. Controlled the same way as `MInfiniteScroll`'s `loading`/`load`: a `refreshing` prop the caller flips on in its `@refresh` handler and back off once the fetch resolves. Mainly relevant for a scroll container that isn't the page/window itself (the browser's native pull-to-refresh never fires inside a nested `overflow-y: auto` element) or for app shells (Capacitor/Electron/installed PWAs) where the OS/browser gesture may not fire at all. **Beta**: reliable on desktop and in Capacitor/Electron-style shells; in an actual mobile browser tab the touch drag can occasionally lose the race against the browser's own scroll/overscroll gesture recognition and release early — a known hard problem with drag-based pull-to-refresh on the open mobile web
+
 ## [0.6.4] - 2026-09-16
 
 ### Fixed

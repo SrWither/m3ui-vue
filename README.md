@@ -186,6 +186,7 @@ const name = ref('')
 | `MPageProgress` | Top/bottom page-loading bar, auto-wired to vue-router when present, or driven by hand via `usePageProgress()` |
 | `MSpinner` | Circular spinner |
 | `MLoadingIndicator` | M3 expressive loading indicator — morphs between rounded shapes (circle, cookie, pentagon, sunny, clover, ellipse); optional contained variant |
+| `MPullToRefresh` (beta) | Drag-to-refresh wrapper around its own scrollable container (mouse and touch via Pointer Events); mainly useful for a nested scroll panel or an app-shell context where the browser's own pull-to-refresh doesn't apply. Reliable on desktop/Electron/Capacitor; on a real mobile browser tab the touch drag can occasionally lose the race against native scroll gesture recognition and release early |
 | `MLoadingOverlay` | Full-area loading |
 | `MSkeleton` | Content skeleton loader |
 | `MEmptyState` | Empty state placeholder |
