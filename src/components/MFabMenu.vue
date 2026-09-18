@@ -9,11 +9,15 @@ export interface FabMenuItem {
   to?: string | Record<string, any>
   onClick?: () => void
   disabled?: boolean
+  /** Overrides the menu's own `color` for just this row. */
+  color?: 'primary' | 'secondary' | 'tertiary' | 'surface'
 }
 
 const props = withDefaults(
   defineProps<{
     icon: string
+    /** Shows the trigger as an extended FAB (icon + text) instead of icon-only. */
+    label?: string
     items: FabMenuItem[]
     color?: 'primary' | 'secondary' | 'tertiary' | 'surface'
     /** Trigger FAB size — independent from `itemSize` below. */
@@ -29,7 +33,7 @@ const props = withDefaults(
   {
     color: 'primary',
     size: 'regular',
-    itemSize: 'regular',
+    itemSize: 'large',
     direction: 'up',
     align: 'end',
     scrim: true,
@@ -49,10 +53,13 @@ const colorMap: Record<string, string> = {
   surface: 'bg-surface-container-high text-primary',
 }
 
+// 'large' matches the real FabMenuBaselineTokens: 56dp row height (py-4 +
+// 24px icon/line-height ≈ 56px), 24dp icon, 24dp horizontal padding, 8dp
+// icon-label gap, titleMedium text — and is the default, matching M3.
 const sizeClasses: Record<string, string> = {
   small: 'gap-2 px-3 py-2 text-label-medium',
   regular: 'gap-3 px-4 py-2.5 text-label-large',
-  large: 'gap-3 px-5 py-3.5 text-title-medium',
+  large: 'gap-2 px-6 py-4 text-title-medium',
 }
 const iconSize: Record<string, number> = { small: 18, regular: 20, large: 24 }
 
@@ -73,6 +80,7 @@ function handleItemClick(item: FabMenuItem, close: () => void) {
 <template>
   <MFab
     :icon="icon"
+    :label="label"
     :color="color"
     :size="size"
     :direction="direction"
@@ -97,7 +105,7 @@ function handleItemClick(item: FabMenuItem, close: () => void) {
           :to="item.to || undefined"
           :type="item.to ? undefined : 'button'"
           class="m3-fabmenu-item shrink-0 cursor-pointer rounded-full font-medium shadow-elevation-1 transition-shadow duration-150 hover:shadow-elevation-2 disabled:cursor-not-allowed disabled:opacity-[0.38]"
-          :class="[colorMap[color], revealClass]"
+          :class="[colorMap[item.color ?? color], revealClass]"
           :style="{ '--m3-fabmenu-delay': `${i * 35}ms` }"
           :disabled="item.disabled"
           @click="handleItemClick(item, close)"
