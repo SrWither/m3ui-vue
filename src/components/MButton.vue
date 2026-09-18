@@ -55,10 +55,26 @@ const isError = computed(() => props.color === 'error')
 const base =
   'relative inline-flex items-center justify-center gap-2 font-medium ' +
   'whitespace-nowrap overflow-hidden transition-[box-shadow,background-color,color] duration-150 select-none cursor-pointer ' +
-  'disabled:cursor-not-allowed disabled:opacity-[0.38] disabled:shadow-none ' +
+  'disabled:cursor-not-allowed disabled:shadow-none disabled:text-on-surface/38 ' +
   "before:content-[''] before:pointer-events-none before:absolute before:inset-0 " +
   'before:bg-current before:opacity-0 before:transition-opacity before:duration-150 ' +
   'enabled:hover:before:opacity-[0.08] enabled:active:before:opacity-[0.12]'
+
+// M3 disabled tokens: container at 12% on-surface opacity (variants with a filled
+// container or an outline), content/label always at 38% on-surface (handled in `base`
+// above, applies to every variant including text/elevated which have no container).
+const disabledContainerClasses = computed(() => {
+  switch (props.variant) {
+    case 'filled':
+    case 'tonal':
+    case 'elevated':
+      return 'disabled:bg-on-surface/12'
+    case 'outlined':
+      return 'disabled:border-on-surface/12'
+    default:
+      return ''
+  }
+})
 
 const shapeClass = computed(() => props.shape === 'squared' ? 'rounded-md' : 'rounded-full')
 
@@ -127,7 +143,7 @@ function createRipple(event: PointerEvent) {
     :to="to || undefined"
     :type="to ? undefined : type"
     :disabled="disabled || loading"
-    :class="[base, shapeClass, sizeClasses, px, variantClasses]"
+    :class="[base, shapeClass, sizeClasses, px, variantClasses, disabledContainerClasses]"
     :style="customStyle"
     @pointerdown="createRipple"
   >

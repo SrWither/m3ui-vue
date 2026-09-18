@@ -37,7 +37,21 @@ const resolved = computed(() => {
 
 const base =
   'inline-flex shrink-0 items-center justify-center transition-colors duration-150 cursor-pointer ' +
-  'disabled:cursor-not-allowed disabled:opacity-[0.38]'
+  'disabled:cursor-not-allowed disabled:text-on-surface/38'
+
+// M3 disabled tokens: container at 12% on-surface (filled/tonal/outlined have one,
+// standard doesn't), icon content always at 38% on-surface (handled in `base` above).
+const disabledContainerClasses = computed(() => {
+  switch (props.variant) {
+    case 'filled':
+    case 'tonal':
+      return 'disabled:bg-on-surface/12'
+    case 'outlined':
+      return 'disabled:border-on-surface/12'
+    default:
+      return ''
+  }
+})
 
 const shapeClass = computed(() => props.shape === 'squared' ? 'rounded-md' : 'rounded-full')
 
@@ -74,7 +88,7 @@ const variantClasses = computed(() => {
     :type="to ? undefined : 'button'"
     :aria-label="label || undefined"
     :disabled="disabled"
-    :class="[base, shapeClass, variantClasses, 'relative overflow-hidden']"
+    :class="[base, shapeClass, variantClasses, disabledContainerClasses, 'relative overflow-hidden']"
     :style="{ width: `${resolved.px}px`, height: `${resolved.px}px` }"
     @pointerdown="createRipple"
   >

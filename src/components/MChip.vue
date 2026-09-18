@@ -38,7 +38,16 @@ const customStyle = computed(() => {
   }
 })
 
+// M3 disabled tokens: label/icon always at 38% on-surface. Container: neutral/unselected
+// chips are outline-only (no fill), so the outline fades to 12%; every other tone has a
+// filled container, so the fill fades to 12% instead (and any border is dropped).
 const toneClasses = computed(() => {
+  if (props.disabled) {
+    if (props.tone === 'neutral' && !props.selected && !isCustomColor.value) {
+      return 'border border-on-surface/12 bg-transparent text-on-surface/38'
+    }
+    return 'border border-transparent bg-on-surface/12 text-on-surface/38'
+  }
   if (isCustomColor.value) {
     return 'border border-transparent bg-[var(--chip-bg)] text-[var(--chip-color)]'
   }
@@ -66,7 +75,7 @@ const toneClasses = computed(() => {
     :class="[
       toneClasses,
       clickable && !disabled ? 'cursor-pointer hover:bg-on-surface/8' : '',
-      disabled ? 'cursor-not-allowed opacity-[0.38]' : '',
+      disabled ? 'cursor-not-allowed' : '',
     ]"
     :style="customStyle"
     @click="clickable && !disabled && emit('click')"

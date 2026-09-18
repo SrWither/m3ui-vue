@@ -17,15 +17,15 @@ const emit = defineEmits<{ "update:modelValue": [boolean] }>();
 <template>
   <label
     class="inline-flex items-center gap-2 select-none"
-    :class="disabled ? 'cursor-not-allowed opacity-[0.38]' : 'cursor-pointer'"
+    :class="disabled ? 'cursor-not-allowed' : 'cursor-pointer'"
   >
     <span class="relative -m-[15px] inline-flex h-12 w-12 shrink-0 items-center justify-center">
       <span
         class="relative inline-flex h-4.5 w-4.5 items-center justify-center rounded-[3px] border-2 transition-colors"
         :class="
-          modelValue || indeterminate
-            ? 'border-primary bg-primary text-on-primary'
-            : 'border-on-surface-variant text-transparent'
+          disabled
+            ? (modelValue || indeterminate ? 'border-on-surface/38 bg-on-surface/38 text-surface' : 'border-on-surface/38 text-transparent')
+            : (modelValue || indeterminate ? 'border-primary bg-primary text-on-primary' : 'border-on-surface-variant text-transparent')
         "
       >
         <input
@@ -43,7 +43,11 @@ const emit = defineEmits<{ "update:modelValue": [boolean] }>();
         />
       </span>
     </span>
-    <span v-if="label || $slots.default" class="text-body-large text-on-surface">
+    <span
+      v-if="label || $slots.default"
+      class="text-body-large"
+      :class="disabled ? 'text-on-surface/38' : 'text-on-surface'"
+    >
       <slot>{{ label }}</slot>
     </span>
   </label>
