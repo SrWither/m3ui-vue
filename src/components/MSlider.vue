@@ -44,6 +44,7 @@ const emit = defineEmits<{ 'update:modelValue': [number | [number, number]] }>()
 
 const trackEl = ref<HTMLElement>()
 const dragging = ref<false | 'single' | 0 | 1>(false)
+const focused = ref(false)
 const isVertical = computed(() => props.orientation === 'vertical')
 const isRange = computed(() => props.variant === 'range')
 const isCentered = computed(() => props.variant === 'centered')
@@ -81,7 +82,9 @@ const endDotHidden = computed(() => {
 })
 
 const sizeMap = {
-  xs: { track: 16, thumbW: 4, thumbH: 32, dot: 4, gap: 7, hitArea: 38, radius: 6, dotInset: 12, thumbInset: 5, iconSize: 14, thumbIconSize: 22 },
+  // thumbH 44 matches SliderTokens.HandleHeight exactly — hitArea bumped from
+  // 38 to 46 to keep containing it (was sized for the old 32px handle).
+  xs: { track: 16, thumbW: 4, thumbH: 44, dot: 4, gap: 6, hitArea: 46, radius: 6, dotInset: 12, thumbInset: 5, iconSize: 14, thumbIconSize: 22 },
   sm: { track: 28, thumbW: 4, thumbH: 40, dot: 5, gap: 7, hitArea: 46, radius: 8, dotInset: 13, thumbInset: 6, iconSize: 16, thumbIconSize: 28 },
   md: { track: 54, thumbW: 5, thumbH: 62, dot: 5, gap: 8, hitArea: 66, radius: 12, dotInset: 15, thumbInset: 7, iconSize: 20, thumbIconSize: 42 },
   lg: { track: 72, thumbW: 5, thumbH: 78, dot: 6, gap: 10, hitArea: 82, radius: 14, dotInset: 17, thumbInset: 8, iconSize: 24, thumbIconSize: 52 },
@@ -105,26 +108,37 @@ const gap = computed(() => {
   return Math.max(s.value.gap, s.value.thumbIconSize / 2 + 4)
 })
 
-const paletteMap: Record<string, { active: string; inactive: string }> = {
-  primary: { active: 'var(--color-primary)', inactive: 'var(--color-primary-container)' },
-  secondary: { active: 'var(--color-secondary)', inactive: 'var(--color-secondary-container)' },
-  tertiary: { active: 'var(--color-tertiary)', inactive: 'var(--color-tertiary-container)' },
-  error: { active: 'var(--color-error)', inactive: 'var(--color-error-container)' },
+const activeColorMap: Record<string, string> = {
+  primary: 'var(--color-primary)',
+  secondary: 'var(--color-secondary)',
+  tertiary: 'var(--color-tertiary)',
+  error: 'var(--color-error)',
 }
 // `fillColor`/`thumbColor` accept a custom CSS color (hex, rgb(), a var, …) —
 // not just an M3 role — that's the point of a "custom color" prop, otherwise
 // it'd just duplicate `color`. A known role name still works as a shortcut.
-// For a custom color there's no ready-made "container" tone, so the inactive
-// shade is derived by mixing it down against the current surface.
-function resolvePalette(custom: string | undefined, base: 'primary' | 'secondary' | 'tertiary' | 'error') {
+function resolveActive(custom: string | undefined, base: 'primary' | 'secondary' | 'tertiary' | 'error') {
   const value = custom ?? base
-  if (value in paletteMap) return paletteMap[value]!
-  return { active: value, inactive: `color-mix(in srgb, ${value} 30%, var(--color-surface-container-highest))` }
+  return activeColorMap[value] ?? value
 }
+
+// M3's SliderTokens fix the inactive track/stop-indicator color to
+// secondary-container regardless of the active track's color (Inactive/Focus/
+// Pressed TrackColor are all SecondaryContainer) — never derived from the
+// active hue the way MCheckbox/MChip's containers are. Disabled state also
+// isn't a single blanket opacity: DisabledActiveTrackOpacity/DisabledHandleOpacity
+// = 38% on-surface, DisabledInactiveTrackOpacity = 12% on-surface.
+const DISABLED_ACTIVE = 'color-mix(in srgb, var(--color-on-surface) 38%, transparent)'
+const DISABLED_INACTIVE = 'color-mix(in srgb, var(--color-on-surface) 12%, transparent)'
+
 // `ct` (fill + corner dot) and `thumbCt` (thumb bar/icon) each fall back to the
 // base `color` prop, but can be overridden independently via `fillColor`/`thumbColor`.
-const ct = computed(() => resolvePalette(props.fillColor, props.color))
-const thumbCt = computed(() => resolvePalette(props.thumbColor, props.color))
+const ct = computed(() => props.disabled
+  ? { active: DISABLED_ACTIVE, inactive: DISABLED_INACTIVE }
+  : { active: resolveActive(props.fillColor, props.color), inactive: 'var(--color-secondary-container)' })
+const thumbCt = computed(() => props.disabled
+  ? { active: DISABLED_ACTIVE, inactive: DISABLED_INACTIVE }
+  : { active: resolveActive(props.thumbColor, props.color), inactive: 'var(--color-secondary-container)' })
 
 function clamp(v: number) {
   const stepped = Math.round((v - props.min) / props.step) * props.step + props.min
@@ -330,9 +344,13 @@ function thumbPos(pct: number) {
     transition: nd.value ? 'left 75ms ease, bottom 75ms ease, transform 80ms ease' : 'transform 80ms ease',
   }
   // Pressed state pinches the thumb thinner along the travel axis (like the
-  // official M3 slider handle) while slightly growing the cross axis.
+  // official M3 slider handle) while slightly growing the cross axis. Exact
+  // ratio matches SliderTokens.PressedHandleWidth/FocusHandleWidth = 2dp,
+  // i.e. half of the base 4dp width — applies on keyboard focus too, not
+  // just an active pointer drag (Compose's isFocused covers both).
+  const isNarrowed = isDragging || focused.value
   const grow = isDragging ? 1.08 : 1
-  const narrow = isDragging ? 0.6 : 1
+  const narrow = isNarrowed ? 0.5 : 1
   if (isVertical.value) {
     base.left = '50%'
     base.bottom = clampedPos(pct)
@@ -413,14 +431,16 @@ const tooltipPct = computed(() => {
         :aria-valuemax="max"
         :aria-disabled="disabled || undefined"
         :aria-orientation="orientation"
-        class="relative touch-none cursor-pointer outline-none"
-        :class="disabled && 'cursor-not-allowed opacity-[0.38]'"
+        class="group relative touch-none cursor-pointer outline-none"
+        :class="disabled && 'cursor-not-allowed'"
         :style="isVertical
           ? { width: `${s.hitArea}px`, minHeight: '160px', height: '100%' }
           : { height: `${s.hitArea}px`, width: '100%' }
         "
         @pointerdown="onPointerDown"
         @keydown="onKeyDown"
+        @focus="focused = true"
+        @blur="focused = false"
       >
         <!-- Track container -->
         <div
@@ -565,13 +585,15 @@ const tooltipPct = computed(() => {
           </template>
         </div>
 
-        <!-- Thumb(s) -->
+        <!-- Thumb(s) — only the pctLo thumb takes keyboard input (arrow keys only
+             move index 0 in range mode, see onKeyDown), so it's the only one that
+             gets the focus-visible ring. -->
         <template v-if="thumbIcon">
-          <MIcon :name="thumbIcon" :size="s.thumbIconSize" class="pointer-events-none" :style="thumbIconPos(pctLo)" />
+          <MIcon :name="thumbIcon" :size="s.thumbIconSize" class="pointer-events-none rounded-full group-focus-visible:ring-2 group-focus-visible:ring-primary group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-surface" :style="thumbIconPos(pctLo)" />
           <MIcon v-if="isRange" :name="thumbIcon" :size="s.thumbIconSize" class="pointer-events-none" :style="thumbIconPos(pctHi)" />
         </template>
         <template v-else>
-          <div class="pointer-events-none" :style="thumbPos(pctLo)" />
+          <div class="pointer-events-none group-focus-visible:ring-2 group-focus-visible:ring-primary group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-surface" :style="thumbPos(pctLo)" />
           <div v-if="isRange" class="pointer-events-none" :style="thumbPos(pctHi)" />
         </template>
 
