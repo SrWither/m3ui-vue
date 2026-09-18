@@ -5,7 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.6.5] - 2026-09-17
+## [0.7.0] - 2026-09-17
+
+### Fixed
+- `MTabs` `primary`/`secondary` indicator animation ported from `androidx.compose.material3.TabRow`'s `TabIndicatorOffsetNode`: the offset and width are now two independent spring simulations (dampingRatio 0.9, stiffness 700, M3's `DefaultSpatial` motion token) driven by a real per-frame rAF physics step, not a hand-choreographed CSS "expand-to-union-box, hold 150ms, then snap" — the natural "stretch" look comes from the two springs covering different distances under identical physics, not from manual bounding-box math, and switching tabs again mid-animation now carries velocity over smoothly instead of restarting
+- `MTabs`' separate `tabs`-prop watcher (for reacting to the tab list itself changing) was re-snapping the indicator with no animation on every change, including a plain reference swap with identical content — which raced with, and could silently cancel, an in-flight `modelValue`-triggered animation (most visibly if a consumer passes an inline `:tabs="[...]"` array literal, recreated on every unrelated re-render). It now animates too, which is a no-op when the target hasn't actually moved
 
 ### Added
 - New component: `MLoadingIndicator` — M3 Expressive loading indicator that continuously morphs through a cycle of rounded shapes (soft burst, cookie, pentagon, pill, sunny, cookie, oval) while rotating. Timing/physics mirror `androidx.compose.material3.LoadingIndicator`: an underdamped spring (dampingRatio 0.6, stiffness 200, ~650ms per shape) drives both the morph and a synced +90° rotation swing on top of a slow constant spin, so the turn visually carries the shape change instead of the two reading as separate animations
