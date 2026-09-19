@@ -61,15 +61,38 @@ const containerClasses = computed(() => {
   return 'inline-flex items-center gap-0.5'
 })
 
+// Dimensions matched to SplitButton{XSmall,Small,Medium,Large,XLarge}Tokens.kt: ContainerHeight,
+// TrailingIconSize, LeadingButton*Space (symmetric padding here vs the real tokens' slightly
+// asymmetric leading/trailing split — simplification, not worth separate left/right padding
+// classes), and resting InnerCorner*CornerSize (`ri`). `r` is always height/2 to keep the outer
+// shape a true pill (ContainerShape = CornerFull) regardless of tier.
 const sizeConfig = computed(() => {
   const map = {
-    xs: { h: 'h-8', w: 'w-8', px: 'px-3', text: 'text-label-medium', icon: 16, arrow: 16, r: 16, ri: 4 },
-    sm: { h: 'h-10', w: 'w-10', px: 'px-4', text: 'text-label-large', icon: 18, arrow: 18, r: 20, ri: 6 },
-    md: { h: 'h-14', w: 'w-14', px: 'px-5', text: 'text-title-medium', icon: 20, arrow: 20, r: 28, ri: 6 },
-    lg: { h: 'h-16', w: 'w-16', px: 'px-6', text: 'text-title-large', icon: 22, arrow: 22, r: 32, ri: 7 },
-    xl: { h: 'h-20', w: 'w-20', px: 'px-7', text: 'text-headline-small', icon: 24, arrow: 24, r: 40, ri: 8 },
+    xs: { h: 'h-8', w: 'w-8', px: 'px-3', text: 'text-label-medium', icon: 20, arrow: 22, r: 16, ri: 4 },
+    sm: { h: 'h-10', w: 'w-10', px: 'px-4', text: 'text-label-large', icon: 20, arrow: 22, r: 20, ri: 4 },
+    md: { h: 'h-14', w: 'w-14', px: 'px-6', text: 'text-title-medium', icon: 24, arrow: 26, r: 28, ri: 4 },
+    lg: { h: 'h-24', w: 'w-24', px: 'px-12', text: 'text-title-large', icon: 32, arrow: 38, r: 48, ri: 8 },
+    xl: { h: 'h-[136px]', w: 'w-[136px]', px: 'px-16', text: 'text-headline-small', icon: 40, arrow: 50, r: 68, ri: 12 },
   }
   return map[props.size] ?? map.sm
+})
+
+// M3 disabled tokens: content at 38% on-surface opacity, container at 10% (same split already
+// established for MButton) — replaces a blanket 38% opacity that was applied to the whole button.
+const buttonStateClasses = computed(() => {
+  if (props.disabled) {
+    return [
+      'text-on-surface/38',
+      props.variant === 'outlined' ? 'border border-outline-variant/10' : 'bg-on-surface/10',
+    ]
+  }
+  return [
+    colorStyles.value.bg,
+    colorStyles.value.text,
+    colorStyles.value.hover,
+    props.variant === 'outlined' ? 'border border-outline' : '',
+    props.variant === 'elevated' ? 'shadow-elevation-1' : '',
+  ]
 })
 
 function computeMenuPos() {
@@ -143,12 +166,8 @@ onUnmounted(() => {
       class="relative flex cursor-pointer items-center gap-2 overflow-hidden font-medium transition-colors"
       :class="[
         sizeConfig.h, sizeConfig.px, sizeConfig.text,
-        colorStyles.bg,
-        colorStyles.text,
-        colorStyles.hover,
-        variant === 'outlined' ? 'border border-outline' : '',
-        variant === 'elevated' ? 'shadow-elevation-1' : '',
-        disabled ? 'pointer-events-none opacity-[0.38]' : '',
+        buttonStateClasses,
+        disabled ? 'pointer-events-none' : '',
       ]"
       :style="{ borderRadius: `${sizeConfig.r}px ${sizeConfig.ri}px ${sizeConfig.ri}px ${sizeConfig.r}px` }"
       :disabled="disabled"
@@ -165,12 +184,8 @@ onUnmounted(() => {
       class="toggle-btn relative flex cursor-pointer items-center justify-center overflow-hidden"
       :class="[
         sizeConfig.h, sizeConfig.w,
-        colorStyles.bg,
-        colorStyles.text,
-        colorStyles.hover,
-        variant === 'outlined' ? 'border border-outline' : '',
-        variant === 'elevated' ? 'shadow-elevation-1' : '',
-        disabled ? 'pointer-events-none opacity-[0.38]' : '',
+        buttonStateClasses,
+        disabled ? 'pointer-events-none' : '',
       ]"
       :style="{ borderRadius: open ? `${sizeConfig.r}px` : `${sizeConfig.ri}px ${sizeConfig.r}px ${sizeConfig.r}px ${sizeConfig.ri}px` }"
       :disabled="disabled"
