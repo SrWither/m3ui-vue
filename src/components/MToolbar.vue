@@ -56,12 +56,14 @@ const isVertical = computed(() => props.orientation === 'vertical')
     <div
       class="flex items-center gap-1"
       :class="[
-        isVertical ? 'flex-col py-3 px-2' : 'flex-row px-3 py-2',
+        isVertical ? 'flex-col w-16' : 'flex-row h-16',
+        isVertical ? (variant === 'floating' ? 'py-2' : 'py-4') : (variant === 'floating' ? 'px-2' : 'px-4'),
         alignClass,
         colorClasses,
-        variant === 'floating' ? 'rounded-2xl shadow-elevation-2' : '',
+        variant === 'floating' ? 'rounded-full' : '',
+        variant === 'floating' && fabPosition !== 'none' ? 'shadow-elevation-1' : '',
         variant === 'docked' ? 'w-full border-t border-outline-variant' : '',
-        variant === 'docked' && isVertical ? 'h-full w-auto border-t-0 border-r border-outline-variant' : '',
+        variant === 'docked' && isVertical ? 'h-full w-16 border-t-0 border-r border-outline-variant' : '',
       ]"
     >
       <slot />
