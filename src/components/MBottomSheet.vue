@@ -43,22 +43,22 @@ const sheetStyle = computed(() => ({
     <Transition name="bs" :duration="{ enter: 320, leave: 280 }">
       <div v-if="modelValue" class="fixed inset-0 z-200 flex flex-col justify-end">
         <!-- Scrim -->
-        <div class="bs-scrim absolute inset-0 bg-scrim/40" @click="close" />
+        <div class="bs-scrim absolute inset-0 bg-scrim/32" @click="close" />
 
         <!-- Panel -->
         <div
-          class="bs-panel relative flex w-full flex-col rounded-t-xl bg-surface-container-low shadow-elevation-3"
+          class="bs-panel relative mx-auto flex w-full max-w-[640px] flex-col rounded-t-[28px] bg-surface-container-low shadow-elevation-1"
           :class="fullHeight ? 'max-h-[92vh]' : 'max-h-[60vh]'"
           :style="sheetStyle"
         >
           <!-- Drag handle -->
           <div
-            class="flex h-9 shrink-0 cursor-grab touch-none select-none items-center justify-center active:cursor-grabbing"
+            class="flex h-12 shrink-0 cursor-grab touch-none select-none items-center justify-center active:cursor-grabbing"
             @pointerdown="onHandlePointerDown"
             @pointermove="onHandlePointerMove"
             @pointerup="onHandlePointerUp"
           >
-            <div class="h-1 w-8 rounded-full bg-on-surface-variant/40" />
+            <div class="h-1 w-8 rounded-full bg-on-surface-variant" />
           </div>
 
           <!-- Header -->
