@@ -172,26 +172,27 @@ onUnmounted(() => {
     <div ref="triggerEl" class="relative mt-2" :style="{ '--field-bg': resolvedFieldBg }">
       <button
         type="button"
-        class="flex h-14 w-full items-center gap-3 rounded-sm border bg-transparent px-4 text-left text-body-large transition-[border-color,border-width] duration-150"
+        class="flex h-14 w-full items-center gap-3 rounded-xs border bg-transparent px-4 text-left text-body-large transition-[border-color,border-width] duration-150"
         :class="[
-          disabled ? 'pointer-events-none opacity-[0.38]' : 'cursor-pointer',
-          open
+          disabled ? 'pointer-events-none cursor-not-allowed border-on-surface/12' : 'cursor-pointer',
+          !disabled && (open
             ? error ? 'border-2 border-error' : 'border-2 border-primary'
-            : error ? 'border-error' : 'border-outline hover:border-on-surface',
+            : error ? 'border-error' : 'border-outline hover:border-on-surface'),
         ]"
         @click="!disabled && (open = !open)"
       >
         <span
           class="h-6 w-6 shrink-0 rounded-full border border-outline-variant"
+          :class="disabled ? 'opacity-38' : ''"
           :style="{ backgroundColor: modelValue }"
         />
-        <span class="flex-1 font-mono text-on-surface">{{ modelValue }}</span>
-        <MIcon name="palette" :size="20" class="shrink-0 text-on-surface-variant" />
+        <span class="flex-1 font-mono" :class="disabled ? 'text-on-surface/38' : 'text-on-surface'">{{ modelValue }}</span>
+        <MIcon name="palette" :size="24" class="shrink-0" :class="disabled ? 'text-on-surface/38' : 'text-on-surface-variant'" />
       </button>
       <label
         v-if="label"
         class="pointer-events-none absolute -top-2.5 left-3 bg-(--field-bg) px-1 text-label-small transition-colors"
-        :class="open ? (error ? 'text-error' : 'text-primary') : error ? 'text-error' : 'text-on-surface-variant'"
+        :class="disabled ? 'text-on-surface/38' : open ? (error ? 'text-error' : 'text-primary') : error ? 'text-error' : 'text-on-surface-variant'"
       >
         {{ label }}
       </label>
@@ -254,7 +255,7 @@ onUnmounted(() => {
               type="text"
               :value="modelValue"
               maxlength="7"
-              class="flex-1 rounded-sm border border-outline bg-transparent px-3 py-2 font-mono text-body-medium text-on-surface outline-none transition-colors focus:border-primary"
+              class="flex-1 rounded-xs border border-outline bg-transparent px-3 py-2 font-mono text-body-medium text-on-surface outline-none caret-primary transition-colors focus:border-primary"
               @input="onHexInput"
             />
           </div>

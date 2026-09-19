@@ -228,7 +228,7 @@ function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') cancel() }
               type="text"
               placeholder="23/06/2026"
               maxlength="10"
-              class="h-14 w-full rounded-sm border border-outline bg-transparent px-4 text-body-large text-on-surface outline-none transition-colors focus:border-2 focus:border-primary"
+              class="h-14 w-full rounded-xs border border-outline bg-transparent px-4 text-body-large text-on-surface caret-primary outline-none transition-colors focus:border-2 focus:border-primary"
               @keydown.enter="applyInput"
               @blur="applyInput"
             />

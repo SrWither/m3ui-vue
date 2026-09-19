@@ -135,6 +135,7 @@ function toggle(value: unknown) {
 
 function removeChip(value: unknown, e: Event) {
   e.stopPropagation()
+  if (props.disabled) return
   emit('update:modelValue', props.modelValue.filter((v) => !eq(v, value)))
   nextTick(() => inputEl.value?.focus())
 }
@@ -297,23 +298,23 @@ const triggerClasses = computed(() => {
   ]
 
   if (props.variant === 'outlined') {
-    return [
-      ...base,
-      'rounded-sm border bg-transparent py-2',
-      open.value
+    const border = props.disabled
+      ? 'border-on-surface/12'
+      : open.value
         ? (props.error ? 'border-2 border-error' : 'border-2 border-primary')
-        : (props.error ? 'border-error' : 'border-outline hover:border-on-surface'),
-    ].join(' ')
+        : (props.error ? 'border-error' : 'border-outline hover:border-on-surface')
+    return [...base, 'rounded-xs border bg-transparent py-2', border].join(' ')
   }
 
-  return [
-    ...base,
-    'rounded-t-sm bg-surface-container-highest border-b pb-2',
-    isFloated.value ? 'pt-7' : 'pt-4',
-    open.value
+  const border = props.disabled
+    ? 'border-on-surface/38'
+    : open.value
       ? (props.error ? 'border-b-2 border-error' : 'border-b-2 border-primary')
-      : (props.error ? 'border-error' : 'border-on-surface-variant hover:border-on-surface'),
-  ].join(' ')
+      : (props.error ? 'border-error' : 'border-on-surface-variant hover:border-on-surface')
+  const bg = props.disabled
+    ? 'bg-[color-mix(in_srgb,var(--color-on-surface)_4%,var(--color-surface-container-highest))]'
+    : 'bg-surface-container-highest'
+  return [...base, 'rounded-t-xs border-b pb-2', isFloated.value ? 'pt-7' : 'pt-4', bg, border].join(' ')
 })
 
 const labelClasses = computed(() => {
@@ -333,9 +334,11 @@ const labelClasses = computed(() => {
     'pointer-events-none absolute right-10 truncate transition-all duration-200',
     left,
     isFloated.value ? floated : unFloated,
-    open.value
-      ? (props.error ? 'text-error' : 'text-primary')
-      : (props.error ? 'text-error' : 'text-on-surface-variant'),
+    props.disabled
+      ? 'text-on-surface/38'
+      : open.value
+        ? (props.error ? 'text-error' : 'text-primary')
+        : (props.error ? 'text-error' : 'text-on-surface-variant'),
   ].join(' ')
 })
 </script>
@@ -351,17 +354,20 @@ const labelClasses = computed(() => {
       <!-- Leading icon -->
       <div
         v-if="leadingIcon"
-        class="pointer-events-none absolute left-3.5 text-on-surface-variant"
-        :class="variant === 'filled' ? 'top-5' : 'top-4.5'"
+        class="pointer-events-none absolute left-3.5"
+        :class="[
+          variant === 'filled' ? 'top-4.5' : 'top-4',
+          disabled ? 'text-on-surface/38' : 'text-on-surface-variant',
+        ]"
       >
-        <MIcon :name="leadingIcon" :size="20" />
+        <MIcon :name="leadingIcon" :size="24" />
       </div>
 
       <!-- Trigger field with chips and inline input -->
       <div
         :class="[
           triggerClasses,
-          disabled ? 'pointer-events-none opacity-[0.38]' : 'cursor-text',
+          disabled ? 'pointer-events-none' : 'cursor-text',
         ]"
         @click="inputEl?.focus()"
       >
@@ -369,10 +375,12 @@ const labelClasses = computed(() => {
           <span
             v-for="(chip, i) in displayChips"
             :key="i"
-            class="inline-flex items-center gap-1 rounded-full bg-secondary-container px-2 py-0.5 text-label-small text-on-secondary-container"
+            class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-label-small"
+            :class="disabled ? 'bg-on-surface/12 text-on-surface/38' : 'bg-secondary-container text-on-secondary-container'"
           >
             {{ chip.label }}
             <button
+              v-if="!disabled"
               type="button"
               class="flex h-4 w-4 items-center justify-center rounded-full hover:bg-on-secondary-container/20"
               @click="removeChip(chip.value, $event)"
@@ -408,7 +416,11 @@ const labelClasses = computed(() => {
           role="combobox"
           :aria-expanded="open"
           :aria-disabled="disabled"
-          class="flex-1 min-w-[60px] bg-transparent text-on-surface text-body-large outline-none placeholder:text-on-surface-variant"
+          :class="[
+            'flex-1 min-w-[60px] bg-transparent text-body-large outline-none placeholder:text-on-surface-variant',
+            error ? 'caret-error' : 'caret-primary',
+            disabled ? 'text-on-surface/38' : 'text-on-surface',
+          ]"
           @focus="onInputFocus"
           @blur="onInputBlur"
           @input="onInput"
@@ -436,8 +448,11 @@ const labelClasses = computed(() => {
         <MIcon
           name="arrow_drop_down"
           :size="24"
-          class="text-on-surface-variant transition-transform duration-200"
-          :class="open || modalOpen ? 'rotate-180' : ''"
+          class="transition-transform duration-200"
+          :class="[
+            open || modalOpen ? 'rotate-180' : '',
+            disabled ? 'text-on-surface/38' : 'text-on-surface-variant',
+          ]"
         />
       </div>
     </div>
@@ -459,7 +474,7 @@ const labelClasses = computed(() => {
       <div
         v-if="open && mode === 'docked'"
         ref="dropdownEl"
-        class="fixed z-500 max-h-60 overflow-auto rounded-sm bg-surface-container shadow-elevation-2"
+        class="fixed z-500 max-h-60 overflow-auto rounded-xs bg-surface-container shadow-elevation-2"
         :style="dropPos"
       >
         <div class="flex flex-col py-1">

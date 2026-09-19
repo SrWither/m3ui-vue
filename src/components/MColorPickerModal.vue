@@ -205,7 +205,7 @@ function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') cancel() }
               type="text"
               :value="hexInput"
               maxlength="7"
-              class="w-full rounded-sm border border-outline bg-transparent px-3 py-2 font-mono text-body-medium text-on-surface outline-none transition-colors focus:border-primary"
+              class="w-full rounded-xs border border-outline bg-transparent px-3 py-2 font-mono text-body-medium text-on-surface caret-primary outline-none transition-colors focus:border-primary"
               @input="onHexFieldInput"
             />
           </div>

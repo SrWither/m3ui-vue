@@ -148,23 +148,26 @@ watch(
 
 const boxClasses = computed(() => {
   const base = [
-    'h-14 w-12 text-center text-title-large text-on-surface outline-none',
+    'h-14 w-12 text-center text-title-large outline-none',
     'transition-[border-color,border-width] duration-150',
-    'disabled:cursor-not-allowed disabled:opacity-[0.38]',
+    'disabled:cursor-not-allowed disabled:text-on-surface/38',
+    props.error ? 'caret-error' : 'caret-primary',
   ]
   if (props.variant === 'outlined') {
     return [...base,
-      'rounded-sm border bg-transparent',
+      'rounded-xs border bg-transparent text-on-surface',
       props.error
         ? 'border-error focus:border-2 focus:border-error'
         : 'border-outline hover:border-on-surface focus:border-2 focus:border-primary',
+      'disabled:border-on-surface/12',
     ].join(' ')
   }
   return [...base,
-    'rounded-t-sm bg-surface-container-highest border-b',
+    'rounded-t-xs bg-surface-container-highest border-b text-on-surface',
     props.error
       ? 'border-error focus:border-b-2 focus:border-error'
       : 'border-on-surface-variant hover:border-on-surface focus:border-b-2 focus:border-primary',
+    'disabled:border-on-surface/38 disabled:bg-[color-mix(in_srgb,var(--color-on-surface)_4%,var(--color-surface-container-highest))]',
   ].join(' ')
 })
 </script>

@@ -167,18 +167,18 @@ onUnmounted(() => {
     <div ref="triggerEl" class="relative mt-2" :style="{ '--field-bg': resolvedFieldBg }">
       <button
         type="button"
-        class="flex h-14 w-full items-center gap-2 rounded-sm border bg-transparent px-4 text-left text-body-large transition-[border-color,border-width] duration-150"
+        class="flex h-14 w-full items-center gap-2 rounded-xs border bg-transparent px-4 text-left text-body-large transition-[border-color,border-width] duration-150"
         :class="[
-          disabled ? 'pointer-events-none opacity-[0.38]' : 'cursor-pointer',
-          open
+          disabled ? 'pointer-events-none cursor-not-allowed border-on-surface/12' : 'cursor-pointer',
+          !disabled && (open
             ? error ? 'border-2 border-error' : 'border-2 border-primary'
-            : error ? 'border-error' : 'border-outline hover:border-on-surface',
+            : error ? 'border-error' : 'border-outline hover:border-on-surface'),
         ]"
         @click="!disabled && (open = !open)"
       >
-        <MIcon name="calendar_today" :size="20" class="shrink-0 text-on-surface-variant" />
-        <span v-if="displayValue" class="flex-1 text-on-surface">{{ displayValue }}</span>
-        <span v-else class="flex-1 text-on-surface-variant">{{ placeholder || label || localeStrings.selectDate }}</span>
+        <MIcon name="calendar_today" :size="24" class="shrink-0" :class="disabled ? 'text-on-surface/38' : 'text-on-surface-variant'" />
+        <span v-if="displayValue" class="flex-1" :class="disabled ? 'text-on-surface/38' : 'text-on-surface'">{{ displayValue }}</span>
+        <span v-else class="flex-1" :class="disabled ? 'text-on-surface/38' : 'text-on-surface-variant'">{{ placeholder || label || localeStrings.selectDate }}</span>
         <MIcon
           v-if="modelValue"
           name="close"
@@ -190,7 +190,7 @@ onUnmounted(() => {
       <label
         v-if="label"
         class="pointer-events-none absolute -top-2.5 left-3 bg-(--field-bg) px-1 text-label-small transition-colors"
-        :class="open ? (error ? 'text-error' : 'text-primary') : error ? 'text-error' : 'text-on-surface-variant'"
+        :class="disabled ? 'text-on-surface/38' : open ? (error ? 'text-error' : 'text-primary') : error ? 'text-error' : 'text-on-surface-variant'"
       >
         {{ label }}
       </label>
