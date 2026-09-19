@@ -11,11 +11,20 @@ const props = withDefaults(
     persistent?: boolean
     fullscreen?: boolean
     closeLabel?: string
+    /**
+     * Whether the header shows a close ("X") icon button. M3's `AlertDialog` spec has no such
+     * button — it expects only a Cancel/Confirm text button in the actions row — so this is a
+     * deliberate library extension on top of the spec, kept opt-out (default `true`, matching
+     * this component's existing behavior) rather than added unconditionally.
+     */
+    closable?: boolean
   }>(),
   {
-    maxWidth: 'max-w-md',
+    // AlertDialogDefaults.DialogMaxWidth = 560dp
+    maxWidth: 'max-w-[560px]',
     persistent: false,
     fullscreen: false,
+    closable: true,
   },
 )
 
@@ -56,19 +65,55 @@ watch(
         @click.self="close"
       >
         <div
-          class="dialog-box flex max-h-[90vh] w-full flex-col rounded-xl bg-surface-container-high shadow-elevation-3"
+          class="dialog-box flex max-h-[90vh] min-w-[280px] w-full flex-col rounded-xl bg-surface-container-high shadow-elevation-3"
           :class="maxWidth"
         >
-          <div class="flex items-start justify-between gap-4 px-6 pt-6 pb-2">
-            <h2 class="text-headline-small text-on-surface">
+          <!--
+            AlertDialogDefaults.dialogPadding is 24dp on all four sides of the whole content
+            column, with per-element bottom paddings (IconPadding/TitlePadding/textPadding)
+            providing the gaps BETWEEN elements — not a single wrapping padding, since this
+            template uses separate divs per section instead of one padded Column. Each
+            section's own top/bottom classes are chosen so the combined gaps still land on
+            the right dp value: title-to-body is 16dp (8px here + 8px there), body-to-actions
+            is 24dp (8px here + 16px there), and the outermost edges (top of title, bottom of
+            whichever section is last) are the full 24dp on their own.
+          -->
+          <div class="relative px-6 pt-6 pb-2">
+            <!--
+              Wrapped in a plain div rather than passing `absolute right-4 top-4` straight to
+              MIconButton: its root already carries its own `relative` (for the ripple span),
+              and Tailwind resolves conflicting position utilities by source order in the
+              compiled CSS, not by order in the class attribute — so an external `absolute`
+              can silently lose to that internal `relative` instead of overriding it.
+            -->
+            <div v-if="closable && !persistent" class="absolute right-4 top-4">
+              <MIconButton icon="close" :label="closeLabel ?? locale.close" @click="close" />
+            </div>
+            <!--
+              Icon slot: M3 AlertDialog's optional `icon` param (IconColor=Secondary,
+              IconSize=24dp expected from the slot content, IconPadding bottom=16dp below it),
+              which per spec also centers the title ("Align the title to the center when an
+              icon is present") — reserving `pr-10` on the title only when the close button is
+              also showing, so a centered title doesn't collide with it.
+            -->
+            <div v-if="$slots.icon" class="mb-4 flex justify-center text-secondary">
+              <slot name="icon" />
+            </div>
+            <h2
+              class="text-headline-small text-on-surface"
+              :class="[$slots.icon ? 'text-center' : 'text-left', closable && !persistent ? 'pr-10' : '']"
+            >
               <slot name="title">{{ title }}</slot>
             </h2>
-            <MIconButton v-if="!persistent" icon="close" :label="closeLabel ?? locale.close" @click="close" />
           </div>
-          <div class="overflow-y-auto px-6 py-2 text-body-medium text-on-surface-variant">
+          <div
+            class="overflow-y-auto px-6 pt-2 text-body-medium text-on-surface-variant"
+            :class="$slots.actions ? 'pb-2' : 'pb-6'"
+          >
             <slot />
           </div>
-          <div v-if="$slots.actions" class="flex justify-end gap-2 px-6 py-4">
+          <!-- flex-wrap approximates AlertDialogFlowRow: buttons wrap to a new line instead of overflowing when labels are too long to fit on one -->
+          <div v-if="$slots.actions" class="flex flex-wrap justify-end gap-2 px-6 pt-4 pb-6">
             <slot name="actions" />
           </div>
         </div>
