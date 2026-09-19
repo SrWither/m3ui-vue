@@ -52,7 +52,8 @@ const inputClasses = computed(() => {
   const base = [
     "peer block w-full text-body-large text-on-surface outline-none placeholder:text-transparent",
     "transition-[border-color,border-width] duration-150",
-    "disabled:cursor-not-allowed disabled:opacity-[0.38]",
+    "disabled:cursor-not-allowed disabled:text-on-surface/38",
+    props.error ? "caret-error" : "caret-primary",
     size,
     pl,
     pr,
@@ -61,19 +62,21 @@ const inputClasses = computed(() => {
   if (props.variant === "outlined") {
     return [
       ...base,
-      "rounded-sm border bg-transparent py-4",
+      "rounded-xs border bg-transparent py-4",
       props.error
         ? "border-error focus:border-2 focus:border-error"
         : "border-outline hover:border-on-surface focus:border-2 focus:border-primary",
+      "disabled:border-on-surface/12",
     ].join(" ");
   }
 
   return [
     ...base,
-    "rounded-t-sm bg-surface-container-highest border-b pt-6 pb-2",
+    "rounded-t-xs bg-surface-container-highest border-b pt-6 pb-2",
     props.error
       ? "border-error focus:border-b-2 focus:border-error"
       : "border-on-surface-variant hover:border-on-surface focus:border-b-2 focus:border-primary",
+    "disabled:border-on-surface/38 disabled:bg-[color-mix(in_srgb,var(--color-on-surface)_4%,var(--color-surface-container-highest))]",
   ].join(" ");
 });
 
@@ -106,6 +109,7 @@ const labelClasses = computed(() => {
       props.error
         ? "text-error peer-focus:text-error"
         : "text-on-surface-variant peer-focus:text-primary",
+      "peer-disabled:text-on-surface/38",
     ].join(" ");
   }
 
@@ -117,6 +121,7 @@ const labelClasses = computed(() => {
     props.error
       ? "text-error peer-focus:text-error"
       : "text-on-surface-variant peer-focus:text-primary",
+    "peer-disabled:text-on-surface/38",
   ].join(" ");
 });
 
@@ -142,10 +147,13 @@ function onInput(event: Event) {
     >
       <div
         v-if="leadingIcon"
-        class="pointer-events-none absolute left-3.5 text-on-surface-variant"
-        :class="multiline ? 'top-[55%] -translate-y-1/2' : variant === 'filled' ? 'top-5' : 'top-4.5'"
+        class="pointer-events-none absolute left-3.5"
+        :class="[
+          multiline ? 'top-[55%] -translate-y-1/2' : variant === 'filled' ? 'top-4.5' : 'top-4',
+          disabled ? 'text-on-surface/38' : 'text-on-surface-variant',
+        ]"
       >
-        <MIcon :name="leadingIcon" :size="20" />
+        <MIcon :name="leadingIcon" :size="24" />
       </div>
 
       <textarea

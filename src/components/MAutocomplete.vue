@@ -248,22 +248,23 @@ const triggerClasses = computed(() => {
   ]
 
   if (props.variant === 'outlined') {
-    return [
-      ...base,
-      'h-14 rounded-sm border bg-transparent',
-      open.value
+    const border = props.disabled
+      ? 'border-on-surface/12'
+      : open.value
         ? (props.error ? 'border-2 border-error' : 'border-2 border-primary')
-        : (props.error ? 'border-error' : 'border-outline hover:border-on-surface'),
-    ].join(' ')
+        : (props.error ? 'border-error' : 'border-outline hover:border-on-surface')
+    return [...base, 'h-14 rounded-xs border bg-transparent', border].join(' ')
   }
 
-  return [
-    ...base,
-    'h-14 rounded-t-sm bg-surface-container-highest border-b pt-6 pb-2',
-    open.value
+  const border = props.disabled
+    ? 'border-on-surface/38'
+    : open.value
       ? (props.error ? 'border-b-2 border-error' : 'border-b-2 border-primary')
-      : (props.error ? 'border-error' : 'border-on-surface-variant hover:border-on-surface'),
-  ].join(' ')
+      : (props.error ? 'border-error' : 'border-on-surface-variant hover:border-on-surface')
+  const bg = props.disabled
+    ? 'bg-[color-mix(in_srgb,var(--color-on-surface)_4%,var(--color-surface-container-highest))]'
+    : 'bg-surface-container-highest'
+  return [...base, 'h-14 rounded-t-xs border-b pt-6 pb-2', bg, border].join(' ')
 })
 
 const isFloated = computed(() => hasValue.value || open.value)
@@ -288,6 +289,7 @@ const labelClasses = computed(() => {
     open.value
       ? (props.error ? 'text-error' : 'text-primary')
       : (props.error ? 'text-error' : 'text-on-surface-variant'),
+    'peer-disabled:text-on-surface/38',
   ].join(' ')
 })
 </script>
@@ -303,10 +305,13 @@ const labelClasses = computed(() => {
       <!-- Leading icon -->
       <div
         v-if="leadingIcon"
-        class="pointer-events-none absolute left-3.5 text-on-surface-variant"
-        :class="variant === 'filled' ? 'top-5' : 'top-4.5'"
+        class="pointer-events-none absolute left-3.5"
+        :class="[
+          variant === 'filled' ? 'top-4.5' : 'top-4',
+          disabled ? 'text-on-surface/38' : 'text-on-surface-variant',
+        ]"
       >
-        <MIcon :name="leadingIcon" :size="20" />
+        <MIcon :name="leadingIcon" :size="24" />
       </div>
 
       <!-- Input trigger -->
@@ -323,8 +328,9 @@ const labelClasses = computed(() => {
         :aria-disabled="disabled"
         :class="[
           triggerClasses,
-          'outline-none text-on-surface',
-          disabled ? 'pointer-events-none opacity-[0.38]' : 'cursor-text',
+          'peer outline-none text-on-surface cursor-text',
+          error ? 'caret-error' : 'caret-primary',
+          'disabled:pointer-events-none disabled:cursor-not-allowed disabled:text-on-surface/38',
         ]"
         @focus="onInputFocus"
         @blur="onInputBlur"
@@ -352,8 +358,11 @@ const labelClasses = computed(() => {
         <MIcon
           name="arrow_drop_down"
           :size="24"
-          class="text-on-surface-variant transition-transform duration-200"
-          :class="open || modalOpen ? 'rotate-180' : ''"
+          class="transition-transform duration-200"
+          :class="[
+            open || modalOpen ? 'rotate-180' : '',
+            disabled ? 'text-on-surface/38' : 'text-on-surface-variant',
+          ]"
         />
       </div>
     </div>
@@ -375,7 +384,7 @@ const labelClasses = computed(() => {
       <div
         v-if="open && mode === 'docked'"
         ref="dropdownEl"
-        class="fixed z-500 max-h-60 overflow-auto rounded-sm bg-surface-container py-1 shadow-elevation-2"
+        class="fixed z-500 max-h-60 overflow-auto rounded-xs bg-surface-container py-1 shadow-elevation-2"
         :style="dropPos"
       >
         <div
