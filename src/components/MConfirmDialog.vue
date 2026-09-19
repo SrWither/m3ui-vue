@@ -12,10 +12,13 @@ const props = withDefaults(
     cancelLabel?: string
     danger?: boolean
     loading?: boolean
+    /** Passed straight through to MDialog's `closable` — show/hide the header close (X) button. */
+    closable?: boolean
   }>(),
   {
     danger: false,
     loading: false,
+    closable: true,
   },
 )
 
@@ -29,6 +32,7 @@ const emit = defineEmits<{ 'update:modelValue': [boolean]; confirm: [] }>()
     :model-value="modelValue"
     :title="title"
     max-width="max-w-sm"
+    :closable="closable"
     @update:model-value="emit('update:modelValue', $event)"
   >
     <p class="text-body-medium text-on-surface-variant">{{ message }}</p>
