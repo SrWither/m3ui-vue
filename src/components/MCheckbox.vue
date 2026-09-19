@@ -14,39 +14,81 @@ withDefaults(
 
 const emit = defineEmits<{ "update:modelValue": [boolean] }>();
 
-// Same 4 named colors + fallback shape as MRadio's checkedColor map.
+// Same 4 named colors + fallback shape as MRadio's checkedColor map. M3's real
+// CheckboxTokens only define Primary (SelectedContainerColor) and Error (as an error
+// STATE, not a color variant) — secondary/tertiary are a deliberate library extension on
+// top of the spec, same status as MSlider's `color`/`icon` props.
 const checkedClasses: Record<string, string> = {
   primary: "border-primary bg-primary text-on-primary",
   secondary: "border-secondary bg-secondary text-on-secondary",
   tertiary: "border-tertiary bg-tertiary text-on-tertiary",
   error: "border-error bg-error text-on-error",
 };
+
+// Just the fill color, reused for the hover/press state layer's tint below.
+const checkedBgClasses: Record<string, string> = {
+  primary: "bg-primary",
+  secondary: "bg-secondary",
+  tertiary: "bg-tertiary",
+  error: "bg-error",
+};
 </script>
 
 <template>
   <label
-    class="inline-flex items-center gap-2 select-none"
+    class="group inline-flex items-center gap-2 select-none"
     :class="disabled ? 'cursor-not-allowed' : 'cursor-pointer'"
   >
-    <span class="relative -m-[15px] inline-flex h-12 w-12 shrink-0 items-center justify-center">
+    <!--
+      Input is a sibling (not an ancestor/descendant) of the state-layer span below so
+      `peer-focus-visible:` can target it — peer-* relies on the CSS general sibling
+      combinator, which only matches true siblings, unlike `group-*` (used for hover/press
+      below instead) which works through any depth of nesting from the `group` on <label>.
+    -->
+    <input
+      type="checkbox"
+      class="peer sr-only"
+      :checked="modelValue"
+      :disabled="disabled"
+      @change="emit('update:modelValue', !modelValue)"
+    />
+
+    <!--
+      CheckboxTokens.StateLayerSize = 40dp (was 48px), StateLayerShape = CornerFull. The
+      negative margin cancels the touch target's own overhang past the visible 18px box
+      (40-18)/2 = 11px per side, so it doesn't push the label text over.
+    -->
+    <span class="relative -m-[11px] inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+      <!--
+        Hover/press state layer (8%/12%), tinted with the checkbox's own indicator color
+        (primary/color prop when checked, on-surface when not) — same `before:`-overlay
+        spirit as MButton/MCard/MIconButton, just a real sibling span here since the parent
+        span is already used for centering/sizing. `group-*` (not a plain `hover:`) so
+        hovering anywhere over the row (including the label text) triggers it, not just
+        the small 18px glyph itself.
+      -->
       <span
-        class="relative inline-flex h-4.5 w-4.5 items-center justify-center rounded-[3px] border-2 transition-colors"
+        v-if="!disabled"
+        class="pointer-events-none absolute inset-0 rounded-full opacity-0 transition-opacity duration-150 group-hover:opacity-[0.08] group-active:opacity-[0.12]"
+        :class="modelValue || indeterminate ? checkedBgClasses[color] : 'bg-on-surface'"
+      />
+      <!-- Keyboard-focus ring (FocusIndicatorColor = secondary) -->
+      <span
+        v-if="!disabled"
+        class="pointer-events-none absolute inset-0 rounded-full ring-0 ring-secondary transition-[box-shadow] duration-150 peer-focus-visible:ring-2"
+      />
+
+      <span
+        class="relative inline-flex h-4.5 w-4.5 items-center justify-center rounded-[2px] border-2 transition-colors"
         :class="
           disabled
             ? (modelValue || indeterminate ? 'border-on-surface/38 bg-on-surface/38 text-surface' : 'border-on-surface/38 text-transparent')
-            : (modelValue || indeterminate ? checkedClasses[color] : 'border-on-surface-variant text-transparent')
+            : (modelValue || indeterminate ? checkedClasses[color] : 'border-on-surface-variant text-transparent group-hover:border-on-surface group-active:border-on-surface')
         "
       >
-        <input
-          type="checkbox"
-          class="sr-only"
-          :checked="modelValue"
-          :disabled="disabled"
-          @change="emit('update:modelValue', !modelValue)"
-        />
         <MIcon
           :name="indeterminate ? 'remove' : 'check'"
-          :size="14"
+          :size="18"
           class="transition-[opacity,transform] duration-150"
           :class="modelValue || indeterminate ? 'scale-100 opacity-100' : 'scale-0 opacity-0'"
         />
