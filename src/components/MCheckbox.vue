@@ -40,25 +40,28 @@ const checkedBgClasses: Record<string, string> = {
     :class="disabled ? 'cursor-not-allowed' : 'cursor-pointer'"
   >
     <!--
-      Input is a sibling (not an ancestor/descendant) of the state-layer span below so
-      `peer-focus-visible:` can target it — peer-* relies on the CSS general sibling
-      combinator, which only matches true siblings, unlike `group-*` (used for hover/press
-      below instead) which works through any depth of nesting from the `group` on <label>.
-    -->
-    <input
-      type="checkbox"
-      class="peer sr-only"
-      :checked="modelValue"
-      :disabled="disabled"
-      @change="emit('update:modelValue', !modelValue)"
-    />
-
-    <!--
       CheckboxTokens.StateLayerSize = 40dp (was 48px), StateLayerShape = CornerFull. The
       negative margin cancels the touch target's own overhang past the visible 18px box
       (40-18)/2 = 11px per side, so it doesn't push the label text over.
     -->
     <span class="relative -m-[11px] inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+      <!--
+        Input must stay nested INSIDE this `relative` span (a true sibling of the state-layer
+        /focus-ring spans below, satisfying `peer-*`'s sibling-combinator requirement, but not
+        hoisted all the way up to be a direct child of <label>): a sr-only, `position: absolute`
+        input with no nearby positioned ancestor made the browser's native focus-scroll
+        algorithm treat a distant `overflow: hidden` ancestor as the thing to scroll into view
+        on click, which — since that ancestor wasn't meant to scroll at all — blew out to its
+        max scrollTop and pushed the entire page off-screen. Real bug, found by testing in the
+        docs site; MSwitch's input, nested the same way this one now is again, never had it.
+      -->
+      <input
+        type="checkbox"
+        class="peer sr-only"
+        :checked="modelValue"
+        :disabled="disabled"
+        @change="emit('update:modelValue', !modelValue)"
+      />
       <!--
         Hover/press state layer (8%/12%), tinted with the checkbox's own indicator color
         (primary/color prop when checked, on-surface when not) — same `before:`-overlay
