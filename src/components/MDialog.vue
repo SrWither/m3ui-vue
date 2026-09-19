@@ -101,7 +101,10 @@ watch(
             </div>
             <h2
               class="text-headline-small text-on-surface"
-              :class="[$slots.icon ? 'text-center' : 'text-left', closable && !persistent ? 'pr-10' : '']"
+              :class="[
+                $slots.icon ? 'text-center' : 'text-left',
+                closable && !persistent ? ($slots.icon ? 'px-10' : 'pr-10') : '',
+              ]"
             >
               <slot name="title">{{ title }}</slot>
             </h2>
