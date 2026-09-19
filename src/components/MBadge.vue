@@ -62,7 +62,7 @@ const positionStyle = computed(() => {
       class="absolute flex items-center justify-center rounded-full font-medium leading-none"
       :class="[
         colorMap[color],
-        !label || dot ? 'h-2.5 w-2.5' : label.length > 2 ? 'h-5 min-w-[1.25rem] px-1 text-[10px]' : 'h-5 w-5 text-[10px]',
+        !label || dot ? 'h-1.5 w-1.5' : label.length > 2 ? 'h-4 min-w-4 px-1 text-label-small' : 'h-4 w-4 text-label-small',
       ]"
       :style="positionStyle"
     >
