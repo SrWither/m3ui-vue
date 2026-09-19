@@ -53,48 +53,64 @@ const customStyle = computed(() => {
 const isError = computed(() => props.color === 'error')
 
 const base =
-  'relative inline-flex items-center justify-center gap-2 font-medium ' +
+  'relative inline-flex items-center justify-center font-medium ' +
   'whitespace-nowrap overflow-hidden transition-[box-shadow,background-color,color] duration-150 select-none cursor-pointer ' +
   'disabled:cursor-not-allowed disabled:shadow-none disabled:text-on-surface/38 ' +
   "before:content-[''] before:pointer-events-none before:absolute before:inset-0 " +
   'before:bg-current before:opacity-0 before:transition-opacity before:duration-150 ' +
   'enabled:hover:before:opacity-[0.08] enabled:active:before:opacity-[0.12]'
 
-// M3 disabled tokens: container at 12% on-surface opacity (variants with a filled
-// container or an outline), content/label always at 38% on-surface (handled in `base`
-// above, applies to every variant including text/elevated which have no container).
+// M3 disabled tokens: container at 10% on-surface opacity (DisabledContainerOpacity, same
+// across Filled/Tonal/Elevated), content/label always at 38% on-surface (handled in `base`
+// above, applies to every variant including text/elevated which have no container). The
+// outlined border uses the SAME color role as its enabled border (OutlineVariant, not
+// on-surface) just dimmed to that 10% too — see `variantClasses`' outlined case below for
+// why the enabled color is also outline-variant, not outline.
 const disabledContainerClasses = computed(() => {
   switch (props.variant) {
     case 'filled':
     case 'tonal':
     case 'elevated':
-      return 'disabled:bg-on-surface/12'
+      return 'disabled:bg-on-surface/10'
     case 'outlined':
-      return 'disabled:border-on-surface/12'
+      return isError.value ? 'disabled:border-error/10' : 'disabled:border-outline-variant/10'
     default:
       return ''
   }
 })
 
-const shapeClass = computed(() => props.shape === 'squared' ? 'rounded-md' : 'rounded-full')
-
+/*
+ * M3's newer 5-tier "expressive" button sizing (Button{XSmall,Small,Medium,Large,
+ * XLarge}Tokens.kt + Button.kt's size-variant overloads — @ExperimentalMaterial3ExpressiveApi
+ * in Compose, but this `size` prop is deliberately implementing exactly that system, same
+ * as MFabMenu/MLoadingIndicator already do for other Expressive-only components). Content
+ * padding is IDENTICAL whether or not an icon is present at every tier in the default
+ * (non "precision pointer") mode — e.g. `IconMediumLeadingPadding = MediumLeadingPadding`
+ * verbatim in the real source — so there's deliberately no separate icon-vs-no-icon padding
+ * split here, unlike the old version of this file which had one (and got the values wrong
+ * in both directions). `gap` between icon and label also varies by tier (IconLabelSpace),
+ * not a flat value for every size.
+ */
 const sizeMap = {
-  xs: { h: 'h-8', text: 'text-label-medium', icon: 16, spinner: 14, px: 'px-4', pxIcon: 'pl-3 pr-4', pxText: 'px-2' },
-  sm: { h: 'h-10', text: 'text-label-large', icon: 20, spinner: 16, px: 'px-6', pxIcon: 'pl-4 pr-6', pxText: 'px-3' },
-  md: { h: 'h-14', text: 'text-title-medium', icon: 20, spinner: 18, px: 'px-6', pxIcon: 'pl-5 pr-6', pxText: 'px-3' },
-  lg: { h: 'h-16', text: 'text-title-large', icon: 22, spinner: 20, px: 'px-7', pxIcon: 'pl-6 pr-7', pxText: 'px-4' },
-  xl: { h: 'h-20', text: 'text-headline-small', icon: 24, spinner: 22, px: 'px-8', pxIcon: 'pl-7 pr-8', pxText: 'px-4' },
+  xs: { h: 'h-8', text: 'text-label-large', icon: 20, spinner: 16, gap: 'gap-1', px: 'px-3', pxText: 'px-2', squareRadius: 'rounded-md' },
+  sm: { h: 'h-10', text: 'text-label-large', icon: 20, spinner: 16, gap: 'gap-2', px: 'px-4', pxText: 'px-3', squareRadius: 'rounded-md' },
+  md: { h: 'h-14', text: 'text-title-medium', icon: 24, spinner: 18, gap: 'gap-2', px: 'px-6', pxText: 'px-3', squareRadius: 'rounded-lg' },
+  lg: { h: 'h-24', text: 'text-headline-small', icon: 32, spinner: 26, gap: 'gap-3', px: 'px-12', pxText: 'px-4', squareRadius: 'rounded-xl' },
+  xl: { h: 'h-[136px]', text: 'text-headline-large', icon: 40, spinner: 34, gap: 'gap-4', px: 'px-16', pxText: 'px-4', squareRadius: 'rounded-xl' },
 }
 
 const s = computed(() => sizeMap[props.size] ?? sizeMap.sm)
-const sizeClasses = computed(() => `${s.value.h} ${s.value.text}`)
+const sizeClasses = computed(() => `${s.value.h} ${s.value.text} ${s.value.gap}`)
 const iconSize = computed(() => s.value.icon)
 const spinnerSize = computed(() => s.value.spinner)
 
-const px = computed(() => {
-  if (props.variant === 'text') return s.value.pxText
-  return (props.icon || props.loading) ? s.value.pxIcon : s.value.px
-})
+const px = computed(() => props.variant === 'text' ? s.value.pxText : s.value.px)
+
+// Squared shape radius scales with size, matching each tier's own ContainerShapeSquare
+// token (ButtonXSmallTokens/ButtonSmallTokens use CornerMedium=12px, ButtonMediumTokens
+// CornerLarge=16px, ButtonLargeTokens/ButtonXLargeTokens CornerExtraLarge=28px) — the
+// pill (ContainerShapeRound) is CornerFull at every tier, so that half doesn't vary.
+const shapeClass = computed(() => props.shape === 'squared' ? s.value.squareRadius : 'rounded-full')
 
 const variantClasses = computed(() => {
   const err = isError.value
@@ -112,9 +128,10 @@ const variantClasses = computed(() => {
         ? 'bg-surface-container-low text-error shadow-elevation-1 enabled:hover:shadow-elevation-2'
         : 'bg-surface-container-low text-primary shadow-elevation-1 enabled:hover:shadow-elevation-2'
     case 'outlined':
+      // OutlinedButtonTokens.OutlineColor = ColorSchemeKeyTokens.OutlineVariant, not Outline
       return err
         ? 'border border-error text-error'
-        : 'border border-outline text-primary'
+        : 'border border-outline-variant text-primary'
     case 'text':
       return err
         ? 'text-error'
