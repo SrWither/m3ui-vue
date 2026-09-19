@@ -13,7 +13,9 @@ const props = withDefaults(defineProps<{
   modelValue: string | number
   tabs: Tab[]
   variant?: 'primary' | 'secondary'
-}>(), { variant: 'primary' })
+  /** Fixed (default, M3 `TabRow`): tabs evenly share the available width, no scrolling — use for 2-5 tabs. Scrollable (M3 `ScrollableTabRow`): tabs keep their natural width and the row scrolls horizontally when they overflow — use for many tabs. */
+  scrollable?: boolean
+}>(), { variant: 'primary', scrollable: false })
 
 const emit = defineEmits<{ 'update:modelValue': [string | number] }>()
 
@@ -120,14 +122,15 @@ function select(tab: Tab) {
 <template>
   <!-- ── Primary: sliding short indicator with stretch ──────────────── -->
   <div v-if="variant === 'primary'" class="border-b border-outline-variant">
-    <div class="relative flex overflow-x-auto" style="scrollbar-width: none">
+    <div class="relative flex" :class="scrollable ? 'overflow-x-auto' : 'overflow-x-hidden'" style="scrollbar-width: none">
       <button
         v-for="tab in tabs"
         :key="tab.value"
         :ref="(el) => { if (el) tabEls[tabs.indexOf(tab)] = el as HTMLElement }"
         type="button"
-        class="relative flex shrink-0 flex-col items-center justify-center gap-1 px-6 text-title-small transition-colors duration-150 focus-visible:outline-none"
+        class="relative flex flex-col items-center justify-center gap-1 px-6 text-title-small transition-colors duration-150 focus-visible:outline-none"
         :class="[
+          scrollable ? 'shrink-0' : 'flex-1 min-w-0',
           tab.icon ? 'h-16 pb-1.5' : 'h-12 pb-1.5',
           tab.value === modelValue
             ? 'text-primary'
@@ -150,20 +153,21 @@ function select(tab: Tab) {
 
   <!-- ── Secondary: full-width underline indicator ─────────────────── -->
   <div v-else class="border-b border-outline-variant">
-    <div class="relative flex overflow-x-auto" style="scrollbar-width: none">
+    <div class="relative flex" :class="scrollable ? 'overflow-x-auto' : 'overflow-x-hidden'" style="scrollbar-width: none">
       <button
         v-for="tab in tabs"
         :key="tab.value"
         :ref="(el) => { if (el) tabEls[tabs.indexOf(tab)] = el as HTMLElement }"
         type="button"
-        class="relative flex h-12 shrink-0 items-center justify-center gap-2 px-6 text-title-small transition-colors duration-150 focus-visible:outline-none"
-        :class="
+        class="relative flex h-12 items-center justify-center gap-2 px-6 text-title-small transition-colors duration-150 focus-visible:outline-none"
+        :class="[
+          scrollable ? 'shrink-0' : 'flex-1 min-w-0',
           tab.value === modelValue
             ? 'text-on-surface'
             : tab.disabled
               ? 'cursor-not-allowed text-on-surface/38'
-              : 'cursor-pointer text-on-surface-variant hover:text-on-surface'
-        "
+              : 'cursor-pointer text-on-surface-variant hover:text-on-surface',
+        ]"
         :disabled="tab.disabled"
         @click="select(tab)"
       >

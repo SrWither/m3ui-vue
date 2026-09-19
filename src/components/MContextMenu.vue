@@ -15,6 +15,24 @@ async function showAt(x: number, y: number) {
     x: Math.min(x, window.innerWidth - el.offsetWidth - 8),
     y: Math.min(y, window.innerHeight - el.offsetHeight - 8),
   }
+  focusableItems()[0]?.focus()
+}
+
+function focusableItems() {
+  if (!panelEl.value) return []
+  return Array.from(
+    panelEl.value.querySelectorAll<HTMLElement>('button:not(:disabled), a[href]'),
+  )
+}
+
+function moveFocus(dir: 1 | -1) {
+  const items = focusableItems()
+  if (!items.length) return
+  const idx = items.indexOf(document.activeElement as HTMLElement)
+  const next = idx === -1
+    ? (dir === 1 ? items[0] : items[items.length - 1])
+    : items[(idx + dir + items.length) % items.length]
+  next?.focus()
 }
 
 function show(e: MouseEvent) {
@@ -38,7 +56,10 @@ function onDocMouseDown(e: MouseEvent) {
 }
 
 function onKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') hide()
+  if (e.key === 'Escape') { hide(); return }
+  if (!visible.value) return
+  if (e.key === 'ArrowDown') { e.preventDefault(); moveFocus(1) }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); moveFocus(-1) }
 }
 
 function onScroll() {

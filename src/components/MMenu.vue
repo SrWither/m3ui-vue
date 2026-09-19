@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, provide, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, provide, ref } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -91,7 +91,10 @@ function onScroll(e: Event) {
 }
 
 function onKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') close()
+  if (e.key === 'Escape') { close(); return }
+  if (!open.value) return
+  if (e.key === 'ArrowDown') { e.preventDefault(); moveFocus(1) }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); moveFocus(-1) }
 }
 
 onMounted(() => {
