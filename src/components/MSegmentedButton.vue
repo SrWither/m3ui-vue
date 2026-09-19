@@ -48,15 +48,20 @@ function toggle(opt: SegmentedOption, modelValue: string | number | (string | nu
       class="relative inline-flex items-center justify-center gap-2 text-label-large font-medium transition-[background-color,color] duration-150 outline-none before:pointer-events-none before:absolute before:inset-0 before:bg-current before:opacity-0 before:transition-opacity before:duration-150 enabled:hover:before:opacity-[0.08] enabled:active:before:opacity-[0.12]"
       :class="[
         density === 'compact' ? 'h-8 px-3' : density === 'comfortable' ? 'h-10 px-4' : 'h-10 px-6',
-        i > 0 ? 'border-l border-outline' : '',
-        opt.disabled ? 'cursor-not-allowed opacity-[0.38]' : 'cursor-pointer',
-        isSelected(opt.value, modelValue)
-          ? color === 'secondary'
-            ? 'bg-secondary-container text-on-secondary-container'
-            : color === 'tertiary'
-              ? 'bg-tertiary-container text-on-tertiary-container'
-              : 'bg-secondary-container text-on-secondary-container'
-          : 'text-on-surface',
+        i > 0 ? (opt.disabled ? 'border-l border-outline/12' : 'border-l border-outline') : '',
+        opt.disabled ? 'cursor-not-allowed' : 'cursor-pointer',
+        isSelected(opt.value, modelValue) && (
+          color === 'secondary' ? 'bg-secondary-container'
+          : color === 'tertiary' ? 'bg-tertiary-container'
+          : 'bg-primary-container'
+        ),
+        opt.disabled
+          ? 'text-on-surface/38'
+          : isSelected(opt.value, modelValue)
+            ? color === 'secondary' ? 'text-on-secondary-container'
+              : color === 'tertiary' ? 'text-on-tertiary-container'
+              : 'text-on-primary-container'
+            : 'text-on-surface',
       ]"
       :disabled="opt.disabled"
       :aria-pressed="isSelected(opt.value, modelValue)"
