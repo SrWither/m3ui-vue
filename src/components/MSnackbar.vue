@@ -103,15 +103,15 @@ const getVariantStyle = (variant: string): VariantStyle =>
         </Transition>
 
         <div
-          class="toast-inner pointer-events-auto relative flex items-center gap-3 overflow-hidden rounded-2xl px-4 py-4 shadow-elevation-2"
+          class="toast-inner pointer-events-auto relative flex min-h-12 items-center gap-3 overflow-hidden rounded px-4 py-4 shadow-elevation-3"
           :class="t.color ? 'text-white ring-1 ring-inset ring-white/10' : getVariantStyle(t.variant).container"
           :style="t.color ? { backgroundColor: t.color } : undefined"
         >
-          <MSpinner v-if="t.loading" :size="20" class="shrink-0" />
+          <MSpinner v-if="t.loading" :size="24" class="shrink-0" />
           <MIcon
             v-else-if="t.icon !== null"
             :name="t.icon ?? getVariantStyle(t.variant).iconName"
-            :size="20"
+            :size="24"
             class="shrink-0"
             :class="t.color ? '' : getVariantStyle(t.variant).icon"
           />
@@ -122,7 +122,7 @@ const getVariantStyle = (variant: string): VariantStyle =>
             <button
               v-if="t.action"
               type="button"
-              class="cursor-pointer rounded px-2 py-1 text-label-medium font-semibold transition-colors"
+              class="cursor-pointer rounded px-2 py-1 text-label-large font-semibold transition-colors"
               :class="t.color ? 'text-white/90 hover:bg-white/15' : getVariantStyle(t.variant).action"
               @click="
                 () => {
