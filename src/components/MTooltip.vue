@@ -60,7 +60,7 @@ function reposition() {
   if (!triggerEl.value || !tipEl.value) return
   const tr = triggerEl.value.getBoundingClientRect()
   const tt = tipEl.value.getBoundingClientRect()
-  const GAP = 8
+  const GAP = 4
 
   let top = 0, left = 0
   switch (props.placement) {
@@ -107,7 +107,7 @@ onUnmounted(() => {
       <div
         v-if="visible && !rich && text"
         ref="tipEl"
-        class="pointer-events-none fixed z-400 max-w-[220px] rounded bg-inverse-surface px-3 py-1.5 text-label-medium text-inverse-on-surface shadow-elevation-2"
+        class="pointer-events-none fixed z-400 min-h-6 min-w-10 max-w-[200px] rounded bg-inverse-surface px-2 py-1 text-body-small text-inverse-on-surface"
         :style="tipStyle"
         role="tooltip"
       >
@@ -118,13 +118,13 @@ onUnmounted(() => {
       <div
         v-else-if="visible && rich"
         ref="tipEl"
-        class="fixed z-400 max-w-[320px] rounded-xl bg-surface-container shadow-elevation-3 ring-1 ring-outline-variant"
+        class="fixed z-400 max-w-[320px] rounded-xl bg-surface-container shadow-elevation-2"
         :style="tipStyle"
         role="tooltip"
         @mouseenter="onTipEnter"
         @mouseleave="onTipLeave"
       >
-        <div v-if="text" class="px-4 pt-3 pb-1 text-title-small font-medium text-on-surface">
+        <div v-if="text" class="px-4 pt-3 pb-1 text-title-small font-medium text-on-surface-variant">
           {{ text }}
         </div>
         <div class="px-4 py-2 text-body-medium text-on-surface-variant">
