@@ -68,7 +68,7 @@ function onSubLeave(e: MouseEvent) {
       :is="tag"
       :to="to || undefined"
       :type="to ? undefined : 'button'"
-      class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-body-large transition-colors"
+      class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-body-large transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-secondary"
       :class="[
         disabled ? 'cursor-not-allowed opacity-[0.38] text-on-surface' : 'cursor-pointer',
         !disabled && danger ? 'text-error hover:bg-error/8' : '',
@@ -93,7 +93,7 @@ function onSubLeave(e: MouseEvent) {
       >
         <div
           v-if="showSub"
-          class="m3-submenu min-w-44 overflow-hidden rounded-lg bg-surface-container py-1 shadow-elevation-2"
+          class="m3-submenu min-w-44 overflow-hidden rounded-xs bg-surface-container py-1 shadow-elevation-2"
           :style="subStyle"
           @mouseleave="onSubLeave"
         >

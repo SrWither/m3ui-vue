@@ -39,9 +39,31 @@ function computePos() {
   dropStyle.value = style
 }
 
+function focusableItems() {
+  if (!dropdownEl.value) return []
+  return Array.from(
+    dropdownEl.value.querySelectorAll<HTMLElement>('button:not(:disabled), a[href]'),
+  )
+}
+
+function focusFirstItem() {
+  nextTick(() => focusableItems()[0]?.focus())
+}
+
+function moveFocus(dir: 1 | -1) {
+  const items = focusableItems()
+  if (!items.length) return
+  const idx = items.indexOf(document.activeElement as HTMLElement)
+  const next = idx === -1
+    ? (dir === 1 ? items[0] : items[items.length - 1])
+    : items[(idx + dir + items.length) % items.length]
+  next?.focus()
+}
+
 function toggle() {
   if (!open.value) computePos()
   open.value = !open.value
+  if (open.value) focusFirstItem()
 }
 
 function close() {
@@ -106,7 +128,7 @@ const origin = computed(() =>
       <div
         v-if="open"
         ref="dropdownEl"
-        class="fixed z-500 min-w-48 overflow-hidden rounded-lg bg-surface-container shadow-elevation-2"
+        class="fixed z-500 min-w-48 overflow-hidden rounded-xs bg-surface-container shadow-elevation-2"
         :style="{ ...dropStyle, transformOrigin: origin }"
       >
         <div class="overflow-y-auto py-1" :style="{ maxHeight: dropStyle.maxHeight }">

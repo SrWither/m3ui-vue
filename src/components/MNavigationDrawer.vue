@@ -145,12 +145,13 @@ watch(
 
         <nav
           :class="[
-            'nd-panel relative flex flex-col bg-surface-container shadow-elevation-3',
+            'nd-panel relative flex flex-col bg-surface-container-low shadow-elevation-1',
             `nd-panel-${side}`,
             side === 'top' || side === 'bottom'
               ? 'w-full max-h-[85vh]'
               : 'h-full max-w-[85vw]',
-            side === 'top' || side === 'bottom' || width ? '' : 'w-72',
+            side === 'top' || side === 'bottom' || width ? '' : 'w-[22.5rem]',
+            side === 'right' ? 'rounded-l-lg' : side === 'left' ? 'rounded-r-lg' : side === 'bottom' ? 'rounded-t-lg' : '',
           ]"
           :style="side !== 'top' && side !== 'bottom' && width ? { width } : undefined"
         >
@@ -208,7 +209,7 @@ watch(
                         :is="itemTag(item)"
                         :to="item.to && !item.disabled ? item.to : undefined"
                         :type="item.to ? undefined : 'button'"
-                        class="flex w-full items-center gap-3 rounded-full py-2.5 text-left transition-colors focus-visible:outline-none"
+                        class="flex w-full items-center gap-3 rounded-full py-4 text-left transition-colors focus-visible:outline-none"
                         :class="[
                           section.collapsible ? 'pl-8 pr-3' : 'px-4',
                           item.disabled
@@ -271,14 +272,14 @@ watch(
     <nav
       class="nd-inline flex h-full shrink-0 flex-col bg-surface"
       :class="[
-        inlineSide === 'right' ? 'border-l border-outline-variant' : 'border-r border-outline-variant',
+        inlineSide === 'right' ? 'border-l border-outline-variant rounded-l-lg' : 'border-r border-outline-variant rounded-r-lg',
         !modelValue
           ? inlineSide === 'right' ? 'nd-hidden w-0 border-l-0' : 'nd-hidden w-0 border-r-0'
           : collapsed
             ? 'nd-collapsed w-[72px]'
-            : width ? '' : 'w-72',
+            : width ? '' : 'w-[22.5rem]',
       ]"
-      :style="{ width: modelValue && !collapsed && width ? width : undefined, '--nd-width': width ?? '18rem' }"
+      :style="{ width: modelValue && !collapsed && width ? width : undefined, '--nd-width': width ?? '22.5rem' }"
     >
       <div v-if="$slots.toggle" class="nd-toggle shrink-0 border-b border-outline-variant">
         <div class="nd-toggle-inner">
@@ -350,7 +351,7 @@ watch(
                     :to="item.to && !item.disabled ? item.to : undefined"
                     :type="item.to ? undefined : 'button'"
                     :title="collapsed ? item.label : undefined"
-                    class="flex w-full shrink-0 items-center gap-3 overflow-hidden whitespace-nowrap rounded-full py-2.5 text-left focus-visible:outline-none"
+                    class="flex w-full shrink-0 items-center gap-3 overflow-hidden whitespace-nowrap rounded-full py-4 text-left focus-visible:outline-none"
                     :class="[
                       section.collapsible && !collapsed ? 'pl-8 pr-3' : 'px-3',
                       item.disabled
@@ -487,7 +488,7 @@ watch(
 
 /* Freeze layout so content clips like a curtain during open/close */
 .nd-inline > * {
-  min-width: var(--nd-width, 18rem);
+  min-width: var(--nd-width, 22.5rem);
 }
 /* Collapse-to-icons: let children adapt to 72px width */
 .nd-inline.nd-collapsed > * {

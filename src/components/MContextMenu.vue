@@ -75,7 +75,7 @@ onUnmounted(() => {
       <div
         v-if="visible"
         ref="panelEl"
-        class="fixed z-[500] min-w-48 overflow-hidden rounded-lg bg-surface-container py-1 shadow-elevation-2"
+        class="fixed z-[500] min-w-48 overflow-hidden rounded-xs bg-surface-container py-1 shadow-elevation-2"
         :style="{ left: `${adjustedPos.x}px`, top: `${adjustedPos.y}px`, transformOrigin: 'top left' }"
         @contextmenu.prevent
       >

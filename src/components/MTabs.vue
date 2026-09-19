@@ -126,9 +126,9 @@ function select(tab: Tab) {
         :key="tab.value"
         :ref="(el) => { if (el) tabEls[tabs.indexOf(tab)] = el as HTMLElement }"
         type="button"
-        class="relative flex shrink-0 flex-col items-center justify-center gap-1 px-6 text-label-large transition-colors duration-150 focus-visible:outline-none"
+        class="relative flex shrink-0 flex-col items-center justify-center gap-1 px-6 text-title-small transition-colors duration-150 focus-visible:outline-none"
         :class="[
-          tab.icon ? 'h-14 pb-1.5' : 'h-12 pb-1.5',
+          tab.icon ? 'h-16 pb-1.5' : 'h-12 pb-1.5',
           tab.value === modelValue
             ? 'text-primary'
             : tab.disabled
@@ -138,7 +138,7 @@ function select(tab: Tab) {
         :disabled="tab.disabled"
         @click="select(tab)"
       >
-        <MIcon v-if="tab.icon" :name="tab.icon" :size="20" />
+        <MIcon v-if="tab.icon" :name="tab.icon" :size="24" />
         <span>{{ tab.label }}</span>
       </button>
       <div
@@ -156,7 +156,7 @@ function select(tab: Tab) {
         :key="tab.value"
         :ref="(el) => { if (el) tabEls[tabs.indexOf(tab)] = el as HTMLElement }"
         type="button"
-        class="relative flex h-12 shrink-0 items-center justify-center gap-2 px-6 text-label-large transition-colors duration-150 focus-visible:outline-none"
+        class="relative flex h-12 shrink-0 items-center justify-center gap-2 px-6 text-title-small transition-colors duration-150 focus-visible:outline-none"
         :class="
           tab.value === modelValue
             ? 'text-on-surface'
@@ -167,11 +167,11 @@ function select(tab: Tab) {
         :disabled="tab.disabled"
         @click="select(tab)"
       >
-        <MIcon v-if="tab.icon" :name="tab.icon" :size="18" />
+        <MIcon v-if="tab.icon" :name="tab.icon" :size="24" />
         {{ tab.label }}
       </button>
       <div
-        class="absolute bottom-0 h-[2px] bg-primary"
+        class="absolute bottom-0 h-[3px] bg-primary"
         :style="{ left: `${indicatorLeft}px`, width: `${indicatorWidth}px` }"
       />
     </div>
