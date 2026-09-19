@@ -12,6 +12,7 @@ export type ListItemTrailing = 'icon' | 'text' | 'switch' | 'checkbox'
 const props = withDefaults(
   defineProps<{
     title?: string
+    overline?: string
     subtitle?: string
     description?: string
     lines?: 1 | 2 | 3
@@ -62,8 +63,8 @@ const list = inject<{
 const resolvedLines = computed(() => {
   if (props.lines) return props.lines
   if (list?.lines.value) return list.lines.value
-  if (props.description) return 3
-  if (props.subtitle) return 2
+  if (props.description || (props.overline && props.subtitle)) return 3
+  if (props.subtitle || props.overline) return 2
   return 1
 })
 
@@ -106,6 +107,17 @@ const isNav = computed(() => list?.nav.value ?? false)
 const isSegmented = computed(() => list?.segmented.value ?? false)
 const hasDivider = computed(() => list?.dividers.value ?? false)
 
+// ListTokens: ItemSelectedLabelTextColor/ItemSelectedLeadingIconColor/etc = OnSecondaryContainer
+const activeTextClass = computed(() => (isActive.value ? 'text-on-secondary-container' : 'text-on-surface'))
+const activeIconClass = computed(() => (isActive.value ? 'text-on-secondary-container' : 'text-on-surface-variant'))
+
+// ListTokens: ItemOneLineContainerHeight/TwoLine/ThreeLine = 56/72/88dp; dense is a library
+// extension with no spec token, so it keeps its own compact padding instead of this floor.
+const minHeightClass = computed(() => {
+  if (isDense.value) return ''
+  return resolvedLines.value === 3 ? 'min-h-22' : resolvedLines.value === 2 ? 'min-h-18' : 'min-h-14'
+})
+
 const containerClasses = computed(() => [
   'mli-row relative flex w-full items-center gap-4 text-left',
   isSegmented.value
@@ -114,12 +126,11 @@ const containerClasses = computed(() => [
   isDense.value
     ? 'py-1'
     : resolvedLines.value === 3 ? 'py-3' : 'py-2',
+  minHeightClass.value,
   isClickable.value && !props.disabled && 'cursor-pointer transition-colors duration-150 hover:bg-on-surface/8 active:bg-on-surface/12',
-  isActive.value && (isSegmented.value
-    ? 'bg-secondary-container text-on-secondary-container'
-    : isNav.value
-      ? 'bg-secondary-container text-on-secondary-container'
-      : 'bg-on-surface/8'),
+  // ListTokens: ItemSelectedContainerColor = SecondaryContainer, applies to any selected list
+  // item, not just nav/segmented contexts.
+  isActive.value && 'bg-secondary-container text-on-secondary-container',
   props.disabled && 'opacity-[0.38] pointer-events-none',
 ])
 
@@ -165,14 +176,17 @@ function handleTrailingToggle() {
     <div :class="containerClasses" @click="handleClick">
       <!-- Leading -->
       <slot name="leading">
-        <MIcon v-if="resolvedLeading === 'icon'" :name="icon!" :size="24" class="shrink-0 text-on-surface-variant" />
+        <MIcon v-if="resolvedLeading === 'icon'" :name="icon!" :size="24" class="shrink-0" :class="activeIconClass" />
       </slot>
 
       <!-- Content -->
       <div class="min-w-0 flex-1">
+        <slot name="overline">
+          <p v-if="overline" class="truncate text-label-small" :class="activeIconClass">{{ overline }}</p>
+        </slot>
         <slot>
-          <p class="truncate text-body-large text-on-surface">{{ title }}</p>
-          <p v-if="subtitle && resolvedLines >= 2" class="text-body-medium text-on-surface-variant" :class="resolvedLines === 2 && 'truncate'">
+          <p class="truncate text-body-large" :class="activeTextClass">{{ title }}</p>
+          <p v-if="subtitle && resolvedLines >= 2" class="text-body-medium" :class="[activeIconClass, resolvedLines === 2 && 'truncate']">
             {{ subtitle }}
           </p>
         </slot>
@@ -182,7 +196,8 @@ function handleTrailingToggle() {
       <MIcon
         :name="isExpanded ? 'expand_less' : 'expand_more'"
         :size="20"
-        class="shrink-0 text-on-surface-variant"
+        class="shrink-0"
+        :class="activeIconClass"
       />
     </div>
 
@@ -214,7 +229,7 @@ function handleTrailingToggle() {
     <!-- Leading -->
     <slot name="leading">
       <template v-if="resolvedLeading === 'icon'">
-        <MIcon :name="icon!" :size="24" class="shrink-0 text-on-surface-variant" />
+        <MIcon :name="icon!" :size="24" class="shrink-0" :class="activeIconClass" />
       </template>
       <template v-else-if="resolvedLeading === 'icon-container'">
         <div
@@ -237,12 +252,15 @@ function handleTrailingToggle() {
 
     <!-- Content -->
     <div class="min-w-0 flex-1">
+      <slot name="overline">
+        <p v-if="overline" class="truncate text-label-small" :class="activeIconClass">{{ overline }}</p>
+      </slot>
       <slot>
-        <p class="truncate text-body-large text-on-surface">{{ title }}</p>
-        <p v-if="subtitle && resolvedLines >= 2" class="text-body-medium text-on-surface-variant" :class="resolvedLines === 2 && 'truncate'">
+        <p class="truncate text-body-large" :class="activeTextClass">{{ title }}</p>
+        <p v-if="subtitle && resolvedLines >= 2" class="text-body-medium" :class="[activeIconClass, resolvedLines === 2 && 'truncate']">
           {{ subtitle }}
         </p>
-        <p v-if="description && resolvedLines >= 3" class="line-clamp-2 text-body-small text-on-surface-variant">
+        <p v-if="description && resolvedLines >= 3" class="line-clamp-2 text-body-small" :class="activeIconClass">
           {{ description }}
         </p>
       </slot>
@@ -251,10 +269,10 @@ function handleTrailingToggle() {
     <!-- Trailing -->
     <slot name="trailing">
       <template v-if="resolvedTrailing === 'icon'">
-        <MIcon :name="trailingIcon!" :size="24" class="shrink-0 text-on-surface-variant" />
+        <MIcon :name="trailingIcon!" :size="24" class="shrink-0" :class="activeIconClass" />
       </template>
       <template v-else-if="resolvedTrailing === 'text'">
-        <span class="shrink-0 text-label-small text-on-surface-variant">{{ trailingText }}</span>
+        <span class="shrink-0 text-label-small" :class="activeIconClass">{{ trailingText }}</span>
       </template>
       <template v-else-if="resolvedTrailing === 'switch'">
         <MSwitch :model-value="!!trailingValue" @update:model-value="handleTrailingToggle" />
