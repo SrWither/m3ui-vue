@@ -105,7 +105,7 @@ function createRipple(event: PointerEvent) {
 function btnStyle(i: number, selected: boolean) {
   const count = props.options.length
   const full = fullRadius.value
-  const inner = '6px'
+  const inner = '8px'
   let tl: string, tr: string, br: string, bl: string
   if (props.variant === 'standard' || selected) {
     tl = tr = br = bl = full
@@ -126,7 +126,7 @@ function btnStyle(i: number, selected: boolean) {
 <template>
   <div
     class="inline-flex"
-    :class="variant === 'standard' ? 'gap-1.5' : 'gap-0.5'"
+    :class="variant === 'standard' ? 'gap-3' : 'gap-0.5'"
     role="group"
   >
     <button
