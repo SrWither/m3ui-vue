@@ -159,7 +159,7 @@ function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') cancel() }
     <Transition name="m3-drp-modal">
       <div
         v-if="show"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-scrim/40 p-4"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-scrim/32 p-4"
         @click.self="cancel"
       >
         <div class="drp-box w-[360px] rounded-[28px] bg-surface-container-high shadow-elevation-3">

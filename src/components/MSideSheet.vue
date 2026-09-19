@@ -42,7 +42,7 @@ const panelStyle = computed(() => ({
     <Transition name="ss" :duration="{ enter: 320, leave: 280 }">
       <div v-if="modelValue" class="fixed inset-0 z-200 flex justify-end">
         <!-- Scrim -->
-        <div class="ss-scrim absolute inset-0 bg-scrim/40" @click="close" />
+        <div class="ss-scrim absolute inset-0 bg-scrim/32" @click="close" />
 
         <!-- Panel -->
         <aside

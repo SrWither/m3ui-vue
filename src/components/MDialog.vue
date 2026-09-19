@@ -61,7 +61,7 @@ watch(
     <Transition v-if="!fullscreen" name="m3-dialog">
       <div
         v-if="modelValue"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-scrim/40 p-4"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-scrim/32 p-4"
         @click.self="close"
       >
         <div

@@ -298,7 +298,7 @@ onUnmounted(() => {
   <Teleport v-if="modal" to="body">
     <Transition :css="false" @enter="onPanelEnter" @leave="onPanelLeave">
       <div v-if="expanded" class="fixed inset-0 z-100" @keydown.escape="close">
-        <div class="wnr-scrim absolute inset-0 bg-scrim/40" @click="close" />
+        <div class="wnr-scrim absolute inset-0 bg-scrim/32" @click="close" />
 
         <nav
           class="wnr-panel fixed inset-y-0 left-0 z-10 flex flex-col overflow-hidden rounded-r-lg bg-surface-container shadow-elevation-2"
