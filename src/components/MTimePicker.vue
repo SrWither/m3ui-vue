@@ -163,7 +163,7 @@ onUnmounted(() => {
         <div
           v-if="open"
           ref="panelEl"
-          class="fixed z-500 w-[280px] rounded-lg bg-surface-container shadow-elevation-3"
+          class="fixed z-500 w-[280px] rounded-[28px] bg-surface-container-high shadow-elevation-3"
           :style="dropPos"
         >
           <!-- Display -->

@@ -65,7 +65,7 @@ const SIZE = 256
 const CX = SIZE / 2
 const OUTER_R = 100
 const INNER_R = 64
-const NUM_R = 20
+const NUM_R = 24
 
 function posAt(idx: number, of: number, r: number) {
   const a = (idx / of) * Math.PI * 2 - Math.PI / 2
@@ -252,7 +252,7 @@ function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') cancel() }
             <div class="mb-5 flex items-center justify-center gap-2">
               <button
                 type="button"
-                class="flex h-[72px] min-w-[96px] items-center justify-center rounded-lg text-display-medium transition-colors"
+                class="flex h-20 min-w-[96px] items-center justify-center rounded-sm text-display-large transition-colors"
                 :class="
                   step === 'hour'
                     ? 'bg-primary-container text-on-primary-container'
@@ -263,11 +263,11 @@ function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') cancel() }
                 {{ pad(selectedHour) }}
               </button>
 
-              <span class="text-display-medium text-on-surface">:</span>
+              <span class="text-display-large text-on-surface">:</span>
 
               <button
                 type="button"
-                class="flex h-[72px] min-w-[96px] items-center justify-center rounded-lg text-display-medium transition-colors"
+                class="flex h-20 min-w-[96px] items-center justify-center rounded-sm text-display-large transition-colors"
                 :class="
                   step === 'minute'
                     ? 'bg-primary-container text-on-primary-container'
@@ -281,11 +281,11 @@ function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') cancel() }
               <!-- AM / PM toggle -->
               <div
                 v-if="!use24h"
-                class="ml-2 flex h-[72px] flex-col overflow-hidden rounded-lg border border-outline"
+                class="ml-2 flex h-20 flex-col overflow-hidden rounded-sm border border-outline"
               >
                 <button
                   type="button"
-                  class="flex flex-1 items-center justify-center px-3 text-label-large transition-colors"
+                  class="flex flex-1 items-center justify-center px-3 text-title-medium transition-colors"
                   :class="
                     period === 'AM'
                       ? 'bg-tertiary-container text-on-tertiary-container'
@@ -296,7 +296,7 @@ function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') cancel() }
                 <div class="h-px bg-outline" />
                 <button
                   type="button"
-                  class="flex flex-1 items-center justify-center px-3 text-label-large transition-colors"
+                  class="flex flex-1 items-center justify-center px-3 text-title-medium transition-colors"
                   :class="
                     period === 'PM'
                       ? 'bg-tertiary-container text-on-tertiary-container'
@@ -331,7 +331,7 @@ function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') cancel() }
                   v-for="item in hourItems"
                   :key="'h' + item.value"
                   type="button"
-                  class="pointer-events-auto absolute flex h-10 w-10 items-center justify-center rounded-full text-body-medium transition-colors"
+                  class="pointer-events-auto absolute flex h-10 w-10 items-center justify-center rounded-full text-body-large transition-colors"
                   :class="
                     item.value === selectedHour
                       ? 'text-on-primary font-medium'
@@ -353,7 +353,7 @@ function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') cancel() }
                   v-for="item in minuteItems"
                   :key="'m' + item.value"
                   type="button"
-                  class="pointer-events-auto absolute flex h-10 w-10 items-center justify-center rounded-full text-body-medium transition-colors"
+                  class="pointer-events-auto absolute flex h-10 w-10 items-center justify-center rounded-full text-body-large transition-colors"
                   :class="
                     item.value === selectedMinute
                       ? 'text-on-primary font-medium'
@@ -379,26 +379,26 @@ function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') cancel() }
               v-model="inputHour"
               type="text"
               maxlength="2"
-              class="h-[72px] w-[96px] rounded-lg border border-outline bg-surface-container-highest text-center text-display-medium text-on-surface outline-none transition-colors focus:border-2 focus:border-primary"
+              class="h-20 w-[96px] rounded-sm border border-outline bg-surface-container-highest text-center text-display-large text-on-surface outline-none transition-colors focus:border-2 focus:border-primary"
               @blur="clampInput"
             />
-            <span class="text-display-medium text-on-surface">:</span>
+            <span class="text-display-large text-on-surface">:</span>
             <input
               ref="inputMinuteEl"
               v-model="inputMinute"
               type="text"
               maxlength="2"
-              class="h-[72px] w-[96px] rounded-lg border border-outline bg-surface-container-highest text-center text-display-medium text-on-surface outline-none transition-colors focus:border-2 focus:border-primary"
+              class="h-20 w-[96px] rounded-sm border border-outline bg-surface-container-highest text-center text-display-large text-on-surface outline-none transition-colors focus:border-2 focus:border-primary"
               @blur="clampInput"
             />
             <!-- AM / PM toggle -->
             <div
               v-if="!use24h"
-              class="ml-2 flex h-[72px] flex-col overflow-hidden rounded-lg border border-outline"
+              class="ml-2 flex h-20 flex-col overflow-hidden rounded-sm border border-outline"
             >
               <button
                 type="button"
-                class="flex flex-1 items-center justify-center px-3 text-label-large transition-colors"
+                class="flex flex-1 items-center justify-center px-3 text-title-medium transition-colors"
                 :class="
                   period === 'AM'
                     ? 'bg-tertiary-container text-on-tertiary-container'
@@ -409,7 +409,7 @@ function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') cancel() }
               <div class="h-px bg-outline" />
               <button
                 type="button"
-                class="flex flex-1 items-center justify-center px-3 text-label-large transition-colors"
+                class="flex flex-1 items-center justify-center px-3 text-title-medium transition-colors"
                 :class="
                   period === 'PM'
                     ? 'bg-tertiary-container text-on-tertiary-container'
