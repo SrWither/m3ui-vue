@@ -161,11 +161,11 @@ function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') cancel() }
         <div class="dp-box w-[360px] rounded-[28px] bg-surface-container-high shadow-elevation-3">
           <!-- Header -->
           <div class="px-6 pt-6 pb-4">
-            <p class="mb-3 text-label-medium text-on-surface-variant">
+            <p class="mb-3 text-label-large text-on-surface-variant">
               {{ title || locale.selectDate }}
             </p>
             <div class="flex items-center justify-between">
-              <span class="text-headline-medium font-medium capitalize text-on-surface">
+              <span class="text-headline-large font-medium capitalize text-on-surface-variant">
                 {{ headerDate }}
               </span>
               <MIconButton
@@ -189,7 +189,7 @@ function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') cancel() }
 
             <!-- Weekday headers -->
             <div class="mb-1 grid grid-cols-7 gap-0.5 text-center">
-              <span v-for="wd in WEEKDAYS" :key="wd" class="py-1 text-label-small font-medium text-on-surface-variant">
+              <span v-for="wd in WEEKDAYS" :key="wd" class="py-1 text-body-large font-medium text-on-surface">
                 {{ wd }}
               </span>
             </div>

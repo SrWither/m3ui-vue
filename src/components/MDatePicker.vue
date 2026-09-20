@@ -210,7 +210,7 @@ onUnmounted(() => {
         <div
           v-if="open"
           ref="panelEl"
-          class="fixed z-500 w-[320px] rounded-lg bg-surface-container p-4 shadow-elevation-3"
+          class="fixed z-500 w-[360px] rounded-[28px] bg-surface-container-high p-4 shadow-elevation-3"
           :style="dropPos"
         >
           <!-- Header -->
@@ -222,7 +222,7 @@ onUnmounted(() => {
 
           <!-- Weekday headers -->
           <div class="mb-1 grid grid-cols-7 gap-0.5 text-center">
-            <span v-for="wd in WEEKDAYS" :key="wd" class="py-1 text-label-small font-medium text-on-surface-variant">
+            <span v-for="wd in WEEKDAYS" :key="wd" class="py-1 text-body-large font-medium text-on-surface">
               {{ wd }}
             </span>
           </div>
@@ -233,7 +233,7 @@ onUnmounted(() => {
               v-for="(day, i) in calendarDays"
               :key="i"
               type="button"
-              class="flex h-9 w-full items-center justify-center rounded-full text-body-medium transition-colors duration-100"
+              class="flex h-10 w-full items-center justify-center rounded-full text-body-medium transition-colors duration-100"
               :class="[
                 day.disabled
                   ? 'cursor-not-allowed text-on-surface/25'
