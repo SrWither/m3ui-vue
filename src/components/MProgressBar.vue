@@ -35,9 +35,7 @@ const MARGIN_PX  = 4;   // gap between wave right-end and track start
 const WAVE_START = 10;  // threshold % below which wave collapses to line
 
 // thickness-derived (computed so they react to prop changes)
-const effectiveThickness = computed(() =>
-  props.thickness ?? (props.variant === "wavy" ? 3 : 4),
-);
+const effectiveThickness = computed(() => props.thickness ?? 4);
 const waveMid  = computed(() => AMP + effectiveThickness.value / 2);
 const waveViewH = computed(() => 2 * AMP + effectiveThickness.value);
 
@@ -199,19 +197,27 @@ watch(isIndeterminate, async (v) => {
     <div
       v-if="variant === 'linear'"
       class="relative w-full overflow-hidden rounded-full"
-      :class="colorMap[color].track"
+      :class="isIndeterminate ? colorMap[color].track : ''"
       :style="{ height: `${effectiveThickness}px` }"
       role="progressbar"
       :aria-valuenow="isIndeterminate ? undefined : clampedValue"
       aria-valuemin="0"
       aria-valuemax="100"
     >
-      <div
-        v-if="!isIndeterminate"
-        class="h-full rounded-full transition-[width] duration-300 ease-in-out"
-        :class="colorMap[color].bar"
-        :style="{ width: `${clampedValue}%` }"
-      />
+      <!-- LinearProgressIndicatorTokens.TrackActiveSpace=4dp: the track starts
+           a fixed gap after the active bar, not flush against it. -->
+      <template v-if="!isIndeterminate">
+        <div
+          class="absolute inset-y-0 left-0 rounded-full transition-[width] duration-300 ease-in-out"
+          :class="colorMap[color].bar"
+          :style="{ width: `${clampedValue}%` }"
+        />
+        <div
+          class="absolute inset-y-0 right-0 rounded-full transition-[left] duration-300 ease-in-out"
+          :class="colorMap[color].track"
+          :style="{ left: `calc(${clampedValue}% + 4px)` }"
+        />
+      </template>
       <div
         v-else
         class="absolute inset-y-0 w-2/5 rounded-full animate-[m3-progress-indeterminate_1.6s_ease-in-out_infinite]"

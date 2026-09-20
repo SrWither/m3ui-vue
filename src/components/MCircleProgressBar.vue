@@ -14,12 +14,15 @@ const props = withDefaults(
   {
     color: "primary",
     variant: "wavy",
-    size: 80,
-    thickness: 3,
+    thickness: 4,
   },
 );
 
 const clampedValue = computed(() => Math.min(100, Math.max(0, props.value ?? 0)));
+
+// CircularProgressIndicatorTokens: Size=40dp (circle) / WaveSize=48dp (wavy) — the wavy
+// variant's default is intentionally larger to fit the wave amplitude without clipping.
+const effectiveSize = computed(() => props.size ?? (props.variant === "wavy" ? 48 : 40));
 
 const svgColorMap: Record<"primary" | "secondary" | "tertiary" | "error", { fill: string; track: string }> = {
   primary:   { fill: "var(--color-primary)",   track: "var(--color-primary-container)"   },
@@ -239,7 +242,7 @@ const maskId = useId();
 
     <div class="relative">
       <svg
-        :width="size" :height="size"
+        :width="effectiveSize" :height="effectiveSize"
         viewBox="0 0 100 100"
         fill="none"
         role="progressbar"
@@ -315,7 +318,7 @@ const maskId = useId();
           text-anchor="middle" dominant-baseline="middle"
           :style="{
             fill: svgColor.fill,
-            fontSize: `${size < 60 ? 11 : 14}px`,
+            fontSize: `${effectiveSize < 60 ? 11 : 14}px`,
             fontWeight: '600',
             fontFamily: 'Roboto, sans-serif',
           }"
