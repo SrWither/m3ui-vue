@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watch } from 'vue'
+import { nextTick, onUnmounted, ref, watch } from 'vue'
 import MIconButton from './MIconButton.vue'
 import { useLocale } from '../composables/useLocale'
 
@@ -41,18 +41,49 @@ function onKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') close()
 }
 
+// M3's dialog anatomy lists an optional divider between the (scrollable) content and the
+// actions row — Compose's own AlertDialog.kt has no built-in implementation of it at all, so
+// this shows it only when the content actually has more to scroll to, above the actions row.
+const contentEl = ref<HTMLElement>()
+const contentInnerEl = ref<HTMLElement>()
+const showDivider = ref(false)
+let resizeObserver: ResizeObserver | undefined
+
+function updateDividerVisibility() {
+  const el = contentEl.value
+  if (!el) { showDivider.value = false; return }
+  showDivider.value = el.scrollHeight - el.scrollTop - el.clientHeight > 1
+}
+
 watch(
   () => props.modelValue,
-  (open) => {
+  async (open) => {
     if (open) {
       document.addEventListener('keydown', onKeydown)
       document.body.style.overflow = 'hidden'
+      await nextTick()
+      updateDividerVisibility()
+      // Observing contentEl alone only catches viewport-driven resizes (e.g. window resize
+      // changing the max-h-[90vh] cap) — its own box stays put when the *slotted* content
+      // changes height, since overflow doesn't affect the scroll container's own size. The
+      // inner wrapper around the slot grows/shrinks with the actual content, so that's what
+      // needs observing to catch dynamic content (reactive text, async-loaded content, etc).
+      resizeObserver = new ResizeObserver(updateDividerVisibility)
+      if (contentEl.value) resizeObserver.observe(contentEl.value)
+      if (contentInnerEl.value) resizeObserver.observe(contentInnerEl.value)
     } else {
       document.removeEventListener('keydown', onKeydown)
       document.body.style.overflow = ''
+      resizeObserver?.disconnect()
+      resizeObserver = undefined
     }
   },
 )
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', onKeydown)
+  resizeObserver?.disconnect()
+})
 </script>
 
 <template>
@@ -110,11 +141,17 @@ watch(
             </h2>
           </div>
           <div
+            ref="contentEl"
             class="overflow-y-auto px-6 pt-2 text-body-medium text-on-surface-variant"
             :class="$slots.actions ? 'pb-2' : 'pb-6'"
+            @scroll="updateDividerVisibility"
           >
-            <slot />
+            <div ref="contentInnerEl">
+              <slot />
+            </div>
           </div>
+          <!-- Divider: M3 dialog anatomy's optional divider, shown only while the content has more to scroll to -->
+          <div v-if="showDivider && $slots.actions" class="shrink-0 border-t border-outline-variant" />
           <!-- flex-wrap approximates AlertDialogFlowRow: buttons wrap to a new line instead of overflowing when labels are too long to fit on one -->
           <div v-if="$slots.actions" class="flex flex-wrap justify-end gap-2 px-6 pt-4 pb-6">
             <slot name="actions" />
