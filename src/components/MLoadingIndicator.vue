@@ -14,15 +14,22 @@ const props = withDefaults(
 
 const locale = useLocale();
 
-const colorMap: Record<"primary" | "secondary" | "tertiary" | "error", { active: string; container: string }> = {
-  primary:   { active: "var(--color-primary)",   container: "var(--color-primary-container)"   },
-  secondary: { active: "var(--color-secondary)", container: "var(--color-secondary-container)" },
-  tertiary:  { active: "var(--color-tertiary)",  container: "var(--color-tertiary-container)"  },
-  error:     { active: "var(--color-error)",     container: "var(--color-error-container)"     },
+// ContainedActiveColor is a different role (OnXContainer) from the bare
+// ActiveIndicatorColor (X) — the shape recolors when it gains the contained
+// circle behind it, it's not just the same tone on a new background.
+const colorMap: Record<"primary" | "secondary" | "tertiary" | "error", { active: string; containedActive: string; container: string }> = {
+  primary:   { active: "var(--color-primary)",   containedActive: "var(--color-on-primary-container)",   container: "var(--color-primary-container)"   },
+  secondary: { active: "var(--color-secondary)", containedActive: "var(--color-on-secondary-container)", container: "var(--color-secondary-container)" },
+  tertiary:  { active: "var(--color-tertiary)",  containedActive: "var(--color-on-tertiary-container)",  container: "var(--color-tertiary-container)"  },
+  error:     { active: "var(--color-error)",     containedActive: "var(--color-on-error-container)",     container: "var(--color-error-container)"     },
 };
 const svgColor = computed(() => colorMap[props.color]);
+const activeColor = computed(() => (props.contained ? svgColor.value.containedActive : svgColor.value.active));
 
-const innerSize = computed(() => (props.contained ? Math.round(props.size * 0.55) : props.size));
+// LoadingIndicatorTokens: ActiveSize=38dp against ContainerHeight/Width=48dp
+// — the bare shape doesn't fill its container, it sits inset within it.
+const BARE_RATIO = 38 / 48;
+const innerSize = computed(() => Math.round(props.size * (props.contained ? 0.55 : BARE_RATIO)));
 
 // ── Shape morph geometry ───────────────────────────────────────────────────
 // Every shape is sampled as a radius multiplier at the same K angles, so any
@@ -178,7 +185,7 @@ onUnmounted(() => cancelAnimationFrame(rafId));
       shape-rendering="geometricPrecision"
       style="transform-origin: 50% 50%"
     >
-      <path ref="pathEl" shape-rendering="geometricPrecision" :style="{ fill: svgColor.active }" />
+      <path ref="pathEl" shape-rendering="geometricPrecision" :style="{ fill: activeColor }" />
     </svg>
   </span>
 </template>
