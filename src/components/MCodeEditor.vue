@@ -196,7 +196,7 @@ onBeforeUnmount(() => view?.destroy())
 </script>
 
 <template>
-  <div class="overflow-hidden rounded-lg border border-outline-variant">
+  <div class="flex flex-col overflow-hidden rounded-lg border border-outline-variant">
     <!-- Header bar -->
     <div class="flex items-center justify-between border-b border-outline-variant bg-surface-container px-4 py-2">
       <span class="text-label-medium text-on-surface-variant">{{ langLabel }}</span>
@@ -224,9 +224,27 @@ onBeforeUnmount(() => view?.destroy())
 </template>
 
 <style scoped>
+.code-editor-container {
+  /* .cm-editor/.cm-scroller/.cm-gutters all use height:100%, which only ever
+     resolves against a genuinely definite ancestor height — a min-height (what
+     this container has, so it can grow with content up to maxHeight) doesn't
+     count as definite for that percentage chain, so .cm-gutters silently fell
+     back to sizing off its own content instead of the real editor height.
+     Making this a flex column and letting .cm-editor grow via flex instead of
+     a % height gives the whole chain a real definite size to resolve against. */
+  display: flex;
+  flex-direction: column;
+  /* Also grow to fill the outer wrapper (see the root element's own flex-col
+     above) rather than just sitting at minHeight, whenever a consumer stretches
+     the whole component taller than that — e.g. `class="h-full"` in a grid
+     cell next to taller content. Still hard-capped by maxHeight either way. */
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .code-editor-container :deep(.cm-editor) {
-  height: 100%;
-  min-height: inherit;
+  flex: 1;
+  min-height: 0;
   font-family: 'Roboto Mono', 'Fira Code', 'Consolas', monospace;
   font-size: 0.8125rem;
   line-height: 1.6;
@@ -237,7 +255,18 @@ onBeforeUnmount(() => view?.destroy())
 }
 
 .code-editor-container :deep(.cm-scroller) {
-  min-height: inherit;
+  /* .cm-scroller normally sizes itself off a height:100% against .cm-editor,
+     but that's a percentage-height-in-nested-flex-column case that browsers
+     don't reliably resolve — grow it directly instead so it has a real,
+     laid-out height for .cm-gutters to stretch against below. */
+  flex: 1 !important;
+  min-height: 0;
+  /* .cm-scroller lays out .cm-gutters/.cm-content in a row (gutter | content),
+     so .cm-gutters' height comes from cross-axis stretch, not flex-grow —
+     CodeMirror's own base theme sets align-items: flex-start !important here,
+     which is exactly what stops the gutter from stretching to full height in
+     the first place. */
+  align-items: stretch !important;
 }
 
 .code-editor-container :deep(.cm-content) {
@@ -254,6 +283,12 @@ onBeforeUnmount(() => view?.destroy())
   color: var(--color-outline);
   font-size: 0.75rem;
   padding: 0 4px;
+  /* .cm-gutters ships with an explicit height:100% rather than auto, so the
+     align-items:stretch above (on .cm-scroller) never actually kicks in —
+     stretch only applies to items whose cross-size computes to auto. Forcing
+     height back to auto here is what makes that stretch take effect. */
+  height: auto !important;
+  align-self: stretch !important;
 }
 
 .code-editor-container :deep(.cm-activeLineGutter) {
