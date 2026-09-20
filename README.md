@@ -16,7 +16,7 @@
 
 ---
 
-135+ tree-shakeable components following [Material Design 3](https://m3.material.io/) guidelines. Ships with 30 color palettes, dark mode, i18n support, and full TypeScript coverage.
+135+ tree-shakeable components following [Material Design 3](https://m3.material.io/) guidelines. Ships with 40 color palettes, dark mode, i18n support, and full TypeScript coverage.
 
 ## Getting Started
 
@@ -58,7 +58,7 @@ In your main stylesheet (e.g. `src/style.css`):
 ```css
 @import 'tailwindcss';
 @import '@m3ui-vue/m3ui-vue/theme';
-@import '@m3ui-vue/m3ui-vue/palettes'; /* 30 color palettes */
+@import '@m3ui-vue/m3ui-vue/palettes'; /* 40 color palettes */
 @import '@m3ui-vue/m3ui-vue/styles';   /* component transitions & animations */
 ```
 
@@ -293,7 +293,7 @@ import { MBarcode } from '@m3ui-vue/m3ui-vue/barcode'
 | | |
 |---|---|
 | `useTheme()` | Light / dark / system theme with `cycle()` |
-| `useColorPalette()` | Switch between 30 palettes at runtime |
+| `useColorPalette()` | Switch between 40 palettes at runtime |
 | `useToast()` | Programmatic toast notifications |
 | `useNotification()` | Rich notifications with actions |
 | `useFieldBg()` | Context-aware field background color |
@@ -303,9 +303,9 @@ import { MBarcode } from '@m3ui-vue/m3ui-vue/barcode'
 
 ## Color Palettes
 
-30 built-in palettes with light and dark variants:
+40 built-in palettes with light and dark variants:
 
-`purple` (default) `indigo` `navy` `blue` `cyan` `teal` `green` `lime` `olive` `amber` `sand` `orange` `deep-orange` `brown` `red` `coral` `crimson` `pink` `violet` `slate` `graphite` `charcoal` `steel` `ash` `iron` `fog` `pewter` `smoke` `stone` `zinc`
+`purple` (default) `indigo` `navy` `blue` `cyan` `teal` `green` `lime` `olive` `amber` `sand` `orange` `deep-orange` `brown` `red` `coral` `crimson` `pink` `violet` `slate` `graphite` `charcoal` `steel` `ash` `iron` `fog` `pewter` `smoke` `stone` `zinc` `monochrome` `rust` `gold` `emerald` `turquoise` `cobalt` `sapphire` `amethyst` `magenta` `mauve`
 
 ### Switch at Runtime
 

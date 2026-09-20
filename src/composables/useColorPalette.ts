@@ -37,6 +37,16 @@ export const palettes: Palette[] = [
   { id: 'smoke',       label: 'Smoke',       seed: '#4D5C66' },
   { id: 'stone',       label: 'Stone',       seed: '#68635A' },
   { id: 'zinc',        label: 'Zinc',        seed: '#585B5E' },
+  { id: 'monochrome',  label: 'Monochrome',  seed: '#1A1A1A' },
+  { id: 'rust',        label: 'Rust',        seed: '#9C441E' },
+  { id: 'gold',        label: 'Gold',        seed: '#715C00' },
+  { id: 'emerald',     label: 'Emerald',     seed: '#006D39' },
+  { id: 'turquoise',   label: 'Turquoise',   seed: '#006A68' },
+  { id: 'cobalt',      label: 'Cobalt',      seed: '#006684' },
+  { id: 'sapphire',    label: 'Sapphire',    seed: '#006399' },
+  { id: 'amethyst',    label: 'Amethyst',    seed: '#5953AC' },
+  { id: 'magenta',     label: 'Magenta',     seed: '#8D3F92' },
+  { id: 'mauve',       label: 'Mauve',       seed: '#914277' },
 ]
 
 const current = ref(localStorage.getItem('m3-palette') ?? 'purple')

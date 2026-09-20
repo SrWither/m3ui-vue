@@ -20,8 +20,8 @@ describe('useColorPalette', () => {
     localStorage.setItem('m3-palette', 'purple')
   })
 
-  it('has 30 palettes', () => {
-    expect(palettes).toHaveLength(30)
+  it('has 40 palettes', () => {
+    expect(palettes).toHaveLength(40)
   })
 
   it('each palette has id, label, and seed', () => {
