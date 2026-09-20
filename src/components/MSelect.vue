@@ -288,7 +288,7 @@ const labelClasses = computed(() => {
             opt.disabled
               ? 'cursor-not-allowed opacity-38 text-on-surface'
               : 'text-on-surface hover:bg-on-surface/8',
-            eq(opt.value, modelValue) ? 'bg-primary/8 text-primary font-medium' : '',
+            eq(opt.value, modelValue) ? 'bg-secondary-container text-on-secondary-container font-medium' : '',
           ]"
           @click="select(opt)"
         >
@@ -296,7 +296,7 @@ const labelClasses = computed(() => {
             v-if="eq(opt.value, modelValue)"
             name="check"
             :size="18"
-            class="shrink-0 text-primary"
+            class="shrink-0 text-on-secondary-container"
           />
           <span v-else class="w-[18px] shrink-0" />
           {{ opt.label }}
@@ -336,16 +336,16 @@ const labelClasses = computed(() => {
                 opt.disabled
                   ? 'cursor-not-allowed opacity-38 text-on-surface'
                   : 'text-on-surface hover:bg-on-surface/8',
-                eq(opt.value, modelValue) ? 'bg-primary/8' : '',
+                eq(opt.value, modelValue) ? 'bg-secondary-container' : '',
               ]"
               @click="select(opt)"
             >
               <MIcon
                 :name="eq(opt.value, modelValue) ? 'radio_button_checked' : 'radio_button_unchecked'"
                 :size="20"
-                :class="eq(opt.value, modelValue) ? 'text-primary' : 'text-on-surface-variant'"
+                :class="eq(opt.value, modelValue) ? 'text-on-secondary-container' : 'text-on-surface-variant'"
               />
-              <span :class="eq(opt.value, modelValue) ? 'text-primary font-medium' : ''">
+              <span :class="eq(opt.value, modelValue) ? 'text-on-secondary-container font-medium' : ''">
                 {{ opt.label }}
               </span>
             </div>
