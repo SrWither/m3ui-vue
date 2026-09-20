@@ -2,7 +2,7 @@
 import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue'
 import MIcon from './MIcon.vue'
 
-type Language = 'javascript' | 'typescript' | 'json' | 'html' | 'css' | 'python' | 'vue' | 'plain'
+type Language = 'javascript' | 'typescript' | 'json' | 'html' | 'css' | 'python' | 'vue' | 'c' | 'cpp' | 'rust' | 'asm' | 'plain'
 
 const props = withDefaults(
   defineProps<{
@@ -49,6 +49,10 @@ const langLabel = computed(() => {
     css: 'CSS',
     python: 'Python',
     vue: 'Vue',
+    c: 'C',
+    cpp: 'C++',
+    rust: 'Rust',
+    asm: 'Assembly',
     plain: 'Texto',
   }
   return labels[props.language]
@@ -57,7 +61,7 @@ const langLabel = computed(() => {
 async function loadModules() {
   if (cmModules) return cmModules
 
-  const [viewMod, stateMod, commandsMod, languageMod, highlightMod, oneDarkMod, jsMod, jsonMod, htmlMod, cssMod, pyMod, vueMod] = await Promise.all([
+  const [viewMod, stateMod, commandsMod, languageMod, highlightMod, oneDarkMod, jsMod, jsonMod, htmlMod, cssMod, pyMod, vueMod, cppMod, rustMod, asmMod] = await Promise.all([
     import('@codemirror/view'),
     import('@codemirror/state'),
     import('@codemirror/commands'),
@@ -70,9 +74,12 @@ async function loadModules() {
     import('@codemirror/lang-css'),
     import('@codemirror/lang-python'),
     import('@codemirror/lang-vue'),
+    import('@codemirror/lang-cpp'),
+    import('@codemirror/lang-rust'),
+    import('@codemirror/legacy-modes/mode/gas'),
   ])
 
-  cmModules = { viewMod, stateMod, commandsMod, languageMod, highlightMod, oneDarkMod, jsMod, jsonMod, htmlMod, cssMod, pyMod, vueMod }
+  cmModules = { viewMod, stateMod, commandsMod, languageMod, highlightMod, oneDarkMod, jsMod, jsonMod, htmlMod, cssMod, pyMod, vueMod, cppMod, rustMod, asmMod }
   return cmModules
 }
 
@@ -131,6 +138,9 @@ function getLangExtension(mods: any) {
     case 'css': return mods.cssMod.css()
     case 'python': return mods.pyMod.python()
     case 'vue': return mods.vueMod.vue()
+    case 'c': case 'cpp': return mods.cppMod.cpp()
+    case 'rust': return mods.rustMod.rust()
+    case 'asm': return mods.languageMod.StreamLanguage.define(mods.asmMod.gas)
     default: return []
   }
 }
