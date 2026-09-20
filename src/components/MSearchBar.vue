@@ -129,7 +129,7 @@ onUnmounted(() => { document.body.style.overflow = '' })
   <div ref="barEl" class="relative w-full">
     <div
       v-show="!expanded"
-      class="flex h-14 items-center gap-3 rounded-full bg-surface-container-high px-4 shadow-elevation-1 transition-shadow duration-150"
+      class="flex h-14 items-center gap-3 rounded-full bg-surface-container-high px-4 shadow-elevation-3 transition-shadow duration-150 focus-within:outline focus-within:outline-2 focus-within:outline-secondary focus-within:-outline-offset-2"
       :class="disabled ? 'pointer-events-none opacity-[0.38]' : ''"
     >
       <span class="inline-flex shrink-0 items-center" :class="iconPosition === 'end' ? 'order-last' : ''">
@@ -180,6 +180,7 @@ onUnmounted(() => { document.body.style.overflow = '' })
             icon="arrow_back"
             :label="locale.close"
             variant="standard"
+            style="color: var(--color-on-surface)"
             @click="close"
           />
           <input
@@ -205,7 +206,7 @@ onUnmounted(() => { document.body.style.overflow = '' })
           <slot name="trailing" />
         </div>
 
-        <div class="h-px shrink-0 bg-outline-variant" />
+        <div class="h-px shrink-0 bg-outline" />
 
         <div class="flex-1 overflow-y-auto">
           <slot />
