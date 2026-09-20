@@ -14,7 +14,7 @@ const props = withDefaults(
     icon: string
     label?: string
     color?: 'primary' | 'secondary' | 'tertiary' | 'surface'
-    size?: 'small' | 'regular' | 'large'
+    size?: 'small' | 'regular' | 'medium' | 'large'
     disabled?: boolean
     items?: SpeedDialItem[]
     direction?: 'up' | 'down' | 'left' | 'right' | 'radial'
@@ -77,7 +77,8 @@ const fabSizeClasses = computed(() => {
   // icon-to-label gap, 20dp end padding, 80dp minimum width.
   if (props.label) return 'h-14 min-w-20 rounded-2xl pl-4 pr-5 gap-3'
   switch (props.size) {
-    case 'small': return 'h-10 w-10 rounded-lg'
+    case 'small': return 'h-10 w-10 rounded-md'
+    case 'medium': return 'h-20 w-20 rounded-[20px]'
     case 'large': return 'h-24 w-24 rounded-[28px]'
     default: return 'h-14 w-14 rounded-2xl'
   }
@@ -86,8 +87,9 @@ const fabSizeClasses = computed(() => {
 const fabIconSize = computed(() => {
   if (props.label) return 24
   switch (props.size) {
-    case 'small': return 20
-    case 'large': return 36
+    case 'small': return 24
+    case 'medium': return 28
+    case 'large': return 32
     default: return 24
   }
 })
@@ -96,6 +98,7 @@ const fabPx = computed(() => {
   if (props.label) return 56
   switch (props.size) {
     case 'small': return 40
+    case 'medium': return 80
     case 'large': return 96
     default: return 56
   }
@@ -277,7 +280,7 @@ onUnmounted(() => {
       :is="fabTag"
       :to="to || undefined"
       :type="to ? undefined : 'button'"
-      class="relative inline-flex cursor-pointer items-center justify-center overflow-hidden shadow-elevation-1 transition-shadow duration-150 hover:shadow-elevation-2 active:shadow-elevation-1 disabled:cursor-not-allowed disabled:opacity-[0.38] before:content-[''] before:pointer-events-none before:absolute before:inset-0 before:bg-current before:opacity-0 before:transition-opacity before:duration-150 hover:before:opacity-[0.08] active:before:opacity-[0.12]"
+      class="relative inline-flex cursor-pointer items-center justify-center overflow-hidden shadow-elevation-3 transition-shadow duration-150 hover:shadow-elevation-4 active:shadow-elevation-3 disabled:cursor-not-allowed disabled:opacity-[0.38] before:content-[''] before:pointer-events-none before:absolute before:inset-0 before:bg-current before:opacity-0 before:transition-opacity before:duration-150 hover:before:opacity-[0.08] active:before:opacity-[0.12]"
       :class="[colorMap[color], fabSizeClasses]"
       :disabled="disabled"
       @pointerdown="createRipple"
@@ -313,7 +316,7 @@ onUnmounted(() => {
           :is="item.to ? 'RouterLink' : 'button'"
           :to="item.to || undefined"
           :type="item.to ? undefined : 'button'"
-          class="relative flex cursor-pointer items-center justify-center overflow-hidden rounded-lg shadow-elevation-1 transition-shadow duration-150 hover:shadow-elevation-2 active:shadow-elevation-1 before:content-[''] before:pointer-events-none before:absolute before:inset-0 before:bg-current before:opacity-0 before:transition-opacity before:duration-150 hover:before:opacity-[0.08] active:before:opacity-[0.12]"
+          class="relative flex cursor-pointer items-center justify-center overflow-hidden rounded-lg shadow-elevation-3 transition-shadow duration-150 hover:shadow-elevation-4 active:shadow-elevation-3 before:content-[''] before:pointer-events-none before:absolute before:inset-0 before:bg-current before:opacity-0 before:transition-opacity before:duration-150 hover:before:opacity-[0.08] active:before:opacity-[0.12]"
           :class="colorMap[color]"
           :style="{ width: `${ITEM_PX}px`, height: `${ITEM_PX}px` }"
           @pointerdown="(e: PointerEvent) => handleItemClick(e, item, e.currentTarget as HTMLElement)"
