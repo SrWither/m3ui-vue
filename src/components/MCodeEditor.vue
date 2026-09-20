@@ -161,6 +161,7 @@ function buildExtensions(mods: any) {
   if (props.wrap) exts.push(viewMod.EditorView.lineWrapping)
   if (props.lineNumbers) exts.push(viewMod.lineNumbers())
   if (props.theme === 'dark') exts.push(oneDarkMod.oneDark)
+  if (props.placeholder) exts.push(viewMod.placeholder(props.placeholder))
 
   return exts
 }
@@ -189,7 +190,7 @@ watch(() => props.modelValue, (val) => {
   }
 })
 
-watch([() => props.language, () => props.theme, () => props.readonly, () => props.lineNumbers, () => props.wrap], createEditor)
+watch([() => props.language, () => props.theme, () => props.readonly, () => props.lineNumbers, () => props.wrap, () => props.placeholder], createEditor)
 
 onBeforeUnmount(() => view?.destroy())
 </script>

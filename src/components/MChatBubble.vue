@@ -10,7 +10,6 @@ const props = withDefaults(
     time?: string
     side?: 'left' | 'right'
     avatar?: string
-    avatarSrc?: string
     status?: 'sent' | 'delivered' | 'read'
     color?: 'primary' | 'secondary' | 'tertiary'
     tail?: boolean

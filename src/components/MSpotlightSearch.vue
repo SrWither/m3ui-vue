@@ -141,7 +141,7 @@ onBeforeUnmount(() => {
     <Transition name="m3-spot">
       <div
         v-if="modelValue"
-        class="fixed inset-0 z-50 flex items-start justify-center bg-scrim/50 pt-[12vh]"
+        class="fixed inset-0 z-50 flex items-start justify-center bg-scrim/32 pt-[12vh]"
         @click.self="close"
       >
         <div class="spot-box flex w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-surface-container-high shadow-elevation-3">

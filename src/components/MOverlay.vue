@@ -34,7 +34,7 @@ function handleScrimClick() {
       <div v-if="modelValue" class="fixed inset-0" :style="style">
         <div
           v-if="scrim"
-          class="absolute inset-0 bg-scrim/50"
+          class="absolute inset-0 bg-scrim/32"
           @click="handleScrimClick"
         />
         <div class="relative h-full w-full">
