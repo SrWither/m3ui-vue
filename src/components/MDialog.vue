@@ -8,6 +8,11 @@ const props = withDefaults(
     modelValue: boolean
     title?: string
     maxWidth?: string
+    /**
+     * M3's `AlertDialogDefaults` has no max-height token at all (only `DialogMaxWidth`) — the
+     * default here is a library-chosen viewport-relative cap, not a spec value.
+     */
+    maxHeight?: string
     persistent?: boolean
     fullscreen?: boolean
     closeLabel?: string
@@ -22,6 +27,7 @@ const props = withDefaults(
   {
     // AlertDialogDefaults.DialogMaxWidth = 560dp
     maxWidth: 'max-w-[560px]',
+    maxHeight: 'max-h-[90vh]',
     persistent: false,
     fullscreen: false,
     closable: true,
@@ -64,7 +70,7 @@ watch(
       await nextTick()
       updateDividerVisibility()
       // Observing contentEl alone only catches viewport-driven resizes (e.g. window resize
-      // changing the max-h-[90vh] cap) — its own box stays put when the *slotted* content
+      // changing the maxHeight cap) — its own box stays put when the *slotted* content
       // changes height, since overflow doesn't affect the scroll container's own size. The
       // inner wrapper around the slot grows/shrinks with the actual content, so that's what
       // needs observing to catch dynamic content (reactive text, async-loaded content, etc).
@@ -96,8 +102,8 @@ onUnmounted(() => {
         @click.self="close"
       >
         <div
-          class="dialog-box flex max-h-[90vh] min-w-[280px] w-full flex-col rounded-xl bg-surface-container-high shadow-elevation-3"
-          :class="maxWidth"
+          class="dialog-box flex min-w-[280px] w-full flex-col rounded-xl bg-surface-container-high shadow-elevation-3"
+          :class="[maxWidth, maxHeight]"
         >
           <!--
             AlertDialogDefaults.dialogPadding is 24dp on all four sides of the whole content
