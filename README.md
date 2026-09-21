@@ -172,7 +172,7 @@ const name = ref('')
 | `MList` / `MListItem` / `MListSubheader` | Lists |
 | `MTimeline` | Vertical timeline |
 | `MCalendar` | Event calendar |
-| `MCarousel` | M3's real multi-browse carousel — one large focal item, neighbors continuously mask/resize toward a small "peek" size as you scroll (ported from `HorizontalMultiBrowseCarousel`) |
+| `MCarousel` | **Beta.** M3's real multi-browse carousel — one large focal item, neighbors continuously mask/resize toward a small "peek" size as you scroll (ported from `HorizontalMultiBrowseCarousel`). The arrangement math is a simplified triangular falloff rather than the real `Arrangement.findLowestCostArrangement` search — see the changelog for scope |
 | `MSimpleCarousel` | Fixed-width slide carousel (hero/multi-browse\*/uncontained layouts) — the old `MCarousel`, renamed since `MCarousel` is now the real M3 carousel. \*its own `multi-browse` layout mode is a simpler fixed-width approximation, not the real masking behavior `MCarousel` implements |
 | `MLightbox` | Fullscreen image lightbox with gallery navigation, swipe, and auto-detected `<img>` scanning |
 | `MJsonViewer` | JSON tree viewer |
