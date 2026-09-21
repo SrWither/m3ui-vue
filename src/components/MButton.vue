@@ -19,6 +19,12 @@ const props = withDefaults(
     disabled?: boolean
     loading?: boolean
     icon?: string
+    /**
+     * Which side of the label `icon` renders on. Real M3 buttons support both via
+     * `ButtonDefaults.contentPaddingFor(hasStartIcon/hasEndIcon)` — padding ends up identical
+     * either way at every tier, so this only changes render order, not spacing.
+     */
+    iconPos?: 'leading' | 'trailing'
     size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
     shape?: 'rounded' | 'squared'
     to?: string | Record<string, any>
@@ -29,6 +35,7 @@ const props = withDefaults(
     type: 'button',
     disabled: false,
     loading: false,
+    iconPos: 'leading',
     size: 'sm',
     shape: 'rounded',
   },
@@ -164,8 +171,14 @@ function createRipple(event: PointerEvent) {
     :style="customStyle"
     @pointerdown="createRipple"
   >
-    <MSpinner v-if="loading" :size="spinnerSize" />
-    <MIcon v-else-if="icon" :name="icon" :size="iconSize" />
+    <template v-if="iconPos === 'leading'">
+      <MSpinner v-if="loading" :size="spinnerSize" />
+      <MIcon v-else-if="icon" :name="icon" :size="iconSize" />
+    </template>
     <slot />
+    <template v-if="iconPos === 'trailing'">
+      <MSpinner v-if="loading" :size="spinnerSize" />
+      <MIcon v-else-if="icon" :name="icon" :size="iconSize" />
+    </template>
   </component>
 </template>
