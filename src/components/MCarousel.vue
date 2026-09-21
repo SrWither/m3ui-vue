@@ -57,12 +57,12 @@ const props = withDefaults(
 const emit = defineEmits<{ change: [index: number] }>()
 
 const trackEl = ref<HTMLElement | null>(null)
-const slotEls = ref<(HTMLElement | null)[]>([])
+const itemEls = ref<(HTMLElement | null)[]>([])
 const containerWidth = ref(0)
 const activeIndex = ref(0)
 
-function setSlotRef(el: unknown, i: number) {
-  slotEls.value[i] = (el as HTMLElement) ?? null
+function setItemRef(el: unknown, i: number) {
+  itemEls.value[i] = (el as HTMLElement) ?? null
 }
 
 const targetLarge = computed(() => Math.min(props.itemWidth, containerWidth.value || props.itemWidth))
@@ -93,8 +93,8 @@ function updateMasks() {
   let closest = 0
   let closestDist = Infinity
 
-  for (let i = 0; i < slotEls.value.length; i++) {
-    const el = slotEls.value[i]
+  for (let i = 0; i < itemEls.value.length; i++) {
+    const el = itemEls.value[i]
     if (!el) { widths.push(large); offsets.push(0); continue }
     const offset = el.getBoundingClientRect().left - trackLeft
 
@@ -126,17 +126,19 @@ function updateMasks() {
   }
 }
 
-function slotStyle() {
-  return {
-    width: `${targetLarge.value}px`,
-    flexShrink: '0',
-  }
-}
-
-function maskStyle(i: number) {
+// The item element's own width IS the animated mask width — not a fixed-width outer "slot"
+// with a shrinking element inside it. That was the first cut of this component, and it was
+// wrong: shrinking an inner element while its outer flex-item stayed at the full large width
+// just left dead space where the flex item used to be, instead of letting flex naturally close
+// the gap by reflowing the next item up against it (exactly what the real component's keyline
+// masking achieves, just via a different mechanism — Compose positions items directly from
+// keyline offsets rather than relying on flow layout, but the visual result needs to be the same:
+// no gaps between items regardless of their current mask size).
+function itemStyle(i: number) {
   return {
     width: `${maskWidths.value[i] ?? targetLarge.value}px`,
     height: '100%',
+    flexShrink: '0',
     overflow: 'hidden',
     position: 'relative' as const,
   }
@@ -153,7 +155,7 @@ function imgStyle(i: number) {
 }
 
 function scrollToItem(index: number) {
-  const el = slotEls.value[index]
+  const el = itemEls.value[index]
   if (!el || !trackEl.value) return
   trackEl.value.scrollTo({ left: el.offsetLeft, behavior: 'smooth' })
 }
@@ -220,22 +222,21 @@ defineExpose({ next, prev, scrollToItem })
       <div
         v-for="(item, i) in items"
         :key="i"
-        :ref="(el) => setSlotRef(el, i)"
-        :style="slotStyle()"
+        :ref="(el) => setItemRef(el, i)"
+        class="rounded-2xl"
+        :style="itemStyle(i)"
       >
-        <div class="h-full overflow-hidden rounded-2xl" :style="maskStyle(i)">
-          <img
-            :src="item.src"
-            :alt="item.alt ?? item.label ?? ''"
-            class="pointer-events-none object-cover"
-            :style="imgStyle(i)"
-          />
-          <div
-            v-if="item.label"
-            class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-4 pb-3 pt-8"
-          >
-            <p class="text-title-medium font-medium text-white">{{ item.label }}</p>
-          </div>
+        <img
+          :src="item.src"
+          :alt="item.alt ?? item.label ?? ''"
+          class="pointer-events-none object-cover"
+          :style="imgStyle(i)"
+        />
+        <div
+          v-if="item.label"
+          class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-4 pb-3 pt-8"
+        >
+          <p class="text-title-medium font-medium text-white">{{ item.label }}</p>
         </div>
       </div>
     </div>
