@@ -1,4 +1,8 @@
 <p align="center">
+  <img src=".github/assets/logo.png" width="120" height="120" alt="M3UI Vue logo">
+</p>
+
+<p align="center">
   <strong>M3UI Vue</strong>
 </p>
 
