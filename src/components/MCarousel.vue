@@ -1,129 +1,124 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import MIcon from './MIcon.vue'
 
 export interface CarouselItem {
   src: string
   alt?: string
   label?: string
-  supportingText?: string
-  ratio?: number
 }
 
+/*
+ * Ported from the real M3 `HorizontalMultiBrowseCarousel` (Carousel.kt/Keylines.kt), not the
+ * "flat fixed-width items" look this library's old MCarousel had (now MSimpleCarousel). The real
+ * spec's signature behavior: one large "focal" item at rest, with neighbors progressively masked
+ * down toward a small "peek" size the further they are from the focal position — items grow/shrink
+ * continuously as you scroll, they're not just fixed-size slides.
+ *
+ * Real defaults ported exactly: minSmallItemWidth = MinSmallItemSize = 40dp, maxSmallItemWidth =
+ * MaxSmallItemSize = 56dp, itemSpacing = 0dp, targetSmallSize = clamp(largeSize/3, min, max), and
+ * the left-aligned focal convention (createLeftAlignedKeylineList — the focal item sits at the
+ * scroll container's left edge, not centered).
+ *
+ * Deliberately NOT ported: the real `Arrangement.findLowestCostArrangement` combinatorial search
+ * that decides exactly how many large/medium/small items fit a given width to the pixel. That's a
+ * large amount of code for a difference only visible at unusual width/item-count combinations —
+ * this uses a direct triangular falloff from the focal position instead, which converges to the
+ * same large-focal-item-with-shrinking-neighbors look for realistic carousels.
+ */
 const props = withDefaults(
   defineProps<{
     items: CarouselItem[]
-    layout?: 'hero' | 'multi-browse' | 'uncontained'
+    /** Target width of the large, fully-visible focal item, in px (preferredItemWidth). */
+    itemWidth?: number
+    /** Spacing between item slots, in px. Real default (CarouselDefaults.ItemSpacing) is 0. */
+    itemSpacing?: number
+    /** Real default (CarouselDefaults.MinSmallItemSize) is 40. */
+    minSmallItemWidth?: number
+    /** Real default (CarouselDefaults.MaxSmallItemSize) is 56. */
+    maxSmallItemWidth?: number
     height?: string
     showArrows?: boolean
-    showIndicators?: boolean
     autoplay?: boolean
     interval?: number
-    gap?: number
-    visibleItems?: number
-    animated?: boolean
   }>(),
   {
-    layout: 'hero',
-    height: '320px',
+    itemWidth: 280,
+    itemSpacing: 0,
+    minSmallItemWidth: 40,
+    maxSmallItemWidth: 56,
+    height: '220px',
     showArrows: true,
-    showIndicators: true,
     autoplay: false,
     interval: 5000,
-    gap: 8,
-    visibleItems: 3,
-    animated: false,
   },
 )
 
 const emit = defineEmits<{ change: [index: number] }>()
 
-const trackEl = ref<HTMLElement>()
-const itemEls = ref<HTMLElement[]>([])
+const trackEl = ref<HTMLElement | null>(null)
+const slotEls = ref<(HTMLElement | null)[]>([])
+const containerWidth = ref(0)
 const activeIndex = ref(0)
-const scrollPos = ref(0)
-const isPageBased = computed(() => props.layout === 'multi-browse' || props.layout === 'uncontained')
 
-const totalPages = computed(() => {
-  if (!isPageBased.value) return props.items.length
-  if (!trackEl.value) return 1
-  const track = trackEl.value
-  return Math.max(1, Math.ceil(track.scrollWidth / track.clientWidth))
-})
-
-const activePage = computed(() => {
-  if (!isPageBased.value) return activeIndex.value
-  if (!trackEl.value) return 0
-  const track = trackEl.value
-  if (track.scrollWidth <= track.clientWidth) return 0
-  const _ = scrollPos.value
-  return Math.round(track.scrollLeft / track.clientWidth)
-})
-const itemTransforms = ref<string[]>([])
-const imageTransforms = ref<string[]>([])
-let autoTimer: ReturnType<typeof setInterval> | null = null
-let rafId = 0
-let scrollTimeout: ReturnType<typeof setTimeout> | null = null
-
-function setItemRef(el: any, i: number) {
-  if (el) itemEls.value[i] = el as HTMLElement
+function setSlotRef(el: unknown, i: number) {
+  slotEls.value[i] = (el as HTMLElement) ?? null
 }
 
-// ── Scroll handling (only transforms, never layout) ────────────
+const targetLarge = computed(() => Math.min(props.itemWidth, containerWidth.value || props.itemWidth))
+const targetSmall = computed(() => {
+  const raw = targetLarge.value / 3
+  return Math.min(Math.max(raw, props.minSmallItemWidth), props.maxSmallItemWidth)
+})
+
+const maskWidths = ref<number[]>([])
+const imgOffsets = ref<number[]>([])
+let rafId = 0
+
 function onScroll() {
   if (rafId) return
   rafId = requestAnimationFrame(() => {
     rafId = 0
-    updateTransforms()
+    updateMasks()
   })
-
-  if (scrollTimeout) clearTimeout(scrollTimeout)
 }
 
-function updateTransforms() {
+function updateMasks() {
   if (!trackEl.value) return
-  const track = trackEl.value
-  scrollPos.value = track.scrollLeft
-  const trackRect = track.getBoundingClientRect()
-  const trackW = trackRect.width
-  const centerX = trackRect.left + trackW / 2
-  const transforms: string[] = []
-  const imgTransforms: string[] = []
+  const trackLeft = trackEl.value.getBoundingClientRect().left
+  const large = targetLarge.value
+  const small = targetSmall.value
+  const widths: number[] = []
+  const offsets: number[] = []
   let closest = 0
   let closestDist = Infinity
 
-  const refX = props.layout === 'multi-browse' ? trackRect.left : centerX
+  for (let i = 0; i < slotEls.value.length; i++) {
+    const el = slotEls.value[i]
+    if (!el) { widths.push(large); offsets.push(0); continue }
+    const offset = el.getBoundingClientRect().left - trackLeft
 
-  for (let i = 0; i < itemEls.value.length; i++) {
-    const el = itemEls.value[i]
-    if (!el) { transforms.push(''); imgTransforms.push(''); continue }
-    const rect = el.getBoundingClientRect()
-    const itemCenterX = rect.left + rect.width / 2
-    const dist = props.layout === 'multi-browse'
-      ? Math.abs(rect.left - refX)
-      : Math.abs(itemCenterX - centerX)
-    const norm = Math.min(dist / (trackW * 0.5), 1)
-
-    if (props.layout === 'hero') {
-      imgTransforms.push(`translateX(${(itemCenterX - centerX) * -0.08}px) scale(1.1)`)
-      transforms.push('')
-    } else if (props.layout === 'uncontained' && props.animated) {
-      const s = 1 - norm * 0.12
-      transforms.push(`scale(${s})`)
-      imgTransforms.push('')
+    let width: number
+    let imgOffset: number
+    if (offset <= 0) {
+      // Exiting (or resting) on the left: mask grows in from the left, keep the right portion
+      // of the image visible (matches the real maskStart clipping from the item's start edge).
+      width = Math.max(large + offset, small)
+      imgOffset = -(large - width)
     } else {
-      transforms.push('')
-      imgTransforms.push('')
+      // Upcoming on the right: mask shrinks from the right, keep the left portion visible.
+      width = Math.max(large - offset, small)
+      imgOffset = 0
     }
+    widths.push(width)
+    offsets.push(imgOffset)
 
-    if (dist < closestDist) {
-      closestDist = dist
-      closest = i
-    }
+    const dist = Math.abs(offset)
+    if (dist < closestDist) { closestDist = dist; closest = i }
   }
 
-  itemTransforms.value = transforms
-  imageTransforms.value = imgTransforms
+  maskWidths.value = widths
+  imgOffsets.value = offsets
 
   if (closest !== activeIndex.value) {
     activeIndex.value = closest
@@ -131,83 +126,45 @@ function updateTransforms() {
   }
 }
 
-// ── Fixed item widths (never change during scroll) ─────────────
-function itemWidth(i: number) {
-  switch (props.layout) {
-    case 'hero':
-      return `calc(100% - 48px)`
-    case 'multi-browse':
-      return `calc(${100 / props.visibleItems}% - ${props.gap * (props.visibleItems - 1) / props.visibleItems}px)`
-    case 'uncontained':
-      return `${(props.items[i]?.ratio ?? 1) * 260}px`
-    default:
-      return '80%'
+function slotStyle() {
+  return {
+    width: `${targetLarge.value}px`,
+    flexShrink: '0',
   }
 }
 
-function itemStyle(i: number) {
-  const style: Record<string, string> = {
-    flexShrink: '0',
-    width: itemWidth(i),
+function maskStyle(i: number) {
+  return {
+    width: `${maskWidths.value[i] ?? targetLarge.value}px`,
+    height: '100%',
+    overflow: 'hidden',
+    position: 'relative' as const,
   }
-  const t = itemTransforms.value[i]
-  if (t) {
-    style.transform = t
-    style.transition = 'transform 120ms ease-out'
-  }
-  return style
 }
 
 function imgStyle(i: number) {
-  const t = imageTransforms.value[i]
-  if (!t) return {}
-  return { transform: t }
+  return {
+    width: `${targetLarge.value}px`,
+    height: '100%',
+    position: 'absolute' as const,
+    left: `${imgOffsets.value[i] ?? 0}px`,
+    top: '0',
+  }
 }
 
-// ── Navigation ─────────────────────────────────────────────────
 function scrollToItem(index: number) {
-  const el = itemEls.value[index]
+  const el = slotEls.value[index]
   if (!el || !trackEl.value) return
-  const track = trackEl.value
-  const scrollLeft = el.offsetLeft - (track.clientWidth - el.offsetWidth) / 2
-  track.scrollTo({ left: scrollLeft, behavior: 'smooth' })
-}
-
-function scrollToPage(page: number) {
-  if (!trackEl.value) return
-  const track = trackEl.value
-  track.scrollTo({ left: page * track.clientWidth, behavior: 'smooth' })
+  trackEl.value.scrollTo({ left: el.offsetLeft, behavior: 'smooth' })
 }
 
 function next() {
-  if (isPageBased.value) {
-    if (!trackEl.value) return
-    trackEl.value.scrollBy({ left: trackEl.value.clientWidth, behavior: 'smooth' })
-  } else {
-    const i = activeIndex.value < props.items.length - 1 ? activeIndex.value + 1 : 0
-    scrollToItem(i)
-  }
+  const i = activeIndex.value < props.items.length - 1 ? activeIndex.value + 1 : 0
+  scrollToItem(i)
 }
-
 function prev() {
-  if (isPageBased.value) {
-    if (!trackEl.value) return
-    trackEl.value.scrollBy({ left: -trackEl.value.clientWidth, behavior: 'smooth' })
-  } else {
-    const i = activeIndex.value > 0 ? activeIndex.value - 1 : props.items.length - 1
-    scrollToItem(i)
-  }
-}
-
-function startAutoplay() {
-  stopAutoplay()
-  if (props.autoplay && props.items.length > 1) {
-    autoTimer = setInterval(next, props.interval)
-  }
-}
-
-function stopAutoplay() {
-  if (autoTimer) { clearInterval(autoTimer); autoTimer = null }
+  const i = activeIndex.value > 0 ? activeIndex.value - 1 : props.items.length - 1
+  scrollToItem(i)
 }
 
 function onKeydown(e: KeyboardEvent) {
@@ -215,23 +172,35 @@ function onKeydown(e: KeyboardEvent) {
   else if (e.key === 'ArrowLeft') prev()
 }
 
-const trackPadding = computed(() => {
-  if (props.layout === 'hero') return '0 24px'
-  if (props.layout === 'uncontained') return '0 24px'
-  return '0'
-})
+let autoTimer: ReturnType<typeof setInterval> | null = null
+function startAutoplay() {
+  stopAutoplay()
+  if (props.autoplay && props.items.length > 1) autoTimer = setInterval(next, props.interval)
+}
+function stopAutoplay() {
+  if (autoTimer) { clearInterval(autoTimer); autoTimer = null }
+}
 
-watch(() => props.autoplay, startAutoplay)
+let resizeObserver: ResizeObserver | null = null
 onMounted(() => {
+  if (trackEl.value) {
+    containerWidth.value = trackEl.value.clientWidth
+    resizeObserver = new ResizeObserver(() => {
+      if (trackEl.value) containerWidth.value = trackEl.value.clientWidth
+      updateMasks()
+    })
+    resizeObserver.observe(trackEl.value)
+  }
+  nextTick(updateMasks)
   startAutoplay()
-  nextTick(() => updateTransforms())
 })
 onBeforeUnmount(() => {
   stopAutoplay()
   if (rafId) cancelAnimationFrame(rafId)
+  resizeObserver?.disconnect()
 })
 
-defineExpose({ next, prev, scrollToItem, scrollToPage })
+defineExpose({ next, prev, scrollToItem })
 </script>
 
 <template>
@@ -245,30 +214,28 @@ defineExpose({ next, prev, scrollToItem, scrollToPage })
     <div
       ref="trackEl"
       class="carousel-track flex overflow-x-auto"
-      :class="layout === 'multi-browse' ? 'snap-start' : 'snap-center'"
-      :style="{ height, gap: `${gap}px`, padding: trackPadding }"
+      :style="{ height, gap: `${itemSpacing}px` }"
       @scroll.passive="onScroll"
     >
       <div
         v-for="(item, i) in items"
         :key="i"
-        :ref="(el) => setItemRef(el, i)"
-        class="relative overflow-hidden rounded-2xl"
-        :style="itemStyle(i)"
+        :ref="(el) => setSlotRef(el, i)"
+        :style="slotStyle()"
       >
-        <img
-          :src="item.src"
-          :alt="item.alt ?? item.label ?? ''"
-          class="pointer-events-none h-full w-full object-cover"
-          :style="imgStyle(i)"
-        />
-
-        <div
-          v-if="item.label || item.supportingText"
-          class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-5 pb-4 pt-12"
-        >
-          <p v-if="item.label" class="text-title-medium font-medium text-white">{{ item.label }}</p>
-          <p v-if="item.supportingText" class="mt-0.5 text-body-small text-white/80">{{ item.supportingText }}</p>
+        <div class="h-full overflow-hidden rounded-2xl" :style="maskStyle(i)">
+          <img
+            :src="item.src"
+            :alt="item.alt ?? item.label ?? ''"
+            class="pointer-events-none object-cover"
+            :style="imgStyle(i)"
+          />
+          <div
+            v-if="item.label"
+            class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-4 pb-3 pt-8"
+          >
+            <p class="text-title-medium font-medium text-white">{{ item.label }}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -289,22 +256,7 @@ defineExpose({ next, prev, scrollToItem, scrollToPage })
         <MIcon name="chevron_right" :size="24" />
       </button>
     </template>
-
-    </div>
-
-    <div
-      v-if="showIndicators && totalPages > 1"
-      class="flex justify-center gap-1.5 pt-3"
-    >
-      <button
-        v-for="p in totalPages"
-        :key="p"
-        type="button"
-        class="h-2 cursor-pointer rounded-full transition-all duration-300"
-        :class="(p - 1) === activePage ? 'w-5 bg-on-surface' : 'w-2 bg-on-surface/30 hover:bg-on-surface/50'"
-        @click="isPageBased ? scrollToPage(p - 1) : scrollToItem(p - 1)"
-      />
-    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -316,10 +268,7 @@ defineExpose({ next, prev, scrollToItem, scrollToPage })
 .carousel-track::-webkit-scrollbar {
   display: none;
 }
-.snap-center > * {
-  scroll-snap-align: center;
-}
-.snap-start > * {
+.carousel-track > * {
   scroll-snap-align: start;
 }
 </style>

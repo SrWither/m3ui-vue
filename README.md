@@ -172,7 +172,8 @@ const name = ref('')
 | `MList` / `MListItem` / `MListSubheader` | Lists |
 | `MTimeline` | Vertical timeline |
 | `MCalendar` | Event calendar |
-| `MCarousel` | Image/content carousel |
+| `MCarousel` | M3's real multi-browse carousel — one large focal item, neighbors continuously mask/resize toward a small "peek" size as you scroll (ported from `HorizontalMultiBrowseCarousel`) |
+| `MSimpleCarousel` | Fixed-width slide carousel (hero/multi-browse\*/uncontained layouts) — the old `MCarousel`, renamed since `MCarousel` is now the real M3 carousel. \*its own `multi-browse` layout mode is a simpler fixed-width approximation, not the real masking behavior `MCarousel` implements |
 | `MLightbox` | Fullscreen image lightbox with gallery navigation, swipe, and auto-detected `<img>` scanning |
 | `MJsonViewer` | JSON tree viewer |
 | `MRelativeTime` | Auto-updating "3 minutes ago" / "in 2 hours" text, locale-aware via `Intl.RelativeTimeFormat` |
