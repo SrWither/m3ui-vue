@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
+import { useLocale } from '../composables/useLocale'
 
 export interface KanbanCard {
   id: string | number
@@ -17,7 +18,10 @@ export interface KanbanColumn {
 
 const props = defineProps<{
   modelValue: KanbanColumn[]
+  emptyText?: string
 }>()
+
+const locale = useLocale()
 
 const emit = defineEmits<{
   'update:modelValue': [KanbanColumn[]]
@@ -139,7 +143,7 @@ function reset() {
           v-if="column.cards.length === 0"
           class="flex flex-1 items-center justify-center rounded-lg border border-dashed border-outline-variant/50 p-4"
         >
-          <p class="text-body-small text-on-surface-variant/60">Sin tarjetas</p>
+          <p class="text-body-small text-on-surface-variant/60">{{ emptyText ?? locale.noItems }}</p>
         </div>
       </div>
     </div>

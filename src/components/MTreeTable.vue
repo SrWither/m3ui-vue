@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import MIcon from './MIcon.vue'
+import { useLocale } from '../composables/useLocale'
 
 export interface TreeTableColumn {
   key: string
@@ -21,12 +22,15 @@ const props = withDefaults(defineProps<{
   defaultExpanded?: boolean
   indent?: number
   dense?: boolean
+  emptyText?: string
 }>(), {
   rowKey: 'id',
   defaultExpanded: false,
   indent: 24,
   dense: false,
 })
+
+const locale = useLocale()
 
 const emit = defineEmits<{ rowClick: [TreeTableRow] }>()
 
@@ -149,7 +153,7 @@ function alignClass(a?: string) { return a === 'center' ? 'text-center' : a === 
           <tr v-if="!flatRows.length">
             <td :colspan="columns.length" class="border-t border-outline-variant px-4 py-10 text-center">
               <MIcon name="account_tree" :size="36" class="mb-2 text-on-surface-variant opacity-30" />
-              <p class="text-body-medium text-on-surface-variant">Sin datos</p>
+              <p class="text-body-medium text-on-surface-variant">{{ emptyText ?? locale.noResults }}</p>
             </td>
           </tr>
         </tbody>

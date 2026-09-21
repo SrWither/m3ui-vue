@@ -2,6 +2,7 @@
 import { computed, provide, ref, type Ref } from 'vue'
 import MTreeNode from './_MTreeNode.vue'
 import MIcon from './MIcon.vue'
+import { useLocale } from '../composables/useLocale'
 
 // ── Public types ────────────────────────────────────────────────────────────
 
@@ -50,9 +51,10 @@ const props = withDefaults(
     checked: () => [],
     checkable: false,
     defaultExpanded: 'none',
-    emptyText: 'Sin elementos',
   },
 )
+
+const locale = useLocale()
 
 const emit = defineEmits<{
   'update:selected': [string | number | null]
@@ -158,7 +160,7 @@ defineExpose({ expandAll, collapseAll })
 
     <div v-else class="flex flex-col items-center gap-2 py-10 text-on-surface-variant">
       <MIcon name="account_tree" :size="32" class="opacity-30" />
-      <p class="text-body-medium">{{ emptyText }}</p>
+      <p class="text-body-medium">{{ emptyText ?? locale.noItems }}</p>
     </div>
   </div>
 </template>
