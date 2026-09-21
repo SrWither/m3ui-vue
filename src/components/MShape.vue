@@ -8,6 +8,9 @@ import { AnimatedMorph, getShape, toSvgPath, type ShapeName } from 'shape-morph'
 
 export type { ShapeName }
 
+// No default width/height here (matches MAspectRatio) — size it via `class`/`style` on the
+// component itself, e.g. `class="h-16 w-16"`. A hardcoded `h-full w-full` would fight Tailwind's
+// own (undefined) utility ordering against whatever sizing class the consumer passes through.
 const props = withDefaults(
   defineProps<{
     /** One of M3's 35 named "expressive" shapes (MaterialShapes.kt), e.g. 'Cookie9Sided', 'Heart'. */
@@ -57,6 +60,11 @@ watch(() => props.shape, (next, prev) => {
     size: 1,
     onFrame: (frame) => { pathD.value = frame.pathD },
   })
+  // The constructor only emits the start shape at progress 0 — setting `progress` is what
+  // actually kicks off the spring animation toward the end shape (see shape-morph's own
+  // useMorph, which drives this the same way). Skipping this makes the shape jump straight
+  // to its final frame with no visible interpolation, one render behind the prop change.
+  morph.progress = 1
   settledShape = next
 })
 
@@ -64,7 +72,7 @@ onUnmounted(() => morph?.dispose())
 </script>
 
 <template>
-  <span class="relative inline-block h-full w-full">
+  <span class="relative inline-block">
     <svg width="0" height="0" class="absolute">
       <defs>
         <clipPath :id="clipId" clipPathUnits="objectBoundingBox">
