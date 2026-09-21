@@ -14,6 +14,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MKanban`'s empty-column state was hardcoded in Spanish (`"Sin tarjetas"`) with no locale wiring at all — while auditing that bug, found the same problem in `MTree` (its `emptyText` prop's *default value* was hardcoded to `'Sin elementos'` rather than falling back to the locale) and `MTreeTable` (hardcoded `"Sin datos"`, no `emptyText` prop and no `useLocale()` import at all — its sibling `MDataTable` already did this correctly). All three now follow the same pattern `MDataTable`/`MTransferList` already established: `emptyText ?? locale.noResults` (`MTreeTable`, matching its sibling) or `emptyText ?? locale.noItems` (`MKanban`/`MTree`, matching `MTransferList`), with `emptyText` as a per-instance override
 - `MCodeEditor`: selecting text on the current line made the selection highlight invisible — CodeMirror renders its selection layer at `z-index: -1` by design (`@codemirror/view`'s `selectionLayer` has `above: false`, so it always sits behind the line content), and `.cm-activeLine`'s background was a fully opaque solid color, painting straight over that layer on whichever line happened to be active. Changed it to a translucent `color-mix()` tint (5% `on-surface` over transparent) so a selection on the active line now actually shows through, instead of being hidden underneath it
 
+### Added
+- `MButton` gained an `iconPos` prop (`'leading' | 'trailing'`, default `'leading'`) — real M3 buttons support both via `ButtonDefaults.contentPaddingFor(hasStartIcon/hasEndIcon)` (padding ends up identical either way at every tier, confirmed against `Button.kt`), but this library only ever rendered `icon` before the slot content, with no way to get a trailing icon (e.g. a "Next" button) without hand-composing one inside the slot yourself
+
 ## [0.8.0] - 2026-09-18
 
 ### Fixed
