@@ -7,6 +7,10 @@ import { useLocale } from '../composables/useLocale'
 import { useDebounce } from '../composables/useDebounce'
 import type { SelectOption } from './MSelect.vue'
 
+// Root is a fragment (field div + a sibling Teleport for the dropdown panel), so Vue can't
+// auto-apply a consumer's class/attrs to either one — forward them onto the field div below.
+defineOptions({ inheritAttrs: false })
+
 const props = withDefaults(
   defineProps<{
     modelValue: unknown
@@ -295,7 +299,7 @@ const labelClasses = computed(() => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-1">
+  <div class="flex flex-col gap-1" v-bind="$attrs">
     <div
       ref="fieldEl"
       class="relative"

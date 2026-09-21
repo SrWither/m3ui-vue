@@ -5,6 +5,10 @@ import MIconButton from './MIconButton.vue'
 import MSpinner from './MSpinner.vue'
 import { useLocale } from '../composables/useLocale'
 
+// Root is a fragment (bar div + a sibling Teleport for the expanded overlay panel), so Vue
+// can't auto-apply a consumer's class/attrs to either one — forward them onto the bar div below.
+defineOptions({ inheritAttrs: false })
+
 const props = withDefaults(
   defineProps<{
     modelValue?: string
@@ -126,7 +130,7 @@ onUnmounted(() => { document.body.style.overflow = '' })
 </script>
 
 <template>
-  <div ref="barEl" class="relative w-full">
+  <div ref="barEl" class="relative w-full" v-bind="$attrs">
     <div
       v-show="!expanded"
       class="flex h-14 items-center gap-3 rounded-full bg-surface-container-high px-4 shadow-elevation-3 transition-shadow duration-150 focus-within:outline focus-within:outline-2 focus-within:outline-secondary focus-within:-outline-offset-2"
