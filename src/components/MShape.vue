@@ -1,3 +1,7 @@
+<script lang="ts">
+export { shapeNames } from 'shape-morph'
+</script>
+
 <script setup lang="ts">
 import { onUnmounted, ref, useId, watch } from 'vue'
 import { AnimatedMorph, getShape, toSvgPath, type ShapeName } from 'shape-morph'
