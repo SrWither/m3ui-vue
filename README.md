@@ -205,6 +205,7 @@ const name = ref('')
 | `MStepper` | Step-by-step wizard |
 | `MPagination` | Page navigation |
 | `MNavigationBar` | Bottom navigation bar |
+| `MShortNavigationBar` | M3 Expressive's shorter (64dp) navigation bar — `equal` or `centered` item arrangement, `top` or `start` icon position |
 | `MNavigationRail` | Side navigation rail |
 | `MNavigationDrawer` | Collapsible side drawer |
 | `MTopAppBar` / `MAppBar` | Top app bar |
