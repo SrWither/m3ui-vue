@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 - `MTopAppBar`: the navigation icon (and trailing action icons) sat too close to the bar's edge — the row's `px-1` only accounted for `AppBar.kt`'s explicit `TopAppBarHorizontalPadding` (4dp), missing the extra 4dp the real `IconButton()` composable gets for free from `Modifier.minimumInteractiveComponentSize()` (it centers its 40dp visible container inside a 48dp touch target). `MIconButton` doesn't implement that invisible expansion, so the row padding is now `px-2` to land the icon glyph at the correct 16dp inset from the edge
+- `MCalendar`, `MScheduler`, `MDatePicker`, `MDatePickerModal`, `MDateRangePicker`, and `MDateRangePickerModal`: the `locale` prop used for month/weekday/time formatting (`Intl.DateTimeFormat`) defaulted to a hardcoded `'es-ES'`, completely disconnected from the app's actual configured locale — a consumer using `createM3UI({ locale: frLocale })` (or any non-Spanish locale) still got Spanish month/day names from these six components regardless. `MRelativeTime` already had the right pattern (`props.locale ?? useLocale().lang`, reading the `lang` field `M3Locale`/`createM3UI` populate); all six now follow it, so month/weekday/time names track the app's actual locale by default and the `locale` prop becomes a true per-instance override rather than the only way to get correct output
 
 ## [0.8.0] - 2026-09-18
 
