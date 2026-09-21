@@ -307,7 +307,12 @@ onBeforeUnmount(() => view?.destroy())
 }
 
 .code-editor-container :deep(.cm-activeLine) {
-  background: var(--color-surface-container-lowest);
+  /* CodeMirror renders the selection highlight on a layer with z-index: -1
+     (@codemirror/view's selectionLayer has `above: false` by design, so it always
+     sits behind the line content). An opaque active-line background would paint
+     straight over it and hide the selection on the current line — this needs to
+     stay a translucent tint so a selection underneath still shows through. */
+  background: color-mix(in srgb, var(--color-on-surface) 5%, transparent);
 }
 
 .code-editor-container :deep(.cm-selectionBackground) {
