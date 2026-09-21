@@ -234,5 +234,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "shape-morph": "^0.4.0"
   }
 }

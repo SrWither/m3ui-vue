@@ -230,6 +230,7 @@ const name = ref('')
 | `MAbsolute` / `MRelative` / `MFixed` / `MSticky` | Positioning |
 | `MFullscreen` | Fullscreen wrapper |
 | `MAspectRatio` | Aspect ratio container |
+| `MShape` | Clips content (or renders a filled shape) into one of M3's 35 expressive shapes, with spring-animated morphing between shapes |
 | `MResponsive` | Responsive breakpoint slots |
 | `MOverlay` | Overlay backdrop |
 | `MWindow` | Window/panel container |
