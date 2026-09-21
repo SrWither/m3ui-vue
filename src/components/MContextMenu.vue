@@ -86,12 +86,12 @@ onUnmounted(() => {
 
   <Teleport to="body">
     <Transition
-      enter-active-class="transition-[opacity,transform] duration-100 ease-out"
-      enter-from-class="opacity-0 scale-95"
+      enter-active-class="transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.05,0.7,0.1,1)]"
+      enter-from-class="opacity-0 scale-[0.8]"
       enter-to-class="opacity-100 scale-100"
-      leave-active-class="transition-[opacity,transform] duration-75 ease-in"
+      leave-active-class="transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.3,0,0.8,0.15)]"
       leave-from-class="opacity-100 scale-100"
-      leave-to-class="opacity-0 scale-95"
+      leave-to-class="opacity-0 scale-[0.8]"
     >
       <div
         v-if="visible"
