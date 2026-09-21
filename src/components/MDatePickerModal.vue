@@ -15,10 +15,15 @@ const props = withDefaults(defineProps<{
 }>(), {
   modelValue: null,
   show: false,
-  locale: 'es-ES',
 })
 
 const locale = useLocale()
+
+// Falls back to the app's own configured locale (via createM3UI/useLocale) rather than a
+// fixed default, matching the pattern MRelativeTime already uses — previously this defaulted
+// to a hardcoded 'es-ES' regardless of what locale the app actually provided.
+const resolvedLocale = computed(() => props.locale ?? locale.lang)
+
 const emit = defineEmits<{
   'update:modelValue': [string | null]
   'update:show': [boolean]
@@ -45,12 +50,12 @@ watch(() => props.show, (open) => {
 
 // ── Calendar logic ─────────────────────────────────────────────────
 const WEEKDAYS = computed(() => {
-  const f = new Intl.DateTimeFormat(props.locale, { weekday: 'narrow' })
+  const f = new Intl.DateTimeFormat(resolvedLocale.value, { weekday: 'narrow' })
   return Array.from({ length: 7 }, (_, i) => f.format(new Date(2024, 0, i + 1)))
 })
 
 const monthLabel = computed(() =>
-  new Intl.DateTimeFormat(props.locale, { month: 'long', year: 'numeric' }).format(viewDate.value),
+  new Intl.DateTimeFormat(resolvedLocale.value, { month: 'long', year: 'numeric' }).format(viewDate.value),
 )
 
 const calendarDays = computed(() => {
@@ -112,7 +117,7 @@ function selectDay(day: typeof calendarDays.value[0]) {
 const headerDate = computed(() => {
   if (!selected.value) return '—'
   const d = new Date(selected.value + 'T00:00:00')
-  return new Intl.DateTimeFormat(props.locale, { weekday: 'short', month: 'short', day: 'numeric' }).format(d)
+  return new Intl.DateTimeFormat(resolvedLocale.value, { weekday: 'short', month: 'short', day: 'numeric' }).format(d)
 })
 
 // ── Input mode ─────────────────────────────────────────────────────

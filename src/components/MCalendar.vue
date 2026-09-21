@@ -20,10 +20,14 @@ const props = withDefaults(defineProps<{
   nextMonthLabel?: string
 }>(), {
   events: () => [],
-  locale: 'es-ES',
 })
 
 const localeStrings = useLocale()
+
+// Falls back to the app's own configured locale (via createM3UI/useLocale) rather than a
+// fixed default, matching the pattern MRelativeTime already uses — previously this defaulted
+// to a hardcoded 'es-ES' regardless of what locale the app actually provided.
+const resolvedLocale = computed(() => props.locale ?? localeStrings.lang)
 
 const emit = defineEmits<{
   dateClick: [string]
@@ -32,13 +36,13 @@ const emit = defineEmits<{
 
 const viewDate = ref(new Date())
 
-const WEEKDAYS = (() => {
-  const f = new Intl.DateTimeFormat(props.locale, { weekday: 'short' })
+const WEEKDAYS = computed(() => {
+  const f = new Intl.DateTimeFormat(resolvedLocale.value, { weekday: 'short' })
   return Array.from({ length: 7 }, (_, i) => f.format(new Date(2024, 0, i + 1)))
-})()
+})
 
 const monthLabel = computed(() =>
-  new Intl.DateTimeFormat(props.locale, { month: 'long', year: 'numeric' }).format(viewDate.value)
+  new Intl.DateTimeFormat(resolvedLocale.value, { month: 'long', year: 'numeric' }).format(viewDate.value)
 )
 
 function fmt(y: number, m: number, d: number) {

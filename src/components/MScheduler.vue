@@ -31,9 +31,13 @@ const props = withDefaults(
     view: 'week',
     startHour: 7,
     endHour: 22,
-    locale: 'es-ES',
   },
 )
+
+// Falls back to the app's own configured locale (via createM3UI/useLocale) rather than a
+// fixed default, matching the pattern MRelativeTime already uses — previously this defaulted
+// to a hardcoded 'es-ES' regardless of what locale the app actually provided.
+const resolvedLocale = computed(() => props.locale ?? locale.lang)
 
 const emit = defineEmits<{
   eventClick: [SchedulerEvent]
@@ -78,17 +82,17 @@ function fmt(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-const dayFormat = new Intl.DateTimeFormat(props.locale, { weekday: 'short' })
-const dateFormat = new Intl.DateTimeFormat(props.locale, { day: 'numeric' })
+const dayFormat = computed(() => new Intl.DateTimeFormat(resolvedLocale.value, { weekday: 'short' }))
+const dateFormat = computed(() => new Intl.DateTimeFormat(resolvedLocale.value, { day: 'numeric' }))
 
 const headerLabel = computed(() => {
   if (currentView.value === 'day') {
-    return new Intl.DateTimeFormat(props.locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    return new Intl.DateTimeFormat(resolvedLocale.value, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
       .format(currentDate.value)
   }
   const start = weekDays.value[0]!
   const end = weekDays.value[6]!
-  const f = new Intl.DateTimeFormat(props.locale, { day: 'numeric', month: 'short' })
+  const f = new Intl.DateTimeFormat(resolvedLocale.value, { day: 'numeric', month: 'short' })
   return `${f.format(start)} – ${f.format(end)}, ${end.getFullYear()}`
 })
 
@@ -125,7 +129,7 @@ function eventDuration(ev: SchedulerEvent) {
 }
 
 function timeLabel(ev: SchedulerEvent) {
-  const f = new Intl.DateTimeFormat(props.locale, { hour: '2-digit', minute: '2-digit' })
+  const f = new Intl.DateTimeFormat(resolvedLocale.value, { hour: '2-digit', minute: '2-digit' })
   return `${f.format(new Date(ev.start))} – ${f.format(new Date(ev.end))}`
 }
 

@@ -10,7 +10,7 @@ export interface DateRange {
   end: string | null
 }
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
   modelValue: DateRange
   label?: string
   placeholder?: string
@@ -26,11 +26,14 @@ const props = withDefaults(defineProps<{
   nextMonthLabel?: string
   pickStartText?: string
   pickEndText?: string
-}>(), {
-  locale: 'es-ES',
-})
+}>()
 
 const localeStrings = useLocale()
+
+// Falls back to the app's own configured locale (via createM3UI/useLocale) rather than a
+// fixed default, matching the pattern MRelativeTime already uses — previously this defaulted
+// to a hardcoded 'es-ES' regardless of what locale the app actually provided.
+const resolvedLocale = computed(() => props.locale ?? localeStrings.lang)
 
 const emit = defineEmits<{ 'update:modelValue': [DateRange] }>()
 
@@ -49,13 +52,13 @@ watch(() => props.modelValue.start, (v) => {
   if (v) viewDate.value = new Date(v + 'T00:00:00')
 })
 
-const WEEKDAYS = (() => {
-  const f = new Intl.DateTimeFormat(props.locale, { weekday: 'narrow' })
+const WEEKDAYS = computed(() => {
+  const f = new Intl.DateTimeFormat(resolvedLocale.value, { weekday: 'narrow' })
   return Array.from({ length: 7 }, (_, i) => f.format(new Date(2024, 0, i + 1)))
-})()
+})
 
 const monthLabel = computed(() =>
-  new Intl.DateTimeFormat(props.locale, { month: 'long', year: 'numeric' }).format(viewDate.value)
+  new Intl.DateTimeFormat(resolvedLocale.value, { month: 'long', year: 'numeric' }).format(viewDate.value)
 )
 
 const calendarDays = computed(() => {
@@ -125,7 +128,7 @@ function prevMonth() { const d = new Date(viewDate.value); d.setMonth(d.getMonth
 function nextMonth() { const d = new Date(viewDate.value); d.setMonth(d.getMonth() + 1); viewDate.value = d }
 
 const displayValue = computed(() => {
-  const f = new Intl.DateTimeFormat(props.locale, { day: 'numeric', month: 'short' })
+  const f = new Intl.DateTimeFormat(resolvedLocale.value, { day: 'numeric', month: 'short' })
   const s = props.modelValue.start ? f.format(new Date(props.modelValue.start + 'T00:00:00')) : '—'
   const e = props.modelValue.end ? f.format(new Date(props.modelValue.end + 'T00:00:00')) : '—'
   if (!props.modelValue.start && !props.modelValue.end) return ''

@@ -5,7 +5,7 @@ import MIconButton from './MIconButton.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 import { useLocale } from '../composables/useLocale'
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
   modelValue: string | null
   label?: string
   placeholder?: string
@@ -19,11 +19,14 @@ const props = withDefaults(defineProps<{
   fieldBg?: string
   prevMonthLabel?: string
   nextMonthLabel?: string
-}>(), {
-  locale: 'es-ES',
-})
+}>()
 
 const localeStrings = useLocale()
+
+// Falls back to the app's own configured locale (via createM3UI/useLocale) rather than a
+// fixed default, matching the pattern MRelativeTime already uses — previously this defaulted
+// to a hardcoded 'es-ES' regardless of what locale the app actually provided.
+const resolvedLocale = computed(() => props.locale ?? localeStrings.lang)
 
 const emit = defineEmits<{ 'update:modelValue': [string | null] }>()
 
@@ -38,16 +41,16 @@ watch(() => props.modelValue, (v) => {
   if (v) viewDate.value = new Date(v + 'T00:00:00')
 })
 
-const WEEKDAYS = (() => {
-  const f = new Intl.DateTimeFormat(props.locale, { weekday: 'narrow' })
+const WEEKDAYS = computed(() => {
+  const f = new Intl.DateTimeFormat(resolvedLocale.value, { weekday: 'narrow' })
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(2024, 0, i + 1) // Mon=1 Jan 2024
     return f.format(d)
   })
-})()
+})
 
 const monthLabel = computed(() => {
-  const f = new Intl.DateTimeFormat(props.locale, { month: 'long', year: 'numeric' })
+  const f = new Intl.DateTimeFormat(resolvedLocale.value, { month: 'long', year: 'numeric' })
   return f.format(viewDate.value)
 })
 
@@ -117,7 +120,7 @@ function clear() {
 const displayValue = computed(() => {
   if (!props.modelValue) return ''
   const d = new Date(props.modelValue + 'T00:00:00')
-  return new Intl.DateTimeFormat(props.locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(d)
+  return new Intl.DateTimeFormat(resolvedLocale.value, { day: 'numeric', month: 'short', year: 'numeric' }).format(d)
 })
 
 function computeDropPos() {
