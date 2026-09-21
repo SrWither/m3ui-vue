@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.8.1] - 2026-09-20
+
+### Fixed
+- `MTopAppBar`: the navigation icon (and trailing action icons) sat too close to the bar's edge — the row's `px-1` only accounted for `AppBar.kt`'s explicit `TopAppBarHorizontalPadding` (4dp), missing the extra 4dp the real `IconButton()` composable gets for free from `Modifier.minimumInteractiveComponentSize()` (it centers its 40dp visible container inside a 48dp touch target). `MIconButton` doesn't implement that invisible expansion, so the row padding is now `px-2` to land the icon glyph at the correct 16dp inset from the edge
+
 ## [0.8.0] - 2026-09-18
 
 ### Fixed
