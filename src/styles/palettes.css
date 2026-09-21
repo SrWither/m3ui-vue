@@ -1914,10 +1914,10 @@
 
 /* ─── Monochrome ───────────────────────────────────────────────────────── */
 [data-palette='monochrome'] {
-  --color-primary: #1A1A1A;
+  --color-primary: #000000;
   --color-on-primary: #ffffff;
   --color-primary-container: #E4E4E4;
-  --color-on-primary-container: #1A1A1A;
+  --color-on-primary-container: #000000;
   --color-secondary: #454545;
   --color-on-secondary: #ffffff;
   --color-secondary-container: #E8E8E8;
@@ -1926,30 +1926,30 @@
   --color-on-tertiary: #ffffff;
   --color-tertiary-container: #ECECEC;
   --color-on-tertiary-container: #383838;
-  --color-surface: #FAFAFA;
-  --color-on-surface: #1A1A1A;
+  --color-surface: #ffffff;
+  --color-on-surface: #000000;
   --color-surface-variant: #E1E1E1;
   --color-on-surface-variant: #454545;
   --color-surface-dim: #DBDBDB;
-  --color-surface-bright: #FAFAFA;
+  --color-surface-bright: #ffffff;
   --color-surface-container-lowest: #ffffff;
   --color-surface-container-low: #F5F5F5;
   --color-surface-container: #EFEFEF;
   --color-surface-container-high: #E9E9E9;
   --color-surface-container-highest: #E3E3E3;
-  --color-background: #FAFAFA;
-  --color-on-background: #1A1A1A;
+  --color-background: #ffffff;
+  --color-on-background: #000000;
   --color-outline: #767676;
   --color-outline-variant: #C6C6C6;
-  --color-inverse-surface: #2E2E2E;
-  --color-inverse-on-surface: #F5F5F5;
-  --color-inverse-primary: #E4E4E4;
+  --color-inverse-surface: #000000;
+  --color-inverse-on-surface: #ffffff;
+  --color-inverse-primary: #ffffff;
 }
 [data-palette='monochrome'].dark {
-  --color-primary: #E8E8E8;
-  --color-on-primary: #1A1A1A;
+  --color-primary: #ffffff;
+  --color-on-primary: #000000;
   --color-primary-container: #3D3D3D;
-  --color-on-primary-container: #EFEFEF;
+  --color-on-primary-container: #ffffff;
   --color-secondary: #C6C6C6;
   --color-on-secondary: #2B2B2B;
   --color-secondary-container: #404040;
@@ -1958,24 +1958,24 @@
   --color-on-tertiary: #303030;
   --color-tertiary-container: #444444;
   --color-on-tertiary-container: #E0E0E0;
-  --color-surface: #121212;
-  --color-on-surface: #E6E6E6;
+  --color-surface: #000000;
+  --color-on-surface: #ffffff;
   --color-surface-variant: #454545;
   --color-on-surface-variant: #C6C6C6;
-  --color-surface-dim: #121212;
+  --color-surface-dim: #000000;
   --color-surface-bright: #383838;
-  --color-surface-container-lowest: #0C0C0C;
+  --color-surface-container-lowest: #000000;
   --color-surface-container-low: #1A1A1A;
   --color-surface-container: #1E1E1E;
   --color-surface-container-high: #282828;
   --color-surface-container-highest: #333333;
-  --color-background: #121212;
-  --color-on-background: #E6E6E6;
+  --color-background: #000000;
+  --color-on-background: #ffffff;
   --color-outline: #909090;
   --color-outline-variant: #454545;
-  --color-inverse-surface: #E6E6E6;
-  --color-inverse-on-surface: #1A1A1A;
-  --color-inverse-primary: #1A1A1A;
+  --color-inverse-surface: #ffffff;
+  --color-inverse-on-surface: #000000;
+  --color-inverse-primary: #000000;
 }
 /* ─── Rust ─────────────────────────────────────────────────────────────── */
 [data-palette='rust'] {
