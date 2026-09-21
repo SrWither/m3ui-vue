@@ -15,14 +15,25 @@ const props = withDefaults(
   defineProps<{
     /** One of M3's 35 named "expressive" shapes (MaterialShapes.kt), e.g. 'Cookie9Sided', 'Heart'. */
     shape: ShapeName
-    /** Fill color used when there's no default slot content to clip (a decorative solid shape). */
+    /**
+     * Fill color used when there's no default slot content to clip (a decorative solid shape).
+     * SVG `fill`, not a `background-color` — a `bg-*` Tailwind class on the component itself has
+     * no effect here; use `fill` (or a `text-*` class, since the default is `currentColor`).
+     */
     fill?: string
     /** Spring-morph into the new outline when `shape` changes — false snaps instantly instead. */
     animate?: boolean
+    /**
+     * Multiplier on the morph spring's speed (1 = default). Scales stiffness by speed² and the
+     * damping coefficient by speed, which time-scales the spring uniformly without changing its
+     * character (same amount of overshoot/settle shape, just faster or slower).
+     */
+    speed?: number
   }>(),
   {
     fill: 'currentColor',
     animate: true,
+    speed: 1,
   },
 )
 
@@ -42,7 +53,12 @@ let settledShape = props.shape
 // "correct" one to copy for a generic shape primitive like this. shape-morph's AnimatedMorph
 // spring uses a plain damping *coefficient*, not Compose's damping *ratio* — converted via
 // damping = 2 * dampingRatio * sqrt(stiffness) = 2 * 0.8 * sqrt(380) ≈ 31.2.
-const SPRING = { stiffness: 380, damping: 31.2 }
+const BASE_STIFFNESS = 380
+const BASE_DAMPING = 31.2
+
+function springFor(speed: number) {
+  return { stiffness: BASE_STIFFNESS * speed ** 2, damping: BASE_DAMPING * speed }
+}
 
 watch(() => props.shape, (next, prev) => {
   if (!prev || next === prev) return
@@ -56,7 +72,7 @@ watch(() => props.shape, (next, prev) => {
   // arbitrary in-flight shape, so a change that interrupts a running morph restarts from
   // the last shape that had actually settled rather than the current on-screen outline.
   morph = new AnimatedMorph(settledShape, next, {
-    spring: SPRING,
+    spring: springFor(props.speed),
     size: 1,
     onFrame: (frame) => { pathD.value = frame.pathD },
   })
