@@ -26,12 +26,21 @@ const emit = defineEmits<{ 'update:checked': [boolean] }>()
 // deliberately reused from MButton's own (already-audited) px values rather than porting
 // ToggleButtonDefaults' own separate ToggleButtonStartPadding/EndPadding constants, which
 // resolve to the same pixel values at every tier this library implements.
+// pillRadius is each tier's exact half-height (32/40/56/96/136 ÷ 2), not an arbitrarily huge
+// stand-in like 9999 — CSS clamps border-radius at 50% of the box's smaller dimension anyway,
+// so anything past that is wasted, invisible spring travel. With 9999 as the target, unchecking
+// (small radius → 9999) spent its entire *visible* range right at the start of the trajectory,
+// exactly where a spring aimed at something 9987px away is accelerating hardest — it blew
+// through the visible range in a couple of frames and looked like a snap instead of a spring.
+// Checking happened to look fine only because its visible range fell in the spring's slow,
+// already-decelerating tail. Using the real clamp value makes the whole trajectory visible and
+// symmetric in both directions.
 const sizeMap = {
-  xs: { h: 'h-8', text: 'text-label-large', icon: 20, gap: 'gap-1', px: 'px-3', checkedRadius: 12, pressedRadius: 8 },
-  sm: { h: 'h-10', text: 'text-label-large', icon: 20, gap: 'gap-2', px: 'px-4', checkedRadius: 12, pressedRadius: 6 },
-  md: { h: 'h-14', text: 'text-title-medium', icon: 24, gap: 'gap-2', px: 'px-6', checkedRadius: 16, pressedRadius: 12 },
-  lg: { h: 'h-24', text: 'text-headline-small', icon: 32, gap: 'gap-3', px: 'px-12', checkedRadius: 28, pressedRadius: 16 },
-  xl: { h: 'h-[136px]', text: 'text-headline-large', icon: 40, gap: 'gap-4', px: 'px-16', checkedRadius: 28, pressedRadius: 16 },
+  xs: { h: 'h-8', text: 'text-label-large', icon: 20, gap: 'gap-1', px: 'px-3', checkedRadius: 12, pressedRadius: 8, pillRadius: 16 },
+  sm: { h: 'h-10', text: 'text-label-large', icon: 20, gap: 'gap-2', px: 'px-4', checkedRadius: 12, pressedRadius: 6, pillRadius: 20 },
+  md: { h: 'h-14', text: 'text-title-medium', icon: 24, gap: 'gap-2', px: 'px-6', checkedRadius: 16, pressedRadius: 12, pillRadius: 28 },
+  lg: { h: 'h-24', text: 'text-headline-small', icon: 32, gap: 'gap-3', px: 'px-12', checkedRadius: 28, pressedRadius: 16, pillRadius: 48 },
+  xl: { h: 'h-[136px]', text: 'text-headline-large', icon: 40, gap: 'gap-4', px: 'px-16', checkedRadius: 28, pressedRadius: 16, pillRadius: 68 },
 }
 
 const s = computed(() => sizeMap[props.size] ?? sizeMap.sm)
@@ -119,7 +128,7 @@ const DAMPING = 2 * 0.9 * Math.sqrt(STIFFNESS)
 
 const targetRadius = computed(() => {
   if (pressed.value) return s.value.pressedRadius
-  return props.checked ? s.value.checkedRadius : 9999
+  return props.checked ? s.value.checkedRadius : s.value.pillRadius
 })
 
 let currentRadius = targetRadius.value
