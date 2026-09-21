@@ -104,6 +104,12 @@ function scrollToActive() {
 }
 
 function onGlobalKeydown(e: KeyboardEvent) {
+  // Every mounted MSpotlightSearch listens for its own hotkey independently —
+  // if more than one is mounted at once (e.g. an app-wide instance plus a
+  // page-local demo), a single keypress would otherwise open all of them.
+  // The first instance to handle it calls preventDefault(), which the rest
+  // check for and bail on, so only one ever claims a given keypress.
+  if (e.defaultPrevented) return
   const tag = (e.target as HTMLElement).tagName
   if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return
   if (e.key === props.hotkey && !e.metaKey && !e.ctrlKey && !e.altKey) {

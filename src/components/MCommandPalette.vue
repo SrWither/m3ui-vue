@@ -99,6 +99,10 @@ function scrollToActive() {
 }
 
 function onGlobalKeydown(e: KeyboardEvent) {
+  // See MSpotlightSearch for why: each mounted instance listens for its own
+  // hotkey independently, so if more than one is mounted at once, a single
+  // keypress would otherwise toggle all of them. First one to handle it wins.
+  if (e.defaultPrevented) return
   if ((e.metaKey || e.ctrlKey) && e.key === props.hotkey) {
     e.preventDefault()
     if (props.modelValue) close()

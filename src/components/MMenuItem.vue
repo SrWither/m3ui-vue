@@ -8,9 +8,12 @@ const props = withDefaults(defineProps<{
   to?: string | Record<string, any>
   disabled?: boolean
   danger?: boolean
+  /** Keep the menu open after this item is clicked (e.g. checkable/toggle items). */
+  keepOpen?: boolean
 }>(), {
   disabled: false,
   danger: false,
+  keepOpen: false,
 })
 
 const emit = defineEmits<{ click: [] }>()
@@ -19,19 +22,16 @@ const slots = useSlots()
 const tag = computed(() => props.to ? 'RouterLink' : 'button')
 const hasChildren = computed(() => !!slots.children)
 const menuClose = inject<(() => void) | null>('m-menu-close', null)
+const nav = inject<{
+  mode: 'flyout' | 'push'
+  push: (entry: { icon?: string, header?: () => any, content?: () => any }) => void
+} | null>('m-menu-nav', null)
 
-function handleClick() {
-  if (props.disabled || hasChildren.value) return
-  emit('click')
-  menuClose?.()
-}
-const showSub = ref(false)
 const itemEl = ref<HTMLElement>()
+const showSub = ref(false)
 const subStyle = ref<Record<string, string>>({})
 
-function onMouseEnter() {
-  if (!hasChildren.value || props.disabled) return
-  showSub.value = true
+function positionSub() {
   if (!itemEl.value) return
   const rect = itemEl.value.getBoundingClientRect()
   const right = rect.right + 200 > window.innerWidth
@@ -45,13 +45,49 @@ function onMouseEnter() {
   }
 }
 
-function onMouseLeave(e: MouseEvent) {
+function toggleSub() {
+  if (showSub.value) {
+    showSub.value = false
+    return
+  }
+  positionSub()
+  showSub.value = true
+}
+
+function handleClick() {
+  if (props.disabled) return
+
+  if (hasChildren.value) {
+    if (nav?.mode === 'push') {
+      nav.push({ icon: props.icon, header: slots.default, content: slots.children })
+    } else {
+      toggleSub()
+    }
+    return
+  }
+
+  emit('click')
+  if (!props.keepOpen) menuClose?.()
+}
+
+// Desktop hover convenience for the flyout variant — ignored on touch/pen so a
+// tap doesn't fire a spurious pointerleave (relatedTarget is null on touch)
+// and close the submenu before its click event can land.
+function onPointerEnter(e: PointerEvent) {
+  if (e.pointerType !== 'mouse' || !hasChildren.value || props.disabled) return
+  positionSub()
+  showSub.value = true
+}
+
+function onPointerLeave(e: PointerEvent) {
+  if (e.pointerType !== 'mouse') return
   const related = e.relatedTarget as Element | null
   if (related?.closest('.m3-submenu')) return
   showSub.value = false
 }
 
-function onSubLeave(e: MouseEvent) {
+function onSubPointerLeave(e: PointerEvent) {
+  if (e.pointerType !== 'mouse') return
   const related = e.relatedTarget as Element | null
   if (related?.closest('.m3-submenu') || itemEl.value?.contains(related as Node)) return
   showSub.value = false
@@ -61,8 +97,8 @@ function onSubLeave(e: MouseEvent) {
 <template>
   <div
     ref="itemEl"
-    @mouseenter="onMouseEnter"
-    @mouseleave="onMouseLeave"
+    @pointerenter="onPointerEnter"
+    @pointerleave="onPointerLeave"
   >
     <component
       :is="tag"
@@ -75,6 +111,8 @@ function onSubLeave(e: MouseEvent) {
         !disabled && !danger ? 'text-on-surface hover:bg-on-surface/8' : '',
       ]"
       :disabled="disabled || undefined"
+      :aria-haspopup="hasChildren ? 'menu' : undefined"
+      :aria-expanded="hasChildren ? showSub : undefined"
       @click="handleClick"
     >
       <MIcon v-if="icon" :name="icon" :size="20" class="shrink-0" :class="danger ? 'text-error' : 'text-on-surface-variant'" />
@@ -83,8 +121,8 @@ function onSubLeave(e: MouseEvent) {
       <MIcon v-if="hasChildren" name="chevron_right" :size="18" class="shrink-0 text-on-surface-variant" />
     </component>
 
-    <!-- Submenu -->
-    <Teleport v-if="hasChildren" to="body">
+    <!-- Submenu (flyout variant only — "push" mode is rendered by the root MMenu/MContextMenu panel) -->
+    <Teleport v-if="hasChildren && nav?.mode !== 'push'" to="body">
       <Transition
         enter-active-class="transition-opacity duration-100"
         enter-from-class="opacity-0"
@@ -93,11 +131,15 @@ function onSubLeave(e: MouseEvent) {
       >
         <div
           v-if="showSub"
-          class="m3-submenu min-w-44 overflow-hidden rounded-xs bg-surface-container py-1 shadow-elevation-2"
+          class="m3-submenu min-w-44 rounded-xs shadow-elevation-2"
           :style="subStyle"
-          @mouseleave="onSubLeave"
+          @pointerleave="onSubPointerLeave"
         >
-          <slot name="children" />
+          <!-- overflow-hidden lives here, separate from shadow-elevation-2 above —
+               overflow-hidden clips an element's own box-shadow too -->
+          <div class="overflow-hidden rounded-xs bg-surface-container py-1">
+            <slot name="children" />
+          </div>
         </div>
       </Transition>
     </Teleport>
