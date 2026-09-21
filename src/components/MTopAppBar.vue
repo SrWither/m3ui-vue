@@ -30,8 +30,12 @@ const locale = useLocale()
       bordered ? 'border-b border-outline-variant' : '',
     ]"
   >
-    <!-- Top row — 64dp per M3's TopAppBarSmall/collapsed-Medium/collapsed-Large tokens -->
-    <div class="flex h-16 shrink-0 items-center gap-1 px-1">
+    <!-- Top row — 64dp per M3's TopAppBarSmall/collapsed-Medium/collapsed-Large tokens.
+         px-2: TopAppBarHorizontalPadding (4dp) + the 4dp IconButton() gets for free from
+         Modifier.minimumInteractiveComponentSize() centering its 40dp visible container inside
+         a 48dp touch target — MIconButton doesn't implement that invisible expansion, so it's
+         folded into this row padding instead to land the icon glyph at the real 16dp inset. -->
+    <div class="flex h-16 shrink-0 items-center gap-1 px-2">
       <!-- Navigation -->
       <slot name="navigation">
         <MIconButton
