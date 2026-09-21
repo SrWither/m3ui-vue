@@ -121,6 +121,7 @@ const name = ref('')
 | `MButtonGroup` | Grouped button options |
 | `MSplitButton` | Button with dropdown actions |
 | `MSegmentedButton` | Toggleable segmented options |
+| `MToggleButton` | M3 Expressive's standalone toggle button — morphs shape (pill ↔ squared) and swaps color on check, filled/tonal/outlined/elevated |
 | `MCopyButton` | Copy-to-clipboard icon button with success feedback |
 | `MExportButton` | Export an array of objects to CSV or JSON |
 
