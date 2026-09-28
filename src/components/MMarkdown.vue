@@ -153,7 +153,7 @@ function onContainerClick(e: MouseEvent) {
   background: var(--color-surface-container-highest);
   padding: 0.15em 0.4em;
   border-radius: 4px;
-  font-family: 'Roboto Mono', 'Fira Code', 'Consolas', monospace;
+  font-family: var(--font-mono, 'Roboto Mono', monospace);
   font-size: 0.875em;
   color: var(--color-primary);
 }

@@ -27,6 +27,8 @@ function getM3Colors() {
     outlineVariant: get('--color-outline-variant'),
     surface: get('--color-surface'),
     surfaceContainer: get('--color-surface-container'),
+    // Canvas can't resolve CSS vars, so pass Chart.js the resolved font stack
+    fontFamily: get('--font-sans') || "'Roboto', system-ui, sans-serif",
   }
 }
 
@@ -38,7 +40,9 @@ onMounted(async () => {
   m3Colors.value = getM3Colors()
 
   themeObserver = new MutationObserver(() => { m3Colors.value = getM3Colors() })
-  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style'] })
+  // Canvas text drawn before a web font finishes loading keeps the fallback, so redraw once it has
+  document.fonts?.ready.then(() => { m3Colors.value = getM3Colors() })
 
   const [chartjs, vueChartjs] = await Promise.all([
     import('chart.js'),
@@ -89,7 +93,7 @@ const mergedOptions = computed<Record<string, any>>(() => {
       legend: {
         labels: {
           color: c.onSurface,
-          font: { family: "'Roboto', system-ui, sans-serif", size: 12 },
+          font: { family: c.fontFamily, size: 12 },
           usePointStyle: true,
           pointStyle: 'circle',
           padding: 16,
@@ -103,8 +107,8 @@ const mergedOptions = computed<Record<string, any>>(() => {
         borderWidth: 1,
         cornerRadius: 12,
         padding: 12,
-        titleFont: { family: "'Roboto', system-ui, sans-serif", size: 13, weight: '600' as const },
-        bodyFont: { family: "'Roboto', system-ui, sans-serif", size: 12 },
+        titleFont: { family: c.fontFamily, size: 13, weight: '600' as const },
+        bodyFont: { family: c.fontFamily, size: 12 },
         displayColors: true,
         boxPadding: 4,
       },
@@ -115,12 +119,12 @@ const mergedOptions = computed<Record<string, any>>(() => {
     base.scales = {
       x: {
         grid: { color: c.outlineVariant + '40', drawTicks: false },
-        ticks: { color: c.onSurfaceVariant, font: { size: 11 }, padding: 8 },
+        ticks: { color: c.onSurfaceVariant, font: { family: c.fontFamily, size: 11 }, padding: 8 },
         border: { color: c.outlineVariant },
       },
       y: {
         grid: { color: c.outlineVariant + '40', drawTicks: false },
-        ticks: { color: c.onSurfaceVariant, font: { size: 11 }, padding: 8 },
+        ticks: { color: c.onSurfaceVariant, font: { family: c.fontFamily, size: 11 }, padding: 8 },
         border: { color: c.outlineVariant },
       },
     }
@@ -131,8 +135,8 @@ const mergedOptions = computed<Record<string, any>>(() => {
       r: {
         grid: { color: c.outlineVariant + '40' },
         angleLines: { color: c.outlineVariant + '40' },
-        pointLabels: { color: c.onSurfaceVariant, font: { size: 11 } },
-        ticks: { color: c.onSurfaceVariant, backdropColor: 'transparent' },
+        pointLabels: { color: c.onSurfaceVariant, font: { family: c.fontFamily, size: 11 } },
+        ticks: { color: c.onSurfaceVariant, backdropColor: 'transparent', font: { family: c.fontFamily } },
       },
     }
   }

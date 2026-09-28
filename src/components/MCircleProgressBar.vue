@@ -320,7 +320,7 @@ const maskId = useId();
             fill: svgColor.fill,
             fontSize: `${effectiveSize < 60 ? 11 : 14}px`,
             fontWeight: '600',
-            fontFamily: 'Roboto, sans-serif',
+            fontFamily: 'var(--font-sans, Roboto, sans-serif)',
           }"
         >{{ clampedValue }}%</text>
       </svg>

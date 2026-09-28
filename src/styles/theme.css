@@ -9,6 +9,7 @@
 /* ---------------------------------------------------------------------- */
 @theme {
   --font-sans: 'Roboto', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Roboto Mono', ui-monospace, 'Fira Code', Consolas, monospace;
 
   /* Color roles */
   --color-primary: #6750a4;

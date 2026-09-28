@@ -255,7 +255,7 @@ onBeforeUnmount(() => view?.destroy())
 .code-editor-container :deep(.cm-editor) {
   flex: 1;
   min-height: 0;
-  font-family: 'Roboto Mono', 'Fira Code', 'Consolas', monospace;
+  font-family: var(--font-mono, 'Roboto Mono', monospace);
   font-size: 0.8125rem;
   line-height: 1.6;
 }

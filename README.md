@@ -38,7 +38,7 @@ pnpm add @m3ui-vue/m3ui-vue
 
 ```html
 <link
-  href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+  href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
   rel="stylesheet"
 />
 ```
@@ -53,7 +53,39 @@ pnpm add material-symbols
 @import 'material-symbols/outlined.css';
 ```
 
-`material-symbols` is listed as an optional peer dependency for this reason. Note this only covers the icon font — if you want `Roboto` offline too, pair it with something like `@fontsource/roboto`.
+`material-symbols` is listed as an optional peer dependency for this reason. For the text fonts, [`@fontsource/roboto`](https://www.npmjs.com/package/@fontsource/roboto) and [`@fontsource/roboto-mono`](https://www.npmjs.com/package/@fontsource/roboto-mono) do the same job:
+
+```bash
+pnpm add @fontsource/roboto @fontsource/roboto-mono
+```
+
+```css
+@import '@fontsource/roboto/400.css';
+@import '@fontsource/roboto/500.css';
+@import '@fontsource/roboto/700.css';
+@import '@fontsource/roboto-mono/400.css';
+```
+
+Roboto isn't required — without it, text falls back to `system-ui`.
+
+#### Using a different font
+
+Every component reads its typeface from two tokens in `theme.css`: `--font-sans` (default `'Roboto', system-ui, …`) and `--font-mono` (default `'Roboto Mono', ui-monospace, …`, used by `MCodeEditor` and `MMarkdown` code). Override them after importing the theme, and load the font yourself (CDN, `@fontsource/*`, or your own `@font-face`):
+
+```css
+@import '@m3ui-vue/m3ui-vue/theme';
+
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+```
+
+To switch at runtime, set the variable on `<html>` — components (including `MChart`'s canvas) pick it up live:
+
+```ts
+document.documentElement.style.setProperty('--font-sans', "'Inter', system-ui, sans-serif")
+```
 
 ### CSS
 

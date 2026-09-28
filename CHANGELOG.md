@@ -5,6 +5,18 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.8.3] - 2026-09-27
+
+### Added
+- `--font-mono` token in `theme.css` (default `'Roboto Mono', ui-monospace, 'Fira Code', Consolas, monospace`), alongside the existing `--font-sans`, so the monospace face used by `MCodeEditor` and `MMarkdown` can be swapped the same way
+
+### Fixed
+- Overriding `--font-sans` didn't reach every component: `MChart` (legend, tooltips) and `MCircleProgressBar` (percentage label) hardcoded `'Roboto'`, and `MCodeEditor`/`MMarkdown` hardcoded `'Roboto Mono'`. All now read the tokens. `MChart` resolves `--font-sans` at runtime (Chart.js draws on a canvas, which can't read CSS vars), re-reads it when `<html>`'s `style` changes, and redraws once web fonts finish loading so the first paint doesn't stay stuck on the fallback face
+- `MChart`'s axis ticks and radar labels never set a font family at all, so they rendered in Chart.js's own default (Helvetica) instead of the app font
+
+### Docs
+- README: self-hosting Roboto/Roboto Mono via `@fontsource/*`, and how to use a different font (build time or runtime)
+
 ## [0.8.2] - 2026-09-21
 
 ### Fixed
