@@ -404,7 +404,7 @@ const origin = computed(() =>
             isGrouped ? '' : 'bg-surface-container',
           ]"
         >
-          <div class="relative overflow-y-auto py-1" :style="{ maxHeight: dropStyle.maxHeight }">
+          <div class="relative overflow-y-auto overscroll-contain py-1" :style="{ maxHeight: dropStyle.maxHeight }">
             <Transition :css="false" @enter="navSlideEnter" @leave="navSlideLeave">
               <div v-if="currentNav" :key="navStack.length">
                 <button
