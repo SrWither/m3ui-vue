@@ -302,8 +302,15 @@ function onKeydown(e: KeyboardEvent) {
   else if (e.key === 'ArrowUp') { e.preventDefault(); moveFocus(-1) }
 }
 
-function onScroll() {
-  if (visible.value) hide()
+// Scrolling inside its own panel or a nested menu's panel shouldn't close it
+function onScroll(e: Event) {
+  if (!visible.value) return
+  const t = e.target as Node
+  for (const panel of panelRegistry) {
+    if (panel.contains(t)) return
+  }
+  if ((t as Element).closest?.('.m3-submenu')) return
+  hide()
 }
 
 onMounted(() => {

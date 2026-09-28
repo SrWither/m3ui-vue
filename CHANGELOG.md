@@ -13,6 +13,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 - Overriding `--font-sans` didn't reach every component: `MChart` (legend, tooltips) and `MCircleProgressBar` (percentage label) hardcoded `'Roboto'`, and `MCodeEditor`/`MMarkdown` hardcoded `'Roboto Mono'`. All now read the tokens. `MChart` resolves `--font-sans` at runtime (Chart.js draws on a canvas, which can't read CSS vars), re-reads it when `<html>`'s `style` changes, and redraws once web fonts finish loading so the first paint doesn't stay stuck on the fallback face
 - `MChart`'s axis ticks and radar labels never set a font family at all, so they rendered in Chart.js's own default (Helvetica) instead of the app font
+- `MCodeEditor` never actually rendered in Roboto Mono (or any `--font-mono`): the font was set on `.cm-editor`, but CodeMirror's base theme declares `font-family: monospace` on `.cm-scroller` itself, which beats inheritance — so code always showed in the browser's generic monospace. The font is now set on `.cm-scroller`
+- Scrolling inside a menu nested in another menu (e.g. a long picker in a submenu, or inside a mobile overflow menu) closed the whole menu tree — `MMenu`'s close-on-scroll check only exempted its *own* panel, not a nested menu's Teleported one, so the parent treated it as an outside scroll and unmounted the child mid-scroll. It now uses the same shared panel registry as the outside-click check. `MContextMenu` closed on *any* scroll, even inside its own panel; it now gets the same check
 
 ### Docs
 - README: self-hosting Roboto/Roboto Mono via `@fontsource/*`, and how to use a different font (build time or runtime)

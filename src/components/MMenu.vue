@@ -334,9 +334,15 @@ function onOutsideClick(e: MouseEvent) {
   close()
 }
 
+// Scrolling inside any panel of this menu tree (own, or a nested menu's
+// Teleported panel) isn't an "outside" scroll — same registry as onOutsideClick
 function onScroll(e: Event) {
   if (!open.value) return
-  if (dropdownEl.value?.contains(e.target as Node)) return
+  const t = e.target as Node
+  for (const panel of panelRegistry) {
+    if (panel.contains(t)) return
+  }
+  if ((t as Element).closest?.('.m3-submenu')) return
   close()
 }
 

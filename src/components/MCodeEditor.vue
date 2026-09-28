@@ -255,7 +255,6 @@ onBeforeUnmount(() => view?.destroy())
 .code-editor-container :deep(.cm-editor) {
   flex: 1;
   min-height: 0;
-  font-family: var(--font-mono, 'Roboto Mono', monospace);
   font-size: 0.8125rem;
   line-height: 1.6;
 }
@@ -277,6 +276,9 @@ onBeforeUnmount(() => view?.destroy())
      which is exactly what stops the gutter from stretching to full height in
      the first place. */
   align-items: stretch !important;
+  /* Set here, not on .cm-editor: CodeMirror's base theme declares
+     font-family: monospace on .cm-scroller itself, which beats inheritance */
+  font-family: var(--font-mono, 'Roboto Mono', monospace);
 }
 
 .code-editor-container :deep(.cm-content) {
