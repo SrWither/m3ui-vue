@@ -397,6 +397,25 @@ Install only the packages you need:
 | `MQRCode` | `qrcode-generator` |
 | `MBarcode` | `jsbarcode` |
 
+## About this project
+
+M3UI Vue started as a set of components I built for my own projects. Over time it grew
+into something I thought others might find useful, so I decided to open-source it and
+keep improving it so anyone can use it for free.
+
+That said, this is a personal project maintained in my spare time. I can't offer
+round-the-clock support or guarantee response times, and features are prioritized
+around what I need and what I have time for.
+
+**Contributions are very welcome:**
+
+- **Found a bug?** [Open an issue](https://github.com/SrWither/m3ui-vue/issues) with steps
+  to reproduce it (a minimal example helps a lot).
+- **Want to fix something or add a feature?** Pull requests are appreciated. For larger
+  changes, opening an issue first to discuss the idea is a good way to avoid wasted effort.
+
+Thanks for using it! ⭐ Starring the repo is also a nice way to show support.
+
 ## License
 
 MIT
