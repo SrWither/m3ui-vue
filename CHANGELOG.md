@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.8.5] - Unreleased
+## [0.8.5] - 2026-10-04
 
 ### Changed
 - `MTable` with `selectable`: same change as `MDataTable` in 0.8.4. Clicking a row no longer toggles its selection by default. Selection now happens only through the row checkbox, and a row click emits the new `rowClick` event (`MTable` had no row-click event at all before). The old click-anywhere-to-select behavior is still available with the new `selectOnRowClick` prop. The checkbox cell no longer runs its own toggle on click either, which removes the same triple-toggle that `MDataTable` had
