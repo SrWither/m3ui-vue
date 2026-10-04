@@ -163,6 +163,12 @@ function openTrajectory() {
 // frame) have to live outside this function to survive that interruption.
 let currentIdx = 0
 let cancelActive: (() => void) | null = null
+// Set only while a close is playing: stops the loop *and* calls its `done()`.
+// Used on unmount — a menu item that navigates away (e.g. "Log out" ->
+// router.push) unmounts this component mid-close, and Vue only removes the
+// Teleported panel from <body> inside the leave's `done()`, so merely
+// cancelling the loop there left the half-closed panel stranded on screen.
+let finishLeave: (() => void) | null = null
 
 function playTrajectory(el: Element, done: () => void, opening: boolean) {
   cancelActive?.()
@@ -189,6 +195,7 @@ function playTrajectory(el: Element, done: () => void, opening: boolean) {
     apply(currentIdx)
     if ((opening && currentIdx >= target) || (!opening && currentIdx <= target)) {
       cancelActive = null
+      finishLeave = null
       done()
       return
     }
@@ -196,6 +203,7 @@ function playTrajectory(el: Element, done: () => void, opening: boolean) {
   }
 
   cancelActive = () => { cancelled = true; cancelAnimationFrame(rafId) }
+  finishLeave = opening ? null : () => { cancelActive?.(); cancelActive = null; finishLeave = null; done() }
   apply(currentIdx)
   rafId = requestAnimationFrame(step)
 }
@@ -367,7 +375,8 @@ onUnmounted(() => {
   document.removeEventListener('mousedown', onOutsideClick)
   document.removeEventListener('keydown', onKeydown)
   window.removeEventListener('scroll', onScroll, true)
-  cancelActive?.()
+  if (finishLeave) finishLeave()
+  else cancelActive?.()
 })
 
 const origin = computed(() =>
