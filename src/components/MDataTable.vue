@@ -36,6 +36,11 @@ const props = withDefaults(defineProps<{
   emptyText?: string
   rowKey?: string
   selectable?: boolean
+  /** Con `selectable`, que el click en cualquier parte de la fila la marque/desmarque (en vez de
+   * emitir `rowClick`). Default false: sólo el checkbox selecciona y el click en la fila emite
+   * `rowClick`, así una tabla puede seleccionar filas y a la vez abrirlas al click.
+   */
+  selectOnRowClick?: boolean
   modelValue?: Record<string, any>[]
   perPage?: number
   searchable?: boolean
@@ -70,6 +75,7 @@ const props = withDefaults(defineProps<{
   loading: false,
   rowKey: 'id',
   selectable: false,
+  selectOnRowClick: false,
   modelValue: () => [],
   perPage: 10,
   searchable: true,
@@ -472,9 +478,9 @@ function colStyle(col: DataTableColumn) {
                   'hover:bg-on-surface/4',
                   selectable && isSelected(row) ? 'bg-primary/6' : '',
                   striped ? 'even:bg-surface-container-lowest' : '',
-                  selectable ? 'cursor-pointer' : '',
+                  selectable && selectOnRowClick ? 'cursor-pointer' : '',
                 ]"
-                @click="selectable ? toggleRow(row) : emit('rowClick', row)"
+                @click="selectable && selectOnRowClick ? toggleRow(row) : emit('rowClick', row)"
               >
                 <td v-if="hasExpand()" class="px-2" :class="dense ? 'py-1' : 'py-2'" @click.stop>
                   <MIconButton
@@ -486,7 +492,7 @@ function colStyle(col: DataTableColumn) {
                     @click="toggleExpand(row)"
                   />
                 </td>
-                <td v-if="selectable" :class="dense ? 'px-4 py-1' : 'px-4 py-3'" @click.stop="toggleRow(row)">
+                <td v-if="selectable" :class="dense ? 'px-4 py-1' : 'px-4 py-3'" @click.stop>
                   <MCheckbox :model-value="isSelected(row)" @update:model-value="toggleRow(row)" />
                 </td>
                 <td

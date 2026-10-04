@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.8.4] - 2026-10-04
+
+### Changed
+- `MDataTable` with `selectable`: clicking a row no longer toggles its selection by default. Selection now happens only through the row checkbox, and a row click emits `rowClick`. The old behavior (click anywhere on the row to toggle it, no `rowClick`) is still available with the new `selectOnRowClick` prop. Before, `rowClick` never fired while `selectable` was on, so a table couldn't both select rows and open them on click. The checkbox cell no longer runs its own toggle on click (it only stops propagation): a single click on the checkbox's label also fired the cell's handler once for the label and once for the input's synthetic click, and only came out right because the three toggles cancelled to one
+
 ## [0.8.3] - 2026-09-27
 
 ### Added
