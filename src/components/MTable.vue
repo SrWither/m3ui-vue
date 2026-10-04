@@ -34,6 +34,11 @@ const props = withDefaults(
     emptyText?: string
     rowKey?: string
     selectable?: boolean
+    /** Con `selectable`, que el click en cualquier parte de la fila la marque/desmarque (en vez de
+     * emitir `rowClick`). Default false: sólo el checkbox selecciona y el click en la fila emite
+     * `rowClick`, así una tabla puede seleccionar filas y a la vez abrirlas al click.
+     */
+    selectOnRowClick?: boolean
     modelValue?: Record<string, any>[]
     perPage?: number
     searchable?: boolean
@@ -48,6 +53,7 @@ const props = withDefaults(
     loading: false,
     rowKey: 'id',
     selectable: false,
+    selectOnRowClick: false,
     modelValue: () => [],
     perPage: 10,
     searchable: true,
@@ -61,6 +67,7 @@ const emit = defineEmits<{
   'update:modelValue': [Record<string, any>[]]
   'update:page': [number]
   fetch: [TableFetchParams]
+  rowClick: [Record<string, any>]
 }>()
 
 // ── Search ─────────────────────────────────────────────────────────────────
@@ -365,11 +372,11 @@ const hasActions = computed(() => !!slots['row-actions'])
                 'border-t border-outline-variant transition-colors duration-100',
                 'hover:bg-on-surface/4',
                 selectable && isSelected(row) ? 'bg-primary/6' : '',
-                selectable ? 'cursor-pointer' : '',
+                selectable && selectOnRowClick ? 'cursor-pointer' : '',
               ]"
-              @click="selectable ? toggleRow(row) : undefined"
+              @click="selectable && selectOnRowClick ? toggleRow(row) : emit('rowClick', row)"
             >
-              <td v-if="selectable" class="px-4 py-3" @click.stop="toggleRow(row)">
+              <td v-if="selectable" class="px-4 py-3" @click.stop>
                 <MCheckbox
                   :model-value="isSelected(row)"
                   @update:model-value="toggleRow(row)"
