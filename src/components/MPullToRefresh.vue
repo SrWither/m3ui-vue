@@ -68,54 +68,38 @@ function hideIndicator(animate: boolean) {
   el.style.opacity = "0";
 }
 
-function onPointerDown(e: PointerEvent) {
-  if (props.disabled || props.refreshing || committed || e.button !== 0) return;
-  if (!scrollEl.value || scrollEl.value.scrollTop > 0) return;
-  pointerId = e.pointerId;
-  startY = e.clientY;
-  pulling = true;
-  isPulling.value = true;
-  // Declare up front (before any touchmove fires) that this element handles
-  // its own touch gestures now — waiting and calling preventDefault() from
-  // inside pointermove is too late on some mobile browsers, which may have
-  // already started resolving the touch as a native scroll/pull-to-refresh
-  // and cancel our pointer sequence out from under us. Note this only fully
-  // holds up in contexts without a competing OS/browser-chrome gesture layer
-  // (Capacitor/Electron shells, desktop mouse) — a real mobile browser tab
-  // can still occasionally win that race and cancel the drag.
-  scrollEl.value.style.touchAction = "none";
-  scrollEl.value.setPointerCapture(e.pointerId);
+function canStart() {
+  return !props.disabled && !props.refreshing && !committed && !!scrollEl.value && scrollEl.value.scrollTop <= 0;
 }
 
-function onPointerMove(e: PointerEvent) {
-  if (!pulling || e.pointerId !== pointerId) return;
-  const raw = e.clientY - startY;
+function beginPull(y: number) {
+  startY = y;
+  pulling = true;
+  pullDistance = 0;
+}
+
+// Returns true when the move is part of a pull (caller should block native scrolling).
+function movePull(y: number): boolean {
+  const raw = y - startY;
   if (raw <= 0) {
-    // Dragging back upward — not a pull. Hand touch scrolling back so the
-    // rest of this gesture can scroll the list normally.
     pullDistance = 0;
     hideIndicator(false);
-    if (scrollEl.value) scrollEl.value.style.touchAction = "";
-    return;
+    return false;
   }
-  e.preventDefault();
+  if (!isPulling.value) isPulling.value = true;
   const maxPull = props.threshold * MAX_PULL_MULTIPLIER;
   pullDistance = Math.min(
     raw <= props.threshold ? raw : props.threshold + (raw - props.threshold) * RESISTANCE,
     maxPull,
   );
   previewIndicator(pullDistance);
+  return true;
 }
 
-function endPull(e: PointerEvent) {
-  if (!pulling || e.pointerId !== pointerId) return;
+function finishPull() {
+  if (!pulling) return;
   pulling = false;
   isPulling.value = false;
-  if (scrollEl.value) {
-    scrollEl.value.style.touchAction = "";
-    if (scrollEl.value.hasPointerCapture(e.pointerId)) scrollEl.value.releasePointerCapture(e.pointerId);
-  }
-
   if (pullDistance >= props.threshold) {
     committed = true;
     settleIndicator(true);
@@ -124,6 +108,73 @@ function endPull(e: PointerEvent) {
     hideIndicator(true);
   }
   pullDistance = 0;
+}
+
+// Mouse/pen: pointer events. Touch is handled separately below — a touch's
+// `touch-action` is resolved by the browser when the finger lands, before any
+// pointerdown handler runs, so it can't be switched to `none` mid-gesture: the
+// browser starts a native pan and fires pointercancel, snapping the indicator
+// back. The only reliable way to own a touch drag is a non-passive touchmove
+// that calls preventDefault().
+function onPointerDown(e: PointerEvent) {
+  if (e.pointerType === "touch" || e.button !== 0 || !canStart()) return;
+  pointerId = e.pointerId;
+  beginPull(e.clientY);
+  scrollEl.value!.setPointerCapture(e.pointerId);
+}
+
+function onPointerMove(e: PointerEvent) {
+  if (!pulling || e.pointerId !== pointerId) return;
+  movePull(e.clientY);
+}
+
+function onPointerEnd(e: PointerEvent) {
+  if (!pulling || e.pointerId !== pointerId) return;
+  pointerId = null;
+  if (scrollEl.value?.hasPointerCapture(e.pointerId)) scrollEl.value.releasePointerCapture(e.pointerId);
+  finishPull();
+}
+
+let touchId: number | null = null;
+// Whether this touch gesture has been claimed as a pull (vs. a normal scroll).
+let touchClaimed = false;
+
+function onTouchStart(e: TouchEvent) {
+  if (e.touches.length !== 1 || !canStart()) return;
+  const t = e.touches[0]!;
+  touchId = t.identifier;
+  touchClaimed = false;
+  beginPull(t.clientY);
+}
+
+function onTouchMove(e: TouchEvent) {
+  if (!pulling || touchId === null) return;
+  const t = Array.from(e.changedTouches).find((x) => x.identifier === touchId);
+  if (!t) return;
+  if (!touchClaimed) {
+    // First move decides: dragging up (or the list has scrolled since touchstart)
+    // is a normal scroll — let the browser have the rest of the gesture.
+    if (t.clientY <= startY || (scrollEl.value?.scrollTop ?? 0) > 0) {
+      if (t.clientY < startY) {
+        pulling = false;
+        touchId = null;
+      }
+      return;
+    }
+    touchClaimed = true;
+  }
+  // Once claimed, keep blocking native scroll for the whole gesture (even if the
+  // finger moves back up) — browsers don't reliably hand a prevented gesture back.
+  if (e.cancelable) e.preventDefault();
+  movePull(t.clientY);
+}
+
+function onTouchEnd(e: TouchEvent) {
+  if (touchId === null) return;
+  if (!Array.from(e.changedTouches).some((x) => x.identifier === touchId)) return;
+  touchId = null;
+  touchClaimed = false;
+  finishPull();
 }
 
 // Also settles the indicator when a refresh is triggered programmatically
@@ -148,11 +199,26 @@ watch(
 // template. A reactive `:style` there would fight this: Vue re-patches any
 // style property it tracks on every re-render of this component (and
 // `isPulling` toggling — used below for the `select-none` class — forces
-// exactly such a re-render right at pointerdown/endPull), stomping whatever
+// exactly such a re-render right as a pull starts and finishes), stomping whatever
 // transform we'd just applied back to its bound value.
-onMounted(() => hideIndicator(false));
+onMounted(() => {
+  hideIndicator(false);
+  const el = scrollEl.value;
+  if (!el) return;
+  el.addEventListener("touchstart", onTouchStart, { passive: true });
+  // Must be non-passive: preventDefault() here is what stops the native scroll.
+  el.addEventListener("touchmove", onTouchMove, { passive: false });
+  el.addEventListener("touchend", onTouchEnd);
+  el.addEventListener("touchcancel", onTouchEnd);
+});
 onBeforeUnmount(() => {
   pulling = false;
+  const el = scrollEl.value;
+  if (!el) return;
+  el.removeEventListener("touchstart", onTouchStart);
+  el.removeEventListener("touchmove", onTouchMove);
+  el.removeEventListener("touchend", onTouchEnd);
+  el.removeEventListener("touchcancel", onTouchEnd);
 });
 </script>
 
@@ -171,8 +237,8 @@ onBeforeUnmount(() => {
       :class="{ 'select-none': isPulling }"
       @pointerdown="onPointerDown"
       @pointermove="onPointerMove"
-      @pointerup="endPull"
-      @pointercancel="endPull"
+      @pointerup="onPointerEnd"
+      @pointercancel="onPointerEnd"
     >
       <slot />
     </div>
