@@ -11,10 +11,12 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MRating` rebuilt with the same API (same props, same `update:modelValue`). It isn't in the official M3 spec, so it's now built from M3 primitives. **Changes the default look:** empty icons are the outlined glyph in `on-surface-variant` (was the same glyph at 40% opacity). The `hover:scale-110` is gone, replaced by a 40px circular state layer (8% hover / 10% pressed) tinted with the rating's `color`, and the component's footprint stays the same. Disabled now uses `on-surface/38` on the icons instead of 38% opacity on the whole component
 - `MRating` now supports dragging to rate, with mouse or touch. Dragging past the first icon clears the rating to 0
 - `MRating` keyboard support: arrow keys step by 1 (or 0.5 with `halfIncrements`, RTL-aware), `Home`/`End` go to 0/`max`, and a `secondary` focus ring shows on keyboard focus. Interactive ratings are `role="slider"` with `aria-valuenow`/`aria-valuetext`. Readonly ratings are `role="img"`, labelled with the value, and no longer a tab stop
+- `MPullToRefresh` is no longer beta: the touch-drag problem that was its known limitation is fixed (see below)
 
 ### Fixed
 - `MRating` with `halfIncrements` never actually showed a half icon: a half value rendered as a fully filled icon. Now each icon draws its outlined glyph with the filled glyph on top, clipped to the exact fraction, so halves (and any fraction, e.g. a readonly `4.3` average fills 30% of the 5th icon) render with any Material Symbol, not just `star`. A fractional `modelValue` now also renders as a fraction when `halfIncrements` is off (before, `3.5` showed as 3)
 - `MRating`: clicking the current value again reset the rating to 0. It now keeps the value
+- `MPullToRefresh`: a touch drag in a real mobile browser couldn't pull. The indicator started to follow the finger, then jumped back up. The drag ran only on Pointer Events, and `touch-action: none` was set inside `pointerdown`, but the browser decides how to handle a touch from its `touch-action` as soon as the finger lands, before that handler runs. So it treated the drag as a native scroll and fired `pointercancel`, which ended the pull. Touch now goes through `touchstart`/`touchmove` with a non-passive `touchmove` whose `preventDefault()` actually blocks the native scroll. The first move decides the gesture: dragging down with the list at the top becomes a pull, and anything else stays a normal scroll. Mouse and pen still use Pointer Events
 
 ## [0.8.5] - 2026-10-04
 
