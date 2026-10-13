@@ -119,4 +119,8 @@ export const esLocale: M3Locale = {
   result403Desc: 'No tienes permisos para ver este recurso.',
   result500Title: 'Error del servidor',
   result500Desc: 'El servidor no pudo procesar la solicitud.',
+
+  // Chat bubble
+  chatTyping: 'Escribiendo…',
+  chatRecordingAudio: 'Grabando audio…',
 }

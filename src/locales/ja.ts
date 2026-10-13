@@ -119,4 +119,8 @@ export const jaLocale: M3Locale = {
   result403Desc: 'このリソースを表示する権限がありません。',
   result500Title: 'サーバーエラー',
   result500Desc: 'サーバーがリクエストを処理できませんでした。',
+
+  // Chat bubble
+  chatTyping: '入力中…',
+  chatRecordingAudio: '音声を録音中…',
 }

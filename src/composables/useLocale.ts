@@ -120,6 +120,10 @@ export interface M3Locale {
   result403Desc: string
   result500Title: string
   result500Desc: string
+
+  // Chat bubble
+  chatTyping: string
+  chatRecordingAudio: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -228,6 +232,10 @@ export const defaultLocale: M3Locale = {
   result403Desc: 'You don\'t have permission to view this resource.',
   result500Title: 'Server error',
   result500Desc: 'The server could not process the request.',
+
+  // Chat bubble
+  chatTyping: 'Typing…',
+  chatRecordingAudio: 'Recording audio…',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')

@@ -119,4 +119,8 @@ export const frLocale: M3Locale = {
   result403Desc: 'Vous n\'avez pas l\'autorisation de voir cette ressource.',
   result500Title: 'Erreur du serveur',
   result500Desc: 'Le serveur n\'a pas pu traiter la requête.',
+
+  // Chat bubble
+  chatTyping: 'En train d\'écrire…',
+  chatRecordingAudio: 'Enregistre un audio…',
 }

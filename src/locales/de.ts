@@ -119,4 +119,8 @@ export const deLocale: M3Locale = {
   result403Desc: 'Du hast keine Berechtigung, diese Ressource anzuzeigen.',
   result500Title: 'Serverfehler',
   result500Desc: 'Der Server konnte die Anfrage nicht verarbeiten.',
+
+  // Chat bubble
+  chatTyping: 'Schreibt…',
+  chatRecordingAudio: 'Nimmt Audio auf…',
 }

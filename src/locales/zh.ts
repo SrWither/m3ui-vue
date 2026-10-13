@@ -119,4 +119,8 @@ export const zhLocale: M3Locale = {
   result403Desc: '您没有权限查看此资源。',
   result500Title: '服务器错误',
   result500Desc: '服务器无法处理该请求。',
+
+  // Chat bubble
+  chatTyping: '正在输入…',
+  chatRecordingAudio: '正在录音…',
 }

@@ -119,4 +119,8 @@ export const koLocale: M3Locale = {
   result403Desc: '이 리소스를 볼 권한이 없습니다.',
   result500Title: '서버 오류',
   result500Desc: '서버가 요청을 처리할 수 없습니다.',
+
+  // Chat bubble
+  chatTyping: '입력 중…',
+  chatRecordingAudio: '음성 녹음 중…',
 }
