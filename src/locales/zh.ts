@@ -103,4 +103,20 @@ export const zhLocale: M3Locale = {
   // JSON viewer
   jsonElements: '个元素',
   jsonFields: '个字段',
+
+  // Result
+  resultSuccessTitle: '操作成功',
+  resultSuccessDesc: '操作已成功完成。',
+  resultErrorTitle: '出错了',
+  resultErrorDesc: '发生意外错误，请重试。',
+  resultWarningTitle: '注意',
+  resultWarningDesc: '有需要您注意的事项。',
+  resultInfoTitle: '信息',
+  resultInfoDesc: '这里有一些您需要了解的信息。',
+  result404Title: '页面未找到',
+  result404Desc: '您要查找的页面不存在或已被移动。',
+  result403Title: '访问被拒绝',
+  result403Desc: '您没有权限查看此资源。',
+  result500Title: '服务器错误',
+  result500Desc: '服务器无法处理该请求。',
 }

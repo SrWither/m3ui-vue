@@ -104,6 +104,22 @@ export interface M3Locale {
   // JSON viewer
   jsonElements: string
   jsonFields: string
+
+  // Result
+  resultSuccessTitle: string
+  resultSuccessDesc: string
+  resultErrorTitle: string
+  resultErrorDesc: string
+  resultWarningTitle: string
+  resultWarningDesc: string
+  resultInfoTitle: string
+  resultInfoDesc: string
+  result404Title: string
+  result404Desc: string
+  result403Title: string
+  result403Desc: string
+  result500Title: string
+  result500Desc: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -196,6 +212,22 @@ export const defaultLocale: M3Locale = {
 
   jsonElements: 'elements',
   jsonFields: 'fields',
+
+  // Result
+  resultSuccessTitle: 'Success',
+  resultSuccessDesc: 'The action was completed successfully.',
+  resultErrorTitle: 'Something went wrong',
+  resultErrorDesc: 'An unexpected error occurred. Please try again.',
+  resultWarningTitle: 'Warning',
+  resultWarningDesc: 'Something needs your attention.',
+  resultInfoTitle: 'Information',
+  resultInfoDesc: 'Here is something you should know.',
+  result404Title: 'Page not found',
+  result404Desc: 'The page you are looking for does not exist or has been moved.',
+  result403Title: 'Access denied',
+  result403Desc: 'You don\'t have permission to view this resource.',
+  result500Title: 'Server error',
+  result500Desc: 'The server could not process the request.',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')

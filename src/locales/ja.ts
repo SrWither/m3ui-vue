@@ -103,4 +103,20 @@ export const jaLocale: M3Locale = {
   // JSON viewer
   jsonElements: '要素',
   jsonFields: 'フィールド',
+
+  // Result
+  resultSuccessTitle: '完了しました',
+  resultSuccessDesc: '操作は正常に完了しました。',
+  resultErrorTitle: '問題が発生しました',
+  resultErrorDesc: '予期しないエラーが発生しました。もう一度お試しください。',
+  resultWarningTitle: '注意',
+  resultWarningDesc: '確認が必要な項目があります。',
+  resultInfoTitle: 'お知らせ',
+  resultInfoDesc: '知っておくべき情報があります。',
+  result404Title: 'ページが見つかりません',
+  result404Desc: 'お探しのページは存在しないか、移動されました。',
+  result403Title: 'アクセスが拒否されました',
+  result403Desc: 'このリソースを表示する権限がありません。',
+  result500Title: 'サーバーエラー',
+  result500Desc: 'サーバーがリクエストを処理できませんでした。',
 }

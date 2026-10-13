@@ -103,4 +103,20 @@ export const ptLocale: M3Locale = {
   // JSON viewer
   jsonElements: 'elementos',
   jsonFields: 'campos',
+
+  // Result
+  resultSuccessTitle: 'Operação concluída',
+  resultSuccessDesc: 'A ação foi concluída com sucesso.',
+  resultErrorTitle: 'Algo deu errado',
+  resultErrorDesc: 'Ocorreu um erro inesperado. Tente novamente.',
+  resultWarningTitle: 'Atenção',
+  resultWarningDesc: 'Há algo que requer sua atenção.',
+  resultInfoTitle: 'Informação',
+  resultInfoDesc: 'Há algo que você deve saber.',
+  result404Title: 'Página não encontrada',
+  result404Desc: 'A página que você procura não existe ou foi movida.',
+  result403Title: 'Acesso negado',
+  result403Desc: 'Você não tem permissão para ver este recurso.',
+  result500Title: 'Erro do servidor',
+  result500Desc: 'O servidor não conseguiu processar a solicitação.',
 }

@@ -103,4 +103,20 @@ export const frLocale: M3Locale = {
   // JSON viewer
   jsonElements: 'éléments',
   jsonFields: 'champs',
+
+  // Result
+  resultSuccessTitle: 'Opération réussie',
+  resultSuccessDesc: 'L\'action a été effectuée avec succès.',
+  resultErrorTitle: 'Une erreur s\'est produite',
+  resultErrorDesc: 'Une erreur inattendue s\'est produite. Veuillez réessayer.',
+  resultWarningTitle: 'Attention',
+  resultWarningDesc: 'Un élément requiert votre attention.',
+  resultInfoTitle: 'Information',
+  resultInfoDesc: 'Voici une information à connaître.',
+  result404Title: 'Page introuvable',
+  result404Desc: 'La page que vous recherchez n\'existe pas ou a été déplacée.',
+  result403Title: 'Accès refusé',
+  result403Desc: 'Vous n\'avez pas l\'autorisation de voir cette ressource.',
+  result500Title: 'Erreur du serveur',
+  result500Desc: 'Le serveur n\'a pas pu traiter la requête.',
 }

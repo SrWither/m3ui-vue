@@ -103,4 +103,20 @@ export const deLocale: M3Locale = {
   // JSON viewer
   jsonElements: 'Elemente',
   jsonFields: 'Felder',
+
+  // Result
+  resultSuccessTitle: 'Erfolgreich',
+  resultSuccessDesc: 'Die Aktion wurde erfolgreich abgeschlossen.',
+  resultErrorTitle: 'Etwas ist schiefgelaufen',
+  resultErrorDesc: 'Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut.',
+  resultWarningTitle: 'Achtung',
+  resultWarningDesc: 'Etwas erfordert deine Aufmerksamkeit.',
+  resultInfoTitle: 'Information',
+  resultInfoDesc: 'Hier ist etwas, das du wissen solltest.',
+  result404Title: 'Seite nicht gefunden',
+  result404Desc: 'Die gesuchte Seite existiert nicht oder wurde verschoben.',
+  result403Title: 'Zugriff verweigert',
+  result403Desc: 'Du hast keine Berechtigung, diese Ressource anzuzeigen.',
+  result500Title: 'Serverfehler',
+  result500Desc: 'Der Server konnte die Anfrage nicht verarbeiten.',
 }

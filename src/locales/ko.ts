@@ -103,4 +103,20 @@ export const koLocale: M3Locale = {
   // JSON viewer
   jsonElements: '요소',
   jsonFields: '필드',
+
+  // Result
+  resultSuccessTitle: '작업 완료',
+  resultSuccessDesc: '작업이 성공적으로 완료되었습니다.',
+  resultErrorTitle: '문제가 발생했습니다',
+  resultErrorDesc: '예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.',
+  resultWarningTitle: '주의',
+  resultWarningDesc: '확인이 필요한 사항이 있습니다.',
+  resultInfoTitle: '정보',
+  resultInfoDesc: '알아두어야 할 내용이 있습니다.',
+  result404Title: '페이지를 찾을 수 없습니다',
+  result404Desc: '찾으시는 페이지가 존재하지 않거나 이동되었습니다.',
+  result403Title: '접근이 거부되었습니다',
+  result403Desc: '이 리소스를 볼 권한이 없습니다.',
+  result500Title: '서버 오류',
+  result500Desc: '서버가 요청을 처리할 수 없습니다.',
 }

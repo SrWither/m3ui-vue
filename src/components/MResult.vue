@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import MIcon from './MIcon.vue'
+import { useLocale, type M3Locale } from '../composables/useLocale'
 
 const props = withDefaults(defineProps<{
   status: 'success' | 'error' | 'warning' | 'info' | '404' | '403' | '500'
@@ -8,16 +9,25 @@ const props = withDefaults(defineProps<{
   description?: string
 }>(), {})
 
+const t = useLocale()
+
+const STATUS_STYLE = {
+  success: { icon: 'check_circle', bg: 'bg-success-container', text: 'text-on-success-container' },
+  error: { icon: 'error', bg: 'bg-error-container', text: 'text-on-error-container' },
+  warning: { icon: 'warning', bg: 'bg-tertiary-container', text: 'text-on-tertiary-container' },
+  info: { icon: 'info', bg: 'bg-primary-container', text: 'text-on-primary-container' },
+  '404': { icon: 'search_off', bg: 'bg-surface-container-high', text: 'text-on-surface-variant' },
+  '403': { icon: 'lock', bg: 'bg-error-container', text: 'text-on-error-container' },
+  '500': { icon: 'cloud_off', bg: 'bg-error-container', text: 'text-on-error-container' },
+} as const
+
+// Locale keys follow the status: success → resultSuccessTitle, 404 → result404Title, …
 const config = computed(() => {
-  switch (props.status) {
-    case 'success': return { icon: 'check_circle',  bg: 'bg-success-container', text: 'text-on-success-container', defaultTitle: 'Operación exitosa',       defaultDesc: 'La acción se completó correctamente.' }
-    case 'error':   return { icon: 'error',          bg: 'bg-error-container',   text: 'text-on-error-container',   defaultTitle: 'Algo salió mal',          defaultDesc: 'Ocurrió un error inesperado. Inténtalo de nuevo.' }
-    case 'warning': return { icon: 'warning',        bg: 'bg-tertiary-container', text: 'text-on-tertiary-container', defaultTitle: 'Atención',             defaultDesc: 'Hay algo que requiere tu atención.' }
-    case 'info':    return { icon: 'info',           bg: 'bg-primary-container', text: 'text-on-primary-container', defaultTitle: 'Información',             defaultDesc: '' }
-    case '404':     return { icon: 'search_off',     bg: 'bg-surface-container-high', text: 'text-on-surface-variant', defaultTitle: 'Página no encontrada', defaultDesc: 'La página que buscas no existe o fue movida.' }
-    case '403':     return { icon: 'lock',           bg: 'bg-error-container',   text: 'text-on-error-container',   defaultTitle: 'Acceso denegado',         defaultDesc: 'No tienes permisos para ver este recurso.' }
-    case '500':     return { icon: 'cloud_off',      bg: 'bg-error-container',   text: 'text-on-error-container',   defaultTitle: 'Error del servidor',      defaultDesc: 'El servidor no pudo procesar la solicitud.' }
-    default:        return { icon: 'info',           bg: 'bg-surface-container-high', text: 'text-on-surface-variant', defaultTitle: '',                     defaultDesc: '' }
+  const key = props.status.charAt(0).toUpperCase() + props.status.slice(1)
+  return {
+    ...STATUS_STYLE[props.status],
+    defaultTitle: t[`result${key}Title` as keyof M3Locale],
+    defaultDesc: t[`result${key}Desc` as keyof M3Locale],
   }
 })
 
