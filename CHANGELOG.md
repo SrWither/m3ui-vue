@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.8.7] - Unreleased
+## [0.8.7] - 2026-10-14
 
 ### Added
 - `MWindow` `maximizable` prop (default `true`): a maximize button between minimize and close, and double-click on the title bar, fill the container (square corners, no resize) and restore to the previous geometry, animated. Dragging a maximized window by its title bar detaches it after ~40px and eases it back to its size, keeping the grab point under the pointer. New `maximize` event (`true`/`false`)
@@ -34,7 +34,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MWindow`s that were closed when mounted didn't follow later size changes of their container
 - `MTransferList`: rows leaving a pane (e.g. on "move all") no longer stack on top of each other while fading out. Each leaving row is now pinned at its own position instead of falling back to a static position that shifted as its siblings left too
 
-## [0.8.6] - Unreleased
+## [0.8.6] - 2026-10-13
 
 ### Added
 - `MChatBubble` `typing` prop (`'text' | 'audio'`): shows a live indicator in place of the message, either three bouncing dots while the other person types or a pulsing mic with a moving waveform while they record audio. It keeps the bubble's side, avatar, sender, tail and `color`, and hides the content, time and status. Exposed as `role="status"` labelled with two new `M3Locale` keys, `chatTyping` and `chatRecordingAudio` (English defaults, translated in all 7 bundled locales), prefixed with `sender` when set. Animations stop under `prefers-reduced-motion`
