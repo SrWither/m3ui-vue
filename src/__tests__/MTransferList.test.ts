@@ -100,4 +100,50 @@ describe('MTransferList', () => {
     expect(leaving.map((li) => li.style.top)).toEqual(['4px', '60px', '116px'])
     w.unmount()
   })
+
+  it('#item replaces the row content, keeps the checkbox and tells each pane apart', () => {
+    const w = mount(MTransferList, {
+      props: { modelValue: [2], items },
+      slots: { item: `<template #item="{ item, side, checked }"><b class="custom">{{ side }}:{{ item.label }}:{{ checked }}</b></template>` },
+    })
+    expect(rows(w, 0).map((r) => r.find('.custom').text())).toEqual(['source:Ana:false', 'source:Marta:false'])
+    expect(rows(w, 1)[0]!.find('.custom').text()).toBe('target:Luis:false')
+    expect(rows(w, 0)[0]!.find('input[type="checkbox"]').exists()).toBe(true)
+  })
+
+  it('controls inside #item keep their clicks instead of checking or moving the row', async () => {
+    let hits = 0
+    const w = mount(MTransferList, {
+      props: { modelValue: [], items, 'onUpdate:modelValue': (v: (string | number)[]) => w.setProps({ modelValue: v }) },
+      slots: { item: `<template #item="{ item }"><span>{{ item.label }}</span><button class="act">x</button><span data-transfer-action class="mark">m</span></template>` },
+    })
+    rows(w, 0)[0]!.find('.act').element.addEventListener('click', () => hits++)
+    await rows(w, 0)[0]!.find('.act').trigger('click')
+    await rows(w, 0)[0]!.find('.act').trigger('dblclick')
+    await rows(w, 0)[0]!.find('.mark').trigger('click')
+    await rows(w, 0)[0]!.find('.act').trigger('keydown', { key: 'Enter' })
+    expect(hits).toBe(1)
+    expect(rows(w, 0)[0]!.classes()).not.toContain('bg-secondary-container')
+    expect(w.emitted('update:modelValue')).toBeUndefined()
+  })
+
+  it('bare rows are drawn by the slot and work as checkboxes', async () => {
+    const w = mount(MTransferList, {
+      props: { modelValue: [], items, bare: true, 'onUpdate:modelValue': (v: (string | number)[]) => w.setProps({ modelValue: v }) },
+      slots: { item: `<template #item="{ item, checked, move }"><div class="card" :data-checked="checked">{{ item.label }}<button class="go" @click="move">go</button></div></template>` },
+    })
+    const row = rows(w, 0)[0]!
+    expect(row.find('input[type="checkbox"]').exists()).toBe(false)
+    expect(row.attributes('role')).toBe('checkbox')
+    expect(row.attributes('tabindex')).toBe('0')
+    await row.find('.card').trigger('click')
+    expect(row.attributes('aria-checked')).toBe('true')
+    expect(row.find('.card').attributes('data-checked')).toBe('true')
+    await row.trigger('keydown', { key: ' ' })
+    expect(row.attributes('aria-checked')).toBe('false')
+    await row.trigger('keydown', { key: 'Enter' })
+    expect(lastValue(w)).toEqual([1])
+    await rows(w, 0)[0]!.find('.go').trigger('click')
+    expect(lastValue(w)).toEqual([1, 2])
+  })
 })

@@ -1,11 +1,4 @@
-<script setup lang="ts">
-import { computed, ref } from 'vue'
-import MIconButton from './MIconButton.vue'
-import MTransferPane from './_MTransferPane.vue'
-import { useLocale } from '../composables/useLocale'
-
-const locale = useLocale()
-
+<script lang="ts">
 export interface TransferItem {
   value: string | number
   label: string
@@ -13,12 +6,21 @@ export interface TransferItem {
   /** Optional second line under the label (an email, a role, a short description). */
   description?: string
 }
+</script>
+
+<script setup lang="ts" generic="T extends TransferItem = TransferItem">
+import { computed, ref } from 'vue'
+import MIconButton from './MIconButton.vue'
+import MTransferPane from './_MTransferPane.vue'
+import { useLocale } from '../composables/useLocale'
+
+const locale = useLocale()
 
 type Value = string | number
 
 const props = withDefaults(defineProps<{
   modelValue: Value[]
-  items: TransferItem[]
+  items: T[]
   sourceTitle?: string
   targetTitle?: string
   filterable?: boolean
@@ -30,10 +32,38 @@ const props = withDefaults(defineProps<{
   moveAllLeftLabel?: string
   /** Height of each list's scroll area (any CSS length). */
   listHeight?: string
+  /**
+   * Fully custom rows: the `#item` slot draws the whole row (no checkbox, padding, min height
+   * or background). The row stays clickable, focusable (Space checks it, Enter moves it) and
+   * animated; use the slot's `checked` to style the checked state.
+   */
+  bare?: boolean
 }>(), {
   filterable: false,
   listHeight: '280px',
+  bare: false,
 })
+
+defineSlots<{
+  /**
+   * Custom row content. Without `bare` it replaces the icon and text, keeping the checkbox,
+   * highlight and hover. Buttons, links, fields and `[data-transfer-action]` elements inside
+   * keep their own clicks instead of checking the row.
+   */
+  item?: (props: {
+    /** Your item, with any extra fields it carries. */
+    item: T
+    checked: boolean
+    /** Which pane the row is in. */
+    side: 'source' | 'target'
+    /** Check or uncheck the row. */
+    toggle: () => void
+    /** Send just this row to the other pane. */
+    move: () => void
+  }) => unknown
+  'source-empty'?: () => unknown
+  'target-empty'?: () => unknown
+}>()
 
 const emit = defineEmits<{ 'update:modelValue': [Value[]] }>()
 
@@ -131,11 +161,13 @@ function activateTarget(value: Value) {
         enter-from="end"
         :select-all-label="locale.selectAll"
         :clear-search-label="locale.clearSearch"
+        :bare="bare"
         @toggle="toggleSource"
         @toggle-all="toggleAllSource"
         @activate="activateSource"
         @update:search="sourceSearch = $event"
       >
+        <template v-if="$slots.item" #item="row"><slot name="item" v-bind="row" :item="row.item as T" side="source" /></template>
         <template v-if="$slots['source-empty']" #empty><slot name="source-empty" /></template>
       </MTransferPane>
 
@@ -187,11 +219,13 @@ function activateTarget(value: Value) {
         enter-from="start"
         :select-all-label="locale.selectAll"
         :clear-search-label="locale.clearSearch"
+        :bare="bare"
         @toggle="toggleTarget"
         @toggle-all="toggleAllTarget"
         @activate="activateTarget"
         @update:search="targetSearch = $event"
       >
+        <template v-if="$slots.item" #item="row"><slot name="item" v-bind="row" :item="row.item as T" side="target" /></template>
         <template v-if="$slots['target-empty']" #empty><slot name="target-empty" /></template>
       </MTransferPane>
     </div>

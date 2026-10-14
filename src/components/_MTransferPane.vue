@@ -21,6 +21,13 @@ const props = defineProps<{
   enterFrom: 'start' | 'end'
   selectAllLabel: string
   clearSearchLabel: string
+  /** The `#item` slot draws the whole row: no checkbox, padding, min height or background. */
+  bare: boolean
+}>()
+
+defineSlots<{
+  item?: (props: { item: TransferItem; checked: boolean; toggle: () => void; move: () => void }) => unknown
+  empty?: () => unknown
 }>()
 
 const emit = defineEmits<{
@@ -40,19 +47,39 @@ const someChecked = computed(() => checkedVisible.value > 0 && !allChecked.value
 // offset before the update (once the first leave starts, later measurements are already
 // wrong) and pin each leaving row there.
 const listEl = ref<HTMLElement>()
-const rowTops = new WeakMap<Element, number>()
+const rowBoxes = new WeakMap<Element, { top: number; left: number; width: number }>()
 onBeforeUpdate(() => {
-  listEl.value?.querySelectorAll(':scope > ul > li').forEach((li) => rowTops.set(li, (li as HTMLElement).offsetTop))
+  listEl.value?.querySelectorAll<HTMLElement>(':scope > ul > li').forEach((li) =>
+    rowBoxes.set(li, { top: li.offsetTop, left: li.offsetLeft, width: li.offsetWidth }),
+  )
 })
 function pinLeaving(el: Element) {
-  const top = rowTops.get(el)
-  if (top !== undefined) (el as HTMLElement).style.top = `${top}px`
+  const box = rowBoxes.get(el)
+  if (!box) return
+  // Left and width too: a `bare` list is padded, so `left: 0; right: 0` would widen the row.
+  Object.assign((el as HTMLElement).style, { top: `${box.top}px`, left: `${box.left}px`, width: `${box.width}px`, right: 'auto' })
 }
+
+// Controls inside custom `#item` content (buttons, links, fields, or anything marked with
+// `data-transfer-action`) keep their own clicks and keys instead of toggling or moving the row.
+const CONTROL = 'button, a, select, textarea, [contenteditable], [data-transfer-action], input:not([type="checkbox"])'
+const fromControl = (e: Event) => !!(e.target as Element).closest(CONTROL)
 
 function onRowClick(e: MouseEvent, value: Value) {
   // The checkbox handles its own clicks (its label + input); toggling here too is exactly
   // the old double-toggle bug, where the box showed checked but the state wasn't.
-  if ((e.target as Element).closest('label')) return
+  if ((e.target as Element).closest('label') || fromControl(e)) return
+  emit('toggle', value)
+}
+function onRowActivate(e: Event, value: Value) {
+  if (fromControl(e)) return
+  e.preventDefault()
+  emit('activate', value)
+}
+// `bare` rows have no checkbox, so the row itself is the focusable checkbox: Space toggles.
+function onRowSpace(e: KeyboardEvent, value: Value) {
+  if (!props.bare || e.target !== e.currentTarget) return
+  e.preventDefault()
   emit('toggle', value)
 }
 </script>
@@ -101,45 +128,81 @@ function onRowClick(e: MouseEvent, value: Value) {
 
     <!-- List -->
     <div ref="listEl" class="relative overflow-y-auto overscroll-contain" :style="{ height: listHeight }">
-      <TransitionGroup tag="ul" :name="`m3-tl-${enterFrom}`" class="relative py-1" @before-leave="pinLeaving">
+      <TransitionGroup
+        tag="ul"
+        :name="`m3-tl-${enterFrom}`"
+        class="relative"
+        :class="bare ? 'flex flex-col gap-2 p-2' : 'py-1'"
+        @before-leave="pinLeaving"
+      >
         <li
           v-for="item in items"
           :key="item.value"
-          class="group relative flex min-h-14 cursor-pointer select-none items-center gap-4 px-4 py-2 transition-colors duration-150"
-          :class="checked.has(item.value) ? 'bg-secondary-container' : ''"
+          class="group relative cursor-pointer select-none"
+          :class="bare
+            ? 'rounded-md outline-none focus-visible:ring-2 focus-visible:ring-secondary'
+            : ['flex min-h-14 items-center gap-4 px-4 py-2 transition-colors duration-150', checked.has(item.value) ? 'bg-secondary-container' : '']"
+          :tabindex="bare ? 0 : undefined"
+          :role="bare ? 'checkbox' : undefined"
+          :aria-checked="bare ? checked.has(item.value) : undefined"
+          :aria-label="bare ? item.label : undefined"
           @click="onRowClick($event, item.value)"
-          @dblclick="emit('activate', item.value)"
-          @keydown.enter.prevent="emit('activate', item.value)"
+          @dblclick="onRowActivate($event, item.value)"
+          @keydown.enter="onRowActivate($event, item.value)"
+          @keydown.space="onRowSpace($event, item.value)"
         >
-          <span
-            aria-hidden="true"
-            class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-150 group-hover:opacity-[0.08]"
-            :class="checked.has(item.value) ? 'bg-on-secondary-container' : 'bg-on-surface'"
+          <!-- bare: the slot draws the whole row -->
+          <slot
+            v-if="bare"
+            name="item"
+            :item="item"
+            :checked="checked.has(item.value)"
+            :toggle="() => emit('toggle', item.value)"
+            :move="() => emit('activate', item.value)"
           />
-          <MCheckbox
-            class="relative"
-            :model-value="checked.has(item.value)"
-            :aria-label="item.label"
-            @update:model-value="emit('toggle', item.value)"
-          />
-          <span
-            v-if="item.icon"
-            class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors duration-150"
-            :class="checked.has(item.value) ? 'bg-secondary text-on-secondary' : 'bg-surface-container-highest text-on-surface-variant'"
-          >
-            <MIcon :name="item.icon" :size="20" />
-          </span>
-          <span class="relative min-w-0 flex-1">
+          <template v-else>
             <span
-              class="block truncate text-body-large"
-              :class="checked.has(item.value) ? 'text-on-secondary-container' : 'text-on-surface'"
-            >{{ item.label }}</span>
-            <span
-              v-if="item.description"
-              class="block truncate text-body-medium"
-              :class="checked.has(item.value) ? 'text-on-secondary-container/80' : 'text-on-surface-variant'"
-            >{{ item.description }}</span>
-          </span>
+              aria-hidden="true"
+              class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-150 group-hover:opacity-[0.08]"
+              :class="checked.has(item.value) ? 'bg-on-secondary-container' : 'bg-on-surface'"
+            />
+            <MCheckbox
+              class="relative"
+              :model-value="checked.has(item.value)"
+              :aria-label="item.label"
+              @update:model-value="emit('toggle', item.value)"
+            />
+            <!-- #item replaces the icon and text; the row (checkbox, highlight, hover) stays -->
+            <div v-if="$slots.item" class="relative min-w-0 flex-1">
+              <slot
+                name="item"
+                :item="item"
+                :checked="checked.has(item.value)"
+                :toggle="() => emit('toggle', item.value)"
+                :move="() => emit('activate', item.value)"
+              />
+            </div>
+            <template v-else>
+              <span
+                v-if="item.icon"
+                class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors duration-150"
+                :class="checked.has(item.value) ? 'bg-secondary text-on-secondary' : 'bg-surface-container-highest text-on-surface-variant'"
+              >
+                <MIcon :name="item.icon" :size="20" />
+              </span>
+              <span class="relative min-w-0 flex-1">
+                <span
+                  class="block truncate text-body-large"
+                  :class="checked.has(item.value) ? 'text-on-secondary-container' : 'text-on-surface'"
+                >{{ item.label }}</span>
+                <span
+                  v-if="item.description"
+                  class="block truncate text-body-medium"
+                  :class="checked.has(item.value) ? 'text-on-secondary-container/80' : 'text-on-surface-variant'"
+                >{{ item.description }}</span>
+              </span>
+            </template>
+          </template>
         </li>
       </TransitionGroup>
 
