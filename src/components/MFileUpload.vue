@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, reactive, watch, onBeforeUnmount } from 'vue'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
 import MSpinner from './MSpinner.vue'
@@ -25,6 +25,8 @@ const props = withDefaults(
     selectText?: string
     maxSizePrefix?: string
     removeLabel?: string
+    /** Optional v-model. Bind it to own the list: clear it, or update each entry's status/progress. Unbound, the component keeps the list itself. */
+    modelValue?: UploadFile[]
   }>(),
   {
     multiple: false,
@@ -35,9 +37,39 @@ const props = withDefaults(
 const emit = defineEmits<{
   select: [UploadFile[]]
   remove: [UploadFile]
+  'update:modelValue': [UploadFile[]]
 }>()
 
-const files = ref<UploadFile[]>([])
+defineSlots<{
+  dropzone?: () => unknown
+  /** Shown below the list while it has files, e.g. an "Upload" button. */
+  actions?: (props: { files: UploadFile[]; clear: () => void }) => unknown
+}>()
+
+// Controlled when v-model is bound, otherwise the component owns the list.
+const internalFiles = ref<UploadFile[]>([])
+const isControlled = computed(() => props.modelValue !== undefined)
+const files = computed(() => (isControlled.value ? props.modelValue! : internalFiles.value))
+
+function setFiles(next: UploadFile[]) {
+  if (!isControlled.value) internalFiles.value = next
+  emit('update:modelValue', next)
+}
+
+// Revoke preview URLs of entries that left the list, however they left it (row X,
+// clear(), or the parent replacing/splicing its v-model array).
+watch(
+  () => files.value.slice(),
+  (next, prev) => {
+    const kept = new Set(next.map((f) => f.id))
+    for (const f of prev) if (f.preview && !kept.has(f.id)) URL.revokeObjectURL(f.preview)
+  },
+)
+onBeforeUnmount(() => {
+  // A bound v-model may outlive this component and remount it with the same entries,
+  // so only the component's own list is released here.
+  if (!isControlled.value) for (const f of internalFiles.value) if (f.preview) URL.revokeObjectURL(f.preview)
+})
 const dragging = ref(false)
 const inputRef = ref<HTMLInputElement | null>(null)
 
@@ -68,26 +100,21 @@ function processFiles(fileList: FileList | File[]) {
     return true
   })
 
-  const entries: UploadFile[] = valid.map((f) => {
-    const entry: UploadFile = {
+  // reactive() up front: the objects emitted in `select` are the exact ones rendered, so
+  // setting `entry.status` / `entry.progress` from the parent updates the row. With plain
+  // objects the list held Vue's reactive copies and those writes never reached the UI.
+  const entries: UploadFile[] = valid.map((f) =>
+    reactive<UploadFile>({
       file: f,
       id: crypto.randomUUID(),
       progress: 0,
       status: 'pending',
-    }
-    if (f.type.startsWith('image/')) {
-      entry.preview = URL.createObjectURL(f)
-    }
-    return entry
-  })
-
-  if (props.multiple) {
-    files.value.push(...entries)
-  } else {
-    files.value.forEach((f) => f.preview && URL.revokeObjectURL(f.preview))
-    files.value = entries.slice(0, 1)
-  }
-
+      preview: f.type.startsWith('image/') ? URL.createObjectURL(f) : undefined,
+    }),
+  )
+  // A drop/pick where every file was rejected leaves the list alone (it used to wipe the
+  // current file in single mode). `select` still fires with exactly what it always did.
+  if (entries.length) setFiles(props.multiple ? [...files.value, ...entries] : entries.slice(0, 1))
   emit('select', entries)
 }
 
@@ -104,10 +131,15 @@ function onFileInput(e: Event) {
 }
 
 function removeFile(entry: UploadFile) {
-  if (entry.preview) URL.revokeObjectURL(entry.preview)
-  files.value = files.value.filter((f) => f.id !== entry.id)
+  setFiles(files.value.filter((f) => f.id !== entry.id))
   emit('remove', entry)
 }
+
+function clear() {
+  if (files.value.length) setFiles([])
+}
+
+defineExpose({ clear, files })
 
 function openPicker() {
   if (!props.disabled) inputRef.value?.click()
@@ -202,6 +234,10 @@ function openPicker() {
         <MIconButton icon="close" :label="removeLabel ?? locale.remove" :size="32" @click="removeFile(entry)" />
       </div>
     </TransitionGroup>
+
+    <div v-if="$slots.actions && files.length" class="flex flex-wrap items-center justify-end gap-2">
+      <slot name="actions" :files="files" :clear="clear" />
+    </div>
   </div>
 </template>
 
