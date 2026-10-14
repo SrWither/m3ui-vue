@@ -9,7 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 - `MWindow` `maximizable` prop (default `true`): a maximize button between minimize and close, and double-click on the title bar, fill the container (square corners, no resize) and restore to the previous geometry, animated. Dragging a maximized window by its title bar detaches it after ~40px and eases it back to its size, keeping the grab point under the pointer. New `maximize` event (`true`/`false`)
-- `MWindow` `snap` prop (default `false`): GNOME-style edge snapping while dragging. Holding the pointer at the container's top edge previews and applies a maximize, at its left/right edge that half. Dragging a snapped window away restores its size
+- `MWindow` `snap` prop (default `false`): GNOME-style edge snapping while dragging. Holding the pointer at the container's top edge previews and applies a maximize, at its left/right edge that half. Dragging a snapped window away restores its size. Pushed into a top corner, the side wins over maximize
+- `MWindow` `offscreen` prop (default `false`): the window can be dragged partly out of its container like on a desktop, up to 3/4 of its width past either side and down until only the title bar shows, never above the top. The container should clip it (`overflow: hidden`)
 - Three `M3Locale` keys for `MWindow`'s title bar buttons, `windowMinimize`, `windowMaximize` and `windowRestore`, translated in all 7 bundled locales
 - `MTransferList` `#item` slot for custom rows, scoped with `{ item, checked, side, toggle, move }` (`side` is `'source'` or `'target'`; `move()` sends just that item across). On its own it replaces the icon and text and keeps the checkbox, checked highlight and hover
 - `MTransferList` `bare` prop: the `#item` slot draws the whole row (no checkbox, padding, min height or background). Rows stay clickable, animated and focusable, exposed as checkboxes (`Space` checks, `Enter` moves)
