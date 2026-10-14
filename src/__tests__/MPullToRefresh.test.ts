@@ -65,3 +65,42 @@ describe('MPullToRefresh (touch)', () => {
     wrapper.unmount()
   })
 })
+
+function pointer(el: Element | Window, type: string, y: number) {
+  const ev = new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 1, pointerType: 'mouse', button: 0, clientY: y })
+  el.dispatchEvent(ev)
+  return ev
+}
+
+describe('MPullToRefresh (mouse)', () => {
+  function mountWithRow() {
+    const wrapper = mount(MPullToRefresh, { slots: { default: '<button class="row">row</button>' }, attachTo: document.body })
+    const scrollEl = wrapper.find('.overflow-y-auto').element as HTMLElement
+    const captured: number[] = []
+    scrollEl.setPointerCapture = (id: number) => void captured.push(id)
+    scrollEl.hasPointerCapture = (id: number) => captured.includes(id)
+    scrollEl.releasePointerCapture = () => {}
+    return { wrapper, scrollEl, row: wrapper.find('.row').element, captured }
+  }
+
+  it('does not capture the pointer on a plain click at the top, so the item still gets it', () => {
+    const { wrapper, row, captured } = mountWithRow()
+    pointer(row, 'pointerdown', 100)
+    pointer(row, 'pointerup', 100)
+    expect(captured).toHaveLength(0)
+    expect(wrapper.emitted('refresh')).toBeUndefined()
+    wrapper.unmount()
+  })
+
+  it('captures once the mouse drags down, and refreshes past the threshold', () => {
+    const { wrapper, scrollEl, row, captured } = mountWithRow()
+    pointer(row, 'pointerdown', 100)
+    pointer(scrollEl, 'pointermove', 102)
+    expect(captured).toHaveLength(0)
+    pointer(scrollEl, 'pointermove', 200)
+    expect(captured).toHaveLength(1)
+    pointer(scrollEl, 'pointerup', 200)
+    expect(wrapper.emitted('refresh')).toHaveLength(1)
+    wrapper.unmount()
+  })
+})

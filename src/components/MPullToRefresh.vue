@@ -116,15 +116,27 @@ function finishPull() {
 // browser starts a native pan and fires pointercancel, snapping the indicator
 // back. The only reliable way to own a touch drag is a non-passive touchmove
 // that calls preventDefault().
+//
+// The pointer is only captured once the mouse has dragged down a few pixels. Capturing on
+// pointerdown retargets pointerup to the scroller, so the browser fires the click there and
+// a plain click on an item at the top of the list never reached the item.
+const POINTER_SLOP = 4;
+let pointerClaimed = false;
+
 function onPointerDown(e: PointerEvent) {
   if (e.pointerType === "touch" || e.button !== 0 || !canStart()) return;
   pointerId = e.pointerId;
+  pointerClaimed = false;
   beginPull(e.clientY);
-  scrollEl.value!.setPointerCapture(e.pointerId);
 }
 
 function onPointerMove(e: PointerEvent) {
   if (!pulling || e.pointerId !== pointerId) return;
+  if (!pointerClaimed) {
+    if (e.clientY - startY < POINTER_SLOP) return;
+    pointerClaimed = true;
+    scrollEl.value!.setPointerCapture(e.pointerId);
+  }
   movePull(e.clientY);
 }
 
