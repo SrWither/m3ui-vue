@@ -9,6 +9,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 - `MChatBubble` `typing` prop (`'text' | 'audio'`): shows a live indicator in place of the message, either three bouncing dots while the other person types or a pulsing mic with a moving waveform while they record audio. It keeps the bubble's side, avatar, sender, tail and `color`, and hides the content, time and status. Exposed as `role="status"` labelled with two new `M3Locale` keys, `chatTyping` and `chatRecordingAudio` (English defaults, translated in all 7 bundled locales), prefixed with `sender` when set. Animations stop under `prefers-reduced-motion`
+- `MFileUpload` optional `v-model` (`UploadFile[]`): bind it to own the file list (clear it with `[]`, read or update entries). Unbound, the component keeps the list itself as before
+- `MFileUpload` `#actions` slot: a right-aligned row below the list, shown only while it has files, scoped with `{ files, clear }`, for Upload/Clear buttons
+- `MFileUpload` exposes `clear()` and `files` through a template ref
 
 ### Changed
 - `MRating` rebuilt with the same API (same props, same `update:modelValue`). It isn't in the official M3 spec, so it's now built from M3 primitives. **Changes the default look:** empty icons are the outlined glyph in `on-surface-variant` (was the same glyph at 40% opacity). The `hover:scale-110` is gone, replaced by a 40px circular state layer (8% hover / 10% pressed) tinted with the rating's `color`, and the component's footprint stays the same. Disabled now uses `on-surface/38` on the icons instead of 38% opacity on the whole component
@@ -24,6 +27,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MChatBubble`: the default slot was wrapped in a `<p>`, so custom content with block elements (images, buttons, cards) ended up as invalid markup inside a paragraph. It's now a `<div>`; it looks the same, since preflight already resets paragraph margins
 - `MChatBubble`: the status checks on sent messages were always `on-primary` tinted. **With `color="secondary"` or `"tertiary"` they now use that bubble's on-color**
 - `MNavigationRail` with `expanded`: collapsing made the label jump. It vanished, popped back for a few frames and then disappeared. The pill switched from `width: auto` to a fixed `w-14`, which can't be transitioned, so it snapped to 56px on the first frame and flex-shrink squeezed the still-visible label to 0. Separately, the label's `max-width` went 200px → 0 while the text itself is ~40px, so most of the transition did nothing visible. The pill now never gets an explicit width (collapsed it's still exactly 56px from its padding + icon), and the label is revealed with `grid-template-columns: 0fr ↔ 1fr`, which animates straight to the text's real width. Same fix in the `modal` panel's item copy
+- `MFileUpload`: setting `status`/`progress` on an entry never updated the UI, so the documented progress bar, spinner and done/error icons couldn't actually be driven. The entries emitted in `select` were plain objects while the list rendered Vue's reactive copies of them, so writes to the emitted objects were invisible. Entries are now created with `reactive()`, so the emitted object is the rendered one
+- `MFileUpload`: in single-file mode, a pick or drop where every file was rejected (wrong type, over `maxSize`) wiped the file already selected. It now leaves the list alone
+- `MFileUpload`: image preview object URLs were only revoked via a row's remove button. They're now revoked whenever an entry leaves the list (including `clear()` or the parent emptying its `v-model`), and on unmount
 
 ## [0.8.5] - 2026-10-04
 
