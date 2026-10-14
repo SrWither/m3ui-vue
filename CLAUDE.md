@@ -178,4 +178,6 @@ Components consume tokens as ordinary Tailwind utility classes (`bg-primary`, `t
 
 ## Cross-repo note
 
+The docs repo's full-screen example apps (`../m3ui-vue-docs/src/examples/<id>/`: Desktop, Chat, Dashboard, Store; see that repo's CLAUDE.md) are the most complete real consumers of the library: when changing a component's behavior, check whether an example uses it (`grep -r MWindow ../m3ui-vue-docs/src/examples`). Use `MSimpleCarousel` rather than `MCarousel` in examples and demos for now (the maintainer considers `MCarousel` not stable yet).
+
 The sibling frontend repo `../newfadelresto-front` is the real-world consumer/proving ground for this library (installed via npm/pnpm as a normal dependency, not a workspace link, per its `package.json`). If a change here is meant to fix a bug reported from that repo, check `newfadelresto-front/src/main.ts` for how `createM3UI`/`esLocale` are wired, and the pinned version there for what's actually deployed — bumping this package's `version` here does not automatically update the consumer's lockfile.
