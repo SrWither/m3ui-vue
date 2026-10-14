@@ -192,4 +192,39 @@ describe('MWindow', () => {
     expect([style.width, style.height]).toEqual(['400px', '300px'])
     w.unmount()
   })
+
+  it('offscreen lets it leave the container up to 3/4 of its width, keeping the title bar; off by default', async () => {
+    const dragBy = async (bar: Element, dx: number, dy: number) => {
+      pointer('pointerdown', 200, 110, bar)
+      pointer('pointermove', 200 + dx, 110 + dy)
+      pointer('pointerup', 200 + dx, 110 + dy)
+      await nextTick()
+    }
+    const inside = setup()
+    const s1 = (inside.win().element as HTMLElement).style
+    await dragBy(inside.bar().element, -1000, 1000)
+    expect([s1.left, s1.top]).toEqual(['0px', '300px']) // 600 - 300: fully inside
+    inside.w.unmount()
+
+    const { win, bar, w } = setup({ offscreen: true })
+    const style = (win().element as HTMLElement).style
+    await dragBy(bar().element, -1000, 1000)
+    expect([style.left, style.top]).toEqual(['-300px', '560px']) // 1/4 of 400 visible, only the 40px bar
+    await dragBy(bar().element, 2000, -2000)
+    expect([style.left, style.top]).toEqual(['900px', '0px']) // never above the top
+    w.unmount()
+  })
+
+  it('snap: a top corner snaps to that side, not maximize', async () => {
+    const { win, bar, w } = setup({ snap: true })
+    const style = (win().element as HTMLElement).style
+    pointer('pointerdown', 200, 110, bar().element)
+    pointer('pointermove', 4, 3)
+    await nextTick()
+    pointer('pointerup', 4, 3)
+    await nextTick()
+    expect([style.left, style.top, style.width, style.height]).toEqual(['0px', '0px', '500px', '600px'])
+    expect(w.emitted('maximize')).toBeUndefined()
+    w.unmount()
+  })
 })

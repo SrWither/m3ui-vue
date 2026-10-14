@@ -40,6 +40,12 @@ const props = withDefaults(
      * maximize, or at its left/right edge to fill that half. A preview shows where it will land.
      */
     snap?: boolean
+    /**
+     * Lets the window be dragged partly out of its container, like a desktop: up to 3/4 of its
+     * width past either side, and down until only the title bar shows; never above the top.
+     * The container should clip it (`overflow: hidden`).
+     */
+    offscreen?: boolean
     x?: number
     y?: number
     resetPosition?: boolean
@@ -55,6 +61,7 @@ const props = withDefaults(
     minimizable: true,
     maximizable: true,
     snap: false,
+    offscreen: false,
     x: 50,
     y: 50,
     resetPosition: false,
@@ -93,6 +100,19 @@ const parentEl = ref<HTMLElement | null>(null)
 const BAR = 40
 /** How close (px) the pointer must get to the parent's edge to offer a snap. */
 const SNAP_EDGE = 12
+
+/** Allowed left for a window this wide: inside the parent, or with `offscreen`, 1/4 kept visible. */
+function clampLeft(x: number, w: number) {
+  const pw = windowRef.value?.parentElement?.clientWidth ?? Infinity
+  if (!props.offscreen) return Math.max(0, Math.min(pw - w, x))
+  const keep = Math.min(w, Math.max(48, w / 4))
+  return Math.max(keep - w, Math.min(pw - keep, x))
+}
+/** Allowed top: never above the parent; with `offscreen`, down until only the title bar shows. */
+function clampTop(y: number, h: number) {
+  const ph = windowRef.value?.parentElement?.clientHeight ?? Infinity
+  return Math.max(0, Math.min(ph - (props.offscreen ? BAR : h), y))
+}
 
 const windowRef = ref<HTMLElement | null>(null)
 
@@ -223,11 +243,8 @@ function stepRestore(now: number) {
 /** Keeps the grab point under the pointer while the size changes under it. */
 function positionFromAnchor() {
   if (!anchor) return
-  const parent = windowRef.value?.parentElement
-  const maxX = parent ? parent.clientWidth - winWidth.value : Infinity
-  const maxY = parent ? parent.clientHeight - winHeight.value : Infinity
-  posX.value = Math.max(0, Math.min(maxX, pointerLocal.x - anchor.ratio * winWidth.value))
-  posY.value = Math.max(0, Math.min(maxY, pointerLocal.y - anchor.grabY))
+  posX.value = clampLeft(pointerLocal.x - anchor.ratio * winWidth.value, winWidth.value)
+  posY.value = clampTop(pointerLocal.y - anchor.grabY, winHeight.value)
 }
 
 function snapAt(e: PointerEvent): 'top' | 'left' | 'right' | null {
@@ -235,9 +252,10 @@ function snapAt(e: PointerEvent): 'top' | 'left' | 'right' | null {
   if (!props.snap || !parent) return null
   const localX = e.clientX - parentLeft
   const localY = e.clientY - parentTop
-  if (localY <= SNAP_EDGE && props.maximizable) return 'top'
+  // Sides first: pushed into a top corner means "that half", not "maximize".
   if (localX <= SNAP_EDGE) return 'left'
   if (localX >= parent.clientWidth - SNAP_EDGE) return 'right'
+  if (localY <= SNAP_EDGE && props.maximizable) return 'top'
   return null
 }
 
@@ -270,13 +288,8 @@ function onPointerMove(e: PointerEvent) {
     }
     snapTarget.value = snapAt(e)
     if (anchor) return positionFromAnchor()
-    const dx = x - dragStartX
-    const dy = y - dragStartY
-    const parent = windowRef.value?.parentElement
-    const maxX = parent ? parent.clientWidth - winWidth.value : Infinity
-    const maxY = parent ? parent.clientHeight - (minimized.value ? BAR : winHeight.value) : Infinity
-    posX.value = Math.max(0, Math.min(maxX, dragStartPosX + dx))
-    posY.value = Math.max(0, Math.min(maxY, dragStartPosY + dy))
+    posX.value = clampLeft(dragStartPosX + x - dragStartX, winWidth.value)
+    posY.value = clampTop(dragStartPosY + y - dragStartY, minimized.value ? BAR : winHeight.value)
   }
 
   if (isResizing) {
@@ -284,8 +297,9 @@ function onPointerMove(e: PointerEvent) {
     const dy = y - resizeStartY
     const dir = resizeDir
     const parent = windowRef.value?.parentElement
-    const parentW = parent ? parent.clientWidth : Infinity
-    const parentH = parent ? parent.clientHeight : Infinity
+    // With `offscreen` the right/bottom/left edges may grow past the parent too.
+    const parentW = parent && !props.offscreen ? parent.clientWidth : Infinity
+    const parentH = parent && !props.offscreen ? parent.clientHeight : Infinity
 
     const clampW = (w: number) => Math.min(props.maxWidth ?? Infinity, Math.max(props.minWidth, w))
     const clampH = (h: number) => Math.min(props.maxHeight ?? Infinity, Math.max(props.minHeight, h))
@@ -294,8 +308,10 @@ function onPointerMove(e: PointerEvent) {
       winWidth.value = Math.min(parentW - resizeStartPosX, clampW(resizeStartW + dx))
     }
     if (dir.includes('w')) {
-      const newW = Math.min(resizeStartPosX + resizeStartW, clampW(resizeStartW - dx))
-      posX.value = Math.max(0, resizeStartPosX + (resizeStartW - newW))
+      const newW = props.offscreen
+        ? clampW(resizeStartW - dx)
+        : Math.min(resizeStartPosX + resizeStartW, clampW(resizeStartW - dx))
+      posX.value = props.offscreen ? resizeStartPosX + (resizeStartW - newW) : Math.max(0, resizeStartPosX + (resizeStartW - newW))
       winWidth.value = newW
     }
     if (dir.includes('s')) {
@@ -446,8 +462,8 @@ function clampToParent() {
   const ph = parent.clientHeight
   if (winWidth.value > pw) winWidth.value = Math.max(props.minWidth, pw)
   if (winHeight.value > ph) winHeight.value = Math.max(props.minHeight, ph)
-  if (posX.value + winWidth.value > pw) posX.value = Math.max(0, pw - winWidth.value)
-  if (posY.value + winHeight.value > ph) posY.value = Math.max(0, ph - winHeight.value)
+  posX.value = clampLeft(posX.value, winWidth.value)
+  posY.value = clampTop(posY.value, minimized.value ? BAR : winHeight.value)
 }
 
 let resizeObserver: ResizeObserver | null = null
