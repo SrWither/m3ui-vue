@@ -7,6 +7,12 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [0.8.7] - Unreleased
 
+### Added
+- `MTransferList` `#item` slot for custom rows, scoped with `{ item, checked, side, toggle, move }` (`side` is `'source'` or `'target'`; `move()` sends just that item across). On its own it replaces the icon and text and keeps the checkbox, checked highlight and hover
+- `MTransferList` `bare` prop: the `#item` slot draws the whole row (no checkbox, padding, min height or background). Rows stay clickable, animated and focusable, exposed as checkboxes (`Space` checks, `Enter` moves)
+- `MTransferList` is generic over its items (`T extends TransferItem`), so `#item` gets your own item type with its extra fields
+- Buttons, links, fields and `[data-transfer-action]` elements inside an `MTransferList` row keep their own clicks and keys instead of checking or moving the row
+
 ### Fixed
 - `MTransferList`: rows leaving a pane (e.g. on "move all") no longer stack on top of each other while fading out. Each leaving row is now pinned at its own position instead of falling back to a static position that shifted as its siblings left too
 
