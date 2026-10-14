@@ -137,4 +137,7 @@ export const ptLocale: M3Locale = {
 
   // Kanban ({column}/{pos}/{total} are replaced at runtime)
   kanbanMoved: 'Movido para {column}, posição {pos} de {total}.',
+  windowMinimize: 'Minimizar',
+  windowMaximize: 'Maximizar',
+  windowRestore: 'Restaurar',
 }

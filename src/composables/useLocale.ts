@@ -138,6 +138,10 @@ export interface M3Locale {
 
   // Kanban ({column}/{pos}/{total} are replaced at runtime)
   kanbanMoved: string
+  // MWindow title bar buttons
+  windowMinimize: string
+  windowMaximize: string
+  windowRestore: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -264,6 +268,9 @@ export const defaultLocale: M3Locale = {
 
   // Kanban ({column}/{pos}/{total} are replaced at runtime)
   kanbanMoved: 'Moved to {column}, position {pos} of {total}.',
+  windowMinimize: 'Minimize',
+  windowMaximize: 'Maximize',
+  windowRestore: 'Restore',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')

@@ -137,4 +137,7 @@ export const zhLocale: M3Locale = {
 
   // Kanban ({column}/{pos}/{total} are replaced at runtime)
   kanbanMoved: '已移至 {column}，位置 {pos}/{total}。',
+  windowMinimize: '最小化',
+  windowMaximize: '最大化',
+  windowRestore: '还原',
 }

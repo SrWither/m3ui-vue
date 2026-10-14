@@ -137,4 +137,7 @@ export const koLocale: M3Locale = {
 
   // Kanban ({column}/{pos}/{total} are replaced at runtime)
   kanbanMoved: '{column}의 {total}개 중 {pos}번째로 이동했습니다.',
+  windowMinimize: '최소화',
+  windowMaximize: '최대화',
+  windowRestore: '복원',
 }

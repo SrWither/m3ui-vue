@@ -137,4 +137,7 @@ export const jaLocale: M3Locale = {
 
   // Kanban ({column}/{pos}/{total} are replaced at runtime)
   kanbanMoved: '{column} の {total} 件中 {pos} 番目に移動しました。',
+  windowMinimize: '最小化',
+  windowMaximize: '最大化',
+  windowRestore: '元に戻す',
 }
