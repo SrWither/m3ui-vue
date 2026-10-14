@@ -5,6 +5,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.8.8] - Unreleased
+
+### Fixed
+- `MPullToRefresh`: with a mouse, clicking an item while the list was scrolled to the top did nothing (e.g. a link or a row never opened). The component captured the pointer on `pointerdown` in case a pull followed, which sent the click to the scroller instead; it now captures only once the mouse has dragged down a few pixels
+
+---
+
 ## [0.8.7] - 2026-10-14
 
 ### Added
