@@ -19,6 +19,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `to` on `MNavigationRail`, `MShortNavigationBar` and `MNavigationSuite` items: the item becomes a real link (middle-click, open in a new tab), a `RouterLink` when vue-router is installed or a plain `<a href>` without it. Clicking still updates `v-model`; items without `to` stay buttons
 - `MShortNavigationBar` item `disabled`: not selectable, icon and label at 38% of the unselected color with no hover (`ShortNavigationBarItemDefaults`' `DisabledAlpha`). Also applies to `MNavigationSuite` in its bar layouts
 
+### Changed
+- **`MBottomSheet` and `MSideSheet` now slide in when opened** (they only faded in: the drag's reactive `transform` style overrode the enter animation). Motion follows androidx `BottomSheet.kt`: the panel enters from fully off-screen with the `DefaultSpatial` spring (0.9 / 700), leaves with `FastEffects` (1.0 / 3800), and the scrim fades with `DefaultEffects` (1.0 / 1600). **The panel no longer fades in or out, it only slides.** Releasing a drag now springs from where the finger left it, carrying its speed: past 100px or flung it closes, otherwise it settles back. Animations are skipped under `prefers-reduced-motion`
+
 ### Fixed
 - `MTransferList`: rows leaving a pane (e.g. on "move all") no longer stack on top of each other while fading out. Each leaving row is now pinned at its own position instead of falling back to a static position that shifted as its siblings left too
 
