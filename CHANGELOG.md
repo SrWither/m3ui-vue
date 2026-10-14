@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.8.7] - Unreleased
+
+### Fixed
+- `MTransferList`: rows leaving a pane (e.g. on "move all") no longer stack on top of each other while fading out. Each leaving row is now pinned at its own position instead of falling back to a static position that shifted as its siblings left too
+
 ## [0.8.6] - Unreleased
 
 ### Added
