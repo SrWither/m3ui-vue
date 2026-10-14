@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Private helper for MTransferList: one pane (header with select-all, search, list).
 // Both panes render through this so the source and target never drift apart.
-import { computed } from 'vue'
+import { computed, onBeforeUpdate, ref } from 'vue'
 import MIcon from './MIcon.vue'
 import MCheckbox from './MCheckbox.vue'
 import type { TransferItem } from './MTransferList.vue'
@@ -33,6 +33,21 @@ const emit = defineEmits<{
 const checkedVisible = computed(() => props.items.filter((i) => props.checked.has(i.value)).length)
 const allChecked = computed(() => props.items.length > 0 && checkedVisible.value === props.items.length)
 const someChecked = computed(() => checkedVisible.value > 0 && !allChecked.value)
+
+// Leaving rows go `position: absolute` so the rest can slide up, but with no `top` each one
+// falls back to its static position, which shifts as its siblings leave the flow too: on a
+// "move all" every row collapsed onto the first slot while fading out. Snapshot every row's
+// offset before the update (once the first leave starts, later measurements are already
+// wrong) and pin each leaving row there.
+const listEl = ref<HTMLElement>()
+const rowTops = new WeakMap<Element, number>()
+onBeforeUpdate(() => {
+  listEl.value?.querySelectorAll(':scope > ul > li').forEach((li) => rowTops.set(li, (li as HTMLElement).offsetTop))
+})
+function pinLeaving(el: Element) {
+  const top = rowTops.get(el)
+  if (top !== undefined) (el as HTMLElement).style.top = `${top}px`
+}
 
 function onRowClick(e: MouseEvent, value: Value) {
   // The checkbox handles its own clicks (its label + input); toggling here too is exactly
@@ -85,8 +100,8 @@ function onRowClick(e: MouseEvent, value: Value) {
     </div>
 
     <!-- List -->
-    <div class="relative overflow-y-auto overscroll-contain" :style="{ height: listHeight }">
-      <TransitionGroup tag="ul" :name="`m3-tl-${enterFrom}`" class="relative py-1">
+    <div ref="listEl" class="relative overflow-y-auto overscroll-contain" :style="{ height: listHeight }">
+      <TransitionGroup tag="ul" :name="`m3-tl-${enterFrom}`" class="relative py-1" @before-leave="pinLeaving">
         <li
           v-for="item in items"
           :key="item.value"

@@ -73,4 +73,31 @@ describe('MTransferList', () => {
     })
     expect(w.find('.custom-empty').text()).toBe('Nobody yet')
   })
+
+  it('pins leaving rows at their own offset on "move all" instead of stacking them', async () => {
+    const w = mount(MTransferList, {
+      props: { modelValue: [], items, 'onUpdate:modelValue': (v: (string | number)[]) => w.setProps({ modelValue: v }) },
+      attachTo: document.body,
+      global: { stubs: { 'transition-group': false } },
+    })
+    // happy-dom has no layout: model the flow, where a row without a pinned `top` sits after
+    // its in-flow (non-leaving) siblings, like the browser's static position does.
+    for (const li of rows(w, 0).map((r) => r.element as HTMLElement)) {
+      Object.defineProperty(li, 'offsetTop', {
+        configurable: true,
+        get() {
+          if (this.style.top) return parseFloat(this.style.top)
+          let n = 0
+          for (let p = this.previousElementSibling; p; p = p.previousElementSibling) {
+            if (![...p.classList].some((c: string) => c.endsWith('-leave-active'))) n++
+          }
+          return 4 + n * 56
+        },
+      })
+    }
+    const leaving = rows(w, 0).map((r) => r.element as HTMLElement)
+    await btn(w, 'Move all right').trigger('click')
+    expect(leaving.map((li) => li.style.top)).toEqual(['4px', '60px', '116px'])
+    w.unmount()
+  })
 })
