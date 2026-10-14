@@ -122,6 +122,10 @@ Navigation items (`NavRailItem`, `ShortNavBarItem`, `NavigationSuiteItem`) take 
 
 **Gotcha:** an HTML comment placed before a component's root element makes the template a fragment in dev builds/tests, so the consumer's `class`/attrs silently stop falling through (production builds strip comments, which hides it). Put template comments *inside* the root element. Pre-existing instances (harmless in `dist/`): `MNavigationDrawer`, `MNavigationRail`, `MSkeleton`, `MStepper`, `MTabs`, `MTransferList`.
 
+### `MWindow` (not an M3 spec component)
+
+M3 has no window, so `MWindow` is built from M3 pieces and desktop conventions (GNOME as the reference the maintainer uses). Module-level `<script>` state is shared across instances: `sharedZIndex` and `activeWindowId` (only the front window gets the focused look: `surface-container-high` bar, elevation 3; others `surface-container`, elevation 1). Geometry lives in refs written by drag/resize directly; animated changes (maximize/restore, minimize) add the `m3-window-geometry` CSS transition class for 300ms only, so drags never lag. Detaching a maximized/snapped window waits for `DETACH_DISTANCE` (40px), then eases the size in a rAF loop while `positionFromAnchor()` keeps the grab point under the pointer. The `snap` preview is teleported into the parent element (the window clips its own content).
+
 ### Locale strings with variables
 
 There's no i18n library: built-in text goes in `M3Locale`. When a string needs values, use `{name}` placeholders replaced at the call site with `.replace('{pos}', ...)` (see `reorderGrabbed`, `kanbanMoved`). `localePresets.test.ts` requires every key in all 7 locales with non-empty values.
