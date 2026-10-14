@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
-import MCheckbox from './MCheckbox.vue'
+import MTransferPane from './_MTransferPane.vue'
 import { useLocale } from '../composables/useLocale'
 
 const locale = useLocale()
@@ -11,10 +10,14 @@ export interface TransferItem {
   value: string | number
   label: string
   icon?: string
+  /** Optional second line under the label (an email, a role, a short description). */
+  description?: string
 }
 
+type Value = string | number
+
 const props = withDefaults(defineProps<{
-  modelValue: (string | number)[]
+  modelValue: Value[]
   items: TransferItem[]
   sourceTitle?: string
   targetTitle?: string
@@ -25,172 +28,172 @@ const props = withDefaults(defineProps<{
   moveRightLabel?: string
   moveLeftLabel?: string
   moveAllLeftLabel?: string
+  /** Height of each list's scroll area (any CSS length). */
+  listHeight?: string
 }>(), {
   filterable: false,
+  listHeight: '280px',
 })
 
-const emit = defineEmits<{ 'update:modelValue': [(string | number)[]] }>()
+const emit = defineEmits<{ 'update:modelValue': [Value[]] }>()
 
-const checkedSource = ref<Set<string | number>>(new Set())
-const checkedTarget = ref<Set<string | number>>(new Set())
+const checkedSource = ref<Set<Value>>(new Set())
+const checkedTarget = ref<Set<Value>>(new Set())
 const sourceSearch = ref('')
 const targetSearch = ref('')
 
+function matches(item: TransferItem, q: string) {
+  if (!q) return true
+  const needle = q.toLowerCase()
+  return item.label.toLowerCase().includes(needle) || !!item.description?.toLowerCase().includes(needle)
+}
+
 const sourceItems = computed(() => {
   const selected = new Set(props.modelValue)
-  let list = props.items.filter(i => !selected.has(i.value))
-  if (sourceSearch.value) {
-    const q = sourceSearch.value.toLowerCase()
-    list = list.filter(i => i.label.toLowerCase().includes(q))
-  }
-  return list
+  return props.items.filter((i) => !selected.has(i.value) && matches(i, sourceSearch.value))
 })
 
 const targetItems = computed(() => {
   const selected = new Set(props.modelValue)
-  let list = props.items.filter(i => selected.has(i.value))
-  if (targetSearch.value) {
-    const q = targetSearch.value.toLowerCase()
-    list = list.filter(i => i.label.toLowerCase().includes(q))
-  }
-  return list
+  return props.items.filter((i) => selected.has(i.value) && matches(i, targetSearch.value))
 })
 
-function toggleSource(value: string | number) {
-  const s = new Set(checkedSource.value)
+function toggleIn(set: typeof checkedSource, value: Value) {
+  const s = new Set(set.value)
   s.has(value) ? s.delete(value) : s.add(value)
-  checkedSource.value = s
-}
-function toggleTarget(value: string | number) {
-  const s = new Set(checkedTarget.value)
-  s.has(value) ? s.delete(value) : s.add(value)
-  checkedTarget.value = s
+  set.value = s
 }
 
+// Select-all acts on what's visible (i.e. what the search left).
+function toggleAllIn(set: typeof checkedSource, visible: TransferItem[]) {
+  const allChecked = visible.length > 0 && visible.every((i) => set.value.has(i.value))
+  const s = new Set(set.value)
+  for (const i of visible) allChecked ? s.delete(i.value) : s.add(i.value)
+  set.value = s
+}
+
+const toggleSource = (v: Value) => toggleIn(checkedSource, v)
+const toggleTarget = (v: Value) => toggleIn(checkedTarget, v)
+const toggleAllSource = () => toggleAllIn(checkedSource, sourceItems.value)
+const toggleAllTarget = () => toggleAllIn(checkedTarget, targetItems.value)
+
 function moveRight() {
-  const next = [...props.modelValue, ...checkedSource.value]
-  emit('update:modelValue', next)
+  emit('update:modelValue', [...props.modelValue, ...checkedSource.value])
   checkedSource.value = new Set()
 }
 function moveLeft() {
   const remove = checkedTarget.value
-  emit('update:modelValue', props.modelValue.filter(v => !remove.has(v)))
+  emit('update:modelValue', props.modelValue.filter((v) => !remove.has(v)))
   checkedTarget.value = new Set()
 }
 function moveAllRight() {
-  const all = sourceItems.value.map(i => i.value)
-  emit('update:modelValue', [...props.modelValue, ...all])
+  emit('update:modelValue', [...props.modelValue, ...sourceItems.value.map((i) => i.value)])
   checkedSource.value = new Set()
 }
 function moveAllLeft() {
-  const keep = targetItems.value.map(i => i.value)
-  emit('update:modelValue', props.modelValue.filter(v => !new Set(keep).has(v)))
+  const remove = new Set(targetItems.value.map((i) => i.value))
+  emit('update:modelValue', props.modelValue.filter((v) => !remove.has(v)))
   checkedTarget.value = new Set()
+}
+
+// Double-click / Enter on a row moves just that item across.
+function activateSource(value: Value) {
+  emit('update:modelValue', [...props.modelValue, value])
+  const s = new Set(checkedSource.value)
+  s.delete(value)
+  checkedSource.value = s
+}
+function activateTarget(value: Value) {
+  emit('update:modelValue', props.modelValue.filter((v) => v !== value))
+  const s = new Set(checkedTarget.value)
+  s.delete(value)
+  checkedTarget.value = s
 }
 </script>
 
 <template>
-  <div class="flex items-stretch gap-2">
-    <!-- Source list -->
-    <div class="flex min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-outline-variant">
-      <div class="flex items-center justify-between border-b border-outline-variant bg-surface-container px-3 py-2">
-        <span class="text-label-large font-medium text-on-surface">{{ sourceTitle ?? locale.available }}</span>
-        <span class="text-label-small text-on-surface-variant">{{ sourceItems.length }}</span>
-      </div>
-      <div v-if="filterable" class="border-b border-outline-variant px-3 py-2">
-        <input
-          v-model="sourceSearch"
-          type="text"
-          :placeholder="searchPlaceholder ?? locale.search"
-          class="w-full bg-transparent text-body-medium text-on-surface outline-none placeholder:text-on-surface-variant/50"
+  <!--
+    Container query, not a viewport breakpoint: the panes sit side by side whenever the
+    component itself is wide enough (@xl = 36rem), and stack with up/down arrows otherwise,
+    whatever the screen size.
+  -->
+  <div class="@container">
+    <div class="flex flex-col items-stretch gap-3 @xl:flex-row">
+      <MTransferPane
+        :title="sourceTitle ?? locale.available"
+        :items="sourceItems"
+        :checked="checkedSource"
+        :filterable="filterable"
+        :search="sourceSearch"
+        :search-placeholder="searchPlaceholder ?? locale.search"
+        :empty-text="emptyText ?? locale.noItems"
+        :list-height="listHeight"
+        enter-from="end"
+        :select-all-label="locale.selectAll"
+        :clear-search-label="locale.clearSearch"
+        @toggle="toggleSource"
+        @toggle-all="toggleAllSource"
+        @activate="activateSource"
+        @update:search="sourceSearch = $event"
+      >
+        <template v-if="$slots['source-empty']" #empty><slot name="source-empty" /></template>
+      </MTransferPane>
+
+      <!-- Transfer buttons: tonal for the checked items, outlined for "all" -->
+      <div class="flex items-center justify-center gap-2 @xl:flex-col">
+        <MIconButton
+          icon="keyboard_double_arrow_right"
+          variant="outlined"
+          class="rotate-90 @xl:rotate-0"
+          :label="moveAllRightLabel ?? locale.moveAllRight"
+          :disabled="!sourceItems.length"
+          @click="moveAllRight"
+        />
+        <MIconButton
+          icon="chevron_right"
+          variant="tonal"
+          class="rotate-90 @xl:rotate-0"
+          :label="moveRightLabel ?? locale.moveRight"
+          :disabled="!checkedSource.size"
+          @click="moveRight"
+        />
+        <MIconButton
+          icon="chevron_left"
+          variant="tonal"
+          class="rotate-90 @xl:rotate-0"
+          :label="moveLeftLabel ?? locale.moveLeft"
+          :disabled="!checkedTarget.size"
+          @click="moveLeft"
+        />
+        <MIconButton
+          icon="keyboard_double_arrow_left"
+          variant="outlined"
+          class="rotate-90 @xl:rotate-0"
+          :label="moveAllLeftLabel ?? locale.moveAllLeft"
+          :disabled="!targetItems.length"
+          @click="moveAllLeft"
         />
       </div>
-      <div class="flex-1 overflow-y-auto" style="max-height: 240px">
-        <button
-          v-for="item in sourceItems"
-          :key="item.value"
-          type="button"
-          class="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-on-surface/4"
-          @click="toggleSource(item.value)"
-        >
-          <MCheckbox :model-value="checkedSource.has(item.value)" @update:model-value="toggleSource(item.value)" />
-          <MIcon v-if="item.icon" :name="item.icon" :size="18" class="shrink-0 text-on-surface-variant" />
-          <span class="flex-1 truncate text-body-medium text-on-surface">{{ item.label }}</span>
-        </button>
-        <slot v-if="!sourceItems.length" name="source-empty">
-          <p class="px-3 py-4 text-center text-body-small text-on-surface-variant">
-            {{ emptyText ?? locale.noItems }}
-          </p>
-        </slot>
-      </div>
-    </div>
 
-    <!-- Transfer buttons -->
-    <div class="flex flex-col items-center justify-center gap-1">
-      <MIconButton
-        icon="keyboard_double_arrow_right"
-        :label="moveAllRightLabel ?? locale.moveAllRight"
-        :size="36"
-        :disabled="!sourceItems.length"
-        @click="moveAllRight"
-      />
-      <MIconButton
-        icon="chevron_right"
-        :label="moveRightLabel ?? locale.moveRight"
-        variant="tonal"
-        :size="36"
-        :disabled="!checkedSource.size"
-        @click="moveRight"
-      />
-      <MIconButton
-        icon="chevron_left"
-        :label="moveLeftLabel ?? locale.moveLeft"
-        variant="tonal"
-        :size="36"
-        :disabled="!checkedTarget.size"
-        @click="moveLeft"
-      />
-      <MIconButton
-        icon="keyboard_double_arrow_left"
-        :label="moveAllLeftLabel ?? locale.moveAllLeft"
-        :size="36"
-        :disabled="!targetItems.length"
-        @click="moveAllLeft"
-      />
-    </div>
-
-    <!-- Target list -->
-    <div class="flex min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-outline-variant">
-      <div class="flex items-center justify-between border-b border-outline-variant bg-surface-container px-3 py-2">
-        <span class="text-label-large font-medium text-on-surface">{{ targetTitle ?? locale.selected }}</span>
-        <span class="text-label-small text-on-surface-variant">{{ targetItems.length }}</span>
-      </div>
-      <div v-if="filterable" class="border-b border-outline-variant px-3 py-2">
-        <input
-          v-model="targetSearch"
-          type="text"
-          :placeholder="searchPlaceholder ?? locale.search"
-          class="w-full bg-transparent text-body-medium text-on-surface outline-none placeholder:text-on-surface-variant/50"
-        />
-      </div>
-      <div class="flex-1 overflow-y-auto" style="max-height: 240px">
-        <button
-          v-for="item in targetItems"
-          :key="item.value"
-          type="button"
-          class="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-on-surface/4"
-          @click="toggleTarget(item.value)"
-        >
-          <MCheckbox :model-value="checkedTarget.has(item.value)" @update:model-value="toggleTarget(item.value)" />
-          <MIcon v-if="item.icon" :name="item.icon" :size="18" class="shrink-0 text-on-surface-variant" />
-          <span class="flex-1 truncate text-body-medium text-on-surface">{{ item.label }}</span>
-        </button>
-        <slot v-if="!targetItems.length" name="target-empty">
-          <p class="px-3 py-4 text-center text-body-small text-on-surface-variant">
-            {{ emptyText ?? locale.noItems }}
-          </p>
-        </slot>
-      </div>
+      <MTransferPane
+        :title="targetTitle ?? locale.selected"
+        :items="targetItems"
+        :checked="checkedTarget"
+        :filterable="filterable"
+        :search="targetSearch"
+        :search-placeholder="searchPlaceholder ?? locale.search"
+        :empty-text="emptyText ?? locale.noItems"
+        :list-height="listHeight"
+        enter-from="start"
+        :select-all-label="locale.selectAll"
+        :clear-search-label="locale.clearSearch"
+        @toggle="toggleTarget"
+        @toggle-all="toggleAllTarget"
+        @activate="activateTarget"
+        @update:search="targetSearch = $event"
+      >
+        <template v-if="$slots['target-empty']" #empty><slot name="target-empty" /></template>
+      </MTransferPane>
     </div>
   </div>
 </template>

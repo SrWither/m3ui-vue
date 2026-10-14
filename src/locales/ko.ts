@@ -130,4 +130,8 @@ export const koLocale: M3Locale = {
   reorderMoved: '{total}개 중 {pos}번째로 이동했습니다.',
   reorderDropped: '{total}개 중 {pos}번째에 놓았습니다.',
   reorderCancelled: '순서 변경을 취소했습니다.',
+
+  // Transfer list (panes)
+  selectAll: '모두 선택',
+  clearSearch: '검색어 지우기',
 }

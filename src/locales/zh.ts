@@ -130,4 +130,8 @@ export const zhLocale: M3Locale = {
   reorderMoved: '已移至位置 {pos}/{total}。',
   reorderDropped: '项目已放在位置 {pos}/{total}。',
   reorderCancelled: '已取消重新排序。',
+
+  // Transfer list (panes)
+  selectAll: '全选',
+  clearSearch: '清除搜索',
 }

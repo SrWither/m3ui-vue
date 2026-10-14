@@ -131,6 +131,10 @@ export interface M3Locale {
   reorderMoved: string
   reorderDropped: string
   reorderCancelled: string
+
+  // Transfer list (panes)
+  selectAll: string
+  clearSearch: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -250,6 +254,10 @@ export const defaultLocale: M3Locale = {
   reorderMoved: 'Moved to position {pos} of {total}.',
   reorderDropped: 'Item dropped at position {pos} of {total}.',
   reorderCancelled: 'Reorder cancelled.',
+
+  // Transfer list (panes)
+  selectAll: 'Select all',
+  clearSearch: 'Clear search',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')

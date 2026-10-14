@@ -8,6 +8,8 @@ withDefaults(
     disabled?: boolean;
     label?: string;
     color?: "primary" | "secondary" | "tertiary" | "error";
+    /** Accessible name for the input when there's no visible label (e.g. a list row's checkbox). */
+    ariaLabel?: string;
   }>(),
   { indeterminate: false, disabled: false, color: "primary" },
 );
@@ -60,6 +62,7 @@ const checkedBgClasses: Record<string, string> = {
         class="peer sr-only"
         :checked="modelValue"
         :disabled="disabled"
+        :aria-label="ariaLabel"
         @change="emit('update:modelValue', !modelValue)"
       />
       <!--

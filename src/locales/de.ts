@@ -130,4 +130,8 @@ export const deLocale: M3Locale = {
   reorderMoved: 'Auf Position {pos} von {total} verschoben.',
   reorderDropped: 'Element auf Position {pos} von {total} abgelegt.',
   reorderCancelled: 'Neuanordnung abgebrochen.',
+
+  // Transfer list (panes)
+  selectAll: 'Alle auswählen',
+  clearSearch: 'Suche löschen',
 }

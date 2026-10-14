@@ -130,4 +130,8 @@ export const jaLocale: M3Locale = {
   reorderMoved: '{total} 件中 {pos} 番目に移動しました。',
   reorderDropped: '{total} 件中 {pos} 番目に配置しました。',
   reorderCancelled: '並べ替えをキャンセルしました。',
+
+  // Transfer list (panes)
+  selectAll: 'すべて選択',
+  clearSearch: '検索をクリア',
 }

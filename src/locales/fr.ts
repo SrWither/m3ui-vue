@@ -130,4 +130,8 @@ export const frLocale: M3Locale = {
   reorderMoved: 'Déplacé à la position {pos} sur {total}.',
   reorderDropped: 'Élément déposé à la position {pos} sur {total}.',
   reorderCancelled: 'Réorganisation annulée.',
+
+  // Transfer list (panes)
+  selectAll: 'Tout sélectionner',
+  clearSearch: 'Effacer la recherche',
 }
