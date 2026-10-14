@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
 import MIcon from './MIcon.vue'
+import { useSheetMotion } from '../composables/_useSheetMotion'
 
 withDefaults(defineProps<{
   modelValue: boolean
@@ -11,51 +11,30 @@ withDefaults(defineProps<{
 const emit = defineEmits<{ 'update:modelValue': [boolean] }>()
 const close = () => emit('update:modelValue', false)
 
-const dragX = ref(0)
-const dragging = ref(false)
-let startX = 0
-
-function onEdgePointerDown(e: PointerEvent) {
-  dragging.value = true
-  startX = e.clientX
-  dragX.value = 0
-  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
-}
-function onEdgePointerMove(e: PointerEvent) {
-  if (!dragging.value) return
-  dragX.value = Math.max(0, e.clientX - startX)
-}
-function onEdgePointerUp() {
-  if (dragX.value > 100) close()
-  dragging.value = false
-  dragX.value = 0
-}
-
-const panelStyle = computed(() => ({
-  transform: `translateX(${dragX.value}px)`,
-  transition: dragging.value ? 'none' : undefined,
-}))
+// Slide in/out and drag-to-dismiss, as springs (see _useSheetMotion).
+const motion = useSheetMotion('x', close)
 </script>
 
 <template>
   <Teleport to="body">
-    <Transition name="ss" :duration="{ enter: 320, leave: 280 }">
+    <Transition :css="false" @enter="motion.onEnter" @leave="motion.onLeave">
       <div v-if="modelValue" class="fixed inset-0 z-200 flex justify-end">
         <!-- Scrim -->
-        <div class="ss-scrim absolute inset-0 bg-scrim/32" @click="close" />
+        <div data-sheet-scrim class="absolute inset-0 bg-scrim/32" @click="close" />
 
         <!-- Panel -->
         <aside
-          class="ss-panel relative flex h-full flex-col bg-surface-container-low shadow-elevation-3"
+          data-sheet-panel
+          class="relative flex h-full flex-col bg-surface-container-low shadow-elevation-3"
           :class="[width, 'max-w-[90vw]']"
-          :style="panelStyle"
         >
           <!-- Drag edge -->
           <div
             class="absolute top-0 left-0 h-full w-3 cursor-ew-resize touch-none"
-            @pointerdown="onEdgePointerDown"
-            @pointermove="onEdgePointerMove"
-            @pointerup="onEdgePointerUp"
+            @pointerdown="motion.onDragStart"
+            @pointermove="motion.onDragMove"
+            @pointerup="motion.onDragEnd"
+            @pointercancel="motion.onDragEnd"
           />
 
           <!-- Header -->
@@ -86,27 +65,3 @@ const panelStyle = computed(() => ({
     </Transition>
   </Teleport>
 </template>
-
-<style scoped>
-.ss-scrim {
-  transition: opacity 280ms ease;
-}
-.ss-enter-from .ss-scrim,
-.ss-leave-to .ss-scrim {
-  opacity: 0;
-}
-
-.ss-panel {
-  transition:
-    transform 320ms cubic-bezier(0.2, 0, 0, 1),
-    opacity 240ms ease;
-}
-.ss-enter-from .ss-panel {
-  transform: translateX(40%);
-  opacity: 0;
-}
-.ss-leave-to .ss-panel {
-  transform: translateX(100%) !important;
-  opacity: 0;
-}
-</style>

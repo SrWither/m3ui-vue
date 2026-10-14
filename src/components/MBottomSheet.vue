@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
 import MIcon from './MIcon.vue'
+import { useSheetMotion } from '../composables/_useSheetMotion'
 
 withDefaults(defineProps<{
   modelValue: boolean
@@ -11,52 +11,30 @@ withDefaults(defineProps<{
 const emit = defineEmits<{ 'update:modelValue': [boolean] }>()
 const close = () => emit('update:modelValue', false)
 
-// Drag-to-dismiss state
-const dragY = ref(0)
-const dragging = ref(false)
-let startY = 0
-
-function onHandlePointerDown(e: PointerEvent) {
-  dragging.value = true
-  startY = e.clientY
-  dragY.value = 0
-  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
-}
-function onHandlePointerMove(e: PointerEvent) {
-  if (!dragging.value) return
-  dragY.value = Math.max(0, e.clientY - startY)
-}
-function onHandlePointerUp() {
-  if (dragY.value > 100) close()
-  dragging.value = false
-  dragY.value = 0
-}
-
-const sheetStyle = computed(() => ({
-  transform: `translateY(${dragY.value}px)`,
-  transition: dragging.value ? 'none' : undefined,
-}))
+// Slide in/out and drag-to-dismiss, as springs (see _useSheetMotion).
+const motion = useSheetMotion('y', close)
 </script>
 
 <template>
   <Teleport to="body">
-    <Transition name="bs" :duration="{ enter: 320, leave: 280 }">
+    <Transition :css="false" @enter="motion.onEnter" @leave="motion.onLeave">
       <div v-if="modelValue" class="fixed inset-0 z-200 flex flex-col justify-end">
         <!-- Scrim -->
-        <div class="bs-scrim absolute inset-0 bg-scrim/32" @click="close" />
+        <div data-sheet-scrim class="absolute inset-0 bg-scrim/32" @click="close" />
 
         <!-- Panel -->
         <div
-          class="bs-panel relative mx-auto flex w-full max-w-[640px] flex-col rounded-t-[28px] bg-surface-container-low shadow-elevation-1"
+          data-sheet-panel
+          class="relative mx-auto flex w-full max-w-[640px] flex-col rounded-t-[28px] bg-surface-container-low shadow-elevation-1"
           :class="fullHeight ? 'max-h-[92vh]' : 'max-h-[60vh]'"
-          :style="sheetStyle"
         >
           <!-- Drag handle -->
           <div
             class="flex h-12 shrink-0 cursor-grab touch-none select-none items-center justify-center active:cursor-grabbing"
-            @pointerdown="onHandlePointerDown"
-            @pointermove="onHandlePointerMove"
-            @pointerup="onHandlePointerUp"
+            @pointerdown="motion.onDragStart"
+            @pointermove="motion.onDragMove"
+            @pointerup="motion.onDragEnd"
+            @pointercancel="motion.onDragEnd"
           >
             <div class="h-1 w-8 rounded-full bg-on-surface-variant" />
           </div>
@@ -87,27 +65,3 @@ const sheetStyle = computed(() => ({
     </Transition>
   </Teleport>
 </template>
-
-<style scoped>
-.bs-scrim {
-  transition: opacity 300ms ease;
-}
-.bs-enter-from .bs-scrim,
-.bs-leave-to .bs-scrim {
-  opacity: 0;
-}
-
-.bs-panel {
-  transition:
-    transform 320ms cubic-bezier(0.2, 0, 0, 1),
-    opacity 240ms ease;
-}
-.bs-enter-from .bs-panel {
-  transform: translateY(40%);
-  opacity: 0;
-}
-.bs-leave-to .bs-panel {
-  transform: translateY(100%) !important;
-  opacity: 0;
-}
-</style>
