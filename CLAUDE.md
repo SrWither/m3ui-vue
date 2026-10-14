@@ -112,6 +112,12 @@ Same escape hatches outside drag-and-drop: `MTransferList` has an `#item` slot (
 
 To give a slot the consumer's own item type, make the component generic (`<script setup lang="ts" generic="T extends TransferItem = TransferItem">`). Exported interfaces can't live in a generic `<script setup>` (vue-tsc: "Modifiers cannot appear here"), so move them into a separate plain `<script lang="ts">` block in the same file; `index.ts`'s `export type { ... } from './X.vue'` keeps working.
 
+### Adaptive layouts (`useWindowSizeClass`, `MNavigationSuite`, `MListDetail`, `MSupportingPane`)
+
+Ported from androidx `material3-adaptive` (`WindowSizeClass` breakpoints in `window-core`, `PaneScaffoldDirective.kt`, `NavigationSuiteScaffold.kt`'s `navigationSuiteType`, `SupportingPaneScaffold.kt`'s default `Reflow(Main)`). Deliberate web departure: the components classify **their own size** (`useWindowSizeClass(rootRef)`, ResizeObserver on `offsetWidth/Height`), not the window, so they work in columns/dialogs and the docs can demo them in a resizable frame (`../m3ui-vue-docs/src/components/demos/AdaptiveFrame.vue`). Pane transitions are CSS (M3 emphasized curve), not Compose's springs; no extra/third pane, no tabletop posture. Current M3 `NavigationSuiteScaffold` never picks a drawer (compact width → short bar, compact height → short bar with `start` icons, else collapsed rail). In `MListDetail` both panes stay mounted in one-pane mode (hidden one gets `inert` + `visibility: hidden`) so list scroll and detail state survive.
+
+**Gotcha:** an HTML comment placed before a component's root element makes the template a fragment in dev builds/tests, so the consumer's `class`/attrs silently stop falling through (production builds strip comments, which hides it). Put template comments *inside* the root element. Pre-existing instances (harmless in `dist/`): `MNavigationDrawer`, `MNavigationRail`, `MSkeleton`, `MStepper`, `MTabs`, `MTransferList`.
+
 ### Locale strings with variables
 
 There's no i18n library: built-in text goes in `M3Locale`. When a string needs values, use `{name}` placeholders replaced at the call site with `.replace('{pos}', ...)` (see `reorderGrabbed`, `kanbanMoved`). `localePresets.test.ts` requires every key in all 7 locales with non-empty values.
