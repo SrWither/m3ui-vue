@@ -223,11 +223,19 @@ onUnmounted(() => {
           the pill (inline-flex, no explicit width) resizes right along with it via ordinary
           flex layout — no separate width bookkeeping needed. The pill is always left-anchored
           with a constant `pl-4`, so the icon's horizontal position never moves at all.
+
+          The pill NEVER gets an explicit width, collapsed included: collapsed it's
+          pl-4 + 24px icon + pr-4 + a 0-wide label = exactly 56dp, the same as the old `w-14`.
+          Switching `auto` <-> `w-14` can't be transitioned (auto isn't interpolable), so on
+          collapse the pill snapped to 56px on the first frame and flex-shrink squeezed the
+          still-visible label to 0, which then regrew a few px before clipping away — the
+          label visibly vanished and popped back. Keeping width content-driven in both
+          states means it only ever follows the label's own animated width.
         -->
         <span
-          class="absolute left-0 inline-flex items-center pl-4 rounded-full transition-all duration-200"
+          class="absolute left-0 inline-flex items-center pl-4 pr-4 rounded-full transition-all duration-200"
           :class="[
-            railExpanded ? 'top-1 h-14 pr-4' : 'top-1.5 h-8 w-14',
+            railExpanded ? 'top-1 h-14' : 'top-1.5 h-8',
             item.value === modelValue
               ? 'bg-secondary-container text-on-secondary-container'
               : 'bg-transparent text-on-surface-variant group-hover:bg-on-surface/8',
@@ -246,26 +254,28 @@ onUnmounted(() => {
             margin, so it doesn't leave a gap when collapsed) grows left-to-right out of the
             icon's edge, so the text reads as emerging out of the icon rather than fading in
             in place. Text itself never moves — only the clipping box's width animates.
-            Animating `max-width` rather than `width` (up to a generous 200px cap, well past
-            any realistic label) is what lets the box settle at the label's own intrinsic
-            width once expanded — a plain `width` transition would need a fixed end value,
-            which is exactly the old bug: every label reveal stopped at the same hardcoded
-            130px regardless of text length, leaving dead space in the pill after a short
-            label like "Home" instead of hugging it. `whitespace-nowrap` plus `inline-block`
-            keep it shrink-to-fit and from reflowing as max-width changes. Opacity animates
+            The width animates via a one-column grid, `grid-template-columns: 0fr <-> 1fr`
+            (the inner span is `min-w-0 overflow-hidden`), which interpolates straight to the
+            label's own intrinsic width. Earlier versions used `width` (fixed end value, every
+            pill stopped at the same 130px regardless of text) and then `max-width: 0 <-> 200px`
+            (hugged the text, but since 200px is far past a label like "Home" (~38px), most of
+            the transition changed nothing visible and the real shrink was crammed into its
+            last few frames). `whitespace-nowrap` keeps the text from reflowing. Opacity animates
             alongside it so collapsing reads as fading out while it shrinks, rather than
             staying solid until the box clips it. Its own text color intentionally differs from
             the pill's (`text-secondary` vs the pill's `text-on-secondary-container`) — M3's
             `ItemActiveLabelTextColor` is a different token from `ItemActiveIconColor`.
           -->
           <span
-            class="inline-block overflow-hidden whitespace-nowrap text-left text-label-large font-medium transition-[max-width,opacity,margin-left] duration-200"
-            :class="[
-              railExpanded ? 'ml-2 max-w-[200px] opacity-100' : 'ml-0 max-w-0 opacity-0',
-              item.value === modelValue ? 'text-secondary' : 'text-on-surface-variant',
-            ]"
+            class="grid transition-[grid-template-columns,opacity,margin-left] duration-200"
+            :class="railExpanded ? 'ml-2 grid-cols-[1fr] opacity-100' : 'ml-0 grid-cols-[0fr] opacity-0'"
           >
-            {{ item.label }}
+            <span
+              class="min-w-0 overflow-hidden whitespace-nowrap text-left text-label-large font-medium"
+              :class="item.value === modelValue ? 'text-secondary' : 'text-on-surface-variant'"
+            >
+              {{ item.label }}
+            </span>
           </span>
         </span>
 
@@ -334,9 +344,9 @@ onUnmounted(() => {
               @click="selectModal(item)"
             >
               <span
-                class="absolute left-0 inline-flex items-center pl-4 rounded-full transition-all duration-200"
+                class="absolute left-0 inline-flex items-center pl-4 pr-4 rounded-full transition-all duration-200"
                 :class="[
-                  panelExpanded ? 'top-1 h-14 pr-4' : 'top-1.5 h-8 w-14',
+                  panelExpanded ? 'top-1 h-14' : 'top-1.5 h-8',
                   item.value === modelValue
                     ? 'bg-secondary-container text-on-secondary-container'
                     : 'bg-transparent text-on-surface-variant group-hover:bg-on-surface/8',
@@ -351,13 +361,15 @@ onUnmounted(() => {
                 <MIcon v-else :name="item.icon" :size="24" />
 
                 <span
-                  class="inline-block overflow-hidden whitespace-nowrap text-left text-label-large font-medium transition-[max-width,opacity,margin-left] duration-200"
-                  :class="[
-                    panelExpanded ? 'ml-2 max-w-[200px] opacity-100' : 'ml-0 max-w-0 opacity-0',
-                    item.value === modelValue ? 'text-secondary' : 'text-on-surface-variant',
-                  ]"
+                  class="grid transition-[grid-template-columns,opacity,margin-left] duration-200"
+                  :class="panelExpanded ? 'ml-2 grid-cols-[1fr] opacity-100' : 'ml-0 grid-cols-[0fr] opacity-0'"
                 >
-                  {{ item.label }}
+                  <span
+                    class="min-w-0 overflow-hidden whitespace-nowrap text-left text-label-large font-medium"
+                    :class="item.value === modelValue ? 'text-secondary' : 'text-on-surface-variant'"
+                  >
+                    {{ item.label }}
+                  </span>
                 </span>
               </span>
 
