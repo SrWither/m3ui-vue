@@ -123,4 +123,11 @@ export const zhLocale: M3Locale = {
   // Chat bubble
   chatTyping: '正在输入…',
   chatRecordingAudio: '正在录音…',
+
+  // Drag & drop list ({pos}/{total} are replaced at runtime)
+  reorderHandle: '重新排序',
+  reorderGrabbed: '已选中项目，位置 {pos}/{total}。使用方向键移动，按空格键放下，按 Esc 取消。',
+  reorderMoved: '已移至位置 {pos}/{total}。',
+  reorderDropped: '项目已放在位置 {pos}/{total}。',
+  reorderCancelled: '已取消重新排序。',
 }

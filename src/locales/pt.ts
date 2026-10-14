@@ -123,4 +123,11 @@ export const ptLocale: M3Locale = {
   // Chat bubble
   chatTyping: 'Digitando…',
   chatRecordingAudio: 'Gravando áudio…',
+
+  // Drag & drop list ({pos}/{total} are replaced at runtime)
+  reorderHandle: 'Reordenar',
+  reorderGrabbed: 'Item selecionado, posição {pos} de {total}. Use as setas para movê-lo, Espaço para soltá-lo e Esc para cancelar.',
+  reorderMoved: 'Movido para a posição {pos} de {total}.',
+  reorderDropped: 'Item solto na posição {pos} de {total}.',
+  reorderCancelled: 'Reordenação cancelada.',
 }

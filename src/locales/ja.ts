@@ -123,4 +123,11 @@ export const jaLocale: M3Locale = {
   // Chat bubble
   chatTyping: '入力中…',
   chatRecordingAudio: '音声を録音中…',
+
+  // Drag & drop list ({pos}/{total} are replaced at runtime)
+  reorderHandle: '並べ替え',
+  reorderGrabbed: '項目を選択しました（{total} 件中 {pos} 番目）。矢印キーで移動、スペースで確定、Escape でキャンセルします。',
+  reorderMoved: '{total} 件中 {pos} 番目に移動しました。',
+  reorderDropped: '{total} 件中 {pos} 番目に配置しました。',
+  reorderCancelled: '並べ替えをキャンセルしました。',
 }

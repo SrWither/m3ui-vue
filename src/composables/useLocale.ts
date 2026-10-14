@@ -124,6 +124,13 @@ export interface M3Locale {
   // Chat bubble
   chatTyping: string
   chatRecordingAudio: string
+
+  // Drag & drop list ({pos}/{total} are replaced at runtime)
+  reorderHandle: string
+  reorderGrabbed: string
+  reorderMoved: string
+  reorderDropped: string
+  reorderCancelled: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -236,6 +243,13 @@ export const defaultLocale: M3Locale = {
   // Chat bubble
   chatTyping: 'Typing…',
   chatRecordingAudio: 'Recording audio…',
+
+  // Drag & drop list ({pos}/{total} are replaced at runtime)
+  reorderHandle: 'Reorder',
+  reorderGrabbed: 'Item grabbed, position {pos} of {total}. Use the arrow keys to move it, Space to drop it, Escape to cancel.',
+  reorderMoved: 'Moved to position {pos} of {total}.',
+  reorderDropped: 'Item dropped at position {pos} of {total}.',
+  reorderCancelled: 'Reorder cancelled.',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')

@@ -123,4 +123,11 @@ export const koLocale: M3Locale = {
   // Chat bubble
   chatTyping: '입력 중…',
   chatRecordingAudio: '음성 녹음 중…',
+
+  // Drag & drop list ({pos}/{total} are replaced at runtime)
+  reorderHandle: '순서 변경',
+  reorderGrabbed: '항목을 선택했습니다. {total}개 중 {pos}번째입니다. 화살표 키로 이동하고, 스페이스로 놓고, Esc로 취소하세요.',
+  reorderMoved: '{total}개 중 {pos}번째로 이동했습니다.',
+  reorderDropped: '{total}개 중 {pos}번째에 놓았습니다.',
+  reorderCancelled: '순서 변경을 취소했습니다.',
 }

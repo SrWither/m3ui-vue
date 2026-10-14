@@ -123,4 +123,11 @@ export const deLocale: M3Locale = {
   // Chat bubble
   chatTyping: 'Schreibt…',
   chatRecordingAudio: 'Nimmt Audio auf…',
+
+  // Drag & drop list ({pos}/{total} are replaced at runtime)
+  reorderHandle: 'Neu anordnen',
+  reorderGrabbed: 'Element aufgenommen, Position {pos} von {total}. Mit den Pfeiltasten verschieben, mit Leertaste ablegen, mit Escape abbrechen.',
+  reorderMoved: 'Auf Position {pos} von {total} verschoben.',
+  reorderDropped: 'Element auf Position {pos} von {total} abgelegt.',
+  reorderCancelled: 'Neuanordnung abgebrochen.',
 }
