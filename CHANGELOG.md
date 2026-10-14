@@ -17,6 +17,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MListDetail`: M3 list-detail layout. From the expanded width class (840px) list and detail sit side by side (24px spacer, list 360px, 412px from large, or `listWidth`); below that one pane shows, chosen by `v-model:showDetail`, with the detail sliding over the list and `back()` in the slot scope. Both panes stay mounted, so the list keeps its scroll position
 - `MSupportingPane`: M3 supporting pane layout. From 840px the supporting pane sits beside the main one (360px / 412px, or `supportingWidth`); below that it reflows under it (`singlePane="below"`, M3's default) or moves into an `MBottomSheet` (`singlePane="sheet"` with `v-model:open`, closed automatically once both panes fit)
 - `to` on `MNavigationRail`, `MShortNavigationBar` and `MNavigationSuite` items: the item becomes a real link (middle-click, open in a new tab), a `RouterLink` when vue-router is installed or a plain `<a href>` without it. Clicking still updates `v-model`; items without `to` stay buttons
+- `MShortNavigationBar` item `disabled`: not selectable, icon and label at 38% of the unselected color with no hover (`ShortNavigationBarItemDefaults`' `DisabledAlpha`). Also applies to `MNavigationSuite` in its bar layouts
 
 ### Fixed
 - `MTransferList`: rows leaving a pane (e.g. on "move all") no longer stack on top of each other while fading out. Each leaving row is now pinned at its own position instead of falling back to a static position that shifted as its siblings left too
