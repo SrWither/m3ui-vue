@@ -10,6 +10,8 @@ export interface ShortNavBarItem {
   icon: string
   badge?: number
   badgeDot?: boolean
+  /** Not selectable: icon and label at 38% of the unselected color, no hover. */
+  disabled?: boolean
   /** Makes the item a link: a vue-router location (rendered as RouterLink), or a URL without vue-router. */
   to?: ItemLink
 }
@@ -42,6 +44,26 @@ defineEmits<{ 'update:modelValue': [string | number] }>()
 
 const itemLink = useItemLink()
 
+// ShortNavigationBarItemDefaults.colors(): disabled icon/text = unselected color at
+// DisabledAlpha (0.38), whether or not the item is selected; no hover state layer.
+const DISABLED = 'text-on-surface-variant/38'
+function topPillClass(item: ShortNavBarItem) {
+  const selected = item.value === props.modelValue
+  if (item.disabled) return selected ? `w-14 bg-secondary-container ${DISABLED}` : `w-0 ${DISABLED}`
+  return selected
+    ? 'w-14 bg-secondary-container text-on-secondary-container'
+    : 'w-0 bg-secondary-container/0 text-on-surface-variant group-hover:w-14 group-hover:bg-on-surface/8'
+}
+function labelClass(item: ShortNavBarItem) {
+  if (item.disabled) return DISABLED
+  return item.value === props.modelValue ? 'text-secondary' : 'text-on-surface-variant'
+}
+function startPillClass(item: ShortNavBarItem) {
+  const selected = item.value === props.modelValue
+  if (item.disabled) return selected ? `bg-secondary-container ${DISABLED}` : DISABLED
+  return selected ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface-variant group-hover:bg-on-surface/8'
+}
+
 // calculateCenteredContentHorizontalPadding: 3 items -> 20% each side, 4 -> 15%, 5 -> 10%,
 // 6 -> 5%, 7+ -> 0. Matches the real formula verbatim: ((100 - 10*(n+3)) / 2) / 100.
 const centeredPadding = computed(() => {
@@ -61,19 +83,15 @@ const centeredPadding = computed(() => {
       v-for="item in items"
       :key="item.value"
       v-bind="itemLink(item).attrs"
-      class="group flex flex-1 cursor-pointer items-center justify-center self-stretch transition-colors focus-visible:outline-none"
-      :class="iconPosition === 'top' ? 'flex-col gap-1' : 'flex-row gap-1 py-1.5'"
-      @click="$emit('update:modelValue', item.value)"
+      class="group flex flex-1 items-center justify-center self-stretch transition-colors focus-visible:outline-none"
+      :class="[iconPosition === 'top' ? 'flex-col gap-1' : 'flex-row gap-1 py-1.5', item.disabled ? 'cursor-not-allowed' : 'cursor-pointer']"
+      @click="!item.disabled && $emit('update:modelValue', item.value)"
     >
       <template v-if="iconPosition === 'top'">
         <!-- Top icon position: 56x32dp pill above a separate label, matching MNavigationBar -->
         <span
           class="inline-flex h-8 items-center justify-center rounded-2xl transition-all duration-200"
-          :class="
-            item.value === modelValue
-              ? 'w-14 bg-secondary-container text-on-secondary-container'
-              : 'w-0 bg-secondary-container/0 text-on-surface-variant group-hover:w-14 group-hover:bg-on-surface/8'
-          "
+          :class="topPillClass(item)"
         >
           <MBadge v-if="item.badge != null" :count="item.badge">
             <MIcon :name="item.icon" :size="24" />
@@ -85,7 +103,7 @@ const centeredPadding = computed(() => {
         </span>
         <span
           class="text-label-medium font-medium"
-          :class="item.value === modelValue ? 'text-secondary' : 'text-on-surface-variant'"
+          :class="labelClass(item)"
         >
           {{ item.label }}
         </span>
@@ -98,11 +116,7 @@ const centeredPadding = computed(() => {
              separate Secondary label color (ShortNavigationBarItemDefaults.colors() doc comment). -->
         <span
           class="inline-flex h-10 items-center justify-center gap-1 rounded-2xl px-4 transition-colors duration-200"
-          :class="
-            item.value === modelValue
-              ? 'bg-secondary-container text-on-secondary-container'
-              : 'text-on-surface-variant group-hover:bg-on-surface/8'
-          "
+          :class="startPillClass(item)"
         >
           <MBadge v-if="item.badge != null" :count="item.badge">
             <MIcon :name="item.icon" :size="24" />
