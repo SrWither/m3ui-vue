@@ -256,6 +256,9 @@ const name = ref('')
 |---|---|
 | `MContainer` | Centered max-width container |
 | `MAppLayout` | Full app layout scaffold |
+| `MNavigationSuite` | Adaptive navigation (M3 `NavigationSuiteScaffold`): short bar on phones, rail from tablets up, chosen by the component's own size |
+| `MListDetail` | M3 list-detail layout: two panes from 840px, one at a time (with `back()`) below |
+| `MSupportingPane` | M3 supporting pane layout: beside the main pane from 840px, below it or in a bottom sheet below |
 | `MGrid` | Responsive grid |
 | `MStack` / `MFlex` / `MBox` | Flexbox utilities |
 | `MCenter` | Center content |
@@ -339,6 +342,7 @@ import { MBarcode } from '@m3ui-vue/m3ui-vue/barcode'
 | `useFieldBg()` | Context-aware field background color |
 | `useLocale()` | i18n locale switching |
 | `useDevice()` | Responsive breakpoint detection |
+| `useWindowSizeClass()` | M3 width/height size classes (compact → extra-large) for the window or any element |
 | `usePageProgress()` | Shared state for `MPageProgress`'s `start()`/`set()`/`done()` — drive it by hand or let the component auto-wire vue-router |
 
 ## Color Palettes
