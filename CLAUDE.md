@@ -106,6 +106,12 @@ Established convention across `MProgressBar`, `MCircleProgressBar`, `MLoadingInd
 - **Keyboard + a11y:** `Space`/`Enter` grab, arrows move (emitting each step so FLIP animates it), `Space`/`Enter` drop, `Esc` restores a snapshot; refocus the moved element in `onUpdated`; announce through an `aria-live` region with locale strings. Lifted look per M3 dragged tokens (`ListTokens`/`ElevatedCardTokens`: elevation Level 4, 16% state layer).
 - **Escape hatches for custom content** (users ask for these after every redesign): an opt-in `bare` prop that drops the row/card shell (lift shadow becomes `filter: drop-shadow` so it follows the slot's shape), slot-scope values like `dragging` / `handleProps` (spread onto a custom grip), and marker attributes. All additive.
 
+### Custom row content in list-like components
+
+Same escape hatches outside drag-and-drop: `MTransferList` has an `#item` slot (`{ item, checked, side, toggle, move }`) that by default replaces only the row's inner content (keeping checkbox/highlight/hover), plus a `bare` prop where the slot draws the whole row (then the `<li>` itself becomes `tabindex=0 role=checkbox` so keyboard and a11y survive). Row click/dblclick/Enter handlers ignore events from controls inside the slot (`button, a, select, textarea, [contenteditable], input:not([type=checkbox]), [data-<component>-action]`).
+
+To give a slot the consumer's own item type, make the component generic (`<script setup lang="ts" generic="T extends TransferItem = TransferItem">`). Exported interfaces can't live in a generic `<script setup>` (vue-tsc: "Modifiers cannot appear here"), so move them into a separate plain `<script lang="ts">` block in the same file; `index.ts`'s `export type { ... } from './X.vue'` keeps working.
+
 ### Locale strings with variables
 
 There's no i18n library: built-in text goes in `M3Locale`. When a string needs values, use `{name}` placeholders replaced at the call site with `.replace('{pos}', ...)` (see `reorderGrabbed`, `kanbanMoved`). `localePresets.test.ts` requires every key in all 7 locales with non-empty values.
