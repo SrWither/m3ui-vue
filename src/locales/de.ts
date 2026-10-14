@@ -134,4 +134,7 @@ export const deLocale: M3Locale = {
   // Transfer list (panes)
   selectAll: 'Alle auswählen',
   clearSearch: 'Suche löschen',
+
+  // Kanban ({column}/{pos}/{total} are replaced at runtime)
+  kanbanMoved: 'Nach {column} verschoben, Position {pos} von {total}.',
 }

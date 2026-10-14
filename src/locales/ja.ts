@@ -134,4 +134,7 @@ export const jaLocale: M3Locale = {
   // Transfer list (panes)
   selectAll: 'すべて選択',
   clearSearch: '検索をクリア',
+
+  // Kanban ({column}/{pos}/{total} are replaced at runtime)
+  kanbanMoved: '{column} の {total} 件中 {pos} 番目に移動しました。',
 }

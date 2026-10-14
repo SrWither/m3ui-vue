@@ -134,4 +134,7 @@ export const koLocale: M3Locale = {
   // Transfer list (panes)
   selectAll: '모두 선택',
   clearSearch: '검색어 지우기',
+
+  // Kanban ({column}/{pos}/{total} are replaced at runtime)
+  kanbanMoved: '{column}의 {total}개 중 {pos}번째로 이동했습니다.',
 }

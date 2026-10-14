@@ -134,4 +134,7 @@ export const ptLocale: M3Locale = {
   // Transfer list (panes)
   selectAll: 'Selecionar tudo',
   clearSearch: 'Limpar pesquisa',
+
+  // Kanban ({column}/{pos}/{total} are replaced at runtime)
+  kanbanMoved: 'Movido para {column}, posição {pos} de {total}.',
 }

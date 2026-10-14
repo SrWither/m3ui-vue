@@ -135,6 +135,9 @@ export interface M3Locale {
   // Transfer list (panes)
   selectAll: string
   clearSearch: string
+
+  // Kanban ({column}/{pos}/{total} are replaced at runtime)
+  kanbanMoved: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -258,6 +261,9 @@ export const defaultLocale: M3Locale = {
   // Transfer list (panes)
   selectAll: 'Select all',
   clearSearch: 'Clear search',
+
+  // Kanban ({column}/{pos}/{total} are replaced at runtime)
+  kanbanMoved: 'Moved to {column}, position {pos} of {total}.',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')

@@ -134,4 +134,7 @@ export const zhLocale: M3Locale = {
   // Transfer list (panes)
   selectAll: '全选',
   clearSearch: '清除搜索',
+
+  // Kanban ({column}/{pos}/{total} are replaced at runtime)
+  kanbanMoved: '已移至 {column}，位置 {pos}/{total}。',
 }
