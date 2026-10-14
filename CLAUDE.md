@@ -110,6 +110,10 @@ Established convention across `MProgressBar`, `MCircleProgressBar`, `MLoadingInd
 
 There's no i18n library: built-in text goes in `M3Locale`. When a string needs values, use `{name}` placeholders replaced at the call site with `.replace('{pos}', ...)` (see `reorderGrabbed`, `kanbanMoved`). `localePresets.test.ts` requires every key in all 7 locales with non-empty values.
 
+### `TransitionGroup` leave with `position: absolute`
+
+The usual trick of making leaving items `position: absolute` (so siblings can `-move` into the gap) needs an explicit `top`: without one each leaving item sits at its static position, which shifts as its siblings leave the flow too, so a batch removal (e.g. MTransferList's "move all") piles every row onto the first slot while fading. `_MTransferPane.vue` snapshots each row's `offsetTop` in `onBeforeUpdate` (before the first leave changes the layout) and pins it in `@before-leave`. Reuse that for any list that can lose several items at once.
+
 ### Container queries
 
 `MTransferList` lays out by its own width with Tailwind v4 container queries (`@container` on the root, `@xl:flex-row` etc.), not viewport breakpoints — right for components that may sit in a narrow column on a wide screen. These utilities reach consumers because `theme.css`'s `@source` scans the built `dist/`.
