@@ -2,6 +2,7 @@
 import { computed, ref, watch, onUnmounted } from 'vue'
 import MIcon from './MIcon.vue'
 import MBadge from './MBadge.vue'
+import { useItemLink, type ItemLink } from '../composables/_useItemLink'
 
 export interface NavRailItem {
   value: string | number
@@ -10,6 +11,8 @@ export interface NavRailItem {
   badge?: number
   badgeDot?: boolean
   disabled?: boolean
+  /** Makes the item a link: a vue-router location (rendered as RouterLink), or a URL without vue-router. */
+  to?: ItemLink
 }
 
 const props = withDefaults(defineProps<{
@@ -47,6 +50,8 @@ const railExpanded = computed(() => !props.modal && props.expanded)
  * collapsed -> expanded change to animate, running alongside (not instead of) the panel's
  * own width spring.
  */
+const itemLink = useItemLink()
+
 const panelExpanded = ref(false)
 
 function close() {
@@ -193,13 +198,13 @@ onUnmounted(() => {
         'justify-end': alignment === 'bottom',
       }"
     >
-      <button
+      <component
+        :is="itemLink(item).tag"
         v-for="item in items"
         :key="item.value"
-        type="button"
+        v-bind="itemLink(item).attrs"
         class="group relative block h-16 w-full cursor-pointer focus-visible:outline-none"
         :class="item.disabled ? 'cursor-not-allowed opacity-[0.38]' : ''"
-        :disabled="item.disabled"
         @click="!item.disabled && $emit('update:modelValue', item.value)"
       >
         <!--
@@ -289,7 +294,7 @@ onUnmounted(() => {
         >
           {{ item.label }}
         </span>
-      </button>
+      </component>
     </div>
   </nav>
 
@@ -334,13 +339,13 @@ onUnmounted(() => {
               can't just bind to `expanded` directly. Keep any pill/label fix in sync
               between the two copies.
             -->
-            <button
+            <component
+              :is="itemLink(item).tag"
               v-for="item in items"
               :key="item.value"
-              type="button"
+              v-bind="itemLink(item).attrs"
               class="group relative block h-16 w-full shrink-0 cursor-pointer focus-visible:outline-none"
               :class="item.disabled ? 'cursor-not-allowed opacity-[0.38]' : ''"
-              :disabled="item.disabled"
               @click="selectModal(item)"
             >
               <span
@@ -383,7 +388,7 @@ onUnmounted(() => {
               >
                 {{ item.label }}
               </span>
-            </button>
+            </component>
           </div>
         </nav>
       </div>

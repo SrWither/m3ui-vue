@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import MNavigationRail from './MNavigationRail.vue'
 import MShortNavigationBar from './MShortNavigationBar.vue'
 import { useWindowSizeClass } from '../composables/useWindowSizeClass'
+import type { ItemLink } from '../composables/_useItemLink'
 
 export interface NavigationSuiteItem {
   value: string | number
@@ -11,6 +12,8 @@ export interface NavigationSuiteItem {
   badge?: number
   badgeDot?: boolean
   disabled?: boolean
+  /** Makes the item a link: a vue-router location (rendered as RouterLink), or a URL without vue-router. */
+  to?: ItemLink
 }
 
 /** The navigation component in use: a short bar (icons over labels, or beside them), or a rail. */

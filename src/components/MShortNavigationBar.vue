@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import MIcon from './MIcon.vue'
 import MBadge from './MBadge.vue'
+import { useItemLink, type ItemLink } from '../composables/_useItemLink'
 
 export interface ShortNavBarItem {
   value: string | number
@@ -9,6 +10,8 @@ export interface ShortNavBarItem {
   icon: string
   badge?: number
   badgeDot?: boolean
+  /** Makes the item a link: a vue-router location (rendered as RouterLink), or a URL without vue-router. */
+  to?: ItemLink
 }
 
 const props = withDefaults(
@@ -37,6 +40,8 @@ const props = withDefaults(
 
 defineEmits<{ 'update:modelValue': [string | number] }>()
 
+const itemLink = useItemLink()
+
 // calculateCenteredContentHorizontalPadding: 3 items -> 20% each side, 4 -> 15%, 5 -> 10%,
 // 6 -> 5%, 7+ -> 0. Matches the real formula verbatim: ((100 - 10*(n+3)) / 2) / 100.
 const centeredPadding = computed(() => {
@@ -51,10 +56,11 @@ const centeredPadding = computed(() => {
     class="flex h-16 w-full items-center border-t border-outline-variant bg-surface-container shadow-elevation-2"
     :style="arrangement === 'centered' ? { paddingLeft: `${centeredPadding}%`, paddingRight: `${centeredPadding}%` } : undefined"
   >
-    <button
+    <component
+      :is="itemLink(item).tag"
       v-for="item in items"
       :key="item.value"
-      type="button"
+      v-bind="itemLink(item).attrs"
       class="group flex flex-1 cursor-pointer items-center justify-center self-stretch transition-colors focus-visible:outline-none"
       :class="iconPosition === 'top' ? 'flex-col gap-1' : 'flex-row gap-1 py-1.5'"
       @click="$emit('update:modelValue', item.value)"
@@ -108,6 +114,6 @@ const centeredPadding = computed(() => {
           <span class="text-label-medium font-medium">{{ item.label }}</span>
         </span>
       </template>
-    </button>
+    </component>
   </nav>
 </template>

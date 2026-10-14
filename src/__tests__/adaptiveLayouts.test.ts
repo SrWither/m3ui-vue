@@ -155,3 +155,37 @@ describe('MSupportingPane', () => {
     w.unmount()
   })
 })
+
+describe('navigation items with `to`', () => {
+  const linkItems = [
+    { value: 'home', label: 'Home', icon: 'home', to: '/home' },
+    { value: 'search', label: 'Search', icon: 'search' },
+    { value: 'off', label: 'Off', icon: 'block', to: '/off', disabled: true },
+  ]
+
+  it('render as plain links without vue-router, buttons otherwise, and still update v-model', async () => {
+    for (const [layout, name] of [['rail', 'MNavigationRail'], ['bar', 'MShortNavigationBar']] as const) {
+      const w = mount(MNavigationSuite, { props: { modelValue: 'search', items: linkItems, layout } })
+      const nav = w.findComponent({ name })
+      const els = nav.findAll('nav a, nav button').filter((e) => e.text().match(/Home|Search|Off/))
+      expect(els.map((e) => e.element.tagName)).toEqual(['A', 'BUTTON', 'BUTTON'])
+      expect(els[0]!.attributes('href')).toBe('/home')
+      await els[0]!.trigger('click')
+      expect(w.emitted('update:modelValue')![0]).toEqual(['home'])
+      w.unmount()
+    }
+  })
+
+  it('render as RouterLink when vue-router is installed', () => {
+    const RouterLink = { name: 'RouterLink', props: ['to'], template: '<a class="rl" :href="String(to)"><slot /></a>' }
+    const w = mount(MNavigationSuite, {
+      props: { modelValue: 'home', items: linkItems, layout: 'rail' },
+      global: { components: { RouterLink } },
+    })
+    const links = w.findAllComponents({ name: 'RouterLink' })
+    expect(links).toHaveLength(1)
+    expect(links[0]!.props('to')).toBe('/home')
+    w.unmount()
+  })
+})
+
