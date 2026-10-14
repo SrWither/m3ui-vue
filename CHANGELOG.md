@@ -29,6 +29,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **`MBottomSheet` and `MSideSheet` now slide in when opened** (they only faded in: the drag's reactive `transform` style overrode the enter animation). Motion follows androidx `BottomSheet.kt`: the panel enters from fully off-screen with the `DefaultSpatial` spring (0.9 / 700), leaves with `FastEffects` (1.0 / 3800), and the scrim fades with `DefaultEffects` (1.0 / 1600). **The panel no longer fades in or out, it only slides.** Releasing a drag now springs from where the finger left it, carrying its speed: past 100px or flung it closes, otherwise it settles back. Animations are skipped under `prefers-reduced-motion`
 
 ### Fixed
+- `MChart` kept the previous palette's axis, legend and tooltip colors after a palette switch (`useColorPalette().set()`), until the theme changed or the page reloaded: it now also watches `data-palette` on `<html>`
 - `MWindow` couldn't be resized from its top edge or top corners: the directions were declared but had no handles and no resize logic
 - `MWindow`s that were closed when mounted didn't follow later size changes of their container
 - `MTransferList`: rows leaving a pane (e.g. on "move all") no longer stack on top of each other while fading out. Each leaving row is now pinned at its own position instead of falling back to a static position that shifted as its siblings left too
