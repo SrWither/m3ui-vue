@@ -73,6 +73,8 @@ const emit = defineEmits<{
   close: []
   minimize: []
   maximize: [maximized: boolean]
+  /** The window came to the front (clicked, dragged, opened, or `focus()`). */
+  focus: []
 }>()
 
 // ---- State ----
@@ -145,6 +147,7 @@ const windowStyle = computed(() => ({
 
 // ---- Bring to front ----
 function bringToFront() {
+  if (activeWindowId.value !== id) emit('focus')
   activeWindowId.value = id
   sharedZIndex++
   zIndex.value = sharedZIndex
@@ -513,6 +516,13 @@ onUnmounted(() => {
   cancelAnimationFrame(sizeRaf)
   if (activeWindowId.value === id) activeWindowId.value = null
   resizeObserver?.disconnect()
+})
+
+defineExpose({
+  /** Brings the window to the front, e.g. from a taskbar. */
+  focus: bringToFront,
+  toggleMaximize,
+  toggleMinimize,
 })
 
 // Resize handle definitions

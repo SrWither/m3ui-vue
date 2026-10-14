@@ -227,4 +227,32 @@ describe('MWindow', () => {
     expect(w.emitted('maximize')).toBeUndefined()
     w.unmount()
   })
+
+  it('focus() brings a window to the front and emits focus once per activation', async () => {
+    const Two = defineComponent({
+      setup() {
+        const a = ref<InstanceType<typeof MWindow>>()
+        return { a }
+      },
+      render() {
+        return [
+          h(MWindow, { ref: 'a', modelValue: true, title: 'A', onFocus: () => this.$emit('focusA') }),
+          h(MWindow, { modelValue: true, title: 'B' }),
+        ]
+      },
+      emits: ['focusA'],
+    })
+    const w = mount(Two, { attachTo: document.body })
+    await nextTick()
+    const [a] = w.findAll('[role="dialog"]')
+    expect(a!.classes()).toContain('shadow-elevation-1')
+    const focusesBefore = w.emitted('focusA')?.length ?? 0
+    ;(w.vm.a as any).focus()
+    await nextTick()
+    expect(a!.classes()).toContain('shadow-elevation-3')
+    expect(w.emitted('focusA')!.length).toBe(focusesBefore + 1)
+    ;(w.vm.a as any).focus()
+    expect(w.emitted('focusA')!.length).toBe(focusesBefore + 1)
+    w.unmount()
+  })
 })
