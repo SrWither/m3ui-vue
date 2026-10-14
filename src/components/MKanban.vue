@@ -197,7 +197,10 @@ function step(now: number) {
 
 // ---------- Pointer dragging ----------
 
-const INTERACTIVE = 'input, textarea, select, button, a, label, [contenteditable]'
+// Inside a card, these never start a drag and never fire cardClick: native controls, plus
+// any element the consumer marks with `data-kanban-action` (e.g. a clickable badge that
+// opens its own menu, or a "copy key" span) so it can do something else instead.
+const INTERACTIVE = 'input, textarea, select, button, a, label, [contenteditable], [data-kanban-action]'
 let prevUserSelect = ''
 let prevSnap = ''
 
@@ -648,8 +651,10 @@ function onCardBlur(card: KanbanCard) {
   })
 }
 
-function onCardClick(card: KanbanCard, columnId: Id) {
+function onCardClick(e: MouseEvent, card: KanbanCard, columnId: Id) {
   if (suppressClick) return
+  const hit = (e.target as Element).closest(INTERACTIVE)
+  if (hit && hit !== e.currentTarget && (e.currentTarget as Element).contains(hit)) return
   emit('cardClick', { card, columnId })
 }
 
@@ -748,7 +753,7 @@ onBeforeUnmount(() => {
             draggingId === card.id ? 'cursor-grabbing' : '',
           ]"
           @pointerdown="onPointerDown($event, card, column.id, index)"
-          @click="onCardClick(card, column.id)"
+          @click="onCardClick($event, card, column.id)"
           @keydown="onCardKeydown($event, card, column)"
           @blur="onCardBlur(card)"
         >

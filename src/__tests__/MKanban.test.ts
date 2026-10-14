@@ -124,3 +124,27 @@ describe('MKanban', () => {
     w.unmount()
   })
 })
+
+describe('MKanban card actions', () => {
+  it('does not fire cardClick or start a drag from buttons or data-kanban-action areas', async () => {
+    const w = mount(MKanban, {
+      props: { modelValue: board() },
+      slots: {
+        card: `<template #card="{ card }"><span class="title">{{ card.id }}</span><button class="btn">menu</button><span class="act" data-kanban-action>copy</span></template>`,
+      },
+      attachTo: document.body,
+    })
+    layout(w)
+    const first = w.findAll('[role="listitem"]')[0]!
+    await first.find('.btn').trigger('click')
+    await first.find('.act').trigger('click')
+    expect(w.emitted('cardClick')).toBeUndefined()
+    await first.find('.title').trigger('click')
+    expect(w.emitted('cardClick')).toHaveLength(1)
+    pointer(first.find('.act').element, 'pointerdown', 100, 70)
+    pointer(window, 'pointermove', 400, 70)
+    pointer(window, 'pointerup', 400, 70)
+    expect(w.emitted('cardMove')).toBeUndefined()
+    w.unmount()
+  })
+})
