@@ -40,7 +40,8 @@ onMounted(async () => {
   m3Colors.value = getM3Colors()
 
   themeObserver = new MutationObserver(() => { m3Colors.value = getM3Colors() })
-  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style'] })
+  // `class` flips light/dark, `data-palette` switches the palette (useColorPalette / createM3UI).
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style', 'data-palette'] })
   // Canvas text drawn before a web font finishes loading keeps the fallback, so redraw once it has
   document.fonts?.ready.then(() => { m3Colors.value = getM3Colors() })
 
