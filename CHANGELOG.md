@@ -8,6 +8,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [0.8.7] - Unreleased
 
 ### Added
+- `MWindow` `maximizable` prop (default `true`): a maximize button between minimize and close, and double-click on the title bar, fill the container (square corners, no resize) and restore to the previous geometry, animated. Dragging a maximized window by its title bar detaches it after ~40px and eases it back to its size, keeping the grab point under the pointer. New `maximize` event (`true`/`false`)
+- `MWindow` `snap` prop (default `false`): GNOME-style edge snapping while dragging. Holding the pointer at the container's top edge previews and applies a maximize, at its left/right edge that half. Dragging a snapped window away restores its size
+- Three `M3Locale` keys for `MWindow`'s title bar buttons, `windowMinimize`, `windowMaximize` and `windowRestore`, translated in all 7 bundled locales
 - `MTransferList` `#item` slot for custom rows, scoped with `{ item, checked, side, toggle, move }` (`side` is `'source'` or `'target'`; `move()` sends just that item across). On its own it replaces the icon and text and keeps the checkbox, checked highlight and hover
 - `MTransferList` `bare` prop: the `#item` slot draws the whole row (no checkbox, padding, min height or background). Rows stay clickable, animated and focusable, exposed as checkboxes (`Space` checks, `Enter` moves)
 - `MTransferList` is generic over its items (`T extends TransferItem`), so `#item` gets your own item type with its extra fields
@@ -20,9 +23,12 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MShortNavigationBar` item `disabled`: not selectable, icon and label at 38% of the unselected color with no hover (`ShortNavigationBarItemDefaults`' `DisabledAlpha`). Also applies to `MNavigationSuite` in its bar layouts
 
 ### Changed
+- **`MWindow` title bar and motion.** The window in front now looks focused (`surface-container-high` bar, `on-surface` title, `primary` icon, elevation 3) while the others step back (`surface-container`, `on-surface-variant`, elevation 1). **Title bar buttons are 32dp** with M3 state layers, a focus ring, `aria-label`s and tooltips from the locale, and `type="button"`. **Windows scale and fade in/out when opened and closed, minimizing folds the height to the title bar**, and a dragged window lifts to elevation 4. Dragging and resizing use Pointer Events (pen works too)
 - **`MBottomSheet` and `MSideSheet` now slide in when opened** (they only faded in: the drag's reactive `transform` style overrode the enter animation). Motion follows androidx `BottomSheet.kt`: the panel enters from fully off-screen with the `DefaultSpatial` spring (0.9 / 700), leaves with `FastEffects` (1.0 / 3800), and the scrim fades with `DefaultEffects` (1.0 / 1600). **The panel no longer fades in or out, it only slides.** Releasing a drag now springs from where the finger left it, carrying its speed: past 100px or flung it closes, otherwise it settles back. Animations are skipped under `prefers-reduced-motion`
 
 ### Fixed
+- `MWindow` couldn't be resized from its top edge or top corners: the directions were declared but had no handles and no resize logic
+- `MWindow`s that were closed when mounted didn't follow later size changes of their container
 - `MTransferList`: rows leaving a pane (e.g. on "move all") no longer stack on top of each other while fading out. Each leaving row is now pinned at its own position instead of falling back to a static position that shifted as its siblings left too
 
 ## [0.8.6] - Unreleased
