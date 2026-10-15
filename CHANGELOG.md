@@ -7,7 +7,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [0.8.8] - Unreleased
 
+### Added
+- Four `M3Locale` keys for `MPagination`, `paginationRange` (`'{from}–{to} of {total}'`), `paginationPage` (`'Page {page} of {pages}'`), `previousPage` and `nextPage`, translated in all 7 bundled locales
+
 ### Fixed
+- **`MPagination` texts were hardcoded in Spanish** ("1-10 de 25", "Página 1 de 3", "Página anterior/siguiente", "0 resultados"). They now come from the locale, so **without one it shows English** ("1–10 of 25", "Page 1 of 3"), with an en dash in the range; an empty list uses `noResults`
 - `MPullToRefresh`: with a mouse, clicking an item while the list was scrolled to the top did nothing (e.g. a link or a row never opened). The component captured the pointer on `pointerdown` in case a pull followed, which sent the click to the scroller instead; it now captures only once the mouse has dragged down a few pixels
 
 ---
