@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.8.8] - Unreleased
+## [0.8.8] - 2026-10-14
 
 ### Added
 - Four `M3Locale` keys for `MPagination`, `paginationRange` (`'{from}–{to} of {total}'`), `paginationPage` (`'Page {page} of {pages}'`), `previousPage` and `nextPage`, translated in all 7 bundled locales
