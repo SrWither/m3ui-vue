@@ -142,6 +142,11 @@ export interface M3Locale {
   windowMinimize: string
   windowMaximize: string
   windowRestore: string
+  // MPagination ({from}/{to}/{total} and {page}/{pages} are replaced at runtime)
+  paginationRange: string
+  paginationPage: string
+  previousPage: string
+  nextPage: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -271,6 +276,11 @@ export const defaultLocale: M3Locale = {
   windowMinimize: 'Minimize',
   windowMaximize: 'Maximize',
   windowRestore: 'Restore',
+  // MPagination ({from}/{to}/{total} and {page}/{pages} are replaced at runtime)
+  paginationRange: '{from}–{to} of {total}',
+  paginationPage: 'Page {page} of {pages}',
+  previousPage: 'Previous page',
+  nextPage: 'Next page',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')

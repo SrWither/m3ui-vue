@@ -140,4 +140,9 @@ export const deLocale: M3Locale = {
   windowMinimize: 'Minimieren',
   windowMaximize: 'Maximieren',
   windowRestore: 'Wiederherstellen',
+  // MPagination ({from}/{to}/{total} and {page}/{pages} are replaced at runtime)
+  paginationRange: '{from}–{to} von {total}',
+  paginationPage: 'Seite {page} von {pages}',
+  previousPage: 'Vorherige Seite',
+  nextPage: 'Nächste Seite',
 }

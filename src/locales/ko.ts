@@ -140,4 +140,9 @@ export const koLocale: M3Locale = {
   windowMinimize: '최소화',
   windowMaximize: '최대화',
   windowRestore: '복원',
+  // MPagination ({from}/{to}/{total} and {page}/{pages} are replaced at runtime)
+  paginationRange: '{total}개 중 {from}–{to}',
+  paginationPage: '{pages}페이지 중 {page}페이지',
+  previousPage: '이전 페이지',
+  nextPage: '다음 페이지',
 }

@@ -140,4 +140,9 @@ export const zhLocale: M3Locale = {
   windowMinimize: '最小化',
   windowMaximize: '最大化',
   windowRestore: '还原',
+  // MPagination ({from}/{to}/{total} and {page}/{pages} are replaced at runtime)
+  paginationRange: '第 {from}–{to} 项，共 {total} 项',
+  paginationPage: '第 {page} 页，共 {pages} 页',
+  previousPage: '上一页',
+  nextPage: '下一页',
 }

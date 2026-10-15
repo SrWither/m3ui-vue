@@ -140,4 +140,9 @@ export const jaLocale: M3Locale = {
   windowMinimize: '最小化',
   windowMaximize: '最大化',
   windowRestore: '元に戻す',
+  // MPagination ({from}/{to}/{total} and {page}/{pages} are replaced at runtime)
+  paginationRange: '{total} 件中 {from}–{to} 件',
+  paginationPage: '{pages} ページ中 {page} ページ',
+  previousPage: '前のページ',
+  nextPage: '次のページ',
 }
