@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - Four `M3Locale` keys for `MPagination`, `paginationRange` (`'{from}–{to} of {total}'`), `paginationPage` (`'Page {page} of {pages}'`), `previousPage` and `nextPage`, translated in all 7 bundled locales
 
 ### Fixed
+- `MNavigationRail` (and `MNavigationSuite`'s rail): a regular or extended `MFab` in the `#fab` slot overflowed the header's fixed 40×56 box, poking past the rail's top and left edges. The box is now a minimum and grows with the FAB
 - **`MPagination` texts were hardcoded in Spanish** ("1-10 de 25", "Página 1 de 3", "Página anterior/siguiente", "0 resultados"). They now come from the locale, so **without one it shows English** ("1–10 of 25", "Page 1 of 3"), with an en dash in the range; an empty list uses `noResults`
 - `MPullToRefresh`: with a mouse, clicking an item while the list was scrolled to the top did nothing (e.g. a link or a row never opened). The component captured the pointer on `pointerdown` in case a pull followed, which sent the click to the scroller instead; it now captures only once the mouse has dragged down a few pixels
 
