@@ -182,9 +182,12 @@ onUnmounted(() => {
       would re-center against the *header's own* width, which changes a lot between collapsed
       (80px rail) and expanded (220px rail), making the button visibly jump sideways when toggling.
       A fixed-width box pinned to the same left inset as the items below stays put regardless.
+      The box is a *minimum* (40×56, an icon button or small FAB): a regular FAB (56dp) or an
+      extended one in the expanded rail grows it instead of overflowing it, which used to push
+      the FAB past the rail's top and left edges.
     -->
     <div v-if="$slots.fab" class="flex shrink-0 flex-col items-start gap-2 px-3 pt-3 pb-2">
-      <div class="flex h-10 w-14 shrink-0 items-center justify-center">
+      <div class="flex min-h-10 min-w-14 shrink-0 items-center justify-center">
         <slot name="fab" />
       </div>
     </div>
@@ -319,7 +322,7 @@ onUnmounted(() => {
           class="wnr-panel fixed inset-y-0 left-0 z-10 flex flex-col overflow-hidden rounded-r-lg bg-surface-container shadow-elevation-2"
         >
           <div v-if="$slots.fab" class="flex shrink-0 flex-col items-start gap-2 px-3 pt-3 pb-2">
-            <div class="flex h-10 w-14 shrink-0 items-center justify-center">
+            <div class="flex min-h-10 min-w-14 shrink-0 items-center justify-center">
               <slot name="fab" />
             </div>
           </div>
