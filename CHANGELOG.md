@@ -9,11 +9,18 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 - `MColorPicker` and `MColorPickerModal`: `alpha` (opacity slider; the value becomes `#rrggbbaa` when the color isn't opaque), `recent` and `recentLimit` (recently picked colors above the presets, stored in localStorage under `m3-color-recent` and shared by every picker), and `eyedropper` (pick a color from the screen where the browser has the EyeDropper API). HEX/RGB/HSL fields, a preview of the original color next to the new one (click it to go back), and keyboard control of the area and sliders
+- `MScrollField`: M3 Expressive's scroll field, an endless wheel to pick a number or option (port of Compose's `ScrollField`): drag, fling (at most one item past the start, as the pager does), wheel, arrow keys or click; the centered item grows from display-medium to display-large emphasized. `format`, `height`, `label`, `#item` slot
+- `MSwipeToDismiss`: port of Compose's `SwipeToDismissBox`, content swiped left or right to dismiss over a `#background` slot (`{ direction, target, progress }`); 56px positional threshold, 125px/s fling, stays dismissed until `v-model` goes back to `'settled'`. Exports the `SwipeToDismissValue` type
+- `MTransition`: Compose's `MaterialTransitions` for `<Transition>` content, `shared-axis` (with `reverse` for back navigation) and `fade-through`; predictive back isn't ported
+- `MScrollable`: `scrollbar` (`'native'` | `'indicator'` | `'none'`) and `scrollbarFade`; `indicator` is Compose's `nonInteractiveScrollbar`, a 4px visual-only thumb that shows while scrolling and fades out 400ms after
 - `M3Locale` keys `selectColor`, `colorHue`, `colorSaturation`, `colorBrightness`, `colorAlpha`, `colorEyedropper`, `colorOriginal`, `colorFormat`, `colorRecent` and `colorPresets`, in all 7 bundled locales
 
 ### Changed
 - **`MColorPicker` and `MColorPickerModal` redesigned**: swatches are rounded squares that morph into a circle when selected, thick hue/opacity tracks with a bar handle, a wide preview showing the hex, filled fields and a format toggle. Both now share one internal panel, and `MColorPickerModal` is built on `MDialog`
 - **`MColorPicker` updates `v-model` live while dragging the saturation/brightness area** (it used to wait for release), and its dropdown stays inside the viewport horizontally. Escape closes it and returns focus to the field
+- **`MListItem` morphs its corners by interaction, as the current Compose `ListItem` does**: 4px at rest, 8px hovered, 16px pressed, focused or selected (clickable items; selected ones always), on the Standard `FastSpatial` spring. Nav lists keep their pill
+- **`MList` `segmented` follows `SegmentedListItem`**: items 2px apart (was 8px), 16px outer corners on the first and last item of each run (a subheader starts a new run) and 4px inner ones (every item was 28px all round)
+- **`MButtonGroup` shapes morph as in Compose's `ButtonGroup`**: standard items are a pill that squares off when selected and more while pressed, and the pressed one grows by 15% into its neighbors; connected inner corners go from 8px to 4px while pressed and a selected button becomes a full pill (it used to keep its inner corners). Springs replace the old size-dependent CSS transitions
 - **Recent colors show by default** (`recent: true`)
 - **The default presets add grey, black and white** (21 swatches, 3 rows of 7)
 - **`MColorPickerModal`'s title and confirm button come from the locale** (`selectColor`, `confirm`) instead of a hardcoded "Select color" / "OK"
