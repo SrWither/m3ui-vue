@@ -8,7 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [0.9.3] - Unreleased
 
 ### Fixed
-- The package now includes the licenses of the code it bundles (`@material/material-color-utilities`, Apache-2.0; `shape-morph`, `@lezer/highlight`, MIT; `highlight.js`, BSD-3-Clause) in `dist/THIRD_PARTY_LICENSES.md`, as those licenses require. `scripts/third-party-licenses.mjs` writes it on every `build:js`, finding the bundled packages from `src/` imports and `vite.config.ts`'s externals, and fails the build if one has no license file
+- The package now includes the licenses of the code it bundles (`@material/material-color-utilities`, Apache-2.0; `shape-morph`, `@lezer/highlight`, MIT; `highlight.js`, BSD-3-Clause) in `dist/THIRD_PARTY_LICENSES.md`, as those licenses require. `scripts/third-party-licenses.mjs` writes it on every `build:js`, finding the bundled packages from `src/` imports and `vite.config.ts`'s externals, and fails the build if one has no license file. It also credits the Unicode emoji data and CLDR annotations behind MEmojiSelector (Unicode License v3, now noted in the generated data files too) and the Android Open Source Project for MCarousel's ported keyline engine (Apache-2.0, noted in `_carouselStrategy.ts`)
 
 ## [0.9.2] - 2026-10-16
 
