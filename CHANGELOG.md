@@ -5,6 +5,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.8.9] - Unreleased
+
+### Fixed
+- **`class`, `style`, `id`, `data-*` and `aria-*` passed to `MMenu`, `MContextMenu`, `MTooltip`, `MFab`, `MSplitButton`, `MLightbox`, `MBarcode`, `MLoadingOverlay` (fullscreen), `MNavigationDrawer` or `MNavigationRail` were silently dropped**, because these components render more than one root node (an element plus a `Teleport`, or a `v-if`/`v-show` pair). They now land on the visible element: the trigger for menus and tooltips, the FAB's wrapper, the split button's container, the barcode's `svg` (or its error message), the fullscreen overlay, and the drawer's or rail's `nav` (the panel for a modal drawer)
+
+---
+
 ## [0.8.8] - 2026-10-14
 
 ### Added
