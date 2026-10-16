@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import MIconButton from './MIconButton.vue'
 import { useLocale } from '../composables/useLocale'
 
@@ -7,10 +7,12 @@ const props = withDefaults(
   defineProps<{
     modelValue: boolean
     title?: string
+    /** A Tailwind class (`max-w-sm`) or a CSS value (`420px`, `min(90vw, 40rem)`). */
     maxWidth?: string
     /**
-     * M3's `AlertDialogDefaults` has no max-height token at all (only `DialogMaxWidth`) — the
-     * default here is a library-chosen viewport-relative cap, not a spec value.
+     * A Tailwind class (`max-h-[80vh]`) or a CSS value (`600px`). M3's `AlertDialogDefaults` has
+     * no max-height token at all (only `DialogMaxWidth`) — the default here is a library-chosen
+     * viewport-relative cap, not a spec value.
      */
     maxHeight?: string
     persistent?: boolean
@@ -35,6 +37,15 @@ const props = withDefaults(
 )
 
 const locale = useLocale()
+
+// maxWidth/maxHeight take either a Tailwind class or a CSS value: a bare length or a CSS function
+// can't be a class, so those go to inline style instead.
+const isCssValue = (v: string) => /^-?[\d.]+[a-z%]*$|^(calc|min|max|clamp|var)\(/i.test(v.trim())
+const sizeClasses = computed(() => [props.maxWidth, props.maxHeight].filter((v) => !isCssValue(v)))
+const sizeStyle = computed(() => ({
+  ...(isCssValue(props.maxWidth) ? { maxWidth: props.maxWidth } : {}),
+  ...(isCssValue(props.maxHeight) ? { maxHeight: props.maxHeight } : {}),
+}))
 
 const emit = defineEmits<{ 'update:modelValue': [boolean] }>()
 
@@ -95,7 +106,8 @@ onUnmounted(() => {
 <template>
   <Teleport to="body">
     <!-- Basic dialog -->
-    <Transition v-if="!fullscreen" name="m3-dialog">
+    <!-- appear: a dialog mounted already open (v-if + modelValue in the same tick) animates in too -->
+    <Transition v-if="!fullscreen" name="m3-dialog" appear>
       <div
         v-if="modelValue"
         class="fixed inset-0 z-50 flex items-center justify-center bg-scrim/32 p-4"
@@ -103,7 +115,8 @@ onUnmounted(() => {
       >
         <div
           class="dialog-box flex min-w-[280px] w-full flex-col rounded-xl bg-surface-container-high shadow-elevation-3"
-          :class="[maxWidth, maxHeight]"
+          :class="sizeClasses"
+          :style="sizeStyle"
         >
           <!--
             AlertDialogDefaults.dialogPadding is 24dp on all four sides of the whole content
@@ -167,7 +180,7 @@ onUnmounted(() => {
     </Transition>
 
     <!-- Fullscreen dialog -->
-    <Transition v-else name="m3-dialog-fs">
+    <Transition v-else name="m3-dialog-fs" appear>
       <div
         v-if="modelValue"
         class="dialog-fs fixed inset-0 z-50 flex flex-col bg-surface"

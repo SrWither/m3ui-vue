@@ -55,4 +55,22 @@ describe('MDialog', () => {
     })
     expect(document.body.textContent).toContain('OK')
   })
+
+  it.each([
+    ['a Tailwind class', 'max-w-sm', 'max-w-sm', ''],
+    ['a length', '420px', '', '420px'],
+    ['a CSS function', 'min(90vw, 40rem)', '', 'min(90vw, 40rem)'],
+  ])('maxWidth accepts %s', (_name, maxWidth, cls, style) => {
+    mount(MDialog, { props: { modelValue: true, maxWidth }, attachTo: document.body })
+    const box = document.body.querySelector('.dialog-box') as HTMLElement
+    if (cls) expect(box.classList.contains(cls)).toBe(true)
+    expect(box.style.maxWidth).toBe(style)
+  })
+
+  it('maxHeight accepts a CSS value alongside a class maxWidth', () => {
+    mount(MDialog, { props: { modelValue: true, maxWidth: 'max-w-md', maxHeight: '600px' }, attachTo: document.body })
+    const box = document.body.querySelector('.dialog-box') as HTMLElement
+    expect(box.classList.contains('max-w-md')).toBe(true)
+    expect(box.style.maxHeight).toBe('600px')
+  })
 })
