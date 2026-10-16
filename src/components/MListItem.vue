@@ -13,11 +13,13 @@
  * @event update:expanded Fires when an expandable item is toggled open/closed
  */
 import { computed, inject, ref, useAttrs, watch } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
 import type { ComputedRef } from 'vue'
 import MIcon from './MIcon.vue'
 import MAvatar from './MAvatar.vue'
 import MCheckbox from './MCheckbox.vue'
 import MSwitch from './MSwitch.vue'
+import { useSpring } from '../composables/_useSpring'
 
 export type ListItemLeading = 'icon' | 'avatar' | 'checkbox' | 'radio' | 'image' | 'icon-container'
 export type ListItemTrailing = 'icon' | 'text' | 'switch' | 'checkbox'
@@ -87,6 +89,7 @@ watch(() => props.expanded, (v) => { if (v !== undefined) internalExpanded.value
 const isExpanded = computed(() => internalExpanded.value)
 
 const list = inject<{
+  segmentPosition: (el: Element | null | undefined) => 'single' | 'first' | 'middle' | 'last' | undefined
   dense: ComputedRef<boolean>
   nav: ComputedRef<boolean>
   segmented: ComputedRef<boolean>
@@ -157,9 +160,8 @@ const minHeightClass = computed(() => {
 
 const containerClasses = computed(() => [
   'mli-row relative flex w-full items-center gap-4 text-left',
-  isSegmented.value
-    ? 'rounded-xl bg-surface-container px-4'
-    : isNav.value ? 'rounded-full px-4' : 'px-4',
+  // Corner radius: a pill in nav lists, otherwise sprung by expressiveRadii below
+  isSegmented.value ? 'bg-surface-container px-4' : isNav.value ? 'rounded-full px-4' : 'px-4',
   isDense.value
     ? 'py-1'
     : resolvedLines.value === 3 ? 'py-3' : 'py-2',
@@ -170,6 +172,57 @@ const containerClasses = computed(() => [
   isActive.value && 'bg-secondary-container text-on-secondary-container',
   props.disabled && 'opacity-[0.38] pointer-events-none',
 ])
+
+// ── Expressive shape morph ──────────────────────────────────────────────────────────────────
+// The current (non-deprecated) ListItem overloads morph the container's corners by interaction, with
+// ListItemDefaults.shapes(): ListTokens.ItemContainerExpressiveShape CornerExtraSmall (4dp) at rest,
+// ItemHovered… CornerMedium (8dp), ItemPressed/Focused/Selected… CornerLarge (16dp), priority
+// pressed > selected > focused > hovered (shapeForInteraction). SegmentedListItem's segmentedShapes() swaps
+// only the resting shape's outer corners for ListTokens.ContainerShape (CornerLarge) on the first and last
+// item of a run; the interaction shapes stay the same. Animated with MotionSchemeKeyTokens.FastSpatial.
+// Nav lists keep their pill (that's NavigationDrawerItem's shape, which doesn't morph).
+const rootEl = ref<Element | ComponentPublicInstance | null>(null)
+const shapeEl = ref<HTMLElement | null>(null)
+const el = (r: Element | ComponentPublicInstance | null) => (r && '$el' in r ? (r.$el as Element) : r)
+const hovered = ref(false)
+const pressed = ref(false)
+const focused = ref(false)
+
+const REST = 4
+const HOVERED = 8
+const LARGE = 16
+
+const segmentPosition = computed(() => (isSegmented.value ? list?.segmentPosition(el(rootEl.value)) : undefined))
+
+const expressiveRadii = computed<number[]>(() => {
+  if (isNav.value) return []
+  const interactive = isClickable.value && !props.disabled
+  const r = interactive && pressed.value ? LARGE
+    : isActive.value ? LARGE
+      : interactive && focused.value ? LARGE
+        : interactive && hovered.value ? HOVERED
+          : null
+  if (r !== null) return [r, r, r, r]
+  const pos = segmentPosition.value
+  const top = pos === 'first' || pos === 'single' ? LARGE : REST
+  const bottom = pos === 'last' || pos === 'single' ? LARGE : REST
+  return [top, top, bottom, bottom]
+})
+
+const { snap } = useSpring(() => expressiveRadii.value, (v) => {
+  const target = shapeEl.value ?? (el(rootEl.value) as HTMLElement | null)
+  if (!target) return
+  target.style.borderRadius = v.length ? v.map((n) => `${n}px`).join(' ') : ''
+})
+// A change of place in the list (or of list style) isn't an interaction: jump there
+watch([segmentPosition, isNav], () => snap())
+
+function onPointerEnter(e: PointerEvent) { if (e.pointerType !== 'touch') hovered.value = true }
+function onPointerLeave() { hovered.value = false; pressed.value = false }
+function onPointerDown(e: PointerEvent) { if (e.button === 0) pressed.value = true }
+function onPointerUp() { pressed.value = false }
+function onFocus(e: FocusEvent) { focused.value = (e.currentTarget as Element).matches(':focus-visible') }
+function onBlur() { focused.value = false }
 
 const tag = computed(() => {
   if (props.href) return 'a'
@@ -209,8 +262,17 @@ function handleTrailingToggle() {
 </script>
 
 <template>
-  <li v-if="expandable" role="listitem">
-    <div :class="containerClasses" @click="handleClick">
+  <li v-if="expandable" ref="rootEl" role="listitem">
+    <div
+      ref="shapeEl"
+      :class="containerClasses"
+      @click="handleClick"
+      @pointerenter="onPointerEnter"
+      @pointerleave="onPointerLeave"
+      @pointerdown="onPointerDown"
+      @pointerup="onPointerUp"
+      @pointercancel="onPointerUp"
+    >
       <!-- Leading -->
       <slot name="leading">
         <MIcon v-if="resolvedLeading === 'icon'" :name="icon!" :size="24" class="shrink-0" :class="activeIconClass" />
@@ -252,9 +314,17 @@ function handleTrailingToggle() {
     v-else
     :is="tag"
     :class="containerClasses"
+    ref="rootEl"
     v-bind="linkProps"
     role="listitem"
     @click="handleClick"
+    @pointerenter="onPointerEnter"
+    @pointerleave="onPointerLeave"
+    @pointerdown="onPointerDown"
+    @pointerup="onPointerUp"
+    @pointercancel="onPointerUp"
+    @focus="onFocus"
+    @blur="onBlur"
   >
     <!-- Divider -->
     <div

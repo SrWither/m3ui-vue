@@ -7,7 +7,7 @@
  * @slot default MListItem / MListSubheader children
  * @event update:selected Fires when a selectable item is clicked (via v-model:selected)
  */
-import { computed, provide } from 'vue'
+import { computed, onMounted, onUnmounted, provide, ref, shallowRef } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -33,7 +33,36 @@ const emit = defineEmits<{
   'update:selected': [value: string | number | null]
 }>()
 
+// Segmented items need to know whether they open or close their run of items (SegmentedListItem's
+// segmentedShapes(index, count)). A subheader or any other non-item child starts a new run.
+const listEl = ref<HTMLElement>()
+const positions = shallowRef(new Map<Element, 'single' | 'first' | 'middle' | 'last'>())
+function measure() {
+  const map = new Map<Element, 'single' | 'first' | 'middle' | 'last'>()
+  let run: Element[] = []
+  const flush = () => {
+    run.forEach((el, i) => map.set(el, run.length === 1 ? 'single' : i === 0 ? 'first' : i === run.length - 1 ? 'last' : 'middle'))
+    run = []
+  }
+  for (const child of listEl.value?.children ?? []) {
+    if (child.getAttribute('role') === 'listitem') run.push(child)
+    else flush()
+  }
+  flush()
+  positions.value = map
+}
+let observer: MutationObserver | undefined
+onMounted(() => {
+  measure()
+  if (listEl.value) {
+    observer = new MutationObserver(measure)
+    observer.observe(listEl.value, { childList: true })
+  }
+})
+onUnmounted(() => observer?.disconnect())
+
 provide('m-list', {
+  segmentPosition: (el: Element | null | undefined) => (el ? positions.value.get(el) : undefined),
   dense: computed(() => props.dense),
   nav: computed(() => props.nav),
   segmented: computed(() => props.segmented),
@@ -46,13 +75,14 @@ provide('m-list', {
 
 const classes = computed(() => [
   'flex flex-col',
-  props.segmented ? 'gap-2 p-2' : 'py-2',
+  // ListTokens.SegmentedGap = 2dp
+  props.segmented ? 'gap-0.5 p-2' : 'py-2',
   props.nav && !props.segmented && 'gap-0.5 px-3',
 ])
 </script>
 
 <template>
-  <ul role="list" :class="classes">
+  <ul ref="listEl" role="list" :class="classes">
     <slot />
   </ul>
 </template>
