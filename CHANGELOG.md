@@ -5,6 +5,23 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.9.2] - Unreleased
+
+### Added
+- `MColorPicker` and `MColorPickerModal`: `alpha` (opacity slider; the value becomes `#rrggbbaa` when the color isn't opaque), `recent` and `recentLimit` (recently picked colors above the presets, stored in localStorage under `m3-color-recent` and shared by every picker), and `eyedropper` (pick a color from the screen where the browser has the EyeDropper API). HEX/RGB/HSL fields, a preview of the original color next to the new one (click it to go back), and keyboard control of the area and sliders
+- `M3Locale` keys `selectColor`, `colorHue`, `colorSaturation`, `colorBrightness`, `colorAlpha`, `colorEyedropper`, `colorOriginal`, `colorFormat`, `colorRecent` and `colorPresets`, in all 7 bundled locales
+
+### Changed
+- **`MColorPicker` and `MColorPickerModal` redesigned**: swatches are rounded squares that morph into a circle when selected, thick hue/opacity tracks with a bar handle, a wide preview showing the hex, filled fields and a format toggle. Both now share one internal panel, and `MColorPickerModal` is built on `MDialog`
+- **`MColorPicker` updates `v-model` live while dragging the saturation/brightness area** (it used to wait for release), and its dropdown stays inside the viewport horizontally. Escape closes it and returns focus to the field
+- **Recent colors show by default** (`recent: true`)
+- **The default presets add grey, black and white** (21 swatches, 3 rows of 7)
+- **`MColorPickerModal`'s title and confirm button come from the locale** (`selectColor`, `confirm`) instead of a hardcoded "Select color" / "OK"
+
+### Fixed
+- `MColorPicker`: dragging to black or to a gray reset the hue to red
+- `MColorPicker` / `MColorPickerModal`: a preset given in a different case than the value (`#F44336` vs `#f44336`) wasn't marked as selected; the check mark was always white, unreadable on light swatches
+
 ## [0.9.1] - 2026-10-16
 
 ### Added
