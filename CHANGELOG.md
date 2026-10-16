@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.9.0] - Unreleased
+## [0.9.0] - 2026-10-16
 
 ### Added
 - `MEmojiSelector`: `recent`, `recentLimit`, `skinTones`, `preview` and `height` props, and a `focus()` method. Exports `withSkinTone()`, `toneableEmojis` and `skinTones` alongside the emoji data. 16 `M3Locale` keys for it (`emojiSearch`, `emojiNoResults`, `emojiRecent`, `emojiSkinTone`, `emojiSkinTones` and `emojiCategory*`) in all 7 locales
