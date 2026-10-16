@@ -5,16 +5,21 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.8.9] - Unreleased
+## [0.9.0] - Unreleased
 
 ### Added
+- `MDialog` `maxWidth` and `maxHeight` take a CSS value (`420px`, `min(90vw, 40rem)`, `50vh`) as well as a Tailwind class
+- `MScheduler`: `v-model:date` (`YYYY-MM-DD`, to open on any date and follow navigation) and `v-model:view`; all-day events (`allDay` on `SchedulerEvent`, dates with an inclusive end) in a new all-day row, where events spanning several days also run as bars (clipped with an arrow past the visible range); `weekStartsOn` (Sunday or Monday), `hourHeight`, `nowIndicator`; an `#event` slot; clicking a day header opens that day; `M3Locale` key `allDay` in all 7 locales
 - `MCarousel` `variant` prop with the four M3 layouts: `multi-browse` (default), `uncontained`, `hero` (centered) and `full-screen`, plus `orientation` (`horizontal`/`vertical`), `contentPadding`, `flingBehavior` (`single-advance`/`multi-browse`/`no-snap`), `userScrollEnabled`, `label`, `v-model` on the current item, an `itemClick` event, an `#item` slot (with `--m3-carousel-mask-start`/`--m3-carousel-mask-size` CSS variables describing the visible part) and `scrollToItem(index, animate)`
 - `M3Locale` keys `carousel` and `carouselItem` (`'{index} of {count}'`), in all 7 bundled locales
 
 ### Changed
+- **`MScheduler` looks different by default**: it's laid out on a CSS grid instead of a table, hour labels sit on the hour lines, a line marks the current time in today's column (`:now-indicator="false"` hides it), week columns have a minimum width so a narrow scheduler scrolls sideways instead of squeezing them, and the header wraps on narrow widths
 - **`MCarousel` rewritten as a port of Compose Material3's carousel** (keyline arrangement, start/end keyline shifting and snapping). Items now keep one size and are masked and translated as they scroll, instead of changing width, which made scrolling jumpy and fought `scroll-snap`. Scrolling is driven by drag (touch and mouse), wheel/trackpad and arrow keys, and a release moves at most one item, except `uncontained`, which scrolls freely. **Breaking:** `showArrows`, `autoplay`, `interval` and the `change` event are gone (they're not part of the M3 carousel; `MSimpleCarousel` keeps them, and `v-model` replaces `change`); `itemWidth` is now `itemSize` and `minSmallItemWidth`/`maxSmallItemWidth` are `minSmallItemSize`/`maxSmallItemSize`. **Defaults changed:** `itemSpacing` 0 → 8, large item size 280 → 186, height 220px → 205px, and items have 28dp (`--radius-xl`) corners
 
 ### Fixed
+- `MScheduler`: an event spanning several days only showed on its first day, with a height running past the grid; minutes were ignored (a 9:30 event sat at 9:00 and durations were rounded up to hours); overlapping events were drawn on top of each other; events starting before `startHour` weren't shown; changing the `view` prop after mount did nothing
+- `MDialog` (and `MConfirmDialog`): a dialog mounted already open (e.g. `v-if` and `v-model` set in the same tick) skipped its enter animation
 - **`MCodeEditor` (and `MJsonEditor`/`MMarkdown`, which use it) rendered lines at CodeMirror's 1.4 line height instead of its own 1.6**, because CodeMirror's base theme sets it on `.cm-scroller`, which beat the value inherited from `.cm-editor`. Lines are now a bit more spaced
 - `createM3UI({ customPalettes })` did nothing: the option was declared but never read. The palettes are now added to `useColorPalette().palettes`, so pickers built from that list show them (an entry with a built-in palette's `id` replaces it). Their CSS is still yours to write
 - **`class`, `style`, `id`, `data-*` and `aria-*` passed to `MMenu`, `MContextMenu`, `MTooltip`, `MFab`, `MSplitButton`, `MLightbox`, `MBarcode`, `MLoadingOverlay` (fullscreen), `MNavigationDrawer` or `MNavigationRail` were silently dropped**, because these components render more than one root node (an element plus a `Teleport`, or a `v-if`/`v-show` pair). They now land on the visible element: the trigger for menus and tooltips, the FAB's wrapper, the split button's container, the barcode's `svg` (or its error message), the fullscreen overlay, and the drawer's or rail's `nav` (the panel for a modal drawer)
