@@ -2,7 +2,7 @@ import type { App, MaybeRef } from 'vue'
 import type { Palette } from './composables/useColorPalette'
 import { __forcePalette, palettes } from './composables/useColorPalette'
 import type { M3Locale } from './composables/useLocale'
-import { M3_LOCALE_KEY } from './composables/useLocale'
+import { M3_LOCALE_KEY, __setAppLocale } from './composables/useLocale'
 
 export interface M3UIOptions {
   palette?: string
@@ -44,6 +44,7 @@ export function createM3UI(options: M3UIOptions = {}) {
       }
       if (options.locale) {
         app.provide(M3_LOCALE_KEY, options.locale)
+        __setAppLocale(options.locale)
       }
     },
   }

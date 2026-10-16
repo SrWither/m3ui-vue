@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useNotification } from '../composables/useNotification'
+import { useLocale } from '../composables/useLocale'
 import MIcon from './MIcon.vue'
 import MSpinner from './MSpinner.vue'
 
 const { notifications, position, dismiss } = useNotification()
+const locale = useLocale()
 
 const isTop = computed(() => position.value.startsWith('top'))
 
@@ -87,6 +89,7 @@ const getStyle = (variant: string) => variantStyles[variant] ?? variantStyles.in
               v-if="n.closable !== false"
               type="button"
               class="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-inverse-on-surface/50 transition-colors hover:bg-inverse-on-surface/10"
+              :aria-label="locale.close"
               @click="dismiss(n.id)"
             >
               <MIcon name="close" :size="16" />

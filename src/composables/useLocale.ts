@@ -1,4 +1,4 @@
-import { inject, reactive, watchEffect, toValue, type InjectionKey, type MaybeRef } from 'vue'
+import { inject, reactive, shallowRef, watchEffect, toValue, type InjectionKey, type MaybeRef } from 'vue'
 
 export interface M3Locale {
   /** BCP-47 language tag (e.g. 'en', 'es', 'pt') — read by locale-aware components (MRelativeTime) that use Intl formatting. */
@@ -323,12 +323,25 @@ export const defaultLocale: M3Locale = {
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')
 
+/**
+ * The locale given to `createM3UI()`, for components rendered outside the app that installed it:
+ * `useToast()` and `useNotification()` mount their hosts with an app of their own, where the
+ * plugin's `provide` doesn't reach. Inside the user's app the provided locale still wins.
+ */
+// Wrapped in an object: a shallowRef holding a ref directly gets that ref unwrapped in its type.
+const appLocale = shallowRef<{ locale: MaybeRef<Partial<M3Locale>> } | null>(null)
+
+/** @internal Called by `createM3UI()`; not exported from the package. */
+export function __setAppLocale(locale: MaybeRef<Partial<M3Locale>> | null) {
+  appLocale.value = locale ? { locale } : null
+}
+
 export function useLocale(): M3Locale {
-  const provided = inject(M3_LOCALE_KEY, {})
+  const provided = inject(M3_LOCALE_KEY, null)
   const locale = reactive({ ...defaultLocale }) as M3Locale
 
   watchEffect(() => {
-    Object.assign(locale, defaultLocale, toValue(provided))
+    Object.assign(locale, defaultLocale, toValue(provided ?? appLocale.value?.locale ?? {}))
   })
 
   return locale
