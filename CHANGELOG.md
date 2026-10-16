@@ -8,6 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [0.8.9] - Unreleased
 
 ### Fixed
+- `createM3UI({ customPalettes })` did nothing: the option was declared but never read. The palettes are now added to `useColorPalette().palettes`, so pickers built from that list show them (an entry with a built-in palette's `id` replaces it). Their CSS is still yours to write
 - **`class`, `style`, `id`, `data-*` and `aria-*` passed to `MMenu`, `MContextMenu`, `MTooltip`, `MFab`, `MSplitButton`, `MLightbox`, `MBarcode`, `MLoadingOverlay` (fullscreen), `MNavigationDrawer` or `MNavigationRail` were silently dropped**, because these components render more than one root node (an element plus a `Teleport`, or a `v-if`/`v-show` pair). They now land on the visible element: the trigger for menus and tooltips, the FAB's wrapper, the split button's container, the barcode's `svg` (or its error message), the fullscreen overlay, and the drawer's or rail's `nav` (the panel for a modal drawer)
 
 ---
