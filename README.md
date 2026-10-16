@@ -371,6 +371,10 @@ app.use(createM3UI({ seed: '#0b57d0', seedOptions: { variant: 'tonal-spot', cont
 
 At runtime, `useColorPalette().setSeed('#0b57d0')`; `set(id)` switches back to a named palette (the last choice wins). A named `palette` wins over `seed` in `createM3UI`. `generateScheme(seed, options)` returns the tokens if you want them yourself.
 
+### Browser Bar Color on Phones
+
+`createM3UI({ themeColor: 'surface' })` keeps `<meta name="theme-color">` in sync with a color role of the active palette (palette, seed and dark mode changes included). Off by default. Chrome and Samsung Internet on Android ignore it in a regular tab while the system is in dark mode; installed apps (PWA) still get it.
+
 ### Switch at Runtime
 
 ```vue

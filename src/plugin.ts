@@ -2,6 +2,7 @@ import type { App, MaybeRef } from 'vue'
 import type { Palette } from './composables/useColorPalette'
 import { __defaultPalette, __defaultSeed, __forcePalette, palettes } from './composables/useColorPalette'
 import type { SeedOptions } from './composables/dynamicColor'
+import { syncThemeColor } from './composables/_themeColor'
 import type { M3Locale } from './composables/useLocale'
 import { M3_LOCALE_KEY, __setAppLocale } from './composables/useLocale'
 
@@ -32,6 +33,15 @@ export interface M3UIOptions {
   /** How `seed` becomes a scheme: `variant` (`'tonal-spot'` by default) and `contrast` (0 standard, 0.5 medium, 1 high). */
   seedOptions?: SeedOptions
   locale?: MaybeRef<Partial<M3Locale>>
+  /**
+   * Keep `<meta name="theme-color">` (the color phones give the browser bar and status bar) in sync with a color
+   * role of the active palette, following palette, seed and dark mode changes. `'surface'` matches a top app
+   * bar, as Material apps on Android do; any role name works (`'primary'`, `'surface-container'`…). Off by default:
+   * when set, the library owns that meta (it's created if missing, and a light/dark `media` pair becomes one).
+   * Note that Chrome and Samsung Internet on Android ignore it in a regular tab while the system is in dark
+   * mode (they keep their own dark bar); installed apps (PWA) still get it.
+   */
+  themeColor?: 'surface' | 'surface-container' | 'primary' | (string & {})
 }
 
 export function createM3UI(options: M3UIOptions = {}) {
@@ -52,6 +62,7 @@ export function createM3UI(options: M3UIOptions = {}) {
         if (options.palette && options.palette !== 'purple') __defaultPalette(options.palette)
         else if (!options.palette && options.seed) void __defaultSeed(options.seed, options.seedOptions, true)
       }
+      if (options.themeColor) syncThemeColor(options.themeColor)
       if (options.locale) {
         app.provide(M3_LOCALE_KEY, options.locale)
         __setAppLocale(options.locale)

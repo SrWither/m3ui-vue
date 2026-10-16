@@ -153,3 +153,39 @@ describe('createM3UI seed', () => {
     expect(localStorage.getItem('m3-palette')).toBe('teal')
   })
 })
+
+describe('createM3UI themeColor', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    document.head.innerHTML = ''
+    document.documentElement.className = ''
+    document.documentElement.style.setProperty('--color-surface', '#fef7ff')
+  })
+
+  it('creates the meta and follows the palette', async () => {
+    const { createM3UI } = await fresh()
+    createApp({}).use(createM3UI({ themeColor: 'surface' }))
+    const meta = () => document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')!
+    expect(meta().content).toBe('#fef7ff')
+    // Dark mode (or a palette switch) changes the variable and touches <html>
+    document.documentElement.style.setProperty('--color-surface', '#141218')
+    document.documentElement.classList.add('dark')
+    await settle()
+    expect(meta().content).toBe('#141218')
+  })
+
+  it('takes over an existing light/dark pair', async () => {
+    document.head.innerHTML = '<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff"><meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000">'
+    const { createM3UI } = await fresh()
+    createApp({}).use(createM3UI({ themeColor: 'surface' }))
+    const all = Array.from(document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]'))
+    expect(all.map((m) => [m.content, m.hasAttribute('media')])).toEqual([['#fef7ff', false], ['#fef7ff', false]])
+  })
+
+  it('leaves the meta alone by default', async () => {
+    document.head.innerHTML = '<meta name="theme-color" content="#6750a4">'
+    const { createM3UI } = await fresh()
+    createApp({}).use(createM3UI({}))
+    expect(document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')!.content).toBe('#6750a4')
+  })
+})
