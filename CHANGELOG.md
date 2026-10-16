@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.9.1] - Unreleased
+
+### Fixed
+- `MHotkeys`: shortcuts with a modifier never fired. `mod` counted as a modifier of its own on top of Ctrl/Cmd, so `mod+s` was rejected for having Ctrl held and `ctrl+s` for having `mod` held; only single keys worked. `mod` now resolves to Ctrl (Cmd on Mac) and the held modifiers must match the combo exactly
+
 ## [0.9.0] - 2026-10-16
 
 ### Added
