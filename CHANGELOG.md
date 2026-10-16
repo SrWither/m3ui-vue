@@ -12,6 +12,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MScrollField`: M3 Expressive's scroll field, an endless wheel to pick a number or option (port of Compose's `ScrollField`): drag, fling (at most one item past the start, as the pager does), wheel, arrow keys or click; the centered item grows from display-medium to display-large emphasized. `format`, `height`, `label`, `#item` slot
 - `MSwipeToDismiss`: port of Compose's `SwipeToDismissBox`, content swiped left or right to dismiss over a `#background` slot (`{ direction, target, progress }`); 56px positional threshold, 125px/s fling, stays dismissed until `v-model` goes back to `'settled'`. Exports the `SwipeToDismissValue` type
 - `MTransition`: Compose's `MaterialTransitions` for `<Transition>` content, `shared-axis` (with `reverse` for back navigation) and `fade-through`; predictive back isn't ported
+- `MDragHandle`: M3's drag handle (Compose's `VerticalDragHandle`), `orientation` and `dragging`; 4×48px in Outline at rest, 12×52px in OnSurface pressed or dragged, sprung between them (Compose switches instantly)
+- `MSplitter` draws `MDragHandle` on its bar and is a keyboard separator (`role="separator"`, arrow keys, Shift for 10%, Home/End)
 - `MScrollable`: `scrollbar` (`'native'` | `'indicator'` | `'none'`) and `scrollbarFade`; `indicator` is Compose's `nonInteractiveScrollbar`, a 4px visual-only thumb that shows while scrolling and fades out 400ms after
 - `M3Locale` keys `selectColor`, `colorHue`, `colorSaturation`, `colorBrightness`, `colorAlpha`, `colorEyedropper`, `colorOriginal`, `colorFormat`, `colorRecent` and `colorPresets`, in all 7 bundled locales
 
