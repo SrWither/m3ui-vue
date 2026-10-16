@@ -26,6 +26,7 @@ function handleScrimClick() {
 <template>
   <Teleport to="body">
     <Transition
+      appear
       enter-active-class="transition-opacity duration-200"
       leave-active-class="transition-opacity duration-150"
       enter-from-class="opacity-0"

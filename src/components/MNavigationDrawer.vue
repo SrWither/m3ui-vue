@@ -133,7 +133,7 @@ watch(
 <template>
   <!-- ── Modal variant ──────────────────────────────────────── -->
   <Teleport v-if="modal" to="body">
-    <Transition name="nd" :duration="{ enter: 300, leave: 280 }">
+    <Transition name="nd" :duration="{ enter: 300, leave: 280 }" appear>
       <div
         v-if="modelValue"
         class="fixed inset-0 z-100 flex"

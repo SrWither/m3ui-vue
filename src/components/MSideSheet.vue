@@ -17,7 +17,7 @@ const motion = useSheetMotion('x', close)
 
 <template>
   <Teleport to="body">
-    <Transition :css="false" @enter="motion.onEnter" @leave="motion.onLeave">
+    <Transition :css="false" @enter="motion.onEnter" @leave="motion.onLeave" appear>
       <div v-if="modelValue" class="fixed inset-0 z-200 flex justify-end">
         <!-- Scrim -->
         <div data-sheet-scrim class="absolute inset-0 bg-scrim/32" @click="close" />

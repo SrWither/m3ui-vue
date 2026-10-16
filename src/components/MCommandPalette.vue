@@ -130,7 +130,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onGlobalKeydown))
 
 <template>
   <Teleport to="body">
-    <Transition name="m3-cmd">
+    <Transition name="m3-cmd" appear>
       <div
         v-if="modelValue"
         class="fixed inset-0 z-50 flex items-start justify-center bg-scrim/32 pt-[15vh]"

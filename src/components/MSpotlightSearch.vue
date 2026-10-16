@@ -144,7 +144,7 @@ onBeforeUnmount(() => {
 
 <template>
   <Teleport to="body">
-    <Transition name="m3-spot">
+    <Transition name="m3-spot" appear>
       <div
         v-if="modelValue"
         class="fixed inset-0 z-50 flex items-start justify-center bg-scrim/32 pt-[12vh]"

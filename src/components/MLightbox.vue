@@ -292,7 +292,7 @@ defineExpose({ open, close, next, prev })
   </div>
 
   <Teleport to="body">
-    <Transition name="m3-lightbox">
+    <Transition name="m3-lightbox" appear>
       <div
         v-if="isOpen"
         class="fixed inset-0 z-[100] flex flex-col bg-black/90"

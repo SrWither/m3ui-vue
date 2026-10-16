@@ -192,12 +192,12 @@ onBeforeUnmount(() => { stopListeners(); clearHighlight() })
 <template>
   <Teleport to="body">
     <!-- Overlay -->
-    <Transition name="m3-tour">
+    <Transition name="m3-tour" appear>
       <div v-if="modelValue && step" class="fixed inset-0 z-200 bg-scrim/32" @click="close" />
     </Transition>
 
     <!-- Tooltip -->
-    <Transition name="m3-tour">
+    <Transition name="m3-tour" appear>
       <div
         v-if="modelValue && step"
         class="fixed z-202 w-80 max-w-[calc(100vw-1rem)] rounded-xl bg-surface-container-high p-5 shadow-elevation-3"

@@ -161,7 +161,7 @@ function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') cancel() }
 
 <template>
   <Teleport to="body">
-    <Transition name="m3-drp-modal">
+    <Transition name="m3-drp-modal" appear>
       <div
         v-if="show"
         class="fixed inset-0 z-50 flex items-center justify-center bg-scrim/32 p-4"

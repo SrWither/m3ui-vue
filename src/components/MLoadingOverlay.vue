@@ -15,6 +15,7 @@ withDefaults(defineProps<{
 <template>
   <Teleport v-if="fullscreen" to="body">
     <Transition
+      appear
       enter-active-class="transition-opacity duration-200"
       enter-from-class="opacity-0"
       leave-active-class="transition-opacity duration-150"
@@ -36,6 +37,7 @@ withDefaults(defineProps<{
   <div v-else v-bind="$attrs" class="relative">
     <slot name="content" />
     <Transition
+      appear
       enter-active-class="transition-opacity duration-200"
       enter-from-class="opacity-0"
       leave-active-class="transition-opacity duration-150"
