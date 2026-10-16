@@ -2,10 +2,10 @@
 /**
  * A full-screen image viewer in the style of Google Photos. Images grow out of the picture you tapped and
  * shrink back into it, you swipe between them with the next one already in view, zoom with a double tap or a
- * pinch, and drag one down to close. Tapping the image hides the bars. Wrap your content and it finds the <img>
+ * pinch, and drag one down to close. Tapping the image hides the bars. Wrap your content and it finds the `<img>`
  * elements by itself, or pass items.
  *
- * @slot default Content to scan for <img> elements when items is not given
+ * @slot default Content to scan for `<img>` elements when items is not given
  * @slot actions Extra buttons in the top bar, for the image being shown (download, share, info…)
  * @event update:modelValue Fires when the lightbox opens or closes
  * @event update:index Fires whenever the current index changes (next/prev/goTo/auto-detected image click)

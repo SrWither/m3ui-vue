@@ -24,7 +24,7 @@ const props = withDefaults(
     submenuMode?: 'flyout' | 'push'
     /**
      * 'standard' is M3's baseline menu (4dp corners). 'expressive' is M3's rounder 'vertical menu' styling
-     * (16dp corners) — combine with <MMenuDivider gap /> to split the panel into independently-rounded groups
+     * (16dp corners) — combine with `<MMenuDivider gap />` to split the panel into independently-rounded groups
      * with a visible gap, instead of a plain divider line.
      */
     // `'standard'` is M3's baseline menu — square-ish 4dp corners

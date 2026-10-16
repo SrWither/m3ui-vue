@@ -78,6 +78,12 @@ function resolveSource(dir, spec) {
 
 const oneLine = (s) => (s ?? '').replace(/\s*\n\s*/g, ' ').replace(/\s+/g, ' ').trim()
 
+/**
+ * A description as one line of Markdown: HTML-looking tags outside backticks (`<a>`, `<MMenuDivider gap />`)
+ * get backticks, or a Markdown renderer would treat them as real HTML.
+ */
+const mdText = (s) => oneLine(s).split(/(`[^`]*`)/).map((part) => (part.startsWith('`') ? part : part.replace(/<\/?[A-Za-z][^<>`]*>/g, (tag) => `\`${tag}\``))).join('')
+
 /** The TypeScript inside a .vue file's <script> blocks, or a .ts file as is. */
 function scriptOf(file) {
   const text = read(file)
@@ -124,10 +130,10 @@ function componentHeader(file) {
   if (!m) return header
   const body = m[1].replace(/^[ \t]*\* ?/gm, '')
   const [desc, ...tags] = body.split(/^(?=@\w+)/m)
-  header.description = oneLine(desc)
+  header.description = mdText(desc)
   for (const t of tags) {
     const tag = t.match(/^@(slot|event)\s+(\S+)\s+([\s\S]*)$/)
-    if (tag) header[`${tag[1]}s`][tag[2]] = oneLine(tag[3])
+    if (tag) header[`${tag[1]}s`][tag[2]] = mdText(tag[3])
   }
   return header
 }
@@ -151,22 +157,22 @@ function componentApi(name, { file, from }) {
       type: stripUndefined(p.type),
       required: p.required,
       default: p.default == null || p.default === 'undefined' ? null : p.default,
-      description: oneLine(p.description),
+      description: mdText(p.description),
     }))
   const models = new Set(meta.events.filter((e) => e.name.startsWith('update:')).map((e) => e.name.slice(7)))
   const events = meta.events.map((e) => ({
     name: e.name,
     args: e.type.replace(/^\[|\]$/g, ''),
-    description: oneLine(e.description) || header.events[e.name] || '',
+    description: mdText(e.description) || header.events[e.name] || '',
   }))
   const slots = meta.slots.map((s) => ({
     name: s.name,
     bindings: s.type === '{}' || s.type === 'any' ? null : s.type,
-    description: oneLine(s.description) || header.slots[s.name] || '',
+    description: mdText(s.description) || header.slots[s.name] || '',
   }))
   const exposed = meta.exposed
     .filter((x) => !x.name.startsWith('$') && !props.some((p) => p.name === x.name))
-    .map((x) => ({ name: x.name, type: x.type, description: oneLine(x.description) }))
+    .map((x) => ({ name: x.name, type: x.type, description: mdText(x.description) }))
   // Exported types, plus any type declared in the file that its API mentions (e.g. a local
   // `type ChartType = …` used by a prop), so the reader knows the allowed values.
   const apiText = JSON.stringify([props, events, slots, exposed])
@@ -256,7 +262,7 @@ function valueApi({ name, file, from }) {
   const signature = calls.length
     ? calls.map((c) => signatureOf(name, c)).join('\n')
     : `${name}: ${tidy(tc.typeToString(type, undefined, flags))}`
-  return { name, import: from, signature, description: oneLine(ts.displayPartsToString(sym.getDocumentationComment(tc))) }
+  return { name, import: from, signature, description: mdText(ts.displayPartsToString(sym.getDocumentationComment(tc))) }
 }
 
 const values = valueExports.map(valueApi)

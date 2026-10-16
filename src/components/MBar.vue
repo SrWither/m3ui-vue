@@ -4,7 +4,7 @@
  * itself and carves out `no-drag` around the icon, controls, and slot content, so those stay clickable. It
  * can't touch the real OS window — minimize/maximize/close just emit events for your app to forward over IPC.
  *
- * @slot icon Replaces the icon — e.g. an <img> logo instead of a Material Symbol
+ * @slot icon Replaces the icon — e.g. an `<img>` logo instead of a Material Symbol
  * @slot title Replaces the title text
  * @slot default Extra content between the title and the trailing area (drag-adjacent, e.g. tabs)
  * @slot trailing Action buttons right before minimize/maximize/close

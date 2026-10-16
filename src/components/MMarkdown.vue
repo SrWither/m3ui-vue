@@ -9,7 +9,7 @@ const props = withDefaults(
   defineProps<{
     /** Markdown source text */
     source: string
-    /** Convert single newlines to <br> */
+    /** Convert single newlines to `<br>` */
     breaks?: boolean
     /** Auto-detect bare URLs and turn them into links */
     linkify?: boolean

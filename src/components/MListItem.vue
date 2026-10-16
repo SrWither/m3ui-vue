@@ -62,7 +62,7 @@ const props = withDefaults(
     disabled?: boolean
     /** Force interactive styling/behavior (auto-true when href, to, @click, selectable, or expandable apply) */
     clickable?: boolean
-    /** Link URL — renders the item as an <a> */
+    /** Link URL — renders the item as an `<a>` */
     href?: string
     /** Vue Router destination — renders the item as a router-link */
     to?: string | object

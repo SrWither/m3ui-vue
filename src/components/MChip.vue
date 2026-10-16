@@ -22,8 +22,8 @@ const props = withDefaults(
     /** Show a remove (X) button */
     removable?: boolean
     /**
-     * Makes the chip an interactive <button> with hover/press/focus feedback (otherwise renders as a plain
-     * <span>)
+     * Makes the chip an interactive `<button>` with hover/press/focus feedback (otherwise renders as a plain
+     * `<span>`)
      */
     clickable?: boolean
     /** Disables interaction */
