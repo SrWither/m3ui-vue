@@ -155,14 +155,14 @@ happy-dom has no layout, so drag tests mock it: `Object.defineProperty(el, 'offs
 ### Plugin: `createM3UI()` (`src/plugin.ts`)
 
 ```ts
-createM3UI({ palette?: string, customPalettes?: Palette[], locale?: MaybeRef<Partial<M3Locale>> })
+createM3UI({ palette?: string, persistPalette?: boolean, customPalettes?: Palette[], locale?: MaybeRef<Partial<M3Locale>> })
 ```
 
 Returned as a Vue plugin object with an `install(app)`. It does two things:
 1. If `options.palette` is set, isn't `'purple'`, and there's no `'m3-palette'` key in `localStorage` yet, it sets `data-palette` on `<html>` and seeds `localStorage`. This "only on first visit" guard is deliberate — once a user picks a palette via `useColorPalette().set()`, that persisted choice must win on every later boot instead of being clobbered back to the plugin's static default (see the comment in `plugin.ts`; there's a matching CHANGELOG fix: "createM3UI pisaba la paleta elegida por el usuario en cada boot").
 2. If `options.locale` is set, `app.provide(M3_LOCALE_KEY, options.locale)`, which is what `useLocale()` reads.
 
-`customPalettes` is accepted in the type but not currently consumed inside `install()` — worth double-checking before relying on it if asked to wire up custom palettes.
+`customPalettes` (0.8.9; before that it was declared but never read) is merged into the exported `palettes` array in place at install time (same id replaces the built-in entry), so any picker built from `useColorPalette().palettes` lists them. It only registers id/label/seed: the consumer still writes the `[data-palette='<id>']` CSS, and nothing generates tokens from `seed`.
 
 The plugin is optional — components work without `app.use(createM3UI(...))`; you just get the default `purple` palette and English strings.
 
