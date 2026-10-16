@@ -24,6 +24,8 @@ export interface DrawerSection {
   collapsible?: boolean;
 }
 
+defineOptions({ inheritAttrs: false })
+
 const props = withDefaults(
   defineProps<{
     modelValue: boolean;
@@ -144,6 +146,7 @@ watch(
         <div class="nd-scrim absolute inset-0 bg-scrim/32" @click="close" />
 
         <nav
+          v-bind="$attrs"
           :class="[
             'nd-panel relative flex flex-col bg-surface-container-low shadow-elevation-1',
             `nd-panel-${side}`,
@@ -270,6 +273,7 @@ watch(
   <!-- ── Standard (inline) variant ──────────────────────────── -->
   <template v-else>
     <nav
+      v-bind="$attrs"
       class="nd-inline flex h-full shrink-0 flex-col bg-surface"
       :class="[
         inlineSide === 'right' ? 'border-l border-outline-variant rounded-l-lg' : 'border-r border-outline-variant rounded-r-lg',

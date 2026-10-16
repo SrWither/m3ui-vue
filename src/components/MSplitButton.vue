@@ -9,6 +9,8 @@ export interface SplitButtonItem {
   onClick?: () => void
 }
 
+defineOptions({ inheritAttrs: false })
+
 const props = withDefaults(defineProps<{
   label: string
   icon?: string
@@ -159,7 +161,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="containerEl" :class="containerClasses">
+  <div ref="containerEl" v-bind="$attrs" :class="containerClasses">
     <!-- Main action -->
     <button
       type="button"

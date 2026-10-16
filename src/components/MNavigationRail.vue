@@ -15,6 +15,8 @@ export interface NavRailItem {
   to?: ItemLink
 }
 
+defineOptions({ inheritAttrs: false })
+
 const props = withDefaults(defineProps<{
   modelValue: string | number
   items: NavRailItem[]
@@ -173,6 +175,7 @@ onUnmounted(() => {
     that actually reacts to `expanded` when `modal` is set.
   -->
   <nav
+    v-bind="$attrs"
     class="flex h-full flex-col border-r border-outline-variant bg-surface transition-[width] duration-200"
     :class="railExpanded ? 'w-[220px]' : 'w-20'"
   >

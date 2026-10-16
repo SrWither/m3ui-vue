@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import MSpinner from './MSpinner.vue'
 
+defineOptions({ inheritAttrs: false })
+
 withDefaults(defineProps<{
   visible: boolean
   text?: string
@@ -20,6 +22,7 @@ withDefaults(defineProps<{
     >
       <div
         v-if="visible"
+        v-bind="$attrs"
         class="fixed inset-0 z-300 flex flex-col items-center justify-center gap-4"
         :class="opaque ? 'bg-surface' : 'bg-surface/80 backdrop-blur-sm'"
       >
@@ -30,7 +33,7 @@ withDefaults(defineProps<{
     </Transition>
   </Teleport>
 
-  <div v-else class="relative">
+  <div v-else v-bind="$attrs" class="relative">
     <slot name="content" />
     <Transition
       enter-active-class="transition-opacity duration-200"

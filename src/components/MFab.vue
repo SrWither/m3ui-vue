@@ -9,6 +9,8 @@ export interface SpeedDialItem {
   onClick?: () => void
 }
 
+defineOptions({ inheritAttrs: false })
+
 const props = withDefaults(
   defineProps<{
     icon: string
@@ -275,7 +277,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="fabEl" class="relative inline-flex items-center justify-center">
+  <div ref="fabEl" v-bind="$attrs" class="relative inline-flex items-center justify-center">
     <component
       :is="fabTag"
       :to="to || undefined"

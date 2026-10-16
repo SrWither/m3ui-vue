@@ -16,6 +16,8 @@ interface OriginRect {
   height: number
 }
 
+defineOptions({ inheritAttrs: false })
+
 const props = withDefaults(
   defineProps<{
     modelValue?: boolean
@@ -285,7 +287,7 @@ defineExpose({ open, close, next, prev })
 </script>
 
 <template>
-  <div ref="containerEl" class="contents">
+  <div ref="containerEl" v-bind="$attrs" class="contents">
     <slot />
   </div>
 

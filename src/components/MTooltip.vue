@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 
+defineOptions({ inheritAttrs: false })
+
 const props = withDefaults(defineProps<{
   text?: string
   placement?: 'top' | 'bottom' | 'left' | 'right'
@@ -85,6 +87,7 @@ onUnmounted(() => {
 <template>
   <span
     ref="triggerEl"
+    v-bind="$attrs"
     class="inline-flex"
     @mouseenter="show"
     @mouseleave="hide"

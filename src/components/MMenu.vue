@@ -3,6 +3,8 @@ import { computed, Fragment, inject, nextTick, onMounted, onUnmounted, provide, 
 import MIcon from './MIcon.vue'
 import MMenuDivider from './MMenuDivider.vue'
 
+defineOptions({ inheritAttrs: false })
+
 const props = withDefaults(
   defineProps<{
     /** Which edge of the trigger the dropdown aligns to. */
@@ -385,7 +387,7 @@ const origin = computed(() =>
 </script>
 
 <template>
-  <div ref="triggerEl" class="inline-block" @click="toggle">
+  <div ref="triggerEl" v-bind="$attrs" class="inline-block" @click="toggle">
     <slot name="trigger" :open="open" />
   </div>
 

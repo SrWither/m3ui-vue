@@ -3,6 +3,8 @@ import { computed, Fragment, inject, nextTick, onMounted, onUnmounted, provide, 
 import MIcon from './MIcon.vue'
 import MMenuDivider from './MMenuDivider.vue'
 
+defineOptions({ inheritAttrs: false })
+
 const props = withDefaults(
   defineProps<{
     /**
@@ -337,7 +339,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div @contextmenu="show">
+  <div v-bind="$attrs" @contextmenu="show">
     <slot name="trigger" />
   </div>
 

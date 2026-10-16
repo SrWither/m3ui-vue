@@ -2,6 +2,8 @@
 import { ref, watchEffect } from 'vue'
 import JsBarcode from 'jsbarcode'
 
+defineOptions({ inheritAttrs: false })
+
 const props = withDefaults(
   defineProps<{
     value: string
@@ -54,8 +56,8 @@ watchEffect(() => {
 </script>
 
 <template>
-  <div v-if="error" class="flex items-center justify-center text-body-small text-error">
+  <div v-if="error" v-bind="$attrs" class="flex items-center justify-center text-body-small text-error">
     <slot name="error">{{ error }}</slot>
   </div>
-  <svg v-show="!error" ref="svgEl" role="img" :aria-label="label ?? value"></svg>
+  <svg v-show="!error" v-bind="error ? {} : $attrs" ref="svgEl" role="img" :aria-label="label ?? value"></svg>
 </template>
