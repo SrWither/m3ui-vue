@@ -435,6 +435,32 @@ Install only the packages you need:
 | `MQRCode` | `qrcode-generator` |
 | `MBarcode` | `jsbarcode` |
 
+## Roadmap to 1.0.0
+
+1.0.0 ships once all of Material 3's core is in the library. Still to come:
+
+**Components**
+
+- [ ] Bottom app bar (`BottomAppBar`) and the Expressive flexible bottom app bar
+- [ ] Standard (non-modal) bottom sheet
+- [ ] Wheel time picker (`TimeScroll`)
+- [ ] Icon toggle buttons (standard, filled, tonal and outlined, with a selected state)
+- [ ] Top app bar scroll behaviors (collapse on scroll, hide on scroll) and the Expressive medium/large flexible app bars with subtitle
+- [ ] Selectable and checkable menu items
+- [ ] Search in the top app bar, and the contained full-screen search
+- [ ] The four chip types (assist, filter, input, suggestion) and their elevated variants
+- [ ] Tabs with the icon beside the label
+- [ ] Swipe to close the modal navigation rail
+
+**Foundations**
+
+- [ ] Material 3 Expressive shape scale (large-increased, extra-large-increased, extra-extra-large)
+- [ ] Motion tokens: easings, durations and springs, exposed for your own animations
+
+Already in: dynamic color from a seed, fixed color roles, elevation levels 0–5, the emphasized type scale, and the
+Expressive components so far (button groups, split buttons, toggle buttons, loading indicator, FAB menu, toolbars,
+shapes, carousel, scroll field, short navigation bar…).
+
 ## About this project
 
 M3UI Vue started as a set of components I built for my own projects. Over time it grew
