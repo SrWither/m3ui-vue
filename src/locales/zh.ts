@@ -47,6 +47,7 @@ export const zhLocale: M3Locale = {
   // Scheduler
   dayView: '日',
   weekView: '周',
+  allDay: '全天',
 
   // Transfer list
   available: '可用',

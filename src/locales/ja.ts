@@ -47,6 +47,7 @@ export const jaLocale: M3Locale = {
   // Scheduler
   dayView: '日',
   weekView: '週',
+  allDay: '終日',
 
   // Transfer list
   available: '利用可能',

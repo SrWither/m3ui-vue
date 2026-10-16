@@ -47,6 +47,7 @@ export const deLocale: M3Locale = {
   // Scheduler
   dayView: 'Tag',
   weekView: 'Woche',
+  allDay: 'Ganztägig',
 
   // Transfer list
   available: 'Verfügbar',

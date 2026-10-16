@@ -47,6 +47,7 @@ export const koLocale: M3Locale = {
   // Scheduler
   dayView: '일',
   weekView: '주',
+  allDay: '종일',
 
   // Transfer list
   available: '사용 가능',

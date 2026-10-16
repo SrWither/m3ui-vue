@@ -47,6 +47,7 @@ export const ptLocale: M3Locale = {
   // Scheduler
   dayView: 'Dia',
   weekView: 'Semana',
+  allDay: 'Dia inteiro',
 
   // Transfer list
   available: 'Disponíveis',

@@ -48,6 +48,7 @@ export interface M3Locale {
   // Scheduler
   dayView: string
   weekView: string
+  allDay: string
 
   // Transfer list
   available: string
@@ -191,6 +192,7 @@ export const defaultLocale: M3Locale = {
 
   dayView: 'Day',
   weekView: 'Week',
+  allDay: 'All day',
 
   available: 'Available',
   selected: 'Selected',

@@ -47,6 +47,7 @@ export const esLocale: M3Locale = {
   // Scheduler
   dayView: 'Día',
   weekView: 'Semana',
+  allDay: 'Todo el día',
 
   // Transfer list
   available: 'Disponibles',
