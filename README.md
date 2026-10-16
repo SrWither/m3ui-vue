@@ -371,6 +371,16 @@ const { palette, palettes, set } = useColorPalette()
 
 Selection is persisted to `localStorage`, unless persistence was disabled via `createM3UI({ persistPalette: false })` or `useColorPalette().setPersistPalette(false)` — `set()` still applies the palette live either way.
 
+### Custom Palettes
+
+Define the tokens under your own ID in CSS (`[data-palette='brand'] { --color-primary: ...; }` plus a `[data-palette='brand'].dark { ... }` block, overriding the same tokens as `palettes.css`), then activate it with `set('brand')`. To list it in pickers built from `palettes`, register it in the plugin; an entry with a built-in ID replaces that palette:
+
+```ts
+app.use(createM3UI({
+  customPalettes: [{ id: 'brand', label: 'Brand', seed: '#0B6E4F' }],
+}))
+```
+
 ## Dark Mode
 
 ```vue

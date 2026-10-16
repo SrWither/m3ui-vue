@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { createApp, defineComponent, h } from 'vue'
 import { createM3UI } from '../plugin'
-import { useColorPalette } from '../composables/useColorPalette'
+import { useColorPalette, palettes } from '../composables/useColorPalette'
 
 describe('createM3UI', () => {
   beforeEach(() => {
@@ -51,5 +51,32 @@ describe('createM3UI', () => {
     const app = createApp(defineComponent({ render: () => h('div') }))
     app.use(createM3UI({ palette: 'iron', persistPalette: false }))
     expect(localStorage.getItem('m3-palette')).toBeNull()
+  })
+
+  describe('customPalettes', () => {
+    const builtIn = palettes.map((p) => ({ ...p }))
+    afterEach(() => {
+      palettes.splice(0, palettes.length, ...builtIn)
+    })
+
+    it('adds custom palettes to the list useColorPalette returns', () => {
+      const app = createApp(defineComponent({ render: () => h('div') }))
+      app.use(createM3UI({ customPalettes: [{ id: 'brand', label: 'Brand', seed: '#0b6e4f' }] }))
+      expect(useColorPalette().palettes).toHaveLength(builtIn.length + 1)
+      expect(useColorPalette().palettes.at(-1)).toEqual({ id: 'brand', label: 'Brand', seed: '#0b6e4f' })
+    })
+
+    it('replaces a built-in palette with the same id instead of duplicating it', () => {
+      const app = createApp(defineComponent({ render: () => h('div') }))
+      app.use(createM3UI({ customPalettes: [{ id: 'teal', label: 'Our teal', seed: '#008080' }] }))
+      expect(palettes).toHaveLength(builtIn.length)
+      expect(palettes.filter((p) => p.id === 'teal')).toEqual([{ id: 'teal', label: 'Our teal', seed: '#008080' }])
+    })
+
+    it('can be selected as the starting palette', () => {
+      const app = createApp(defineComponent({ render: () => h('div') }))
+      app.use(createM3UI({ palette: 'brand', customPalettes: [{ id: 'brand', label: 'Brand', seed: '#0b6e4f' }] }))
+      expect(document.documentElement.getAttribute('data-palette')).toBe('brand')
+    })
   })
 })

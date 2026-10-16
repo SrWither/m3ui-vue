@@ -1,6 +1,6 @@
 import type { App, MaybeRef } from 'vue'
 import type { Palette } from './composables/useColorPalette'
-import { __forcePalette } from './composables/useColorPalette'
+import { __forcePalette, palettes } from './composables/useColorPalette'
 import type { M3Locale } from './composables/useLocale'
 import { M3_LOCALE_KEY } from './composables/useLocale'
 
@@ -15,6 +15,12 @@ export interface M3UIOptions {
    * and any later choice persists and wins over it).
    */
   persistPalette?: boolean
+  /**
+   * Palettes of your own, added to `useColorPalette().palettes` so palette pickers built from
+   * that list show them. An entry whose `id` matches a built-in palette replaces it. Each one
+   * still needs its CSS: `[data-palette='<id>'] { --color-primary: ...; }` plus a
+   * `[data-palette='<id>'].dark { ... }` block, overriding the same tokens as `palettes.css`.
+   */
   customPalettes?: Palette[]
   locale?: MaybeRef<Partial<M3Locale>>
 }
@@ -22,6 +28,11 @@ export interface M3UIOptions {
 export function createM3UI(options: M3UIOptions = {}) {
   return {
     install(app: App) {
+      for (const custom of options.customPalettes ?? []) {
+        const i = palettes.findIndex((p) => p.id === custom.id)
+        if (i === -1) palettes.push(custom)
+        else palettes[i] = custom
+      }
       if (options.persistPalette === false) {
         if (options.palette) __forcePalette(options.palette, false)
       } else if (options.palette && options.palette !== 'purple' && !localStorage.getItem('m3-palette')) {
