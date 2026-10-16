@@ -38,8 +38,10 @@ function writeLines(lines: string[]) {
   })
 }
 
+// xterm draws on a canvas, so it can't use the CSS variables directly: read them (from the
+// container, so a palette set on an ancestor applies too) and hand xterm plain colors.
 function getThemeColors() {
-  const style = getComputedStyle(document.documentElement)
+  const style = getComputedStyle(containerRef.value ?? document.documentElement)
   return {
     background: style.getPropertyValue('--color-surface-container-lowest').trim() || '#0f0d13',
     foreground: style.getPropertyValue('--color-on-surface').trim() || '#e6e1e5',
@@ -47,6 +49,14 @@ function getThemeColors() {
     cursorAccent: style.getPropertyValue('--color-on-primary').trim() || '#381e72',
     selectionBackground: style.getPropertyValue('--color-primary-container').trim() || '#4f378b',
   }
+}
+
+// Theme (.dark) and palette (data-palette) changes don't reach the canvas on their own: re-read
+// the colors whenever <html> changes, like useFieldBg does.
+let themeObserver: MutationObserver | null = null
+let unmounted = false
+function applyTheme() {
+  if (terminal) terminal.options.theme = getThemeColors()
 }
 
 onMounted(async () => {
@@ -58,8 +68,8 @@ onMounted(async () => {
   ])
 
   try { await import('@xterm/xterm/css/xterm.css') } catch { /* consumer will provide styles */ }
-
-  const colors = getThemeColors()
+  // Unmounted while xterm was loading: don't create a terminal (and observers) nobody will dispose.
+  if (unmounted || !containerRef.value) return
 
   terminal = new xtermMod.Terminal({
     fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
@@ -67,13 +77,7 @@ onMounted(async () => {
     lineHeight: 1.4,
     cursorBlink: !props.readonly,
     disableStdin: props.readonly,
-    theme: {
-      background: colors.background,
-      foreground: colors.foreground,
-      cursor: colors.cursor,
-      cursorAccent: colors.cursorAccent,
-      selectionBackground: colors.selectionBackground,
-    },
+    theme: getThemeColors(),
     scrollback: 1000,
     convertEol: true,
   })
@@ -110,6 +114,12 @@ onMounted(async () => {
     try { fitAddon?.fit() } catch { /* ignore */ }
   })
   resizeObserver.observe(containerRef.value)
+
+  themeObserver = new MutationObserver(applyTheme)
+  themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class', 'style', 'data-theme', 'data-palette'],
+  })
 })
 
 watch(() => props.lines, (newLines) => {
@@ -119,7 +129,9 @@ watch(() => props.lines, (newLines) => {
 })
 
 onBeforeUnmount(() => {
+  unmounted = true
   resizeObserver?.disconnect()
+  themeObserver?.disconnect()
   terminal?.dispose()
 })
 
