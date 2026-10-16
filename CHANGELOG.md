@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.9.1] - Unreleased
+## [0.9.1] - 2026-10-16
 
 ### Added
 - `dist/API.md`: a compact API reference for AI coding agents, generated from the source on every build by `scripts/generate-api.mjs` (vue-component-meta): every component's props with types and defaults, events, slots with their bindings, exposed methods and types, plus composables, locale keys, theme tokens and palettes. `dist/api.json` holds the same data for tooling. New `build:api` script, run at the end of `pnpm build`
