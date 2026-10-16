@@ -485,4 +485,4 @@ Thanks for using it! ⭐ Starring the repo is also a nice way to show support.
 
 MIT
 
-The package bundles code from a few open-source packages (`@material/material-color-utilities`, `shape-morph`, `highlight.js`, `@lezer/highlight`); their licenses ship in `dist/THIRD_PARTY_LICENSES.md`, generated on every build.
+The package bundles code from a few open-source packages (`@material/material-color-utilities`, `shape-morph`, `highlight.js`, `@lezer/highlight`), emoji data generated from Unicode's emoji files and CLDR annotations (Unicode License v3), and a TypeScript port of the Compose Material 3 carousel engine (Android Open Source Project, Apache-2.0). Their licenses ship in `dist/THIRD_PARTY_LICENSES.md`, generated on every build. Optional peer dependencies (TipTap, CodeMirror, xterm.js, Chart.js, markdown-it…) aren't bundled: your app installs them with their own licenses.

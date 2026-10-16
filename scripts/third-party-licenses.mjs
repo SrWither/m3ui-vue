@@ -44,12 +44,39 @@ const sections = bundled.map((pkg) => {
   return `## ${meta.name} ${meta.version}\n\nLicense: ${meta.license ?? 'see below'}${repo ? `  \nSource: ${repo.replace(/^git\+/, '')}` : ''}\n\n\`\`\`\n${text}\n\`\`\``
 })
 
+// Not packages, but also redistributed: generated data and ported source (texts in scripts/licenses/)
+const licenseText = (name) => readFileSync(join(root, 'scripts', 'licenses', name), 'utf8').trim()
+const other = [
+  `## Unicode emoji data and CLDR annotations
+
+The emoji list (\`src/data/emojis.ts\`, from Unicode's emoji-test.txt) and emoji names in several languages
+(\`src/data/emoji-names/\`, from the Unicode CLDR annotations) used by MEmojiSelector are generated from Unicode
+data files by \`scripts/generate-emoji-data.mjs\`.
+
+\`\`\`
+${licenseText('unicode-license-v3.txt')}
+\`\`\``,
+  `## Android Open Source Project (androidx Compose Material 3, Material Components for Android)
+
+Copyright The Android Open Source Project. Licensed under the Apache License, Version 2.0 (text below).
+
+\`src/composables/_carouselStrategy.ts\` (MCarousel's keyline engine) is a TypeScript translation, modified for
+this library, of androidx \`compose/material3/carousel\` (Arrangement.kt, KeylineList.kt, Keylines.kt,
+Strategy.kt, KeylineSnapPosition.kt) and of Material Components for Android's FullScreenCarouselStrategy. Other
+components follow the behavior and design token values (sizes, colors, motion specs) of Compose Material 3.
+
+\`\`\`
+${licenseText('apache-2.0.txt')}
+\`\`\``,
+]
+
 const out = `# Third-party licenses
 
-${own} bundles code from the following packages into \`dist/\`. Their licenses follow.
+${own} bundles code from the following packages into \`dist/\`, and includes data and source derived from the
+projects after them. Their licenses follow.
 
-${sections.join('\n\n')}
+${[...sections, ...other].join('\n\n')}
 `
 if (!existsSync(join(root, 'dist'))) throw new Error('third-party-licenses: run vite build first')
 writeFileSync(join(root, 'dist', 'THIRD_PARTY_LICENSES.md'), out)
-console.log(`Third-party licenses: ${bundled.join(', ')} → dist/THIRD_PARTY_LICENSES.md`)
+console.log(`Third-party licenses: ${bundled.join(', ')}, Unicode data, AOSP → dist/THIRD_PARTY_LICENSES.md`)

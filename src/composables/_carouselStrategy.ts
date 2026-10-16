@@ -1,4 +1,7 @@
 /*
+ * Portions Copyright The Android Open Source Project, licensed under the Apache License, Version 2.0
+ * (dist/THIRD_PARTY_LICENSES.md). Translated from Kotlin to TypeScript and modified for this library.
+ *
  * Port of the Compose Material3 carousel engine (androidx compose/material3/carousel:
  * Arrangement.kt, KeylineList.kt, Keylines.kt, Strategy.kt, KeylineSnapPosition.kt), kept close to
  * the original so it can be diffed against upstream. Pure functions, no DOM: MCarousel feeds it the
