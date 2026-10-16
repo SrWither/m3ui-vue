@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.9.2] - Unreleased
+## [0.9.2] - 2026-10-16
 
 ### Added
 - `MColorPicker` and `MColorPickerModal`: `alpha` (opacity slider; the value becomes `#rrggbbaa` when the color isn't opaque), `recent` and `recentLimit` (recently picked colors above the presets, stored in localStorage under `m3-color-recent` and shared by every picker), and `eyedropper` (pick a color from the screen where the browser has the EyeDropper API). HEX/RGB/HSL fields, a preview of the original color next to the new one (click it to go back), and keyboard control of the area and sliders
