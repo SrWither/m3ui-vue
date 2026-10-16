@@ -1,11 +1,13 @@
 <script setup lang="ts">
 /**
- * Two resizable panels divided by a draggable handle.
+ * Two resizable panels divided by a draggable bar with M3's drag handle (MDragHandle) on it. The bar is also a
+ * keyboard separator: arrow keys move it (Shift for 10%), Home/End jump to the limits.
  *
  * @slot first Content for the first (left/top) panel
  * @slot second Content for the second (right/bottom) panel
  */
 import { ref, computed, onBeforeUnmount } from 'vue'
+import MDragHandle from './MDragHandle.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -40,8 +42,23 @@ const panelBStyle = computed(() =>
 )
 
 function onPointerDown(e: PointerEvent) {
+  if (e.button !== 0) return
   dragging.value = true
-  ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+  ;(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId)
+}
+
+function onKeydown(e: KeyboardEvent) {
+  const step = e.shiftKey ? 10 : 1
+  const back = isHorizontal.value ? 'ArrowLeft' : 'ArrowUp'
+  const fwd = isHorizontal.value ? 'ArrowRight' : 'ArrowDown'
+  let next: number
+  if (e.key === back) next = split.value - step
+  else if (e.key === fwd) next = split.value + step
+  else if (e.key === 'Home') next = props.min
+  else if (e.key === 'End') next = props.max
+  else return
+  e.preventDefault()
+  split.value = Math.min(props.max, Math.max(props.min, next))
 }
 
 function onPointerMove(e: PointerEvent) {
@@ -83,22 +100,28 @@ onBeforeUnmount(() => {
     </div>
 
     <div
-      class="z-10 flex shrink-0 items-center justify-center transition-colors"
+      role="separator"
+      tabindex="0"
+      :aria-orientation="isHorizontal ? 'vertical' : 'horizontal'"
+      :aria-valuenow="Math.round(split)"
+      :aria-valuemin="min"
+      :aria-valuemax="max"
+      class="group z-10 flex shrink-0 items-center justify-center outline-none transition-colors"
       :class="[
-        isHorizontal
-          ? 'w-2 cursor-col-resize flex-col'
-          : 'h-2 cursor-row-resize flex-row',
-        dragging ? 'bg-primary/20' : 'bg-outline-variant/40 hover:bg-primary/12',
+        isHorizontal ? 'w-2 cursor-col-resize' : 'h-2 cursor-row-resize',
+        dragging ? 'bg-primary/20' : 'bg-outline-variant/40 hover:bg-primary/12 focus-visible:bg-primary/12',
       ]"
       style="touch-action: none"
       @pointerdown="onPointerDown"
       @pointermove="onPointerMove"
       @pointerup="onPointerUp"
       @pointercancel="onPointerUp"
+      @keydown="onKeydown"
     >
-      <div
-        class="rounded-full bg-outline"
-        :class="isHorizontal ? 'h-6 w-1' : 'h-1 w-6'"
+      <MDragHandle
+        :orientation="isHorizontal ? 'vertical' : 'horizontal'"
+        :dragging="dragging"
+        class="rounded-md group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-primary"
       />
     </div>
 
