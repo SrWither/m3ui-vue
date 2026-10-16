@@ -12,6 +12,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MScrollField`: M3 Expressive's scroll field, an endless wheel to pick a number or option (port of Compose's `ScrollField`): drag, fling (at most one item past the start, as the pager does), wheel, arrow keys or click; the centered item grows from display-medium to display-large emphasized. `format`, `height`, `label`, `#item` slot
 - `MSwipeToDismiss`: port of Compose's `SwipeToDismissBox`, content swiped left or right to dismiss over a `#background` slot (`{ direction, target, progress }`); 56px positional threshold, 125px/s fling, stays dismissed until `v-model` goes back to `'settled'`. Exports the `SwipeToDismissValue` type
 - `MTransition`: Compose's `MaterialTransitions` for `<Transition>` content, `shared-axis` (with `reverse` for back navigation) and `fade-through`; predictive back isn't ported
+- Dynamic color: `createM3UI({ seed, seedOptions: { variant, contrast } })` generates the whole scheme (light and dark) from one color with Google's `material-color-utilities` (HCT; `tonal-spot` by default, 9 variants, contrast levels), and `useColorPalette().setSeed(seed, options)` does it at runtime (`palette` becomes `'seed'`, `seed` holds the active one). A named `palette` wins over `seed` in `createM3UI`; at runtime the last choice wins. A custom palette with a `seed` and no CSS of its own is generated too. The generator is bundled and loaded on demand (about 20 KB gzipped, only when a seed is used), and the generated CSS is cached so a reload doesn't flash. Exports `generateScheme`, `schemeToCss`, `schemeRoles`, `SEED_PALETTE` and the `SchemeVariant`, `SeedOptions`, `GeneratedScheme`, `ActiveSeed` types
+- Fixed accent color roles: `primary-fixed`, `primary-fixed-dim`, `on-primary-fixed`, `on-primary-fixed-variant` and the same for secondary and tertiary (tones 90/80/10/30, identical in light and dark), in the baseline theme and all 39 palettes
+- `--shadow-elevation-5` (M3 level 5); `MBox` `elevation` takes 4 and 5
+- Emphasized type scale: `text-display-large-emphasized` … `text-label-small-emphasized`, M3 Expressive's `*Emphasized` styles (same size and line height, weight 500 or 700, their own letter spacing)
 - `MDragHandle`: M3's drag handle (Compose's `VerticalDragHandle`), `orientation` and `dragging`; 4×48px in Outline at rest, 12×52px in OnSurface pressed or dragged, sprung between them (Compose switches instantly)
 - `MSplitter` draws `MDragHandle` on its bar and is a keyboard separator (`role="separator"`, arrow keys, Shift for 10%, Home/End)
 - `MScrollable`: `scrollbar` (`'native'` | `'indicator'` | `'none'`) and `scrollbarFade`; `indicator` is Compose's `nonInteractiveScrollbar`, a 4px visual-only thumb that shows while scrolling and fades out 400ms after
@@ -28,6 +32,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **`MColorPickerModal`'s title and confirm button come from the locale** (`selectColor`, `confirm`) instead of a hardcoded "Select color" / "OK"
 
 ### Fixed
+- `createM3UI({ palette })`: on the first visit the palette was reset to purple as soon as a component called `useColorPalette()`, whose state had been read before the plugin set it
 - `MColorPicker`: dragging to black or to a gray reset the hue to red
 - `MColorPicker` / `MColorPickerModal`: a preset given in a different case than the value (`#F44336` vs `#f44336`) wasn't marked as selected; the check mark was always white, unreadable on light swatches
 
