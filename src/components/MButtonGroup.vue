@@ -5,8 +5,9 @@
  *
  * @event update:modelValue Emitted on selection change — powers v-model
  */
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import MIcon from './MIcon.vue'
+import { FAST_SPATIAL, useSpring } from '../composables/_useSpring'
 
 export interface ButtonGroupOption {
   value: unknown
@@ -73,25 +74,19 @@ function toggle(opt: ButtonGroupOption) {
   }
 }
 
+// pad: ButtonDefaults content padding per tier, also the most a neighbor can be compressed by (animateWidth's
+// default compressionLimit). checked/pressed: ToggleButtonDefaults.shapesFor() radii, as in MToggleButton (the
+// standard group's items are ToggleButtons). The button group spec only has the small tier; lg/xl are library
+// sizes and reuse the medium radii.
 const sizeMap = {
-  xs: { h: 'h-8', px: 'px-3', text: 'text-label-medium', icon: 16, check: 14 },
-  sm: { h: 'h-10', px: 'px-4', text: 'text-label-large', icon: 18, check: 16 },
-  md: { h: 'h-14', px: 'px-6', text: 'text-title-medium', icon: 20, check: 18 },
-  lg: { h: 'h-16', px: 'px-7', text: 'text-title-large', icon: 22, check: 20 },
-  xl: { h: 'h-20', px: 'px-8', text: 'text-headline-small', icon: 24, check: 22 },
+  xs: { h: 'h-8', px: 'px-3', text: 'text-label-medium', icon: 16, check: 14, height: 32, pad: 12, checked: 12, pressed: 8 },
+  sm: { h: 'h-10', px: 'px-4', text: 'text-label-large', icon: 18, check: 16, height: 40, pad: 16, checked: 12, pressed: 6 },
+  md: { h: 'h-14', px: 'px-6', text: 'text-title-medium', icon: 20, check: 18, height: 56, pad: 24, checked: 16, pressed: 12 },
+  lg: { h: 'h-16', px: 'px-7', text: 'text-title-large', icon: 22, check: 20, height: 64, pad: 28, checked: 16, pressed: 12 },
+  xl: { h: 'h-20', px: 'px-8', text: 'text-headline-small', icon: 24, check: 22, height: 80, pad: 32, checked: 16, pressed: 12 },
 }
 
 const s = computed(() => sizeMap[props.size] ?? sizeMap.sm)
-
-const fullRadius = computed(() => {
-  const hMap = { xs: '16px', sm: '20px', md: '28px', lg: '32px', xl: '40px' }
-  return hMap[props.size] ?? '20px'
-})
-
-const transitionMs = computed(() => {
-  const msMap = { xs: 350, sm: 300, md: 250, lg: 200, xl: 180 }
-  return msMap[props.size] ?? 250
-})
 
 const selectedColors = computed(() => {
   const map = {
@@ -115,25 +110,108 @@ function createRipple(event: PointerEvent) {
   el.addEventListener('animationend', () => el.remove(), { once: true })
 }
 
-function btnStyle(i: number, selected: boolean) {
-  const count = props.options.length
-  const full = fullRadius.value
-  const inner = '8px'
-  let tl: string, tr: string, br: string, bl: string
-  if (props.variant === 'standard' || selected) {
-    tl = tr = br = bl = full
-  } else {
-    tl = bl = i === 0 ? full : inner
-    tr = br = i === count - 1 ? full : inner
-  }
-  return {
-    borderTopLeftRadius: tl,
-    borderTopRightRadius: tr,
-    borderBottomRightRadius: br,
-    borderBottomLeftRadius: bl,
-    transition: `border-top-left-radius ${transitionMs.value}ms ease, border-top-right-radius ${transitionMs.value}ms ease, border-bottom-right-radius ${transitionMs.value}ms ease, border-bottom-left-radius ${transitionMs.value}ms ease, background-color ${transitionMs.value}ms ease, color ${transitionMs.value}ms ease`,
-  }
+const buttons: (HTMLElement | null)[] = []
+const pressedIndex = ref(-1)
+
+function onPointerDown(e: PointerEvent, i: number) {
+  createRipple(e)
+  if (e.button !== 0 || props.options[i]?.disabled) return
+  measureWidths()
+  pressedIndex.value = i
 }
+function onPointerUp() {
+  pressedIndex.value = -1
+}
+
+// ── Shapes ──────────────────────────────────────────────────────────────────────────────────
+// Both variants morph like ToggleButton's shapeByInteraction(): pressed > checked > resting, on
+// MotionSchemeKeyTokens.FastSpatial.
+// Standard: ToggleButtonDefaults shapes, a pill that squares off when checked and more when pressed.
+// Connected (ButtonGroupDefaults.connected*ButtonShapes, ConnectedButtonGroupSmallTokens): outer corners
+// full, inner corners InnerCornerCornerSize (8dp) → PressedInnerCornerCornerSize (4dp) while pressed, and a
+// checked button becomes a full pill (connectedButtonCheckedShape = CornerFull).
+const CONNECTED_INNER = 8
+const CONNECTED_PRESSED_INNER = 4
+
+function radiiFor(i: number): number[] {
+  const full = s.value.height / 2
+  const pressed = pressedIndex.value === i
+  const checked = isSelected(props.options[i]!.value)
+  if (props.variant === 'standard') {
+    const r = pressed ? s.value.pressed : checked ? s.value.checked : full
+    return [r, r, r, r]
+  }
+  if (!pressed && checked) return [full, full, full, full]
+  const inner = pressed ? CONNECTED_PRESSED_INNER : CONNECTED_INNER
+  const start = i === 0 ? full : inner
+  const end = i === props.options.length - 1 ? full : inner
+  return [start, end, end, start]
+}
+
+useSpring(
+  () => props.options.flatMap((_, i) => radiiFor(i)),
+  (v) => {
+    buttons.forEach((el, i) => {
+      if (el) el.style.borderRadius = `${v[i * 4]}px ${v[i * 4 + 1]}px ${v[i * 4 + 2]}px ${v[i * 4 + 3]}px`
+    })
+  },
+  FAST_SPATIAL,
+)
+
+// ── Width: the pressed button grows, its neighbors give way (standard only) ──────────────────
+// ButtonGroup's layout with ButtonGroupScope.animateWidth: the pressed item grows by expandedRatio
+// (ButtonGroupDefaults.ExpandedRatio = 0.15) of its width, taken from its neighbors and capped by how much
+// each can be compressed (its content padding). A middle item splits the growth between both sides.
+// The connected samples don't use animateWidth, so the connected variant keeps its widths.
+const EXPANDED_RATIO = 0.15
+let natural: number[] = []
+let widthsActive = false
+
+function measureWidths() {
+  if (widthsActive) return
+  natural = props.options.map((_, i) => buttons[i]?.offsetWidth ?? 0)
+}
+
+function widthsFor(progress: readonly number[]): number[] {
+  const w = [...natural]
+  const pad = s.value.pad
+  const last = w.length - 1
+  for (let i = 0; i < w.length; i++) {
+    const p = progress[i] ?? 0
+    if (p === 0) continue
+    let growth: number
+    if (i > 0 && i < last) {
+      const g = Math.round(p * Math.min((EXPANDED_RATIO * w[i]!) / 2, pad))
+      const left = Math.min(g, w[i - 1]!)
+      const right = Math.min(g, w[i + 1]!)
+      w[i - 1]! -= left
+      w[i + 1]! -= right
+      growth = left + right
+    } else if (i === 0) {
+      const g = Math.round(p * Math.min(EXPANDED_RATIO * w[i]!, pad))
+      growth = Math.min(g, w[i + 1]!)
+      w[i + 1]! -= growth
+    } else {
+      const g = Math.round(p * Math.min(EXPANDED_RATIO * w[i]!, pad))
+      growth = Math.min(g, w[i - 1]!)
+      w[i - 1]! -= growth
+    }
+    w[i]! += growth
+  }
+  return w
+}
+
+useSpring(
+  () => props.options.map((_, i) => (props.variant === 'standard' && props.options.length > 1 && pressedIndex.value === i ? 1 : 0)),
+  (progress) => {
+    widthsActive = progress.some((p) => p !== 0)
+    const w = widthsActive && natural.length === props.options.length ? widthsFor(progress) : null
+    buttons.forEach((el, i) => {
+      if (el) el.style.width = w ? `${w[i]}px` : ''
+    })
+  },
+  FAST_SPATIAL,
+)
 </script>
 
 <template>
@@ -146,16 +224,19 @@ function btnStyle(i: number, selected: boolean) {
       v-for="(opt, i) in options"
       :key="String(opt.value)"
       type="button"
-      class="btn-group-item relative inline-flex items-center justify-center gap-2 overflow-hidden font-medium"
+      :ref="(el) => { buttons[i] = el as HTMLElement | null }"
+      class="btn-group-item relative inline-flex shrink-0 items-center justify-center gap-2 overflow-hidden font-medium whitespace-nowrap transition-[background-color,color] duration-200"
       :class="[
         s.h, s.px, s.text,
         opt.disabled ? 'cursor-not-allowed opacity-[0.38]' : 'cursor-pointer',
         isSelected(opt.value) ? selectedColors : unselectedColors,
       ]"
-      :style="btnStyle(i, isSelected(opt.value))"
       :disabled="opt.disabled"
       :aria-pressed="isSelected(opt.value)"
-      @pointerdown="createRipple"
+      @pointerdown="onPointerDown($event, i)"
+      @pointerup="onPointerUp"
+      @pointerleave="onPointerUp"
+      @pointercancel="onPointerUp"
       @click="toggle(opt)"
     >
       <MIcon
