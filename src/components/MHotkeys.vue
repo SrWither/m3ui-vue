@@ -41,22 +41,21 @@ function parseCombo(keys: string) {
 }
 
 function matchesEvent(combo: string[], e: KeyboardEvent): boolean {
-  const modifiers = { ctrl: e.ctrlKey, alt: e.altKey, shift: e.shiftKey, meta: e.metaKey, mod: isMac ? e.metaKey : e.ctrlKey }
-  const key = e.key.toLowerCase()
-
+  // `mod` is resolved to the platform's physical key first: comparing it as a fifth modifier
+  // made Ctrl count as both `ctrl` and `mod`, so neither `mod+z` nor `ctrl+z` ever matched.
+  const wanted = { ctrl: false, alt: false, shift: false, meta: false }
+  let key = ''
   for (const part of combo) {
-    if (part in modifiers) {
-      if (!modifiers[part as keyof typeof modifiers]) return false
-    } else if (key !== part) {
-      return false
-    }
+    if (part === 'mod') wanted[isMac ? 'meta' : 'ctrl'] = true
+    else if (part in wanted) wanted[part as keyof typeof wanted] = true
+    else key = part
   }
 
-  for (const [mod, active] of Object.entries(modifiers)) {
-    if (active && !combo.includes(mod)) return false
-  }
-
-  return true
+  return e.ctrlKey === wanted.ctrl
+    && e.altKey === wanted.alt
+    && e.shiftKey === wanted.shift
+    && e.metaKey === wanted.meta
+    && e.key.toLowerCase() === key
 }
 
 function onKeydown(e: KeyboardEvent) {
