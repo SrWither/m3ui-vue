@@ -1,275 +1,601 @@
-<script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
-import MIcon from './MIcon.vue'
-
+<script lang="ts">
 export interface CarouselItem {
   src: string
   alt?: string
   label?: string
 }
 
+export type CarouselVariant = 'multi-browse' | 'uncontained' | 'hero' | 'full-screen'
+export type CarouselFlingBehavior = 'single-advance' | 'multi-browse' | 'no-snap'
+</script>
+
+<script setup lang="ts" generic="T = CarouselItem">
 /*
- * Ported from the real M3 `HorizontalMultiBrowseCarousel` (Carousel.kt/Keylines.kt), not the
- * "flat fixed-width items" look this library's old MCarousel had (now MSimpleCarousel). The real
- * spec's signature behavior: one large "focal" item at rest, with neighbors progressively masked
- * down toward a small "peek" size the further they are from the focal position — items grow/shrink
- * continuously as you scroll, they're not just fixed-size slides.
+ * M3 carousel, ported from Compose Material3 (carousel/Carousel.kt and the keyline engine in
+ * ../composables/_carouselStrategy.ts). Like Compose's pager-based Carousel, every item has the
+ * same size (the strategy's focal size) and they're laid out end to end; what changes while
+ * scrolling is only how each one looks: it's clipped to a mask, centered in the item, the size of
+ * the keyline it sits on, and translated so masked items touch. The scroll geometry never changes,
+ * which is what the old flex/width-based version got wrong (resizing items mid-scroll fought the
+ * browser's scroll and scroll-snap).
  *
- * Real defaults ported exactly: minSmallItemWidth = MinSmallItemSize = 40dp, maxSmallItemWidth =
- * MaxSmallItemSize = 56dp, itemSpacing = 0dp, targetSmallSize = clamp(largeSize/3, min, max), and
- * the left-aligned focal convention (createLeftAlignedKeylineList — the focal item sits at the
- * scroll container's left edge, not centered).
+ * Variants: 'multi-browse' (HorizontalMultiBrowseCarousel), 'uncontained'
+ * (HorizontalUncontainedCarousel), 'hero' (HorizontalCenteredHeroCarousel) and 'full-screen'
+ * (MDC-Android's FullScreenCarouselStrategy: one item filling the container, usually vertical).
  *
- * Deliberately NOT ported: the real `Arrangement.findLowestCostArrangement` combinatorial search
- * that decides exactly how many large/medium/small items fit a given width to the pixel. That's a
- * large amount of code for a difference only visible at unusual width/item-count combinations —
- * this uses a direct triangular falloff from the focal position instead, which converges to the
- * same large-focal-item-with-shrinking-neighbors look for realistic carousels.
+ * Scrolling is our own (Pointer Events + wheel + keys), driven in a rAF loop that writes
+ * transform/clip-path straight to each item, never through a reactive :style binding. Release
+ * behavior follows CarouselDefaults: singleAdvanceFlingBehavior (at most one item per fling) for
+ * multi-browse/hero/full-screen, noSnapFlingBehavior for uncontained, and the snap animation is
+ * spring(stiffness = StiffnessMediumLow = 400, dampingRatio = 1). The fling decay itself is an
+ * exponential friction curve, an approximation of Android's spline decay.
  */
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useLocale } from '../composables/useLocale'
+import {
+  Strategy,
+  fullScreenKeylineList,
+  heroKeylineList,
+  maxScrollOffset,
+  multiBrowseKeylineList,
+  placeItem,
+  snapScrollOffset,
+  uncontainedKeylineList,
+} from '../composables/_carouselStrategy'
+
 const props = withDefaults(
   defineProps<{
-    items: CarouselItem[]
-    /** Target width of the large, fully-visible focal item, in px (preferredItemWidth). */
-    itemWidth?: number
-    /** Spacing between item slots, in px. Real default (CarouselDefaults.ItemSpacing) is 0. */
+    items: T[]
+    /** Index of the current (snapped) item; use with v-model to follow or drive it. */
+    modelValue?: number
+    variant?: CarouselVariant
+    orientation?: 'horizontal' | 'vertical'
+    /**
+     * Size of large items along the scroll axis, in px. Multi-browse and hero treat it as the
+     * preferred size (the arrangement that fits best wins); uncontained uses it as is. Hero
+     * without it fills the container minus its small items; full-screen ignores it.
+     */
+    itemSize?: number
+    /** Space between items, in px. The M3 spec and every Compose sample use 8. */
     itemSpacing?: number
-    /** Real default (CarouselDefaults.MinSmallItemSize) is 40. */
-    minSmallItemWidth?: number
-    /** Real default (CarouselDefaults.MaxSmallItemSize) is 56. */
-    maxSmallItemWidth?: number
+    /** Padding at both ends of the scroll axis, in px. Items scroll under it. */
+    contentPadding?: number
+    minSmallItemSize?: number
+    maxSmallItemSize?: number
+    /** What a release does. Defaults to 'no-snap' for uncontained, 'single-advance' otherwise. */
+    flingBehavior?: CarouselFlingBehavior
+    userScrollEnabled?: boolean
+    /** Height of the carousel. Defaults to 205px for a horizontal carousel that isn't full-screen. */
     height?: string
-    showArrows?: boolean
-    autoplay?: boolean
-    interval?: number
+    /** Accessible name of the carousel. */
+    label?: string
   }>(),
   {
-    itemWidth: 280,
-    itemSpacing: 0,
-    minSmallItemWidth: 40,
-    maxSmallItemWidth: 56,
-    height: '220px',
-    showArrows: true,
-    autoplay: false,
-    interval: 5000,
+    variant: 'multi-browse',
+    orientation: 'horizontal',
+    itemSpacing: 8,
+    contentPadding: 0,
+    minSmallItemSize: 40,
+    maxSmallItemSize: 56,
+    userScrollEnabled: true,
   },
 )
 
-const emit = defineEmits<{ change: [index: number] }>()
+const emit = defineEmits<{
+  'update:modelValue': [index: number]
+  itemClick: [item: T, index: number]
+}>()
 
-const trackEl = ref<HTMLElement | null>(null)
-const itemEls = ref<(HTMLElement | null)[]>([])
-const containerWidth = ref(0)
-const activeIndex = ref(0)
+defineSlots<{
+  item?: (scope: { item: T; index: number }) => unknown
+}>()
 
-function setItemRef(el: unknown, i: number) {
-  itemEls.value[i] = (el as HTMLElement) ?? null
-}
+const t = useLocale()
 
-const targetLarge = computed(() => Math.min(props.itemWidth, containerWidth.value || props.itemWidth))
-const targetSmall = computed(() => {
-  const raw = targetLarge.value / 3
-  return Math.min(Math.max(raw, props.minSmallItemWidth), props.maxSmallItemWidth)
+const SPRING_STIFFNESS = 400
+const SPRING_DAMPING = 1
+const MIN_FLING_VELOCITY = 400
+const FLING_FRICTION = 4
+const DEFAULT_ITEM_SIZE = 186
+
+const rootEl = ref<HTMLElement | null>(null)
+const itemEls: (HTMLElement | null)[] = []
+const labelEls: (HTMLElement | null)[] = []
+let labelWidths: number[] = []
+const mainSize = ref(0)
+const currentIndex = ref(clampIndex(props.modelValue ?? 0, props.items.length))
+
+const horizontal = computed(() => props.orientation === 'horizontal')
+let rtl = false
+
+// Only the number of items matters to the geometry: depending on the array itself would rebuild
+// the strategy (and re-snap) whenever a consumer passes a fresh inline array on re-render.
+const itemCount = computed(() => props.items.length)
+
+const strategy = computed(() => {
+  const size = mainSize.value
+  const count = itemCount.value
+  const spacing = props.itemSpacing
+  const keylines =
+    props.variant === 'uncontained'
+      ? uncontainedKeylineList(size, props.itemSize ?? DEFAULT_ITEM_SIZE, spacing)
+      : props.variant === 'hero'
+        ? heroKeylineList(size, props.itemSize ?? null, spacing, count, true, props.minSmallItemSize, props.maxSmallItemSize)
+        : props.variant === 'full-screen'
+          ? fullScreenKeylineList(size, spacing)
+          : multiBrowseKeylineList(size, props.itemSize ?? DEFAULT_ITEM_SIZE, spacing, count, props.minSmallItemSize, props.maxSmallItemSize)
+  return new Strategy(keylines, size, spacing, props.contentPadding, props.contentPadding)
 })
 
-const maskWidths = ref<number[]>([])
-const imgOffsets = ref<number[]>([])
-let rafId = 0
+const itemMainSize = computed(() => (strategy.value.isValid ? strategy.value.itemMainAxisSize : 0))
+const snaps = computed(() => Array.from({ length: itemCount.value }, (_, i) => snapScrollOffset(strategy.value, i, itemCount.value)))
+const maxScroll = computed(() => (strategy.value.isValid ? maxScrollOffset(strategy.value, itemCount.value) : 0))
 
-function onScroll() {
-  if (rafId) return
-  rafId = requestAnimationFrame(() => {
-    rafId = 0
-    updateMasks()
+const resolvedFling = computed<CarouselFlingBehavior>(
+  () => props.flingBehavior ?? (props.variant === 'uncontained' ? 'no-snap' : 'single-advance'),
+)
+
+const resolvedHeight = computed(
+  () => props.height ?? (horizontal.value && props.variant !== 'full-screen' ? '205px' : undefined),
+)
+
+function itemLabel(i: number) {
+  return t.carouselItem.replace('{index}', String(i + 1)).replace('{count}', String(props.items.length))
+}
+
+function clampIndex(i: number, count: number) {
+  return Math.min(Math.max(i, 0), Math.max(count - 1, 0))
+}
+
+function nearestIndex(pos: number) {
+  let best = 0
+  let bestDist = Infinity
+  snaps.value.forEach((s, i) => {
+    const d = Math.abs(s - pos)
+    if (d < bestDist - 0.5) {
+      best = i
+      bestDist = d
+    }
+  })
+  return best
+}
+
+// ── Per-frame state, outside Vue's reactivity ───────────────────────────────────────────────
+
+let scroll = 0
+let velocity = 0
+let anim: { kind: 'spring'; target: number } | { kind: 'decay' } | null = null
+let animFrame = 0
+let lastTime = 0
+let renderFrame = 0
+
+const round = (v: number) => Math.round(v * 100) / 100
+
+function clampScroll(v: number) {
+  return Math.min(Math.max(v, 0), maxScroll.value)
+}
+
+function render() {
+  const s = strategy.value
+  const count = props.items.length
+  if (!s.isValid) return
+  const size = s.itemMainAxisSize
+  const viewport = mainSize.value
+  const max = maxScroll.value
+  const isHorizontal = horizontal.value
+
+  const index = nearestIndex(scroll)
+  if (index !== currentIndex.value) {
+    currentIndex.value = index
+    emit('update:modelValue', index)
+  }
+
+  for (let i = 0; i < count; i++) {
+    const el = itemEls[i]
+    if (!el) continue
+    const p = placeItem(s, i, scroll, max)
+    const visibleStart = p.offset + p.maskStart
+    const visibleEnd = visibleStart + p.maskSize
+    el.style.visibility = visibleEnd <= 0 || visibleStart >= viewport ? 'hidden' : ''
+    const pos = round(isHorizontal && rtl ? viewport - p.offset - size : p.offset)
+    el.style.transform = isHorizontal ? `translate3d(${pos}px, 0, 0)` : `translate3d(0, ${pos}px, 0)`
+    const start = round(p.maskStart)
+    const end = round(size - p.maskStart - p.maskSize)
+    el.style.clipPath = isHorizontal
+      ? `inset(0 ${end}px 0 ${start}px round var(--radius-xl))`
+      : `inset(${start}px 0 ${end}px 0 round var(--radius-xl))`
+    // The current item is in front and the others descend with their distance from it.
+    el.style.zIndex = String(count - Math.abs(i - index))
+    el.style.setProperty('--m3-carousel-mask-start', `${start}px`)
+    el.style.setProperty('--m3-carousel-mask-size', `${round(p.maskSize)}px`)
+
+    // Default label: fades in once the mask is wide enough to show it whole (the Compose
+    // FadingHorizontalMultiBrowseCarouselSample formula).
+    const label = labelEls[i]
+    const labelWidth = labelWidths[i] ?? 0
+    if (label && labelWidth > 0) {
+      label.style.opacity = String(Math.max(labelWidth - s.maxItemSize + p.maskSize, 0) / labelWidth)
+    }
+  }
+}
+
+function scheduleRender() {
+  if (renderFrame) return
+  renderFrame = requestAnimationFrame(() => {
+    renderFrame = 0
+    render()
   })
 }
 
-function updateMasks() {
-  if (!trackEl.value) return
-  const trackLeft = trackEl.value.getBoundingClientRect().left
-  const large = targetLarge.value
-  const small = targetSmall.value
-  const widths: number[] = []
-  const offsets: number[] = []
-  let closest = 0
-  let closestDist = Infinity
+function stopAnimation() {
+  anim = null
+  if (animFrame) cancelAnimationFrame(animFrame)
+  animFrame = 0
+}
 
-  for (let i = 0; i < itemEls.value.length; i++) {
-    const el = itemEls.value[i]
-    if (!el) { widths.push(large); offsets.push(0); continue }
-    const offset = el.getBoundingClientRect().left - trackLeft
+function startAnimation(next: NonNullable<typeof anim>) {
+  anim = next
+  if (animFrame) return
+  lastTime = performance.now()
+  animFrame = requestAnimationFrame(step)
+}
 
-    let width: number
-    let imgOffset: number
-    if (offset <= 0) {
-      // Exiting (or resting) on the left: mask grows in from the left, keep the right portion
-      // of the image visible (matches the real maskStart clipping from the item's start edge).
-      width = Math.max(large + offset, small)
-      imgOffset = -(large - width)
-    } else {
-      // Upcoming on the right: mask shrinks from the right, keep the left portion visible.
-      width = Math.max(large - offset, small)
-      imgOffset = 0
+function step(now: number) {
+  animFrame = 0
+  if (!anim) return
+  const dt = Math.min((now - lastTime) / 1000, 1 / 30)
+  lastTime = now
+
+  if (anim.kind === 'spring') {
+    const target = anim.target
+    // Semi-implicit Euler in fixed substeps, like _useSheetMotion.
+    const h = 0.004
+    for (let left = dt; left > 0; left -= h) {
+      const sub = Math.min(h, left)
+      const accel = -SPRING_STIFFNESS * (scroll - target) - 2 * SPRING_DAMPING * Math.sqrt(SPRING_STIFFNESS) * velocity
+      velocity += accel * sub
+      scroll += velocity * sub
     }
-    widths.push(width)
-    offsets.push(imgOffset)
-
-    const dist = Math.abs(offset)
-    if (dist < closestDist) { closestDist = dist; closest = i }
+    if (Math.abs(scroll - target) < 0.5 && Math.abs(velocity) < 10) {
+      scroll = target
+      velocity = 0
+      anim = null
+    }
+  } else {
+    velocity *= Math.exp(-FLING_FRICTION * dt)
+    const next = clampScroll(scroll + velocity * dt)
+    if (next !== scroll + velocity * dt) velocity = 0
+    scroll = next
+    if (Math.abs(velocity) < 20) {
+      velocity = 0
+      anim = null
+    }
   }
 
-  maskWidths.value = widths
-  imgOffsets.value = offsets
-
-  if (closest !== activeIndex.value) {
-    activeIndex.value = closest
-    emit('change', closest)
-  }
+  render()
+  if (anim) animFrame = requestAnimationFrame(step)
 }
 
-// The item element's own width IS the animated mask width — not a fixed-width outer "slot"
-// with a shrinking element inside it. That was the first cut of this component, and it was
-// wrong: shrinking an inner element while its outer flex-item stayed at the full large width
-// just left dead space where the flex item used to be, instead of letting flex naturally close
-// the gap by reflowing the next item up against it (exactly what the real component's keyline
-// masking achieves, just via a different mechanism — Compose positions items directly from
-// keyline offsets rather than relying on flow layout, but the visual result needs to be the same:
-// no gaps between items regardless of their current mask size).
-function itemStyle(i: number) {
-  return {
-    width: `${maskWidths.value[i] ?? targetLarge.value}px`,
-    height: '100%',
-    flexShrink: '0',
-    overflow: 'hidden',
-    position: 'relative' as const,
-  }
+function springTo(index: number) {
+  const target = snaps.value[clampIndex(index, props.items.length)]
+  if (target === undefined) return
+  startAnimation({ kind: 'spring', target })
 }
 
-function imgStyle(i: number) {
-  return {
-    width: `${targetLarge.value}px`,
-    height: '100%',
-    position: 'absolute' as const,
-    left: `${imgOffsets.value[i] ?? 0}px`,
-    top: '0',
+/** A release with `v` px/s along the scroll offset (positive = towards later items). */
+function fling(v: number, startIndex: number) {
+  if (resolvedFling.value === 'no-snap') {
+    velocity = v
+    if (Math.abs(v) >= MIN_FLING_VELOCITY / 4) startAnimation({ kind: 'decay' })
+    return
   }
+  velocity = v
+  if (resolvedFling.value === 'multi-browse') {
+    springTo(nearestIndex(clampScroll(scroll + v / FLING_FRICTION)))
+    return
+  }
+  // single-advance: PagerSnapDistance.atMost(1) from the item the gesture started on.
+  let target = nearestIndex(scroll)
+  if (Math.abs(v) >= MIN_FLING_VELOCITY) {
+    const list = snaps.value
+    if (v > 0) {
+      const i = list.findIndex((s) => s > scroll + 0.5)
+      if (i !== -1) target = i
+    } else {
+      for (let i = list.length - 1; i >= 0; i--) {
+        if (list[i]! < scroll - 0.5) { target = i; break }
+      }
+    }
+    target = Math.min(Math.max(target, startIndex - 1), startIndex + 1)
+  }
+  springTo(target)
 }
 
-function scrollToItem(index: number) {
-  const el = itemEls.value[index]
-  if (!el || !trackEl.value) return
-  trackEl.value.scrollTo({ left: el.offsetLeft, behavior: 'smooth' })
+function scrollToItem(index: number, animate = true) {
+  const i = clampIndex(index, props.items.length)
+  const target = snaps.value[i]
+  if (target === undefined) return
+  if (animate) {
+    springTo(i)
+  } else {
+    stopAnimation()
+    scroll = target
+    velocity = 0
+    render()
+  }
 }
 
 function next() {
-  const i = activeIndex.value < props.items.length - 1 ? activeIndex.value + 1 : 0
-  scrollToItem(i)
+  scrollToItem(currentIndex.value + 1)
 }
+
 function prev() {
-  const i = activeIndex.value > 0 ? activeIndex.value - 1 : props.items.length - 1
-  scrollToItem(i)
+  scrollToItem(currentIndex.value - 1)
+}
+
+// ── Pointer dragging ────────────────────────────────────────────────────────────────────────
+
+interface Press {
+  id: number
+  x: number
+  y: number
+  base: number
+  startScroll: number
+  startIndex: number
+  slop: number
+  active: boolean
+  samples: { t: number; s: number }[]
+  wasAnimating: boolean
+}
+let press: Press | null = null
+let suppressClick = false
+
+function onPointerDown(e: PointerEvent) {
+  if (!props.userScrollEnabled || e.button !== 0 || !strategy.value.isValid) return
+  if ((e.target as Element).closest('input, textarea, select, [contenteditable]')) return
+  const wasAnimating = anim !== null
+  stopAnimation()
+  press = {
+    id: e.pointerId,
+    x: e.clientX,
+    y: e.clientY,
+    base: 0,
+    startScroll: scroll,
+    startIndex: currentIndex.value,
+    slop: e.pointerType === 'touch' ? 8 : 4,
+    active: false,
+    samples: [],
+    wasAnimating,
+  }
+  window.addEventListener('pointermove', onPointerMove)
+  window.addEventListener('pointerup', onPointerUp)
+  window.addEventListener('pointercancel', onPointerCancel)
+}
+
+function onPointerMove(e: PointerEvent) {
+  if (!press || e.pointerId !== press.id) return
+  const dx = e.clientX - press.x
+  const dy = e.clientY - press.y
+  const main = horizontal.value ? dx : dy
+  const cross = horizontal.value ? dy : dx
+  if (!press.active) {
+    if (Math.abs(cross) > press.slop && Math.abs(cross) > Math.abs(main)) {
+      endPress()
+      return
+    }
+    if (Math.abs(main) <= press.slop) return
+    press.active = true
+    press.base = main
+    try { rootEl.value?.setPointerCapture(e.pointerId) } catch { /* not capturable */ }
+    document.body.style.userSelect = 'none'
+  }
+  const sign = horizontal.value && rtl ? 1 : -1
+  scroll = clampScroll(press.startScroll + sign * (main - press.base))
+  const now = performance.now()
+  press.samples.push({ t: now, s: scroll })
+  while (press.samples.length > 2 && now - press.samples[0]!.t > 100) press.samples.shift()
+  scheduleRender()
+}
+
+function releaseVelocity(p: Press) {
+  const first = p.samples[0]
+  const last = p.samples[p.samples.length - 1]
+  if (!first || !last || last.t - first.t < 1 || performance.now() - last.t > 80) return 0
+  return ((last.s - first.s) / (last.t - first.t)) * 1000
+}
+
+function onPointerUp(e: PointerEvent) {
+  if (!press || e.pointerId !== press.id) return
+  const p = press
+  endPress()
+  if (p.active) {
+    suppressClick = true
+    setTimeout(() => (suppressClick = false), 0)
+    fling(releaseVelocity(p), p.startIndex)
+  } else if (p.wasAnimating) {
+    // A tap that caught a moving carousel: settle it instead of leaving it mid-way.
+    fling(0, currentIndex.value)
+  }
+}
+
+function onPointerCancel(e: PointerEvent) {
+  if (!press || e.pointerId !== press.id) return
+  const p = press
+  endPress()
+  if (p.active || p.wasAnimating) fling(0, p.startIndex)
+}
+
+function endPress() {
+  press = null
+  document.body.style.userSelect = ''
+  window.removeEventListener('pointermove', onPointerMove)
+  window.removeEventListener('pointerup', onPointerUp)
+  window.removeEventListener('pointercancel', onPointerCancel)
+}
+
+function onClickCapture(e: MouseEvent) {
+  if (!suppressClick) return
+  e.stopPropagation()
+  e.preventDefault()
+}
+
+function onItemClick(item: T, index: number) {
+  emit('itemClick', item, index)
+  const s = strategy.value
+  if (!s.isValid) return
+  const p = placeItem(s, index, scroll, maxScroll.value)
+  const start = p.offset + p.maskStart
+  const fullyVisible = p.maskSize >= s.itemMainAxisSize - 0.5 && start >= -0.5 && start + p.maskSize <= mainSize.value + 0.5
+  if (!fullyVisible) scrollToItem(index)
+}
+
+// ── Wheel and keyboard ──────────────────────────────────────────────────────────────────────
+
+let wheelTimer: ReturnType<typeof setTimeout> | null = null
+
+function onWheel(e: WheelEvent) {
+  if (!props.userScrollEnabled || !strategy.value.isValid) return
+  let delta = 0
+  if (horizontal.value) {
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) delta = e.deltaX
+    else if (e.shiftKey) delta = e.deltaY
+    if (rtl) delta = -delta
+  } else {
+    delta = e.deltaY
+  }
+  if (e.deltaMode === 1) delta *= 16
+  if (!delta) return
+  const next = clampScroll(scroll + delta)
+  // At an edge, let the page scroll instead.
+  if (next === scroll) return
+  e.preventDefault()
+  stopAnimation()
+  scroll = next
+  velocity = 0
+  scheduleRender()
+  if (wheelTimer) clearTimeout(wheelTimer)
+  wheelTimer = setTimeout(() => {
+    wheelTimer = null
+    if (resolvedFling.value !== 'no-snap') springTo(nearestIndex(scroll))
+  }, 120)
 }
 
 function onKeydown(e: KeyboardEvent) {
-  if (e.key === 'ArrowRight') next()
-  else if (e.key === 'ArrowLeft') prev()
+  const forward = horizontal.value ? (rtl ? 'ArrowLeft' : 'ArrowRight') : 'ArrowDown'
+  const backward = horizontal.value ? (rtl ? 'ArrowRight' : 'ArrowLeft') : 'ArrowUp'
+  let target: number | null = null
+  if (e.key === forward) target = currentIndex.value + 1
+  else if (e.key === backward) target = currentIndex.value - 1
+  else if (e.key === 'Home') target = 0
+  else if (e.key === 'End') target = props.items.length - 1
+  if (target === null) return
+  e.preventDefault()
+  scrollToItem(target)
 }
 
-let autoTimer: ReturnType<typeof setInterval> | null = null
-function startAutoplay() {
-  stopAutoplay()
-  if (props.autoplay && props.items.length > 1) autoTimer = setInterval(next, props.interval)
+// ── Measuring and lifecycle ─────────────────────────────────────────────────────────────────
+
+function measure() {
+  const el = rootEl.value
+  if (!el) return
+  rtl = getComputedStyle(el).direction === 'rtl'
+  mainSize.value = horizontal.value ? el.clientWidth : el.clientHeight
 }
-function stopAutoplay() {
-  if (autoTimer) { clearInterval(autoTimer); autoTimer = null }
+
+function measureLabels() {
+  labelWidths = labelEls.map((el) => el?.offsetWidth ?? 0)
 }
+
+// Resizes, prop changes and item-count changes rebuild the strategy: keep the current item snapped.
+watch(
+  strategy,
+  () => {
+    stopAnimation()
+    velocity = 0
+    currentIndex.value = clampIndex(currentIndex.value, props.items.length)
+    scroll = resolvedFling.value === 'no-snap' ? clampScroll(scroll) : (snaps.value[currentIndex.value] ?? 0)
+    measureLabels()
+    render()
+  },
+  { flush: 'post' },
+)
+
+watch(
+  () => props.modelValue,
+  (v) => {
+    if (v !== undefined && v !== currentIndex.value) scrollToItem(v)
+  },
+)
 
 let resizeObserver: ResizeObserver | null = null
+
 onMounted(() => {
-  if (trackEl.value) {
-    containerWidth.value = trackEl.value.clientWidth
-    resizeObserver = new ResizeObserver(() => {
-      if (trackEl.value) containerWidth.value = trackEl.value.clientWidth
-      updateMasks()
-    })
-    resizeObserver.observe(trackEl.value)
-  }
-  nextTick(updateMasks)
-  startAutoplay()
-})
-onBeforeUnmount(() => {
-  stopAutoplay()
-  if (rafId) cancelAnimationFrame(rafId)
-  resizeObserver?.disconnect()
+  const el = rootEl.value!
+  el.addEventListener('wheel', onWheel, { passive: false })
+  resizeObserver = new ResizeObserver(measure)
+  resizeObserver.observe(el)
+  measure()
+  nextTick(() => {
+    measureLabels()
+    scroll = snaps.value[currentIndex.value] ?? 0
+    render()
+  })
 })
 
-defineExpose({ next, prev, scrollToItem })
+onBeforeUnmount(() => {
+  stopAnimation()
+  endPress()
+  if (renderFrame) cancelAnimationFrame(renderFrame)
+  if (wheelTimer) clearTimeout(wheelTimer)
+  resizeObserver?.disconnect()
+  rootEl.value?.removeEventListener('wheel', onWheel)
+})
+
+defineExpose({ scrollToItem, next, prev })
 </script>
 
 <template>
   <div
-    class="group relative overflow-hidden"
+    ref="rootEl"
+    class="m3-carousel relative overflow-hidden outline-none focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-secondary"
+    :class="horizontal ? 'touch-pan-y' : 'touch-pan-x'"
+    :style="{ height: resolvedHeight }"
+    role="region"
+    :aria-roledescription="t.carousel"
+    :aria-label="label"
     tabindex="0"
+    @pointerdown="onPointerDown"
+    @click.capture="onClickCapture"
+    @dragstart.prevent
     @keydown="onKeydown"
-    @mouseenter="stopAutoplay"
-    @mouseleave="startAutoplay"
   >
     <div
-      ref="trackEl"
-      class="carousel-track flex overflow-x-auto"
-      :style="{ height, gap: `${itemSpacing}px` }"
-      @scroll.passive="onScroll"
+      v-for="(item, i) in items"
+      :key="i"
+      :ref="(el) => (itemEls[i] = el as HTMLElement | null)"
+      class="absolute left-0 top-0 overflow-hidden bg-surface-container-highest"
+      :style="horizontal ? { width: `${itemMainSize}px`, height: '100%' } : { width: '100%', height: `${itemMainSize}px` }"
+      role="group"
+      :aria-label="itemLabel(i)"
+      data-carousel-item
+      @click="onItemClick(item, i)"
     >
-      <div
-        v-for="(item, i) in items"
-        :key="i"
-        :ref="(el) => setItemRef(el, i)"
-        class="rounded-2xl"
-        :style="itemStyle(i)"
-      >
+      <slot name="item" :item="item" :index="i">
         <img
-          :src="item.src"
-          :alt="item.alt ?? item.label ?? ''"
-          class="pointer-events-none object-cover"
-          :style="imgStyle(i)"
+          :src="(item as CarouselItem).src"
+          :alt="(item as CarouselItem).alt ?? (item as CarouselItem).label ?? ''"
+          draggable="false"
+          class="pointer-events-none size-full select-none object-cover"
         />
-        <div
-          v-if="item.label"
-          class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-4 pb-3 pt-8"
-        >
-          <p class="text-title-medium font-medium text-white">{{ item.label }}</p>
-        </div>
-      </div>
+        <template v-if="(item as CarouselItem).label">
+          <div class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
+          <span
+            :ref="(el) => (labelEls[i] = el as HTMLElement | null)"
+            class="pointer-events-none absolute bottom-4 whitespace-nowrap text-title-medium text-white"
+            style="inset-inline-start: calc(var(--m3-carousel-mask-start, 0px) + 16px)"
+          >{{ (item as CarouselItem).label }}</span>
+        </template>
+      </slot>
     </div>
-
-    <template v-if="showArrows && items.length > 1">
-      <button
-        type="button"
-        class="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-surface/80 text-on-surface shadow-elevation-1 opacity-0 backdrop-blur-sm transition-all duration-200 hover:bg-surface hover:shadow-elevation-2 group-hover:opacity-100"
-        @click="prev"
-      >
-        <MIcon name="chevron_left" :size="24" />
-      </button>
-      <button
-        type="button"
-        class="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-surface/80 text-on-surface shadow-elevation-1 opacity-0 backdrop-blur-sm transition-all duration-200 hover:bg-surface hover:shadow-elevation-2 group-hover:opacity-100"
-        @click="next"
-      >
-        <MIcon name="chevron_right" :size="24" />
-      </button>
-    </template>
   </div>
 </template>
-
-<style scoped>
-.carousel-track {
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-.carousel-track::-webkit-scrollbar {
-  display: none;
-}
-.carousel-track > * {
-  scroll-snap-align: start;
-}
-</style>

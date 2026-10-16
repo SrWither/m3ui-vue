@@ -145,4 +145,6 @@ export const zhLocale: M3Locale = {
   paginationPage: '第 {page} 页，共 {pages} 页',
   previousPage: '上一页',
   nextPage: '下一页',
+  carousel: '轮播',
+  carouselItem: '第 {index} 项，共 {count} 项',
 }

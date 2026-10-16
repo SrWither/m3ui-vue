@@ -145,4 +145,6 @@ export const ptLocale: M3Locale = {
   paginationPage: 'Página {page} de {pages}',
   previousPage: 'Página anterior',
   nextPage: 'Próxima página',
+  carousel: 'Carrossel',
+  carouselItem: '{index} de {count}',
 }

@@ -147,6 +147,8 @@ export interface M3Locale {
   paginationPage: string
   previousPage: string
   nextPage: string
+  carousel: string
+  carouselItem: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -281,6 +283,8 @@ export const defaultLocale: M3Locale = {
   paginationPage: 'Page {page} of {pages}',
   previousPage: 'Previous page',
   nextPage: 'Next page',
+  carousel: 'Carousel',
+  carouselItem: '{index} of {count}',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')

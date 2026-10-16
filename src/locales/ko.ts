@@ -145,4 +145,6 @@ export const koLocale: M3Locale = {
   paginationPage: '{pages}페이지 중 {page}페이지',
   previousPage: '이전 페이지',
   nextPage: '다음 페이지',
+  carousel: '캐러셀',
+  carouselItem: '{count}개 중 {index}번째',
 }

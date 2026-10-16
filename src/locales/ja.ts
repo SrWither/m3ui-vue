@@ -145,4 +145,6 @@ export const jaLocale: M3Locale = {
   paginationPage: '{pages} ページ中 {page} ページ',
   previousPage: '前のページ',
   nextPage: '次のページ',
+  carousel: 'カルーセル',
+  carouselItem: '{count} 件中 {index} 件目',
 }

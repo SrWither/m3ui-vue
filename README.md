@@ -204,7 +204,7 @@ const name = ref('')
 | `MList` / `MListItem` / `MListSubheader` | Lists |
 | `MTimeline` | Vertical timeline |
 | `MCalendar` | Event calendar |
-| `MCarousel` | **Beta.** M3's real multi-browse carousel — one large focal item, neighbors continuously mask/resize toward a small "peek" size as you scroll (ported from `HorizontalMultiBrowseCarousel`). The arrangement math is a simplified triangular falloff rather than the real `Arrangement.findLowestCostArrangement` search — see the changelog for scope |
+| `MCarousel` | The M3 carousel, ported from Compose Material3: `multi-browse`, `uncontained`, `hero` and `full-screen` layouts, horizontal or vertical. Items keep one size and are masked as they scroll; drag, wheel and keyboard, v-model on the current item, `#item` slot for custom content |
 | `MSimpleCarousel` | Fixed-width slide carousel (hero/multi-browse\*/uncontained layouts) — the old `MCarousel`, renamed since `MCarousel` is now the real M3 carousel. \*its own `multi-browse` layout mode is a simpler fixed-width approximation, not the real masking behavior `MCarousel` implements |
 | `MLightbox` | Fullscreen image lightbox with gallery navigation, swipe, and auto-detected `<img>` scanning |
 | `MJsonViewer` | JSON tree viewer |
