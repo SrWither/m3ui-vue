@@ -1,10 +1,23 @@
 <script setup lang="ts">
+/**
+ * A panel that slides in from the right edge of the screen. Supports drag-to-dismiss from its left edge, or
+ * tapping the scrim.
+ *
+ * @slot header Replaces the default title text entirely — the close button stays
+ * @slot default Sheet body content (scrollable)
+ * @slot actions Footer action buttons, shown in a bordered strip below the content
+ * @event update:modelValue Emitted when the sheet closes (scrim click, drag-to-dismiss from the left edge, or
+ *   the close button) — powers v-model
+ */
 import MIcon from './MIcon.vue'
 import { useSheetMotion } from '../composables/_useSheetMotion'
 
 withDefaults(defineProps<{
+  /** Open/closed state (v-model) */
   modelValue: boolean
+  /** Sheet header title, ignored if the header slot is used */
   title?: string
+  /** Tailwind width class for the panel (capped at max-w-[90vw]) */
   width?: string
 }>(), { width: 'w-80' })
 

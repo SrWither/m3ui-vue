@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * A JSON-aware editor built on top of MCodeEditor — validates as you type and adds format/minify shortcuts.
+ *
+ * @event update:modelValue Emitted with the parsed value whenever the text is valid JSON — powers v-model
+ */
 import { ref, computed, watch } from 'vue'
 import MCodeEditor from './MCodeEditor.vue'
 import MIcon from './MIcon.vue'
@@ -15,10 +20,18 @@ const locale = useLocale()
 
 const props = withDefaults(
   defineProps<{
+    /** JSON data (v-model, any valid JSON) */
     modelValue: unknown
+    /** Read-only mode */
     readonly?: boolean
+    /** Min height */
     minHeight?: string
+    /** Max height */
     maxHeight?: string
+    /**
+     * Overrides for the valid/invalid badge and format/minify button text (see `JsonEditorLabels`) — defaults come
+     * from useLocale()
+     */
     labels?: JsonEditorLabels
   }>(),
   {

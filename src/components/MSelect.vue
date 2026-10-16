@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * A single-value dropdown select, docked or as a modal dialog on smaller screens.
+ *
+ * @event update:modelValue Emitted with the selected option's value.
+ */
 import { computed, ref, useId, onMounted, onUnmounted, watch } from 'vue'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
@@ -17,20 +22,37 @@ defineOptions({ inheritAttrs: false })
 
 const props = withDefaults(
   defineProps<{
+    /** Selected value (any type — v-model) */
     modelValue: unknown
+    /** The options to choose from; see `SelectOption`. */
     options: SelectOption[]
+    /** Field label */
     label?: string
+    /** Placeholder when no value selected */
     placeholder?: string
+    /** Visual style */
     variant?: 'filled' | 'outlined'
+    /** Dropdown mode: docked (inline) or modal (dialog) */
     mode?: 'docked' | 'modal'
+    /** Disables the select */
     disabled?: boolean
+    /** Error state */
     error?: boolean
+    /** Error message shown when error is true */
     errorLabel?: string
+    /** Hint text below the field */
     hint?: string
+    /** Marks as required — adds a red asterisk after the label */
     required?: boolean
+    /** Material Symbol shown before the trigger */
     leadingIcon?: string
+    /** Show a clear button to reset the selection */
     clearable?: boolean
+    /**
+     * Overrides the auto-detected background color used to cut the floating label out of the outlined border
+     */
     fieldBg?: string
+    /** Text shown when options is empty — defaults to the current locale's string */
     noResultsText?: string
   }>(),
   {

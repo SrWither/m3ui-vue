@@ -1,4 +1,10 @@
 <script setup lang="ts">
+/**
+ * A WYSIWYG editor built on tiptap, with a formatting toolbar covering text styles, lists, alignment, links,
+ * and images.
+ *
+ * @event update:modelValue Emitted with the editor HTML on every content change — powers v-model
+ */
 import { ref, watch, onMounted, onBeforeUnmount, shallowRef, computed } from 'vue'
 import MIcon from './MIcon.vue'
 import MMenu from './MMenu.vue'
@@ -40,10 +46,18 @@ const locale = useLocale()
 
 const props = withDefaults(
   defineProps<{
+    /** HTML content (v-model) */
     modelValue: string
+    /** Placeholder text shown on an empty document */
     placeholder?: string
+    /** Disables editing */
     disabled?: boolean
+    /** Minimum editor height */
     minHeight?: string
+    /**
+     * Object with all toolbar/dialog label overrides for i18n (see `RichTextEditorLabels`) — defaults come from
+     * useLocale()
+     */
     labels?: RichTextEditorLabels
   }>(),
   { disabled: false, minHeight: '200px' },

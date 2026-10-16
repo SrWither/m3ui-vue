@@ -1,29 +1,49 @@
 <script setup lang="ts">
+/**
+ * The generic M3 modal shell — Escape, scroll lock, and Teleport are handled internally. Supports a centered
+ * card, a full-screen variant, and an optional icon that centers the title per spec.
+ *
+ * @slot icon M3 AlertDialog's optional icon (Secondary color, 24dp expected). Its presence also centers the
+ *   title, per spec.
+ * @slot title Overrides the title prop with custom markup
+ * @slot default Dialog body content — scrolls independently when taller than maxHeight
+ * @slot actions Row of action buttons — wraps to a new line instead of overflowing when labels are long
+ * @event update:modelValue Emitted when the dialog should open/close — powers v-model
+ */
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import MIconButton from './MIconButton.vue'
 import { useLocale } from '../composables/useLocale'
 
 const props = withDefaults(
   defineProps<{
+    /** Open/closed state (v-model) */
     modelValue: boolean
+    /** Dialog title (overridable via the #title slot) */
     title?: string
     /** A Tailwind class (`max-w-sm`) or a CSS value (`420px`, `min(90vw, 40rem)`). */
     maxWidth?: string
     /**
-     * A Tailwind class (`max-h-[80vh]`) or a CSS value (`600px`). M3's `AlertDialogDefaults` has
-     * no max-height token at all (only `DialogMaxWidth`) — the default here is a library-chosen
-     * viewport-relative cap, not a spec value.
+     * Maximum height: a Tailwind class (`max-h-[60vh]`) or a CSS value (`480px`, `calc(100dvh - 4rem)`). When the
+     * content is taller, the body scrolls and a divider appears above the actions.
      */
+    // A Tailwind class (`max-h-[80vh]`) or a CSS value (`600px`). M3's `AlertDialogDefaults` has
+    // no max-height token at all (only `DialogMaxWidth`) — the default here is a library-chosen
+    // viewport-relative cap, not a spec value.
     maxHeight?: string
+    /** Prevent closing by clicking the scrim, pressing Escape, or the X button */
     persistent?: boolean
+    /** Full-screen variant — slides up from the bottom, covers the entire viewport */
     fullscreen?: boolean
+    /** Aria label for the close (X) button — falls back to the locale string when omitted */
     closeLabel?: string
     /**
-     * Whether the header shows a close ("X") icon button. M3's `AlertDialog` spec has no such
-     * button — it expects only a Cancel/Confirm text button in the actions row — so this is a
-     * deliberate library extension on top of the spec, kept opt-out (default `true`, matching
-     * this component's existing behavior) rather than added unconditionally.
+     * Show the header close (X) button — a library addition, not part of the M3 AlertDialog spec, so it can be
+     * turned off
      */
+    // Whether the header shows a close ("X") icon button. M3's `AlertDialog` spec has no such
+    // button — it expects only a Cancel/Confirm text button in the actions row — so this is a
+    // deliberate library extension on top of the spec, kept opt-out (default `true`, matching
+    // this component's existing behavior) rather than added unconditionally.
     closable?: boolean
   }>(),
   {

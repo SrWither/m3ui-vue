@@ -1,13 +1,24 @@
 <script setup lang="ts">
+/**
+ * A thin, prop-driven wrapper around CSS flexbox — direction, alignment, justification, gap, and wrap.
+ *
+ * @slot default The flex items.
+ */
 import { computed } from 'vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Flex direction */
     direction?: 'row' | 'column' | 'row-reverse' | 'column-reverse'
+    /** Cross-axis alignment (align-items) */
     align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline'
+    /** Main-axis alignment (justify-content) */
     justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly'
+    /** Gap between items */
     gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+    /** Allow items to wrap */
     wrap?: boolean
+    /** Use inline-flex instead of flex */
     inline?: boolean
   }>(),
   { direction: 'row', align: 'stretch', justify: 'start', gap: 'none', wrap: false, inline: false },

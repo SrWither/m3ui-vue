@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * The standard M3 button — five variants, five expressive size tiers, and either color.
+ *
+ * @slot default The button's label.
+ */
 import { computed } from 'vue'
 import MSpinner from './MSpinner.vue'
 import MIcon from './MIcon.vue'
@@ -8,6 +13,7 @@ type NamedColor = (typeof NAMED_COLORS)[number]
 
 const props = withDefaults(
   defineProps<{
+    /** Visual style of the button */
     variant?: 'filled' | 'tonal' | 'outlined' | 'text' | 'elevated'
     /**
      * Named semantic color ('primary' | 'error') OR any CSS color string
@@ -15,18 +21,30 @@ const props = withDefaults(
      * When a CSS color is passed, --color-primary is overridden for this button.
      */
     color?: string
+    /** HTML button type */
     type?: 'button' | 'submit' | 'reset'
+    /** Disables interaction */
     disabled?: boolean
+    /** Shows a spinner and disables the button */
     loading?: boolean
+    /** Material Symbol icon name shown next to the label */
     icon?: string
-    /**
-     * Which side of the label `icon` renders on. Real M3 buttons support both via
-     * `ButtonDefaults.contentPaddingFor(hasStartIcon/hasEndIcon)` — padding ends up identical
-     * either way at every tier, so this only changes render order, not spacing.
-     */
+    /** Which side of the label the icon renders on */
+    // Which side of the label `icon` renders on. Real M3 buttons support both via
+    // `ButtonDefaults.contentPaddingFor(hasStartIcon/hasEndIcon)` — padding ends up identical
+    // either way at every tier, so this only changes render order, not spacing.
     iconPos?: 'leading' | 'trailing'
+    /**
+     * M3's 5-tier expressive button sizing (xs: 32px, sm: 40px, md: 56px, lg: 96px, xl: 136px) — lg/xl are
+     * meant for hero-style prominent buttons, not everyday UI
+     */
     size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+    /**
+     * Button shape — rounded (pill, always) or squared (corner radius scales with size: 12px xs/sm, 16px md,
+     * 28px lg/xl)
+     */
     shape?: 'rounded' | 'squared'
+    /** Vue Router destination — renders as RouterLink instead of button */
     to?: string | Record<string, any>
   }>(),
   {

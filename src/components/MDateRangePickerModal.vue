@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * A modal, centered date range picker with range highlighting — the sibling of MDateRangePicker, a fully
+ * separate component rather than a shared internal.
+ *
+ * @event update:modelValue Emitted when the end date is confirmed — powers v-model
+ * @event update:show Emitted when the dialog opens or closes — powers v-model:show
+ */
 import { computed, ref, watch } from 'vue'
 import MButton from './MButton.vue'
 import MIconButton from './MIconButton.vue'
@@ -10,11 +17,20 @@ export interface DateRange {
 }
 
 const props = withDefaults(defineProps<{
+  /** Selected date range (v-model) — see `DateRange` */
   modelValue: DateRange
+  /** Controls dialog visibility (v-model:show) */
   show?: boolean
+  /** Minimum selectable date (YYYY-MM-DD) */
   min?: string
+  /** Maximum selectable date (YYYY-MM-DD) */
   max?: string
+  /**
+   * Locale for month/day names. Falls back to the app's configured locale (createM3UI({ locale })) — same
+   * pattern as MRelativeTime
+   */
   locale?: string
+  /** Dialog title */
   title?: string
 }>(), {
   show: false,

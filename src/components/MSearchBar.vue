@@ -1,4 +1,15 @@
 <script setup lang="ts">
+/**
+ * A collapsed search field that expands into a docked panel or a fullscreen overlay, with results shown below
+ * the input.
+ *
+ * @slot leading Overrides the collapsed bar's leading icon
+ * @slot trailing Trailing content in both the collapsed bar and the expanded header (e.g. an avatar)
+ * @slot default Results/suggestions content, shown below the input while expanded
+ * @event update:modelValue Emitted on every input change — powers v-model
+ * @event search Emitted when Enter is pressed in the input, with the current query
+ * @event update:expanded Emitted when the expanded state changes — powers v-model:expanded
+ */
 import { computed, ref, watch, onMounted, onUnmounted, nextTick, useId } from 'vue'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
@@ -11,14 +22,17 @@ defineOptions({ inheritAttrs: false })
 
 const props = withDefaults(
   defineProps<{
+    /** Search query (v-model) */
     modelValue?: string
     /** Controls the expanded/collapsed state — also works uncontrolled if omitted. */
     expanded?: boolean
+    /** Defaults to the locale's "Search..." */
     placeholder?: string
     /** 'docked' grows into a rounded panel anchored below the bar (default).
      *  'fullscreen' takes over the whole viewport, matching M3's mobile
      *  search pattern — the leading icon becomes a back button either way. */
     variant?: 'docked' | 'fullscreen'
+    /** Icon shown in the collapsed bar */
     leadingIcon?: string
     /** Which side of the *collapsed* bar the leading icon sits on. The
      *  expanded panel's back button always stays at the start regardless —
@@ -27,8 +41,11 @@ const props = withDefaults(
     /** Centers the input/placeholder text instead of the M3-standard start
      *  alignment (an iOS-style look some apps use for the collapsed bar). */
     textAlign?: 'start' | 'center'
+    /** Shows a spinner in the expanded header instead of the clear button */
     loading?: boolean
+    /** Shows a clear (×) button once there is a query */
     clearable?: boolean
+    /** Disables the collapsed bar */
     disabled?: boolean
   }>(),
   {

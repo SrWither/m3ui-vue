@@ -1,13 +1,25 @@
 <script setup lang="ts">
+/**
+ * A spinner-and-text overlay, either layered on top of a piece of content via the `#content` slot, or covering
+ * the whole viewport with `fullscreen`.
+ *
+ * @slot default Extra content shown below the spinner/text, in either mode
+ * @slot content The content the overlay is layered on top of (only used when fullscreen is false)
+ */
 import MSpinner from './MSpinner.vue'
 
 defineOptions({ inheritAttrs: false })
 
 withDefaults(defineProps<{
+  /** Show/hide the overlay */
   visible: boolean
+  /** Loading text message shown below the spinner */
   text?: string
+  /** Cover the entire viewport via Teleport, instead of overlaying just the #content slot */
   fullscreen?: boolean
+  /** Solid surface background instead of a translucent, blurred one */
   opaque?: boolean
+  /** Spinner size in px */
   spinnerSize?: number
 }>(), { fullscreen: false, opaque: false, spinnerSize: 40 })
 </script>

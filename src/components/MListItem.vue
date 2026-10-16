@@ -1,4 +1,17 @@
 <script setup lang="ts">
+/**
+ * A row of an MList: headline with optional overline, supporting text, a leading icon, avatar or image, and
+ * trailing text, icon, checkbox or switch. It can be a link, be clickable or expand to show nested items.
+ *
+ * @slot leading Custom leading element, replacing the icon/avatar/image/icon-container
+ * @slot overline Custom overline content, replacing the overline prop
+ * @slot default Custom content replacing the title/subtitle/description text block
+ * @slot children Nested content revealed when expandable is set and the item is expanded
+ * @slot trailing Custom trailing element, replacing the icon/text/switch/checkbox
+ * @event click Fires on any click, including on an expandable item (right before it toggles)
+ * @event update:trailingValue Fires when a trailing switch/checkbox is toggled (trailing='switch' | 'checkbox')
+ * @event update:expanded Fires when an expandable item is toggled open/closed
+ */
 import { computed, inject, ref, useAttrs, watch } from 'vue'
 import type { ComputedRef } from 'vue'
 import MIcon from './MIcon.vue'
@@ -11,27 +24,51 @@ export type ListItemTrailing = 'icon' | 'text' | 'switch' | 'checkbox'
 
 const props = withDefaults(
   defineProps<{
+    /** Primary text (headline) */
     title?: string
+    /** Small label above the title */
     overline?: string
+    /** Secondary text (line 2) */
     subtitle?: string
+    /** Tertiary text (line 3) */
     description?: string
+    /** Number of text lines — auto-detected from which text props/parent MList lines are set when omitted */
     lines?: 1 | 2 | 3
+    /** Leading Material Symbol icon */
     icon?: string
+    /**
+     * Leading element type — auto-resolves to 'icon'/'avatar'/'image' from icon/avatarName/image when omitted
+     */
     leading?: ListItemLeading
+    /** Name for the avatar (when leading='avatar') */
     avatarName?: string
+    /** Image URL (when leading='image') */
     image?: string
+    /** Icon container background color (when leading='icon-container') */
     iconContainerColor?: 'primary' | 'secondary' | 'tertiary' | 'error' | 'success'
+    /** Trailing icon name */
     trailingIcon?: string
+    /** Trailing text label */
     trailingText?: string
+    /** Trailing element type — auto-resolves from trailingIcon/trailingText when omitted */
     trailing?: ListItemTrailing
+    /** Value for a trailing switch/checkbox (v-model:trailingValue) */
     trailingValue?: boolean
+    /** Selection value — compared against the parent MList selected prop */
     value?: string | number
+    /** Force the active/highlighted state regardless of parent list selection */
     active?: boolean
+    /** Disabled state (38% opacity, blocks interaction) */
     disabled?: boolean
+    /** Force interactive styling/behavior (auto-true when href, to, @click, selectable, or expandable apply) */
     clickable?: boolean
+    /** Link URL — renders the item as an <a> */
     href?: string
+    /** Vue Router destination — renders the item as a router-link */
     to?: string | object
+    /** Show an expand/collapse chevron revealing the #children slot */
     expandable?: boolean
+    /** Control the expanded state (v-model:expanded) — otherwise managed internally */
     expanded?: boolean
   }>(),
   { active: false, disabled: false, expandable: false },

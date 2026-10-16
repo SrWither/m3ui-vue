@@ -1,11 +1,25 @@
 <script setup lang="ts">
+/**
+ * A full result screen for the end of a flow: success, errors, empty states and HTTP error pages. Each status
+ * comes with its own icon, colors, title and description, and you can override any of them. The default texts
+ * come from the active locale (`useLocale`), so they follow the language passed to `createM3UI({ locale })`.
+ *
+ * @slot actions Action buttons, in a centered row below the description
+ * @slot default Extra content below the actions row, e.g. a secondary link or fine print
+ */
 import { computed } from 'vue'
 import MIcon from './MIcon.vue'
 import { useLocale, type M3Locale } from '../composables/useLocale'
 
 const props = withDefaults(defineProps<{
+  /**
+   * Required. Picks the icon, its colors, and the default title/description. The three HTTP statuses also show
+   * the code in large type above the icon
+   */
   status: 'success' | 'error' | 'warning' | 'info' | '404' | '403' | '500'
+  /** Custom title, replaces the status default */
   title?: string
+  /** Custom description, replaces the status default */
   description?: string
 }>(), {})
 

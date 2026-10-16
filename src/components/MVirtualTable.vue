@@ -1,4 +1,10 @@
 <script setup lang="ts">
+/**
+ * Renders only the rows currently in (or near) the viewport, so a table with thousands of rows stays smooth —
+ * no pagination needed. Trade-off: no built-in search/filtering, sort is a client-side full-array sort.
+ *
+ * @event rowClick Emitted with the row's data when you click a row.
+ */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import MIcon from './MIcon.vue'
 
@@ -11,11 +17,17 @@ export interface VTableColumn {
 }
 
 const props = withDefaults(defineProps<{
+  /** Column definitions; see `VTableColumn` */
   columns: VTableColumn[]
+  /** All rows — the full array is held in memory, only visible rows are rendered to the DOM */
   rows: Record<string, any>[]
+  /** Fixed row height in px, used for the virtualization math */
   rowHeight?: number
+  /** Unique key field */
   rowKey?: string
+  /** Extra rows rendered above/below the visible viewport, to reduce blank flashes on fast scroll */
   overscan?: number
+  /** Scrollable container height (any valid CSS height) */
   maxHeight?: string
 }>(), {
   rowHeight: 44,

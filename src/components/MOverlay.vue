@@ -1,10 +1,20 @@
 <script setup lang="ts">
+/**
+ * Full-screen overlay with scrim and teleport to body. A generic low-level building block — content is entirely
+ * up to you via the default slot.
+ *
+ * @slot default Content shown over the scrim.
+ * @event update:modelValue Emitted with false when the scrim is clicked, for v-model support
+ */
 import { computed } from 'vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Controls visibility (v-model) */
     modelValue?: boolean
+    /** Show dark backdrop */
     scrim?: boolean
+    /** Z-index value */
     zIndex?: number
   }>(),
   { modelValue: true, scrim: true, zIndex: 50 },

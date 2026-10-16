@@ -1,8 +1,19 @@
 <script setup lang="ts">
+/**
+ * Full app shell — drawer, header, content, footer, and fab slots.
+ *
+ * @slot drawer Side navigation (e.g. MNavigationDrawer). Use drawerRight prop to place it on the right.
+ * @slot header Top bar (e.g. MTopAppBar)
+ * @slot default Main scrollable content
+ * @slot footer Bottom bar or status area
+ * @slot fab Floating elements (e.g. MFab) rendered outside the scroll area
+ */
 import { computed } from 'vue'
 
 const props = defineProps<{
+  /** Container height (CSS value). Use "100%" to fit inside a parent instead of the viewport. */
   height?: string
+  /** Place the drawer slot on the right side of the layout */
   drawerRight?: boolean
 }>()
 

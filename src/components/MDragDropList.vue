@@ -1,4 +1,16 @@
 <script setup lang="ts">
+/**
+ * A reorderable list: v-model the array and render each row with the #default slot. Works with a mouse, a
+ * finger and the keyboard. The dragged row lifts with M3's dragged-item elevation and the rest slide out of its
+ * way.
+ *
+ * @slot default Content of each row (or the whole row with bare). Falls back to item.id. Controls inside it
+ *   (checkboxes, switches, buttons, links) keep working and never start a drag. dragging is true while the row
+ *   is lifted; handleProps (with handle) goes on your own grip element via v-bind
+ * @event update:modelValue Emitted with the reordered array (v-model)
+ * @event reorder Emitted alongside update:modelValue with the source and destination indices. Useful for saving
+ *   the new order to a backend
+ */
 import { ref, onBeforeUpdate, onUpdated, onMounted, onBeforeUnmount } from 'vue'
 import MIcon from './MIcon.vue'
 import { useLocale } from '../composables/useLocale'
@@ -10,8 +22,14 @@ export interface DragDropItem {
 
 const props = withDefaults(
   defineProps<{
+    /** Array of items with a unique id (v-model) */
     modelValue: DragDropItem[]
+    /**
+     * Drag only from a handle button at the start of each row. Touch drags start right away from the handle;
+     * without it, a whole row starts dragging after a long press so swipes still scroll the page
+     */
     handle?: boolean
+    /** Turns reordering off (pointer and keyboard) and dims the list */
     disabled?: boolean
     /**
      * Drops the row's own look (padding, min height, hover/dragged state layer, background)

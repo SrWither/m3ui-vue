@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * A line between groups of items in an MMenu or MContextMenu; with `gap` in an expressive menu it splits the
+ * menu into separate rounded groups.
+ */
 withDefaults(
   defineProps<{
     /**

@@ -1,13 +1,20 @@
 <script setup lang="ts">
+/**
+ * A thin bar pinned to the top or bottom edge of the viewport, for page/route-level loading state — auto-wired
+ * to vue-router by default, or driven entirely by hand via usePageProgress().
+ */
 import { getCurrentInstance, onMounted, onUnmounted } from "vue";
 import { usePageProgress } from "../composables/usePageProgress";
 
 const props = withDefaults(
   defineProps<{
+    /** Bar color */
     color?: "primary" | "secondary" | "tertiary" | "error";
+    /** Bar height in px */
     thickness?: number;
     /** Auto-wire to vue-router's navigation guards when a router is detected. Set to `false` to drive it entirely by hand via `usePageProgress()`. */
     auto?: boolean;
+    /** Which edge of the viewport the bar is pinned to */
     position?: "top" | "bottom";
   }>(),
   { color: "primary", thickness: 3, auto: true, position: "top" },

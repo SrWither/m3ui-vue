@@ -1,14 +1,29 @@
 <script setup lang="ts">
+/**
+ * A bordered canvas that captures pointer strokes for signature capture. There's no v-model, since a signature
+ * isn't a simple value — read it out via events or the exposed methods.
+ *
+ * @event end Fires after a stroke ends, with a PNG data: URL of the canvas
+ * @event change Fires alongside end, and also after undo() — same data: URL payload
+ * @event begin Fires on the first pointerdown of a new stroke
+ */
 import { computed, onMounted, ref, watch } from 'vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Canvas width in px */
     width?: number
+    /** Canvas height in px */
     height?: number
+    /** Stroke width */
     lineWidth?: number
+    /** Stroke color */
     color?: string
+    /** Canvas background color */
     background?: string
+    /** Container border style */
     variant?: 'filled' | 'outlined'
+    /** Disables drawing */
     disabled?: boolean
   }>(),
   {

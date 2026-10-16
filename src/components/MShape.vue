@@ -3,6 +3,12 @@ export { shapeNames } from 'shape-morph'
 </script>
 
 <script setup lang="ts">
+/**
+ * Clips its content — or renders a filled shape with no content — into one of Material 3's 35 real "expressive"
+ * shapes. Changing `shape` spring-morphs into the new outline instead of snapping.
+ *
+ * @slot default Content clipped to the shape (an image, an icon, anything). Without it the shape is drawn filled with `fill`.
+ */
 import { onUnmounted, ref, useId, watch } from 'vue'
 import { AnimatedMorph, getShape, toSvgPath, type ShapeName } from 'shape-morph'
 

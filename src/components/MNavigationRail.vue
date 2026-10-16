@@ -1,4 +1,13 @@
 <script setup lang="ts">
+/**
+ * Compact vertical navigation for desktop/tablet layouts with a pill indicator, an optional wide "expanded"
+ * state, and an optional modal (flyout) variant.
+ *
+ * @slot fab A FAB (or MFabMenu) at the top of the rail, above the items.
+ * @event update:modelValue Emitted when an item is clicked — powers v-model
+ * @event update:expanded Emitted when the modal panel closes (modal mode only) — pair with :expanded for
+ *   v-model:expanded
+ */
 import { computed, ref, watch, onUnmounted } from 'vue'
 import MIcon from './MIcon.vue'
 import MBadge from './MBadge.vue'
@@ -18,18 +27,27 @@ export interface NavRailItem {
 defineOptions({ inheritAttrs: false })
 
 const props = withDefaults(defineProps<{
+  /** Active item value, v-model */
   modelValue: string | number
+  /** Array of rail items (see `NavRailItem`) */
   items: NavRailItem[]
+  /** Vertical alignment of items within the rail */
   alignment?: 'top' | 'center' | 'bottom'
-  /** M3 `WideNavigationRail`'s expanded state: items become icon+label side by side in a full-width pill instead of icon-over-label in a narrow centered one. */
+  /**
+   * Widens the rail (220px) and shows each item's icon beside its label in a full-width pill, instead of the icon
+   * over the label. Toggle it from your own menu button.
+   */
+  // M3 `WideNavigationRail`'s expanded state: items become icon+label side by side in a full-width pill instead of icon-over-label in a narrow centered one.
   expanded?: boolean
   /**
-   * M3 `ModalWideNavigationRail` (default `hideOnCollapse = false` variant — not the
-   * dismissible, slide-from-offscreen one). Instead of this rail itself resizing between
-   * collapsed/expanded, the collapsed rail stays on screen exactly as-is (so it never
-   * affects the app's layout grid — `ModalWideNavigationRail`'s whole point) and `expanded`
-   * instead opens a Teleported, scrim-backed panel that floats above the rest of the app.
+   * Keeps the rail collapsed and opens the expanded rail as a panel over the app, with a scrim, instead of
+   * widening in place. It closes on a scrim click, Escape or picking an item, emitting `update:expanded`.
    */
+  // M3 `ModalWideNavigationRail` (default `hideOnCollapse = false` variant — not the
+  // dismissible, slide-from-offscreen one). Instead of this rail itself resizing between
+  // collapsed/expanded, the collapsed rail stays on screen exactly as-is (so it never
+  // affects the app's layout grid — `ModalWideNavigationRail`'s whole point) and `expanded`
+  // instead opens a Teleported, scrim-backed panel that floats above the rest of the app.
   modal?: boolean
 }>(), { alignment: 'top', expanded: false, modal: false })
 

@@ -1,18 +1,34 @@
 <script setup lang="ts">
+/**
+ * Same API as MAbsolute but uses `position: fixed`. Positions elements relative to the viewport, not a
+ * positioned ancestor.
+ *
+ * @slot default Content.
+ */
 import { computed } from 'vue'
 import type { Placement } from './MAbsolute.vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Preset corner/edge placement */
     placement?: Placement
+    /** Distance from edges when using placement (applies to both axes) */
     offset?: string | number
+    /** Horizontal offset — overrides offset for the X axis */
     offsetX?: string | number
+    /** Vertical offset — overrides offset for the Y axis */
     offsetY?: string | number
+    /** Top offset (number = px) */
     top?: string | number
+    /** Right offset */
     right?: string | number
+    /** Bottom offset */
     bottom?: string | number
+    /** Left offset */
     left?: string | number
+    /** Set all sides to 0 */
     inset?: boolean
+    /** Z-index value */
     zIndex?: number
   }>(),
   { inset: false, zIndex: 50, offset: 0 },

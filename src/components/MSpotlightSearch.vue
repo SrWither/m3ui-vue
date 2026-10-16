@@ -1,4 +1,13 @@
 <script setup lang="ts">
+/**
+ * A spotlight-style search overlay. Unlike MCommandPalette, it doesn't filter internally — you own the results
+ * array and update it from the search event, which makes it a natural fit for async/remote search.
+ *
+ * @event update:modelValue Emitted on open/close — powers v-model
+ * @event select Emitted when a result is chosen (click, or Enter)
+ * @event search Emitted as the query changes (debounced by the debounce prop) — drive your own filtering and
+ *   update results in response
+ */
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import MIcon from './MIcon.vue'
 import MSpinner from './MSpinner.vue'
@@ -16,15 +25,33 @@ export interface SpotlightResult {
 
 const props = withDefaults(
   defineProps<{
+    /** Open/closed state (v-model). Required — there is no default. */
     modelValue: boolean
+    /**
+     * Results to render — the component does no filtering itself, it just displays whatever you pass via the
+     * search event handler
+     */
     results?: SpotlightResult[]
+    /** Search input placeholder — falls back to the locale's own string when unset */
     placeholder?: string
+    /** Shows a spinner in place of the clear button, e.g. while an async search is in flight */
     loading?: boolean
+    /** Empty-state text — falls back to the locale's own string when unset */
     noResultsText?: string
+    /**
+     * Global keyboard shortcut key (no modifier) to open the search — ignored while focus is in a text
+     * input/textarea/contenteditable
+     */
     hotkey?: string
+    /**
+     * Delay in ms before the search event fires after the query changes; 0 fires immediately on every keystroke
+     */
     debounce?: number
+    /** Footer hint text for the arrow keys — falls back to the locale's own string when unset */
     navigateHint?: string
+    /** Footer hint text for Enter — falls back to the locale's own string when unset */
     openHint?: string
+    /** Footer hint text for Escape — falls back to the locale's own string when unset */
     closeHint?: string
   }>(),
   {

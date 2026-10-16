@@ -1,4 +1,17 @@
 <script setup lang="ts">
+/**
+ * A simple, general-purpose data table — sortable columns, built-in search, pagination, and optional row
+ * selection, with an escape hatch to delegate all three to your backend via serverSide.
+ *
+ * @slot toolbar Extra content in the toolbar next to the search input (filters, buttons, etc.)
+ * @slot empty Custom empty-state content, replaces the default icon + text
+ * @slot row-actions Per-row action buttons — rendering this slot adds a trailing actions column
+ * @event update:modelValue Emitted when the selection changes — powers v-model
+ * @event update:page Emitted when the page changes — powers v-model:page
+ * @event rowClick Emitted with the row's data when you click a row (unless `selectOnRowClick` makes the click
+ *   select it).
+ * @event fetch Emitted instead of filtering locally when serverSide is true
+ */
 import { computed, onMounted, ref, watch } from 'vue'
 import MCheckbox from './MCheckbox.vue'
 import MIcon from './MIcon.vue'
@@ -28,25 +41,41 @@ const SKEL = [65, 80, 50, 75, 90, 55, 70, 85, 60, 78, 88, 52, 70, 83, 58]
 
 const props = withDefaults(
   defineProps<{
+    /** Column definitions: { key, label, sortable?, width?, align? } */
     columns: TableColumn[]
+    /** Table data rows */
     rows: Record<string, any>[]
+    /** Show skeleton loading state */
     loading?: boolean
+    /** Text when no rows (defaults to the locale string) */
     emptyText?: string
+    /** Unique key field in each row */
     rowKey?: string
-    selectable?: boolean
-    /** Con `selectable`, que el click en cualquier parte de la fila la marque/desmarque (en vez de
-     * emitir `rowClick`). Default false: sólo el checkbox selecciona y el click en la fila emite
-     * `rowClick`, así una tabla puede seleccionar filas y a la vez abrirlas al click.
+    /**
+     * Enable row selection with checkboxes (by default only the checkbox toggles a row; clicking the row itself
+     * still emits row-click)
      */
+    selectable?: boolean
+    /** With selectable, clicking anywhere on a row toggles its selection instead of emitting row-click */
+    // Con `selectable`, que el click en cualquier parte de la fila la marque/desmarque (en vez de
+    // emitir `rowClick`). Default false: sólo el checkbox selecciona y el click en la fila emite
+    // `rowClick`, así una tabla puede seleccionar filas y a la vez abrirlas al click.
     selectOnRowClick?: boolean
+    /** Selected rows (v-model) */
     modelValue?: Record<string, any>[]
+    /** Rows per page */
     perPage?: number
+    /** Show search input */
     searchable?: boolean
     /** Emit `fetch` instead of filtering locally. Requires :total. */
     serverSide?: boolean
+    /** Total rows (for server-side pagination) */
     total?: number
+    /** Current page (v-model via update:page) */
     page?: number
+    /** Placeholder for search input (defaults to the locale string) */
     searchPlaceholder?: string
+    /** Text for selected count badge, pluralized with 's' (defaults to the locale string) */
     selectedText?: string
   }>(),
   {

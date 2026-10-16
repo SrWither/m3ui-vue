@@ -1,13 +1,30 @@
 <script setup lang="ts">
+/**
+ * A collapsible section with a smooth height animation. Works controlled via v-model, or uncontrolled by simply
+ * omitting modelValue.
+ *
+ * @slot default Panel body content, revealed with a height animation when open
+ * @event update:modelValue Emitted when the panel is toggled — only meaningful when modelValue is passed
+ *   (controlled usage); powers v-model
+ */
 import { computed, ref } from 'vue'
 import MIcon from './MIcon.vue'
 
 const props = withDefaults(defineProps<{
+  /** Panel header text */
   title: string
+  /** Secondary text in the header, below the title */
   subtitle?: string
+  /** Leading Material Symbol icon in the header */
   icon?: string
+  /**
+   * Open/closed state (v-model). Omit it entirely to let the panel manage its own open state internally
+   * (uncontrolled).
+   */
   modelValue?: boolean
+  /** Disables toggling */
   disabled?: boolean
+  /** Visual style of the panel container */
   variant?: 'outlined' | 'filled' | 'elevated'
 }>(), { modelValue: undefined, disabled: false, variant: 'outlined' })
 

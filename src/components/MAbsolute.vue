@@ -1,4 +1,10 @@
 <script setup lang="ts">
+/**
+ * Declarative absolute positioning without Tailwind classes. Supports manual offsets, placement shortcuts, and
+ * per-axis control. Pair it with `MRelative` as the positioning parent.
+ *
+ * @slot default Content.
+ */
 import { computed } from 'vue'
 
 export type Placement =
@@ -8,15 +14,27 @@ export type Placement =
 
 const props = withDefaults(
   defineProps<{
+    /** Preset corner/edge placement */
     placement?: Placement
+    /** Distance from edges when using placement (applies to both axes) */
     offset?: string | number
+    /** Horizontal offset — overrides offset for the X axis */
     offsetX?: string | number
+    /** Vertical offset — overrides offset for the Y axis */
     offsetY?: string | number
+    /**
+     * Top offset (number = px). Defaults to 8px when neither placement nor any of top/right/bottom/left is set
+     */
     top?: string | number
+    /** Right offset */
     right?: string | number
+    /** Bottom offset */
     bottom?: string | number
+    /** Left offset. Defaults to 8px when neither placement nor any of top/right/bottom/left is set */
     left?: string | number
+    /** Set all sides to 0 */
     inset?: boolean
+    /** Z-index value */
     zIndex?: number
   }>(),
   { inset: false, offset: 0 },

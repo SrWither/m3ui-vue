@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * A numeric text field with +/- stepper buttons, min/max clamping, and keyboard arrow support.
+ *
+ * @event update:modelValue Emitted on every change — typing, stepper clicks, or arrow keys — powers v-model
+ * @event debounced Emitted debounce ms after the user stops typing (only when debounce > 0). Stepper
+ *   clicks/arrow keys still emit instantly
+ */
 import { computed, ref, useId } from 'vue'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
@@ -7,20 +14,37 @@ import { useDebounce } from '../composables/useDebounce'
 
 const props = withDefaults(
   defineProps<{
+    /** Bound numeric value (v-model) */
     modelValue: number | null
+    /** Field label */
     label: string
+    /** Visual style */
     variant?: 'filled' | 'outlined'
+    /** Minimum allowed value */
     min?: number
+    /** Maximum allowed value */
     max?: number
+    /** Increment/decrement step */
     step?: number
+    /** Error state */
     error?: boolean
+    /** Error message shown when error is true */
     errorLabel?: string
+    /** Hint text */
     hint?: string
+    /** Disables the field */
     disabled?: boolean
+    /** Marks as required — adds a red asterisk after the label */
     required?: boolean
+    /** Material Symbol icon */
     leadingIcon?: string
+    /** Show +/- buttons */
     stepper?: boolean
+    /**
+     * Overrides the auto-detected background color used to cut the floating label out of the outlined border
+     */
     fieldBg?: string
+    /** Delay (ms) before firing the @debounced event */
     debounce?: number
   }>(),
   {

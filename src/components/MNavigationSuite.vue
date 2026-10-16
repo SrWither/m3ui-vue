@@ -1,4 +1,16 @@
 <script setup lang="ts">
+/**
+ * One navigation that adapts to the space, after Material 3's `NavigationSuiteScaffold`: a short navigation bar
+ * at the bottom on phones, the same bar with icons beside labels on a phone in landscape, and a navigation rail
+ * on the side from tablets up. Give it your destinations and your content; it picks MShortNavigationBar or
+ * MNavigationRail by its own size (see useWindowSizeClass) and swaps them without remounting the content. It
+ * has no default size, so give it the app's height, e.g. `class="h-dvh"`.
+ *
+ * @slot default The app content. It scrolls on its own and keeps its state when the navigation swaps. layout is
+ *   the navigation in use
+ * @slot fab Primary action, e.g. an MFab: in the rail's header, or floating at the bottom end above the bar
+ * @event update:modelValue Emitted when a destination is picked (v-model)
+ */
 import { computed, ref } from 'vue'
 import MNavigationRail from './MNavigationRail.vue'
 import MShortNavigationBar from './MShortNavigationBar.vue'
@@ -20,13 +32,18 @@ export interface NavigationSuiteItem {
 export type NavigationSuiteLayout = 'bar' | 'bar-medium' | 'rail' | 'rail-expanded' | 'none'
 
 const props = withDefaults(defineProps<{
+  /** Selected destination (v-model) */
   modelValue: string | number
+  /** Destinations, the same shape MNavigationRail and MShortNavigationBar take */
   items: NavigationSuiteItem[]
   /**
-   * 'auto' picks by the component's own size, as M3's NavigationSuiteScaffold does
-   * (`navigationSuiteType`): compact width → short bar; compact height (a phone in landscape)
-   * → short bar with icons beside labels; anything else → collapsed rail. Set it to force one.
+   * 'auto' picks by the component's own size: compact width → short bar, compact height (a phone in landscape)
+   * → short bar with icons beside labels, anything else → rail. Any other value forces that navigation; 'none'
+   * hides it
    */
+  // 'auto' picks by the component's own size, as M3's NavigationSuiteScaffold does
+  // (`navigationSuiteType`): compact width → short bar; compact height (a phone in landscape)
+  // → short bar with icons beside labels; anything else → collapsed rail. Set it to force one.
   layout?: 'auto' | NavigationSuiteLayout
 }>(), { layout: 'auto' })
 

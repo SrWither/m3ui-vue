@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * A row of joined segments for choosing between a small set of related options — single or multi select.
+ *
+ * @event update:modelValue Emitted on selection change — powers v-model
+ */
 import MIcon from './MIcon.vue'
 
 export interface SegmentedOption {
@@ -9,10 +14,15 @@ export interface SegmentedOption {
 }
 
 withDefaults(defineProps<{
+  /** Selected value(s) */
   modelValue: string | number | (string | number)[]
+  /** The options to choose from; see `SegmentedOption`. */
   options: SegmentedOption[]
+  /** Allow multiple selections */
   multiSelect?: boolean
+  /** Button density */
   density?: 'default' | 'comfortable' | 'compact'
+  /** Selected segment color */
   color?: 'primary' | 'secondary' | 'tertiary'
 }>(), { multiSelect: false, density: 'default', color: 'primary' })
 

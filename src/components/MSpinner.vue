@@ -1,11 +1,21 @@
 <script setup lang="ts">
+/**
+ * A small circular loading spinner — a standard ring, or the M3 Expressive wavy variant. For a larger,
+ * shape-morphing loading affordance, see MLoadingIndicator.
+ */
 import { computed } from "vue";
 import { useLocale } from '../composables/useLocale';
 
 const props = withDefaults(
   defineProps<{
+    /** Size in px */
     size?: number;
+    /**
+     * M3 Expressive wavy animation style — the ring rotates while a wave travels along its stroke, instead of a
+     * plain spin
+     */
     wavy?: boolean;
+    /** Aria label for the spinner's status role — falls back to the locale string ('Loading') when omitted */
     label?: string;
   }>(),
   { size: 20, wavy: false },

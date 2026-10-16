@@ -11,6 +11,24 @@ const activeWindowId = moduleRef<number | null>(null)
 </script>
 
 <script setup lang="ts">
+/**
+ * A floating, draggable, resizable window — the building block for a desktop-style multi-window UI inside your
+ * app. Drag from the title bar, resize from any edge or corner, minimize to just the title bar, maximize (or
+ * double-click the title bar) to fill its container, and click any window to bring it to front. The window in
+ * front shows a stronger title bar and elevation, the others step back. Material 3 has no window component, so
+ * this one is built from M3 pieces: surface tones, elevation levels, 32dp icon buttons with state layers, and
+ * standard motion.
+ *
+ * @slot header Replaces the default icon + title, keeps drag behavior
+ * @slot actions Extra buttons in the title bar, before minimize/maximize/close. MIconButton size="xs" matches
+ *   the built-in ones
+ * @slot default The window's content, under the title bar. Unmounted while the window is hidden.
+ * @event close Emitted when the close button is clicked
+ * @event update:modelValue Emitted when the window closes — powers v-model
+ * @event minimize Emitted when the minimize button is toggled (either direction)
+ * @event maximize Emitted when the window is maximized (true) or restored (false)
+ * @event focus Emitted when the window comes to the front.
+ */
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import MIcon from './MIcon.vue'
 import { useLocale } from '../composables/useLocale'
@@ -20,18 +38,31 @@ const id = ++nextId
 
 const props = withDefaults(
   defineProps<{
+    /** Visible state (v-model) */
     modelValue: boolean
+    /** Window title in the title bar */
     title?: string
+    /** Material Symbol icon in the title bar */
     icon?: string
+    /** Initial width */
     width?: string
+    /** Initial height */
     height?: string
+    /** Minimum width in px */
     minWidth?: number
+    /** Minimum height in px */
     minHeight?: number
+    /** Maximum width in px */
     maxWidth?: number
+    /** Maximum height in px */
     maxHeight?: number
+    /** Allow resizing from edges and corners */
     resizable?: boolean
+    /** Allow dragging from the title bar */
     draggable?: boolean
+    /** Show close button */
     closable?: boolean
+    /** Show minimize button (collapses to title bar) */
     minimizable?: boolean
     /** Maximize button, and double-click on the title bar, to fill the parent and back. */
     maximizable?: boolean
@@ -46,8 +77,11 @@ const props = withDefaults(
      * The container should clip it (`overflow: hidden`).
      */
     offscreen?: boolean
+    /** Initial X position */
     x?: number
+    /** Initial Y position */
     y?: number
+    /** Reset position, size, and state when the window is closed */
     resetPosition?: boolean
   }>(),
   {

@@ -1,4 +1,18 @@
 <script setup lang="ts">
+/**
+ * A feature-rich data table — everything MTable has, plus column resize/pin/toggle, row grouping, striped/dense
+ * density, sticky header, expandable rows, and CSV export.
+ *
+ * @slot toolbar Extra content in the toolbar next to the search input (filters, buttons, etc.)
+ * @slot empty Custom empty-state content, replaces the default icon + text
+ * @slot row-actions Per-row action buttons — rendering this slot adds a trailing actions column
+ * @slot row-expand Expanded-row detail content, shown when expandable is true and the row is toggled open
+ * @event update:modelValue Emitted when the selection changes — powers v-model
+ * @event update:page Emitted when the page changes — powers v-model:page
+ * @event rowClick Emitted with the row's data when you click a row (unless `selectOnRowClick` makes the click
+ *   select it).
+ * @event fetch Emitted instead of filtering locally when serverSide is true
+ */
 import { computed, ref, useSlots, watch, onMounted } from 'vue'
 import MCheckbox from './MCheckbox.vue'
 import MIcon from './MIcon.vue'
@@ -30,46 +44,78 @@ export interface DataTableGroup {
 const SKEL = [65, 80, 50, 75, 90, 55, 70, 85, 60, 78]
 
 const props = withDefaults(defineProps<{
+  /** Column definitions; see `DataTableColumn` */
   columns: DataTableColumn[]
+  /** Table data rows */
   rows: Record<string, any>[]
+  /** Show skeleton loading state */
   loading?: boolean
+  /** Text when no rows (defaults to the locale string) */
   emptyText?: string
+  /** Unique key field in each row */
   rowKey?: string
+  /**
+   * Enable row selection with checkboxes (by default only the checkbox toggles a row; clicking the row itself
+   * still emits row-click)
+   */
   selectable?: boolean
-  /** Con `selectable`, que el click en cualquier parte de la fila la marque/desmarque (en vez de
-   * emitir `rowClick`). Default false: sólo el checkbox selecciona y el click en la fila emite
-   * `rowClick`, así una tabla puede seleccionar filas y a la vez abrirlas al click.
-   */
+  /** With selectable, clicking anywhere on a row toggles its selection instead of emitting row-click */
+  // Con `selectable`, que el click en cualquier parte de la fila la marque/desmarque (en vez de
+  // emitir `rowClick`). Default false: sólo el checkbox selecciona y el click en la fila emite
+  // `rowClick`, así una tabla puede seleccionar filas y a la vez abrirlas al click.
   selectOnRowClick?: boolean
+  /** Selected rows (v-model) */
   modelValue?: Record<string, any>[]
+  /** Rows per page */
   perPage?: number
+  /** Show search input */
   searchable?: boolean
+  /** Enable row expansion (requires the row-expand slot) */
   expandable?: boolean
+  /** Alternate row colors */
   striped?: boolean
+  /** Compact row height */
   dense?: boolean
+  /** Sticky table header */
   stickyHeader?: boolean
+  /** Group rows by this column key */
   groupBy?: string
+  /** Allow hiding/showing columns from a menu */
   columnToggle?: boolean
+  /** Show an export-to-CSV button */
   exportable?: boolean
+  /** Emit fetch instead of local filtering. Requires :total. */
   serverSide?: boolean
+  /** Total rows (for server-side pagination) */
   total?: number
+  /** Current page (v-model via update:page) */
   page?: number
+  /** Placeholder for search input (defaults to the locale string) */
   searchPlaceholder?: string
+  /** Text for selected count badge (defaults to the locale string) */
   selectedText?: string
+  /** Text for total records count (defaults to the locale string) */
   recordsText?: string
+  /** Aria label for the expand button (defaults to the locale string) */
   expandLabel?: string
+  /** Label for the column-toggle button (defaults to the locale string) */
   columnsLabel?: string
+  /** Label for the export button (defaults to the locale string) */
   exportLabel?: string
+  /** Text for the ungrouped-rows bucket (defaults to the locale string) */
   noGroupText?: string
-  /** Alto mínimo del área de la tabla (cualquier valor CSS válido para `min-height`) — reserva
-   * espacio fijo para que pasar de "cargando" (skeleton) a "pocos o cero resultados" (o
-   * viceversa, al cambiar de filtro/página) no encoja/agrande la tabla visiblemente. Sin valor
-   * (default), la tabla vuelve a su comportamiento natural: alto según la cantidad real de filas,
-   * sin piso reservado — usalo sólo en tablas puntuales que necesiten ese piso (p. ej. una agenda
-   * diaria que suele tener pocos o cero elementos y no debería verse minúscula al filtrar a un día
-   * vacío). El estado vacío siempre reserva un mínimo propio independientemente de este prop, ver
-   * `emptyStateMinHeight`.
+  /**
+   * Reserves a fixed min-height for the table area (any valid CSS min-height value) so switching between
+   * loading/empty/loaded doesn't visibly resize the table. Off by default.
    */
+  // Alto mínimo del área de la tabla (cualquier valor CSS válido para `min-height`) — reserva
+  // espacio fijo para que pasar de "cargando" (skeleton) a "pocos o cero resultados" (o
+  // viceversa, al cambiar de filtro/página) no encoja/agrande la tabla visiblemente. Sin valor
+  // (default), la tabla vuelve a su comportamiento natural: alto según la cantidad real de filas,
+  // sin piso reservado — usalo sólo en tablas puntuales que necesiten ese piso (p. ej. una agenda
+  // diaria que suele tener pocos o cero elementos y no debería verse minúscula al filtrar a un día
+  // vacío). El estado vacío siempre reserva un mínimo propio independientemente de este prop, ver
+  // `emptyStateMinHeight`.
   minHeight?: string
 }>(), {
   loading: false,

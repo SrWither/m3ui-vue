@@ -1,15 +1,26 @@
 <script setup lang="ts">
+/**
+ * A single emoji button that cycles through a random pool on hover (Discord-style) and emits whichever emoji is
+ * showing when clicked.
+ *
+ * @event click Emitted on click with the currently displayed emoji (whatever hover last cycled to)
+ */
 import { ref } from 'vue'
 import { allEmojis, emojiCategories, randomEmoji } from '../data/emojis'
 
 const props = withDefaults(
   defineProps<{
+    /** Default/current emoji shown before any hover cycling or click */
     emoji?: string
+    /** Emoji font size in pixels (the button itself is size + 12px) */
     size?: number
+    /** Accessible label — defaults to 'Emoji {emoji}' */
     label?: string
+    /** Cycle to a random emoji on hover (Discord-style) */
     randomOnHover?: boolean
     /** Limit random pool to a category id (e.g. 'smileys', 'animals') */
     category?: string
+    /** Disables interaction */
     disabled?: boolean
   }>(),
   { emoji: '😀', size: 28, randomOnHover: true, disabled: false },

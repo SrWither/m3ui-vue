@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * A multi-step wizard, horizontal or vertical, with icons, descriptions, and optional/error states.
+ *
+ * @event update:modelValue Emitted with the new current step index.
+ */
 import { computed } from 'vue'
 import MIcon from './MIcon.vue'
 
@@ -11,9 +16,16 @@ export interface StepItem {
 }
 
 const props = withDefaults(defineProps<{
+  /** Step definitions (see `StepItem`) */
   steps: StepItem[]
+  /** Active step index (0-based), v-model */
   modelValue: number
+  /** Layout direction */
   direction?: 'horizontal' | 'vertical'
+  /**
+   * When true, steps are not clickable — only the active step changes via v-model from outside. When false, any
+   * non-active step can be clicked to jump to it.
+   */
   linear?: boolean
 }>(), { direction: 'horizontal', linear: true })
 

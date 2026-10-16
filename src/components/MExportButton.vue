@@ -1,15 +1,30 @@
 <script setup lang="ts">
+/**
+ * Serializes the data prop and triggers a real browser download — no dependencies.
+ *
+ * @slot default Replaces the label text prop
+ * @event error Emitted if serialization or the download trigger fails
+ * @event exported Emitted after a successful download is triggered
+ */
 import MButton from './MButton.vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Array of objects to export */
     data: Record<string, unknown>[]
+    /** Export format */
     format?: 'csv' | 'json'
+    /** Filename without extension — the extension is added automatically */
     filename?: string
+    /** Button label (overridden by the default slot) */
     label?: string
+    /** Leading Material Symbol icon */
     icon?: string
+    /** Visual style (same as MButton) */
     variant?: 'filled' | 'tonal' | 'outlined' | 'text' | 'elevated'
+    /** Button size */
     size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+    /** Disables the button */
     disabled?: boolean
   }>(),
   {

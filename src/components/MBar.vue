@@ -1,21 +1,40 @@
 <script setup lang="ts">
+/**
+ * A draggable Electron title bar for frameless windows (`frame: false`). Sets `-webkit-app-region: drag` on
+ * itself and carves out `no-drag` around the icon, controls, and slot content, so those stay clickable. It
+ * can't touch the real OS window — minimize/maximize/close just emit events for your app to forward over IPC.
+ *
+ * @slot icon Replaces the icon — e.g. an <img> logo instead of a Material Symbol
+ * @slot title Replaces the title text
+ * @slot default Extra content between the title and the trailing area (drag-adjacent, e.g. tabs)
+ * @slot trailing Action buttons right before minimize/maximize/close
+ * @event close Emitted when the close button is clicked
+ * @event minimize Emitted when the minimize button is clicked — forward to your Electron IPC call
+ * @event maximize Emitted when the maximize/restore button is clicked, or (with doubleClickMaximize) empty drag
+ *   space is double-clicked
+ */
 import { computed } from 'vue'
 import MIcon from './MIcon.vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Window title text */
     title?: string
     /** Material Symbol name, or an image src (URL, data URI, or a path with a file extension) — detected automatically. */
     icon?: string
+    /** Centered floats over the whole bar so it stays centered regardless of side content width */
     titleAlign?: 'start' | 'center'
     /** Show the minimize/maximize/close buttons as a group. Defaults to `true`, except on `platform="macos"` where the OS draws native traffic lights instead. */
     controls?: boolean
     /** Individually hide one control while keeping the others — e.g. a fixed-size window with no maximize button. */
     minimizable?: boolean
+    /** Show the maximize/restore button on its own */
     maximizable?: boolean
+    /** Show the close button on its own */
     closable?: boolean
     /** Reflects the real window state — the bar has no way to know it itself, the host app must read it from its Electron main process and pass it down. */
     maximized?: boolean
+    /** 'macos' reserves space for the native traffic lights and hides the drawn controls by default */
     platform?: 'windows' | 'macos'
     /** Bar height in px. */
     height?: number

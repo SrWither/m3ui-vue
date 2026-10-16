@@ -1,4 +1,12 @@
 <script setup lang="ts">
+/**
+ * Compact elements for filters, input, or actions — named semantic tones or any CSS color, with optional icon,
+ * click, selection, and removal support.
+ *
+ * @slot default The chip's label.
+ * @event click Emitted when a clickable, non-disabled chip is clicked
+ * @event remove Emitted when the remove (X) button is clicked (removable only)
+ */
 import { computed } from 'vue'
 import MIcon from './MIcon.vue'
 
@@ -7,11 +15,20 @@ type NamedTone = (typeof NAMED_TONES)[number]
 
 const props = withDefaults(
   defineProps<{
+    /** Color tone or any CSS color string */
     tone?: string       // named tone OR CSS color string
+    /** Selected/active state — the chip's shape morphs from a rounded rect to a full pill when selected */
     selected?: boolean
+    /** Show a remove (X) button */
     removable?: boolean
+    /**
+     * Makes the chip an interactive <button> with hover/press/focus feedback (otherwise renders as a plain
+     * <span>)
+     */
     clickable?: boolean
+    /** Disables interaction */
     disabled?: boolean
+    /** Leading Material Symbol icon */
     icon?: string
   }>(),
   {

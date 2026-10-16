@@ -1,7 +1,13 @@
 <script setup lang="ts">
+/**
+ * A thin separator line, horizontal or vertical, with an optional centered label.
+ */
 withDefaults(defineProps<{
+  /** Render as a vertical divider (fills the height of a flex container) */
   vertical?: boolean
+  /** Text label in the middle of the divider (horizontal only) */
   label?: string
+  /** Add left margin (ml-16) to align with content that has a leading icon */
   inset?: boolean
 }>(), { vertical: false, inset: false })
 </script>

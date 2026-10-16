@@ -1,22 +1,41 @@
 <script setup lang="ts">
+/**
+ * One box per character for OTP/PIN/verification codes. Typing advances to the next box, backspace on an empty
+ * box goes back, and pasting a full code fills every box at once.
+ *
+ * @event update:modelValue Emitted on every box change — powers v-model
+ * @event complete Fires once with the full code as soon as every box is filled — the natural place to trigger
+ *   auto-submit
+ */
 import { computed, nextTick, ref, watch } from 'vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Bound code (v-model), e.g. "1234" */
     modelValue: string
+    /** Number of boxes (ignored when groups is set) */
     length?: number
     /** Segment sizes for a grouped layout, e.g. [2, 4, 2, 3, 1, 3] renders `__ ____ __ ___ _ ___`. Overrides `length` (derived as the sum). */
     groups?: number[]
     /** Visual separator rendered between groups (only used when `groups` is set). */
     separator?: string
+    /** Restricts which characters are accepted */
     type?: 'numeric' | 'alphanumeric'
+    /** Renders each box as a password field (dots instead of characters) */
     masked?: boolean
+    /** Visual style */
     variant?: 'filled' | 'outlined'
+    /** Error state */
     error?: boolean
+    /** Error message shown when error is true */
     errorLabel?: string
+    /** Hint text below the boxes */
     hint?: string
+    /** Disables every box */
     disabled?: boolean
+    /** Focuses the first box on mount */
     autoFocus?: boolean
+    /** aria-label for the group of boxes */
     label?: string
   }>(),
   {

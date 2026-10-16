@@ -1,4 +1,10 @@
 <script setup lang="ts">
+/**
+ * A syntax-highlighted code editor built on CodeMirror 6, with a header bar, line numbers, and a copy button.
+ *
+ * @slot actions Extra controls rendered in the header bar, before the built-in copy button
+ * @event update:modelValue Emitted on every document change — powers v-model
+ */
 import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue'
 import MIcon from './MIcon.vue'
 
@@ -6,14 +12,23 @@ type Language = 'javascript' | 'typescript' | 'json' | 'html' | 'css' | 'python'
 
 const props = withDefaults(
   defineProps<{
+    /** Editor content (v-model) */
     modelValue: string
+    /** Syntax language */
     language?: Language
+    /** Read-only mode */
     readonly?: boolean
+    /** Show line numbers */
     lineNumbers?: boolean
+    /** Color theme */
     theme?: 'light' | 'dark'
+    /** Minimum editor height */
     minHeight?: string
+    /** Maximum editor height */
     maxHeight?: string
+    /** Placeholder text shown via CodeMirror when the editor is empty */
     placeholder?: string
+    /** Word wrap */
     wrap?: boolean
   }>(),
   {

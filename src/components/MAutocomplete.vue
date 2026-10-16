@@ -1,4 +1,10 @@
 <script setup lang="ts">
+/**
+ * Like MSelect but with a text input for filtering. Type to search, arrow keys to navigate, Enter to select.
+ *
+ * @event update:modelValue Emitted on selection — powers v-model
+ * @event debounced Emitted debounce ms after the user stops typing the search query (only when debounce > 0)
+ */
 import { computed, ref, useId, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
@@ -13,21 +19,39 @@ defineOptions({ inheritAttrs: false })
 
 const props = withDefaults(
   defineProps<{
+    /** Selected value (v-model) */
     modelValue: unknown
+    /** The options to choose from; see `SelectOption`. */
     options: SelectOption[]
+    /** Floating label text */
     label?: string
+    /** Input placeholder */
     placeholder?: string
+    /** Field style */
     variant?: 'filled' | 'outlined'
+    /** Dropdown mode: docked (inline) or modal (dialog) */
     mode?: 'docked' | 'modal'
+    /** Disables the field */
     disabled?: boolean
+    /** Error state */
     error?: boolean
+    /** Error message shown when error is true */
     errorLabel?: string
+    /** Helper text below field */
     hint?: string
+    /** Marks as required — adds a red asterisk after the label */
     required?: boolean
+    /** Material Symbol icon name */
     leadingIcon?: string
+    /** Show a clear button */
     clearable?: boolean
+    /**
+     * Overrides the auto-detected background color used to cut the floating label out of the outlined border
+     */
     fieldBg?: string
+    /** Text when no options match */
     noResultsText?: string
+    /** Delay (ms) before filtering and firing @debounced. Selection is always instant */
     debounce?: number
   }>(),
   {

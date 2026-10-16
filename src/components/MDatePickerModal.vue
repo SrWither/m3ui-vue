@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * A modal, centered date picker with calendar and keyboard input modes. For a field that opens a dropdown
+ * calendar, use MDatePicker.
+ *
+ * @event update:modelValue Emitted when a date is confirmed — powers v-model
+ * @event update:show Emitted when the dialog opens or closes — powers v-model:show
+ */
 import { computed, ref, watch } from 'vue'
 import MButton from './MButton.vue'
 import MIconButton from './MIconButton.vue'
@@ -6,11 +13,20 @@ import MIcon from './MIcon.vue'
 import { useLocale } from '../composables/useLocale'
 
 const props = withDefaults(defineProps<{
+  /** Selected date in YYYY-MM-DD format (v-model) */
   modelValue: string | null
+  /** Controls dialog visibility (v-model:show) */
   show?: boolean
+  /** Minimum selectable date (YYYY-MM-DD) */
   min?: string
+  /** Maximum selectable date (YYYY-MM-DD) */
   max?: string
+  /**
+   * Locale for month/day names. Falls back to the app's configured locale (createM3UI({ locale })) — same
+   * pattern as MRelativeTime
+   */
   locale?: string
+  /** Dialog title */
   title?: string
 }>(), {
   modelValue: null,

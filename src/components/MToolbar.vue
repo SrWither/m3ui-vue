@@ -1,11 +1,23 @@
 <script setup lang="ts">
+/**
+ * A container for grouping icon buttons and actions — docked to an edge or floating as a rounded pill,
+ * horizontal or vertical, with an optional paired FAB.
+ *
+ * @slot fab A FAB rendered alongside the toolbar body, positioned by fabPosition
+ * @slot default Toolbar items — typically MIconButton/MButton, separated with MDivider
+ */
 import { computed } from 'vue'
 
 const props = withDefaults(defineProps<{
+  /** Docked (edge-attached, full width/height, bordered) or floating (rounded pill with shadow) */
   variant?: 'docked' | 'floating'
+  /** Layout direction */
   orientation?: 'horizontal' | 'vertical'
+  /** Background color scheme */
   color?: 'surface' | 'primary' | 'secondary' | 'tertiary'
+  /** Where the #fab slot renders relative to the toolbar body */
   fabPosition?: 'start' | 'end' | 'none'
+  /** Item alignment along the main axis */
   align?: 'start' | 'center' | 'end' | 'between'
 }>(), {
   variant: 'docked',

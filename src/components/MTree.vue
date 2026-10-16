@@ -1,4 +1,13 @@
 <script setup lang="ts">
+/**
+ * A hierarchical tree view with expand/collapse, single-node selection, and optional cascading checkbox
+ * selection.
+ *
+ * @event update:selected Fires when a node is clicked, toggling selection (clicking the already-selected node
+ *   clears it)
+ * @event update:checked Fires when a checkbox toggles a node (checkable mode)
+ * @event node-click Fires whenever a node row is clicked, alongside update:selected
+ */
 import { computed, provide, ref, type Ref } from 'vue'
 import MTreeNode from './_MTreeNode.vue'
 import MIcon from './MIcon.vue'
@@ -32,6 +41,7 @@ export interface TreeContext {
 
 const props = withDefaults(
   defineProps<{
+    /** Root nodes to render — required */
     nodes: TreeNode[]
     /** Currently selected node id (single-select). */
     selected?: string | number | null
@@ -44,6 +54,7 @@ const props = withDefaults(
      * 'all' | 'none' | array of ids (default: 'none').
      */
     defaultExpanded?: (string | number)[] | 'all' | 'none'
+    /** Text shown when nodes is empty. Falls back to the app's configured locale's noItems string */
     emptyText?: string
   }>(),
   {

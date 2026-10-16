@@ -1,4 +1,18 @@
 <script setup lang="ts">
+/**
+ * A slide-out or inline drawer of grouped, badge-able, optionally-nested navigation items — modal (Teleported,
+ * scrim-backed) or inline (participates in layout, supports a collapsed icon-only mode).
+ *
+ * @slot header Custom header content (e.g. profile card, logo). Fully generic, no positioning constraints
+ *   applied — overrides the title prop.
+ * @slot default Free content rendered at the end of the scrollable area, after all sections. Use for footers,
+ *   logout buttons, or any custom content.
+ * @slot toggle Collapse/expand toggle button area (inline variant only). Renders inside a 72px centered
+ *   container with a bottom border that aligns with MTopAppBar (64px height). The icon stays anchored in the
+ *   same position during collapse/expand transitions.
+ * @event update:modelValue Open/closed state for v-model
+ * @event select Fires when an item is clicked — use to track the selected item
+ */
 import { ref, reactive, watch, provide, computed } from "vue";
 import MIcon from "./MIcon.vue";
 import MDrawerItemList from "./_MDrawerItemList.vue";
@@ -28,13 +42,24 @@ defineOptions({ inheritAttrs: false })
 
 const props = withDefaults(
   defineProps<{
+    /** Open/closed state (v-model) */
     modelValue: boolean;
+    /** Currently selected item value */
     selected?: string | number;
+    /** Array of sections (see the types below) */
     sections: DrawerSection[];
+    /** Drawer header title (ignored if the #header slot is used) */
     title?: string;
+    /** Modal with a Teleported scrim overlay, or an inline sidebar that participates in normal layout flow */
     modal?: boolean;
+    /** Compact mode (72px) showing only icons — inline variant only */
     collapsed?: boolean;
+    /** Custom drawer width (e.g. "320px", "25rem"). Defaults to 22.5rem (360px) */
     width?: string;
+    /**
+     * Which side the drawer opens from. Top/bottom are only available for the modal variant — the inline
+     * variant always renders on left or right.
+     */
     side?: 'left' | 'right' | 'top' | 'bottom';
   }>(),
   { modal: true, side: 'left' },

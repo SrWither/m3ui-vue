@@ -1,4 +1,12 @@
 <script setup lang="ts">
+/**
+ * A right-click context menu composed with MMenuItem — same item/divider/submenu building blocks as MMenu, but
+ * positioned at the cursor instead of anchored to a trigger element.
+ *
+ * @slot trigger The element(s) that respond to right-click. MContextMenu intercepts contextmenu events
+ *   automatically and positions the panel at the cursor, clamped to stay on-screen.
+ * @slot default Menu items — use MMenuItem, MMenuDivider, or any element.
+ */
 import { computed, Fragment, inject, nextTick, onMounted, onUnmounted, provide, ref, useSlots, watch, type VNode } from 'vue'
 import MIcon from './MIcon.vue'
 import MMenuDivider from './MMenuDivider.vue'
@@ -15,13 +23,16 @@ const props = withDefaults(
      */
     submenuMode?: 'flyout' | 'push'
     /**
-     * `'standard'` is M3's baseline menu — square-ish 4dp corners
-     * (`MenuTokens.ContainerShape`/`CornerExtraSmall`).
-     * `'expressive'` is M3's rounder "vertical menu" styling — 16dp corners
-     * (`SegmentedMenuTokens.ContainerShape`/`CornerLarge`). Combine with
-     * `<MMenuDivider gap />` to split the panel into independently-rounded
-     * groups with a visible gap between them, instead of a plain line.
+     * 'standard' is M3's baseline menu (4dp corners). 'expressive' is M3's rounder 'vertical menu' styling
+     * (16dp corners) — combine with <MMenuDivider gap /> to split the panel into independently-rounded groups
+     * with a visible gap, instead of a plain divider line.
      */
+    // `'standard'` is M3's baseline menu — square-ish 4dp corners
+    // (`MenuTokens.ContainerShape`/`CornerExtraSmall`).
+    // `'expressive'` is M3's rounder "vertical menu" styling — 16dp corners
+    // (`SegmentedMenuTokens.ContainerShape`/`CornerLarge`). Combine with
+    // `<MMenuDivider gap />` to split the panel into independently-rounded
+    // groups with a visible gap between them, instead of a plain line.
     variant?: 'standard' | 'expressive'
   }>(),
   { submenuMode: 'flyout', variant: 'standard' },

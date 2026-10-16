@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * An emoji picker in the style of Android's and Gboard's: the full Unicode set (Emoji 15.0) by category,
+ * recently used ones first, skin tones, and search by name in the app's language. The names come from Unicode's
+ * CLDR and load only when the picker is used, one language at a time.
+ *
+ * @event select An emoji was picked, with the skin tone applied
+ */
 /*
  * Emoji picker. M3 has no emoji component; the reference is Google's own androidx
  * EmojiPickerView (a category bar with Recent first, a grid with headers, skin-tone variants on

@@ -1,12 +1,21 @@
 <script setup lang="ts">
+/**
+ * Shows or hides content at specific breakpoints using pure CSS (Tailwind's `hidden`/`block` utilities) — no JS
+ * resize listener.
+ *
+ * @slot default Content.
+ */
 import { computed } from 'vue'
 
 type Breakpoint = 'sm-up' | 'md-up' | 'lg-up' | 'xl-up' | 'sm-down' | 'md-down' | 'lg-down' | 'xl-down'
 
 const props = withDefaults(
   defineProps<{
+    /** Show content only at this breakpoint range */
     show?: Breakpoint
+    /** Hide content at this breakpoint range */
     hide?: Breakpoint
+    /** HTML tag to render */
     tag?: string
   }>(),
   { tag: 'div' },

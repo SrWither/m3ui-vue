@@ -1,4 +1,14 @@
 <script setup lang="ts">
+/**
+ * Material 3's supporting pane layout: main content plus a narrower pane that supports it, like related videos
+ * next to a player, a cart next to a product or comments next to a document. With room for two panes (840px and
+ * up) the supporting pane sits beside the main one; on smaller screens it moves under it, or into a bottom
+ * sheet with `single-pane="sheet"`. It measures its own width, not the window's.
+ *
+ * @slot main The main content
+ * @slot supporting Content that supports the main pane: related items, a summary, details, tools
+ * @event update:open Emitted when the sheet is dismissed, or closed because both panes fit again
+ */
 import { computed, ref, watch } from 'vue'
 import MBottomSheet from './MBottomSheet.vue'
 import { useWindowSizeClass } from '../composables/useWindowSizeClass'

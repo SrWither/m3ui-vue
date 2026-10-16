@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * Renders any of the 15 Material 3 typography variants, with an auto-selected semantic HTML tag.
+ *
+ * @slot default The text.
+ */
 import { computed } from 'vue'
 
 export type TextVariant =
@@ -10,12 +15,22 @@ export type TextVariant =
 
 const props = withDefaults(
   defineProps<{
+    /** Typography variant from the Material 3 type scale */
     variant?: TextVariant
+    /**
+     * HTML tag to render (auto-selected based on variant — h1/h2/h3 for display/headline, p for title/body,
+     * span for label)
+     */
     tag?: string
+    /** Text color */
     color?: 'on-surface' | 'on-surface-variant' | 'primary' | 'secondary' | 'tertiary' | 'error' | 'inherit'
+    /** Text alignment */
     align?: 'left' | 'center' | 'right'
+    /** Truncate text with ellipsis on overflow */
     truncate?: boolean
+    /** Clamp text to a specific number of lines */
     lines?: 1 | 2 | 3 | 4 | 5 | 6
+    /** Font weight override */
     weight?: 'regular' | 'medium' | 'bold'
   }>(),
   { variant: 'body-medium', color: 'inherit', align: 'left' },

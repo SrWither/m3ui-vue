@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * Registers global keyboard shortcuts for as long as it's mounted, with an optional on-screen overlay listing
+ * them grouped by category.
+ */
 import { onMounted, onBeforeUnmount } from 'vue'
 
 export interface HotkeyBinding {
@@ -11,7 +15,11 @@ export interface HotkeyBinding {
 
 const props = withDefaults(
   defineProps<{
+    /** Array of key combos to register globally; see `HotkeyBinding` */
     bindings: HotkeyBinding[]
+    /**
+     * Render a visible list of the registered shortcuts (otherwise the component is invisible and only listens)
+     */
     showOverlay?: boolean
   }>(),
   { showOverlay: false },

@@ -1,12 +1,24 @@
 <script setup lang="ts">
+/**
+ * An inline banner for contextual status messages — info, success, warning, or error.
+ *
+ * @slot default Alert body content
+ * @slot actions Optional row of action buttons rendered below the body
+ * @event close Emitted when the close button is clicked. The parent owns visibility — pair with v-if/v-else to
+ *   actually hide the alert.
+ */
 import MIcon from './MIcon.vue'
 import { useLocale } from '../composables/useLocale'
 
 const props = withDefaults(
   defineProps<{
+    /** Alert variant and color */
     type?: 'info' | 'success' | 'warning' | 'error'
+    /** Bold title text */
     title?: string
+    /** Show close button */
     closeable?: boolean
+    /** Aria label for the close button (falls back to the locale string) */
     closeAriaLabel?: string
   }>(),
   {

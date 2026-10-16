@@ -1,4 +1,12 @@
 <script setup lang="ts">
+/**
+ * A star rating input with half increments and any Material Symbol icon. Not part of the official M3 spec, so
+ * it's built from M3 primitives: filled/outlined icon pairs, a state layer on hover/press, and a focus ring.
+ * Click or drag to rate (drag past the first icon to clear), or use the arrow keys, Home and End when focused.
+ *
+ * @event update:modelValue Emitted when the user rates by click, drag or keyboard (v-model). Dragging past the
+ *   first icon emits 0
+ */
 import { computed, ref } from 'vue'
 import MIcon from './MIcon.vue'
 
@@ -6,13 +14,24 @@ import MIcon from './MIcon.vue'
 // Material Symbol pairs, on-surface-variant for the unselected icon, a 40px circular
 // hover/press state layer (8%/10%) tinted with the active color, and a secondary focus ring.
 const props = withDefaults(defineProps<{
+  /** Current rating (v-model) */
   modelValue: number
+  /** Maximum stars */
   max?: number
+  /** Star size in px */
   size?: number
+  /** Display-only: not focusable, exposed as role="img" with the value as its label */
   readonly?: boolean
+  /** Disables interaction */
   disabled?: boolean
+  /** One of the 4 M3 roles ('primary' | 'secondary' | 'tertiary' | 'error'), or any other CSS color string */
   color?: string
+  /** Material Symbol icon */
   icon?: string
+  /**
+   * Allow half-star values (click the left half of an icon). Fractional values always render exactly, with or
+   * without this prop
+   */
   halfIncrements?: boolean
 }>(), { max: 5, size: 28, color: 'primary', icon: 'star', halfIncrements: false })
 

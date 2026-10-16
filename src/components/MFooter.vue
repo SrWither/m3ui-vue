@@ -1,6 +1,17 @@
 <script setup lang="ts">
+/**
+ * Page footer with slots for brand, content, social links, and a bottom bar. Responsive padding adapts to
+ * screen size.
+ *
+ * @slot brand Logo and tagline area (top)
+ * @slot default Main content area (navigation columns, etc.)
+ * @slot social Social media icon buttons (flex row with gap)
+ * @slot bottom Bottom bar with copyright / legal links (separated by a top border)
+ */
 withDefaults(defineProps<{
+  /** Add a top border (border-outline-variant) */
   bordered?: boolean
+  /** Background surface color */
   surface?: 'default' | 'container' | 'container-low' | 'container-high' | 'inverse'
 }>(), {
   surface: 'default',

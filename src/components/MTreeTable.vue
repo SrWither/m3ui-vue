@@ -1,4 +1,12 @@
 <script setup lang="ts">
+/**
+ * A hierarchical table for nested data like file systems or org charts — rows can carry a `children` array, and
+ * the first column renders the indent and expand/collapse toggle automatically.
+ *
+ * @slot toolbar Toolbar content above the table, only rendered when this slot is used — gets
+ *   expandAll()/collapseAll() helpers
+ * @event rowClick Emitted with the row when you click it.
+ */
 import { computed, ref } from 'vue'
 import MIcon from './MIcon.vue'
 import { useLocale } from '../composables/useLocale'
@@ -16,12 +24,19 @@ export interface TreeTableRow {
 }
 
 const props = withDefaults(defineProps<{
+  /** Column definitions; see `TreeTableColumn` */
   columns: TreeTableColumn[]
+  /** Hierarchical rows with an optional children array; see `TreeTableRow` */
   rows: TreeTableRow[]
+  /** Unique key field */
   rowKey?: string
+  /** Expand all nodes with children by default */
   defaultExpanded?: boolean
+  /** Indentation per depth level, in px */
   indent?: number
+  /** Compact row height */
   dense?: boolean
+  /** Text shown when rows is empty. Falls back to the app's configured locale's noResults string */
   emptyText?: string
 }>(), {
   rowKey: 'id',

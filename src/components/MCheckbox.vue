@@ -1,12 +1,23 @@
 <script setup lang="ts">
+/**
+ * A checkbox with checked, indeterminate, and disabled states, and 4 semantic color options.
+ *
+ * @slot default Custom label content — overrides the label prop when provided
+ * @event update:modelValue Emitted with the new checked state.
+ */
 import MIcon from "./MIcon.vue";
 
 withDefaults(
   defineProps<{
+    /** Checked state (v-model) */
     modelValue: boolean;
+    /** Indeterminate state */
     indeterminate?: boolean;
+    /** Disables the checkbox */
     disabled?: boolean;
+    /** Label text — overridden by the default slot when present */
     label?: string;
+    /** Checked/indeterminate color */
     color?: "primary" | "secondary" | "tertiary" | "error";
     /** Accessible name for the input when there's no visible label (e.g. a list row's checkbox). */
     ariaLabel?: string;

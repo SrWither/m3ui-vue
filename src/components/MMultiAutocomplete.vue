@@ -1,4 +1,10 @@
 <script setup lang="ts">
+/**
+ * Multi-value autocomplete with inline search. Type to filter, Enter to toggle, Backspace to remove last chip.
+ *
+ * @event update:modelValue Emitted on selection change — powers v-model
+ * @event debounced Emitted debounce ms after the user stops typing the search query (only when debounce > 0)
+ */
 import { computed, ref, useId, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
@@ -14,23 +20,43 @@ defineOptions({ inheritAttrs: false })
 
 const props = withDefaults(
   defineProps<{
+    /** Selected values (v-model) */
     modelValue: unknown[]
+    /** The options to choose from; see `MultiSelectOption`. */
     options: MultiSelectOption[]
+    /** Floating label text */
     label?: string
+    /** Input placeholder */
     placeholder?: string
+    /** Field style */
     variant?: 'filled' | 'outlined'
+    /** Dropdown mode: docked (inline) or modal (dialog) */
     mode?: 'docked' | 'modal'
+    /** Disables the field */
     disabled?: boolean
+    /** Error state */
     error?: boolean
+    /** Error message shown when error is true */
     errorLabel?: string
+    /** Helper text below field */
     hint?: string
+    /** Marks as required — adds a red asterisk after the label */
     required?: boolean
+    /** Material Symbol icon name */
     leadingIcon?: string
+    /**
+     * Overrides the auto-detected background color used to cut the floating label out of the outlined border
+     */
     fieldBg?: string
+    /** Show a clear-all button */
     clearable?: boolean
+    /** Max visible chips before "+N" */
     maxChips?: number
+    /** Text when no options match */
     noResultsText?: string
+    /** Remove already-selected options from the dropdown */
     hideSelected?: boolean
+    /** Delay (ms) before filtering and firing @debounced. Selection is always instant */
     debounce?: number
   }>(),
   {

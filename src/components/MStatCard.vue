@@ -1,14 +1,27 @@
 <script setup lang="ts">
+/**
+ * A compact metric card — title, value, optional icon, and a trend indicator, with a built-in loading skeleton.
+ *
+ * @slot footer Extra content appended after the trend indicator/label row (only rendered when trend,
+ *   trendLabel, or this slot is present)
+ */
 import { computed } from 'vue'
 import MIcon from './MIcon.vue'
 
 const props = withDefaults(defineProps<{
+  /** Stat label text — required */
   title: string
+  /** Main stat value — required */
   value: string | number
+  /** Material Symbol icon shown in a colored container on the right */
   icon?: string
+  /** Percentage change — positive shows green/up, negative red/down, zero neutral/flat */
   trend?: number
+  /** Text next to the trend indicator (e.g. "vs last month") */
   trendLabel?: string
+  /** Icon container color */
   color?: 'primary' | 'secondary' | 'tertiary' | 'error' | 'success'
+  /** Show a skeleton placeholder instead of the value */
   loading?: boolean
 }>(), { color: 'primary' })
 

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+/**
+ * A read-only, recursively expandable tree view for inspecting JSON-compatible data.
+ */
 import { ref, computed } from 'vue'
 import MIcon from './MIcon.vue'
 import { useLocale } from '../composables/useLocale'
@@ -12,9 +15,13 @@ const locale = useLocale()
 
 const props = withDefaults(
   defineProps<{
+    /** Data to display (any JSON-compatible value) */
     data: unknown
+    /** Name for the root node */
     rootName?: string
+    /** Levels to expand by default */
     expandDepth?: number
+    /** Overrides for the collapsed-node summary text (see `JsonViewerLabels`) — defaults come from useLocale() */
     labels?: JsonViewerLabels
     /** @internal — used by recursive instances */
     _depth?: number

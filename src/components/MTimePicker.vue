@@ -1,19 +1,34 @@
 <script setup lang="ts">
+/**
+ * An inline, dropdown-anchored hour/minute picker with 12h/24h format support.
+ *
+ * @event update:modelValue Emitted with the picked time.
+ */
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import MIcon from './MIcon.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 import { useLocale } from '../composables/useLocale'
 
 const props = withDefaults(defineProps<{
+  /** Selected time (HH:MM, v-model) */
   modelValue: string | null
+  /** Field label */
   label?: string
+  /** Placeholder shown when no time is selected — falls back to label, then the current locale's string */
   placeholder?: string
+  /** Disables the picker */
   disabled?: boolean
+  /** Error state */
   error?: boolean
+  /** Error message shown when error is true */
   errorLabel?: string
+  /** Hint text below the field */
   hint?: string
+  /** Minute increment step */
   minuteStep?: number
+  /** Use 24-hour format */
   use24h?: boolean
+  /** Overrides the auto-detected background color used to cut the floating label out of the border */
   fieldBg?: string
 }>(), { minuteStep: 5, use24h: true })
 

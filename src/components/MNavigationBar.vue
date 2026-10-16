@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * A mobile bottom navigation bar with a pill indicator and badge support.
+ *
+ * @event update:modelValue Emitted when an item is clicked — powers v-model
+ */
 import MIcon from './MIcon.vue'
 import MBadge from './MBadge.vue'
 
@@ -11,7 +16,9 @@ export interface NavBarItem {
 }
 
 withDefaults(defineProps<{
+  /** Active item value, v-model */
   modelValue: string | number
+  /** Array of nav bar items (see `NavBarItem`) */
   items: NavBarItem[]
 }>(), {})
 

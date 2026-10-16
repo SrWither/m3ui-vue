@@ -1,4 +1,16 @@
 <script setup lang="ts">
+/**
+ * A full-screen image viewer in the style of Google Photos. Images grow out of the picture you tapped and
+ * shrink back into it, you swipe between them with the next one already in view, zoom with a double tap or a
+ * pinch, and drag one down to close. Tapping the image hides the bars. Wrap your content and it finds the <img>
+ * elements by itself, or pass items.
+ *
+ * @slot default Content to scan for <img> elements when items is not given
+ * @slot actions Extra buttons in the top bar, for the image being shown (download, share, info…)
+ * @event update:modelValue Fires when the lightbox opens or closes
+ * @event update:index Fires whenever the current index changes (next/prev/goTo/auto-detected image click)
+ * @event change Fires alongside update:index with the new index
+ */
 /*
  * Full-screen image viewer. M3 has no lightbox component; the reference is Google Photos' viewer:
  * a black stage, a top bar (close, position, actions) and a bottom area (caption, thumbnails) that
@@ -29,11 +41,15 @@ defineOptions({ inheritAttrs: false })
 
 const props = withDefaults(
   defineProps<{
+    /** v-model — open/closed state */
     modelValue?: boolean
     /** Explicit gallery. Omit it to auto-detect `<img>` elements rendered in the default slot instead. */
     items?: LightboxItem[]
+    /** v-model:index — current image index */
     index?: number
+    /** Wrap around when navigating past the first/last image */
     loop?: boolean
+    /** Overrides the close button aria-label (defaults to the active locale) */
     closeLabel?: string
     /** Show a row of clickable thumbnails at the bottom for jumping directly to an image. */
     showThumbnails?: boolean

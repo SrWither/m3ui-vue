@@ -1,14 +1,26 @@
 <script setup lang="ts">
+/**
+ * Flex stack with gap, alignment, and optional dividers between items.
+ *
+ * @slot default The stacked items.
+ */
 import { computed } from 'vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Stack direction */
     direction?: 'column' | 'row'
+    /** Gap between items (ignored when divider is true) */
     gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+    /** Cross-axis alignment */
     align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline'
+    /** Main-axis alignment */
     justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly'
+    /** Allow items to wrap */
     wrap?: boolean
+    /** Show dividers between items instead of a gap */
     divider?: boolean
+    /** Use inline-flex */
     inline?: boolean
   }>(),
   { direction: 'column', gap: 'md', align: 'stretch', justify: 'start', wrap: false, divider: false, inline: false },

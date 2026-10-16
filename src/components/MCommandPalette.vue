@@ -1,4 +1,12 @@
 <script setup lang="ts">
+/**
+ * A searchable, keyboard-driven command palette — grouped commands, fuzzy-free substring search, and a global
+ * hotkey (Cmd/Ctrl+K by default).
+ *
+ * @event update:modelValue Emitted on open/close — powers v-model
+ * @event select Emitted when an item is chosen (click, or Enter) — fires before the item's own onSelect
+ *   callback runs
+ */
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import MIcon from './MIcon.vue'
 import { useLocale } from '../composables/useLocale'
@@ -17,13 +25,21 @@ export interface CommandItem {
 
 const props = withDefaults(
   defineProps<{
+    /** Open/closed state (v-model). Required — there is no default. */
     modelValue: boolean
+    /** Commands to search over (see `CommandItem`). Required — there is no default. */
     items: CommandItem[]
+    /** Search input placeholder — falls back to the locale's own string when unset */
     placeholder?: string
+    /** Empty-state text — falls back to the locale's own string when unset */
     noResultsText?: string
+    /** Global keyboard shortcut key, combined with Cmd/Ctrl, to toggle the palette */
     hotkey?: string
+    /** Footer hint text for the arrow keys — falls back to the locale's own string when unset */
     navigateHint?: string
+    /** Footer hint text for Enter — falls back to the locale's own string when unset */
     selectHint?: string
+    /** Footer hint text for Escape — falls back to the locale's own string when unset */
     closeHint?: string
   }>(),
   {

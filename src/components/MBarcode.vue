@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * Renders a barcode as inline SVG. Available from the `/barcode` entry point.
+ *
+ * @slot error Shown instead of the SVG when value is invalid for the given format (e.g. a non-numeric EAN13)
+ */
 import { ref, watchEffect } from 'vue'
 import JsBarcode from 'jsbarcode'
 
@@ -6,16 +11,25 @@ defineOptions({ inheritAttrs: false })
 
 const props = withDefaults(
   defineProps<{
+    /** Data to encode. Required — there is no default. */
     value: string
     /** Barcode symbology. Common values: 'CODE128', 'EAN13', 'EAN8', 'UPC', 'CODE39', 'ITF14', 'MSI', 'pharmacode', 'codabar'. */
     format?: string
+    /** Width of the narrowest bar, in px */
     width?: number
+    /** Bar height in px */
     height?: number
+    /** Show the encoded text below the bars */
     displayValue?: boolean
+    /** Bar color */
     color?: string
+    /** Background color */
     background?: string
+    /** Quiet zone around the barcode, in px */
     margin?: number
+    /** Font size for the displayed value */
     fontSize?: number
+    /** aria-label for the svg. Defaults to value */
     label?: string
   }>(),
   {

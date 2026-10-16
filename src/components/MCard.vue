@@ -1,17 +1,43 @@
 <script setup lang="ts">
+/**
+ * A flexible surface for grouping related content — three variants following the M3 elevation system, with
+ * optional header image, structured title/subtitle, and action buttons.
+ *
+ * @slot media Custom media content (alternative to the image prop)
+ * @slot header Custom header content (overrides title/subtitle props)
+ * @slot default Main content area (raw, no wrapper)
+ * @slot actions Bottom action buttons (flex row, right-aligned)
+ */
 import { computed } from 'vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Card surface style */
     variant?: 'elevated' | 'filled' | 'outlined'
+    /**
+     * Makes the card an interactive element — hover/press elevation (varies by variant per M3), a focus
+     * ring/border on keyboard focus, and reachable/activatable via Tab + Enter/Space, not just mouse
+     */
     clickable?: boolean
+    /**
+     * Shortcut that forces the elevated variant regardless of variant — true is equivalent to
+     * variant='elevated'
+     */
     elevated?: boolean
+    /**
+     * Disabled visual state (own per-variant color, not just a dimmed one) and, when combined with clickable,
+     * blocks interaction entirely
+     */
     disabled?: boolean
     /** src URL for a full-bleed header image */
     image?: string
+    /** Alt text for the header image */
     imageAlt?: string
+    /** Tailwind height class for the image */
     imageHeight?: string
+    /** Card title text */
     title?: string
+    /** Supporting text below the title */
     subtitle?: string
   }>(),
   { variant: 'elevated', clickable: false, elevated: false, disabled: false },

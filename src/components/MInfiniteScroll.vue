@@ -1,4 +1,14 @@
 <script setup lang="ts">
+/**
+ * Wraps a scrollable list and emits load when an IntersectionObserver sentinel at the bottom becomes visible —
+ * hand it your own fetch-more logic.
+ *
+ * @slot default The content list itself
+ * @slot loading Custom loading indicator, shown when loading is true
+ * @slot end Custom end-of-list content, shown when ended is true
+ * @slot idle Content shown when neither loading nor ended (empty by default)
+ * @event load Emitted when the sentinel scrolls into view and more items should be fetched
+ */
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import MSpinner from './MSpinner.vue'
 import { useLocale } from '../composables/useLocale'
@@ -7,11 +17,17 @@ const locale = useLocale()
 
 const props = withDefaults(
   defineProps<{
+    /** Currently loading more items — shows the loading slot */
     loading?: boolean
+    /** Disable the load trigger entirely (no observer attached) */
     disabled?: boolean
+    /** Distance in px from the sentinel before it triggers load */
     threshold?: number
+    /** Text shown while loading (defaults to the locale string, 'Loading...') */
     loadingText?: string
+    /** Text shown when ended (defaults to the locale string, 'No more items') */
     endText?: string
+    /** No more items to load — shows the end slot and stops observing */
     ended?: boolean
   }>(),
   {

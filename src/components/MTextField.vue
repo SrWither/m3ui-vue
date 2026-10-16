@@ -1,4 +1,12 @@
 <script setup lang="ts">
+/**
+ * The standard single- or multi-line text input, filled or outlined, with floating label.
+ *
+ * @slot trailing Custom trailing content (e.g. an icon button) — replaces the built-in clear button when
+ *   present
+ * @event update:modelValue Emitted on every keystroke — powers v-model
+ * @event debounced Emitted debounce ms after the user stops typing (only when debounce > 0)
+ */
 import { computed, ref, useId, useSlots } from "vue";
 import MIcon from "./MIcon.vue";
 import { useFieldBg } from "../composables/useFieldBg";
@@ -6,21 +14,39 @@ import { useDebounce } from "../composables/useDebounce";
 
 const props = withDefaults(
   defineProps<{
+    /** Bound value (v-model) */
     modelValue: string | number;
+    /** Field label */
     label: string;
+    /** HTML input type */
     type?: string;
+    /** Visual style */
     variant?: "filled" | "outlined";
+    /** Puts the field in error state (red border and label) */
     error?: boolean;
+    /** Error message shown below the field (only visible when error is true) */
     errorLabel?: string;
+    /** Hint text shown below the field */
     hint?: string;
+    /** Disables the field */
     disabled?: boolean;
+    /** Marks as required — adds a red asterisk after the label */
     required?: boolean;
+    /** Renders a textarea instead of an input */
     multiline?: boolean;
+    /** Textarea rows (when multiline) */
     rows?: number;
+    /** Passed through to the native autocomplete attribute */
     autocomplete?: string;
+    /** Material Symbol shown before the input */
     leadingIcon?: string;
+    /** Show a clear button when the field has a value */
     clearable?: boolean;
+    /**
+     * Overrides the auto-detected background color used to cut the floating label out of the outlined border
+     */
     fieldBg?: string;
+    /** Delay (ms) before firing the @debounced event. v-model always updates immediately */
     debounce?: number;
   }>(),
   {

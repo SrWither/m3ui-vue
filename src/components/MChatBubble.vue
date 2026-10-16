@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * A chat message bubble — sender name, avatar, timestamp, and read status, for left (received) or right (sent)
+ * messages.
+ *
+ * @slot default Custom content inside the bubble, replacing the text prop — images, files, buttons, or any
+ *   layout
+ */
 import { computed } from 'vue'
 import MAvatar from './MAvatar.vue'
 import MIcon from './MIcon.vue'
@@ -6,15 +13,25 @@ import { useLocale } from '../composables/useLocale'
 
 const props = withDefaults(
   defineProps<{
+    /** Message text (or use the default slot for custom content) */
     text?: string
+    /** Sender name shown above the bubble (left-side only) */
     sender?: string
+    /** Timestamp string (e.g. "10:32") */
     time?: string
+    /** Left = received, right = sent */
     side?: 'left' | 'right'
+    /** Avatar name — shows an MAvatar with these initials (left-side only) */
     avatar?: string
+    /** Message status icon next to the timestamp (right-side only) */
     status?: 'sent' | 'delivered' | 'read'
+    /** Bubble color for sent (right-side) messages */
     color?: 'primary' | 'secondary' | 'tertiary'
+    /** Show the bubble tail (a sharper corner on the side nearest the sender) */
     tail?: boolean
+    /** Text size (body-small / body-medium / body-large) */
     size?: 'small' | 'medium' | 'large'
+    /** Max bubble width (px, %, or var()) — supports a CSS variable for responsive control */
     maxWidth?: string
     /** Shows a live indicator instead of the content: bouncing dots while the other person types, or a mic with a moving waveform while they record audio. */
     typing?: 'text' | 'audio'

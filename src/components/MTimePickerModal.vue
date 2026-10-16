@@ -1,14 +1,26 @@
 <script setup lang="ts">
+/**
+ * A modal, centered time picker with a clock dial and a keyboard input mode. Supports AM/PM toggle and 24h
+ * format — the sibling of MTimePicker, a fully separate component rather than a shared internal.
+ *
+ * @event update:modelValue Emitted when a time is confirmed — powers v-model
+ * @event update:show Emitted when the dialog opens or closes — powers v-model:show
+ */
 import { computed, ref, watch } from 'vue'
 import MButton from './MButton.vue'
 import MIconButton from './MIconButton.vue'
 import { useLocale } from '../composables/useLocale'
 
 const props = withDefaults(defineProps<{
+  /** Selected time in HH:MM format (v-model) */
   modelValue: string | null
+  /** Controls dialog visibility (v-model:show) */
   show?: boolean
+  /** Use 24-hour format (shows inner ring 13-23) */
   use24h?: boolean
+  /** Minute increment step */
   minuteStep?: number
+  /** Dialog title */
   title?: string
 }>(), {
   modelValue: null,

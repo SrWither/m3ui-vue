@@ -1,4 +1,20 @@
 <script setup lang="ts">
+/**
+ * A drag-and-drop board. Cards lift and follow the pointer, the others make room, and a dashed slot shows where
+ * the card will land. Works with a mouse, a finger (long-press a card) and the keyboard; the board scrolls
+ * sideways on its own when you drag near its edges.
+ *
+ * @slot card Content of each card. column is the full KanbanColumn; dragging is true while the card is lifted.
+ *   Buttons, links and inputs inside keep working: they never start a drag or fire cardClick. Add
+ *   data-kanban-action to any other element (a badge, a span) to give it the same treatment, so a click there
+ *   can do something else instead of opening the card
+ * @slot column-header Replaces the default header (color dot, title and count)
+ * @slot column-footer Content below each column's cards, e.g. an "Add card" button
+ * @event update:modelValue Emitted after a card moves, by pointer or keyboard (v-model)
+ * @event cardMove Emitted alongside update:modelValue with where the card went. Not emitted when a card is
+ *   dropped back where it was
+ * @event cardClick Emitted when a card is clicked or Enter is pressed on it. Not emitted at the end of a drag
+ */
 import { ref, onBeforeUpdate, onUpdated, onMounted, onBeforeUnmount } from 'vue'
 import MIcon from './MIcon.vue'
 import { useLocale } from '../composables/useLocale'
@@ -18,7 +34,9 @@ export interface KanbanColumn {
 }
 
 const props = defineProps<{
+  /** Columns with their cards (v-model). Required */
   modelValue: KanbanColumn[]
+  /** Text shown in a column with no cards (defaults to the locale string) */
   emptyText?: string
 }>()
 

@@ -1,8 +1,15 @@
 <script setup lang="ts">
+/**
+ * A password strength bar. Scores length + character variety (0-4) and emits `score` so you can gate a submit
+ * button on it.
+ *
+ * @event score Emitted whenever value changes — -1 for an empty value, or 0-4 otherwise
+ */
 import { computed, watch } from 'vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Password to score */
     value: string
     /** 5 labels, weakest to strongest. */
     labels?: string[]

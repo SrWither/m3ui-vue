@@ -1,13 +1,22 @@
 <script setup lang="ts">
+/**
+ * A linear progress indicator — determinate, indeterminate, or the M3 Expressive wavy variant.
+ */
 import { computed, ref, watch, onMounted, onUnmounted, nextTick } from "vue";
 
 const props = withDefaults(
   defineProps<{
+    /** Progress 0–100 (omit for indeterminate) */
     value?: number;
+    /** Indeterminate animation — also implied by omitting value */
     indeterminate?: boolean;
+    /** Bar color */
     color?: "primary" | "secondary" | "tertiary" | "error";
+    /** Bar style */
     variant?: "linear" | "wavy";
+    /** Label text above the bar */
     label?: string;
+    /** Stroke width in px. Defaults to 4dp, matching the real M3 token for both variants. */
     thickness?: number;
   }>(),
   { color: "primary", variant: "linear" },

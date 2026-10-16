@@ -1,12 +1,23 @@
 <script setup lang="ts">
+/**
+ * A single radio button, for when you lay out the options yourself. It's selected when `modelValue` equals its
+ * `value`; for a plain list of options, MRadioGroup is simpler.
+ *
+ * @event update:modelValue Emitted with `value` when the radio is selected.
+ */
 import { computed, useId } from "vue";
 
 const props = withDefaults(
   defineProps<{
+    /** The group's current value (v-model); share one ref between the radios of a group. */
     modelValue: unknown;
+    /** The value this radio stands for; selecting it sets the v-model to it. */
     value: unknown;
+    /** Text next to the radio. Clicking it selects the radio too. */
     label?: string;
+    /** Grays the radio out and ignores clicks. */
     disabled?: boolean;
+    /** Color role of the selected radio. */
     color?: "primary" | "secondary" | "tertiary" | "error";
   }>(),
   { disabled: false, color: "primary" },

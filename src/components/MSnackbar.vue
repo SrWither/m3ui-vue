@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * Renders the toasts shown with `useToast()`. It's mounted for you the first time `useToast()` is called, so you
+ * don't place it yourself; its position comes from `useToast().position`.
+ */
 import { computed } from "vue";
 import { useToast } from "../composables/useToast";
 import MIcon from "./MIcon.vue";
@@ -6,6 +10,7 @@ import MSpinner from "./MSpinner.vue";
 import { useLocale } from '../composables/useLocale';
 
 const props = defineProps<{
+  /** Accessible label of each toast's close button. Defaults to the locale's "Close". */
   closeAriaLabel?: string
 }>()
 

@@ -1,4 +1,10 @@
 <script setup lang="ts">
+/**
+ * A monthly calendar grid with color-coded, clickable events.
+ *
+ * @event dateClick Emitted when an empty part of a day cell is clicked
+ * @event eventClick Emitted when an event pill is clicked
+ */
 import { computed, ref } from 'vue'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
@@ -13,10 +19,18 @@ export interface CalendarEvent {
 }
 
 const props = withDefaults(defineProps<{
+  /** Array of events to render on the grid (see `CalendarEvent`) */
   events?: CalendarEvent[]
+  /**
+   * Locale for month/weekday names, via Intl.DateTimeFormat. Falls back to the app's configured locale
+   * (createM3UI({ locale })) — same pattern as MRelativeTime
+   */
   locale?: string
+  /** Label for the Today button — falls back to the locale's own string when unset */
   todayLabel?: string
+  /** Aria label for the previous-month button — falls back to the locale's own string when unset */
   prevMonthLabel?: string
+  /** Aria label for the next-month button — falls back to the locale's own string when unset */
   nextMonthLabel?: string
 }>(), {
   events: () => [],

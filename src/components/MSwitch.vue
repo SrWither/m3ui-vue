@@ -1,19 +1,27 @@
 <script setup lang="ts">
+/**
+ * A toggle switch with an optional label, 4 semantic colors, and both M3 icon variants.
+ *
+ * @event update:modelValue Emitted with the new on/off state.
+ */
 import { computed, ref } from 'vue'
 import MIcon from './MIcon.vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Toggle state (v-model) */
     modelValue: boolean
+    /** Disables the switch */
     disabled?: boolean
+    /** Label text */
     label?: string
+    /** Track/thumb color when on */
     color?: 'primary' | 'secondary' | 'tertiary' | 'error'
-    /**
-     * M3 officially has two Switch variants: with a check icon inside the thumb (the
-     * `thumbContent` slot filled), and without (Compose's actual default — `thumbContent`
-     * defaults to `null`). Defaults to `true` here to keep this component's existing look;
-     * pass `false` for the plain/no-icon variant.
-     */
+    /** Shows a check icon in the thumb while on. Set to `false` for M3's plain switch without an icon. */
+    // M3 officially has two Switch variants: with a check icon inside the thumb (the
+    // `thumbContent` slot filled), and without (Compose's actual default — `thumbContent`
+    // defaults to `null`). Defaults to `true` here to keep this component's existing look;
+    // pass `false` for the plain/no-icon variant.
     icon?: boolean
   }>(),
   { disabled: false, color: 'primary', icon: true },

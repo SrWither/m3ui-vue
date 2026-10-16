@@ -1,9 +1,15 @@
 <script setup lang="ts">
+/**
+ * Renders a timestamp as human-readable relative text ("5 minutes ago", "in 2 hours") that keeps itself up to
+ * date, formatted with the native Intl.RelativeTimeFormat. It renders a semantic `<time>` element, and hovering
+ * it shows the full absolute date.
+ */
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { useLocale } from '../composables/useLocale'
 
 const props = withDefaults(
   defineProps<{
+    /** Required. The timestamp to format: an ISO string, epoch milliseconds, or a Date */
     value: string | number | Date
     /** BCP-47 locale tag (e.g. 'es-ES'). Defaults to the app's locale (via createM3UI/useLocale), then the browser's locale. */
     locale?: string

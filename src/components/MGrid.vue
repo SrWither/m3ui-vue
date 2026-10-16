@@ -1,14 +1,26 @@
 <script setup lang="ts">
+/**
+ * A responsive CSS grid with per-breakpoint column counts.
+ *
+ * @slot default The grid items.
+ */
 import { computed } from 'vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Default column count */
     cols?: 1 | 2 | 3 | 4 | 5 | 6 | 12
+    /** Columns at sm breakpoint */
     sm?: 1 | 2 | 3 | 4 | 5 | 6 | 12
+    /** Columns at md breakpoint */
     md?: 1 | 2 | 3 | 4 | 5 | 6 | 12
+    /** Columns at lg breakpoint */
     lg?: 1 | 2 | 3 | 4 | 5 | 6 | 12
+    /** Columns at xl breakpoint */
     xl?: 1 | 2 | 3 | 4 | 5 | 6 | 12
+    /** Gap between items */
     gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+    /** Vertical alignment */
     alignItems?: 'start' | 'center' | 'end' | 'stretch'
   }>(),
   { cols: 1, gap: 'md', alignItems: 'stretch' },

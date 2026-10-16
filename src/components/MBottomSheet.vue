@@ -1,10 +1,22 @@
 <script setup lang="ts">
+/**
+ * A sheet that slides up from the bottom of the screen, capped at a 640px max width and rounded top corners.
+ * Supports drag-to-dismiss via the handle bar, or tapping the scrim.
+ *
+ * @slot default Sheet body content (scrollable)
+ * @slot actions Footer action buttons, shown in a bordered strip below the content
+ * @event update:modelValue Emitted when the sheet closes (scrim click, drag-to-dismiss, or the close button) —
+ *   powers v-model
+ */
 import MIcon from './MIcon.vue'
 import { useSheetMotion } from '../composables/_useSheetMotion'
 
 withDefaults(defineProps<{
+  /** Open/closed state (v-model) */
   modelValue: boolean
+  /** Sheet header title */
   title?: string
+  /** Use max-h-[92vh] instead of the default max-h-[60vh] */
   fullHeight?: boolean
 }>(), { fullHeight: false })
 

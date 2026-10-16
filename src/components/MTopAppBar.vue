@@ -1,16 +1,34 @@
 <script setup lang="ts">
+/**
+ * A top app bar in four M3 layouts — center-aligned, small, medium, and large — with a leading navigation icon
+ * and trailing actions.
+ *
+ * @slot navigation Custom leading area (default: an MIconButton built from the navigationIcon prop)
+ * @slot title Custom title content (default: renders the title prop)
+ * @slot actions Trailing action buttons
+ * @event navigation Emitted when the default navigation icon button is clicked (not emitted when the
+ *   #navigation slot is overridden — that content is fully custom)
+ */
 import MIconButton from './MIconButton.vue'
 import { useLocale } from '../composables/useLocale'
 
 withDefaults(defineProps<{
+  /** App bar title */
   title?: string
+  /** 64dp small/center-aligned row, or a 112dp medium / 152dp large two-row layout with the title below */
   variant?: 'center' | 'small' | 'medium' | 'large'
+  /** Leading icon (e.g. menu, arrow_back) */
   navigationIcon?: string
   /** Accessible label for the navigation icon button — defaults to the
    *  locale's generic "Menu" label; override when navigationIcon is
    *  actually a back arrow rather than a drawer toggle. */
   navigationLabel?: string
+  /**
+   * Swaps both container color (surface → surface-container) and elevation (level 0 → level 2), matching the
+   * real M3 on-scroll container tokens rather than just adding a shadow
+   */
   elevated?: boolean
+  /** Add a bottom border (border-outline-variant) */
   bordered?: boolean
 }>(), { variant: 'small' })
 

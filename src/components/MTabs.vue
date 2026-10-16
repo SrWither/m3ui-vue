@@ -1,4 +1,10 @@
 <script setup lang="ts">
+/**
+ * Switches between different views or content sections. The indicator animates via two independent springs
+ * (offset and width), not a CSS transition — see the component source for details.
+ *
+ * @event update:modelValue Emitted with the value of the tab you picked.
+ */
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import MIcon from './MIcon.vue'
 
@@ -10,8 +16,14 @@ interface Tab {
 }
 
 const props = withDefaults(defineProps<{
+  /** Active tab value (v-model) */
   modelValue: string | number
+  /** Tab definitions */
   tabs: Tab[]
+  /**
+   * Primary: short sliding underline shorter than the tab with a stretch animation. Secondary: full-width
+   * underline spanning the entire tab, text-only.
+   */
   variant?: 'primary' | 'secondary'
   /** Fixed (default, M3 `TabRow`): tabs evenly share the available width, no scrolling — use for 2-5 tabs. Scrollable (M3 `ScrollableTabRow`): tabs keep their natural width and the row scrolls horizontally when they overflow — use for many tabs. */
   scrollable?: boolean

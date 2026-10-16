@@ -1,10 +1,18 @@
 <script setup lang="ts">
+/**
+ * A constrained scroll area — vertical, horizontal, or both directions.
+ *
+ * @slot default The scrolling content.
+ */
 import { computed } from 'vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Scroll direction */
     direction?: 'vertical' | 'horizontal' | 'both'
+    /** Fixed height (CSS value) */
     height?: string
+    /** Maximum height (CSS value) */
     maxHeight?: string
   }>(),
   { direction: 'vertical' },

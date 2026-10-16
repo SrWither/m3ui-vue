@@ -1,8 +1,14 @@
 <script setup lang="ts">
+/**
+ * Centers its children both horizontally and vertically.
+ *
+ * @slot default Content, centered.
+ */
 import { computed } from 'vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Use inline-flex instead of flex */
     inline?: boolean
   }>(),
   { inline: false },

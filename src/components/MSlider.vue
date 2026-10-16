@@ -1,22 +1,43 @@
 <script setup lang="ts">
+/**
+ * The M3 slider — vertical bar thumb, rounded track with gap, standard/centered/range variants, horizontal or
+ * vertical.
+ *
+ * @event update:modelValue Emitted while dragging and on key presses, with the new value (a `[low, high]` pair
+ *   for the range variant).
+ */
 import { computed, onBeforeUnmount, ref } from 'vue'
 import MIcon from './MIcon.vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Current value — a tuple when variant is range */
     modelValue: number | [number, number]
+    /** Minimum value */
     min?: number
+    /** Maximum value */
     max?: number
+    /** Step increment */
     step?: number
+    /** Disables the slider */
     disabled?: boolean
+    /** Label text */
     label?: string
+    /** Show current value beside label */
     showValue?: boolean
+    /** Show value tooltip while dragging */
     showTooltip?: boolean
+    /** Slider orientation */
     orientation?: 'horizontal' | 'vertical'
+    /** Track and thumb size */
     size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+    /** Standard, centered (from middle), or range (two thumbs) */
     variant?: 'standard' | 'centered' | 'range'
+    /** Show stop dots at each step (max 30 visible) */
     stops?: boolean
+    /** Material Symbol icon shown before the slider — hides once the fill reaches it */
     icon?: string
+    /** Base color — used for the fill and thumb unless overridden by fillColor/thumbColor */
     color?: 'primary' | 'secondary' | 'tertiary' | 'error'
     /** Custom color (hex, rgb(), a CSS var, etc.) for the filled/active portion of the track and the corner dot. Defaults to `color`'s M3 token. */
     fillColor?: string

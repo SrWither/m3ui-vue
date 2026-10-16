@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * A navigation trail showing the current page's location within a hierarchy, with icons and custom separators.
+ *
+ * @event select Emitted when a non-last, non-disabled item is clicked
+ */
 import MIcon from './MIcon.vue'
 
 export interface BreadcrumbItem {
@@ -9,7 +14,9 @@ export interface BreadcrumbItem {
 }
 
 withDefaults(defineProps<{
+  /** Breadcrumb items (see `BreadcrumbItem`) */
   items: BreadcrumbItem[]
+  /** Material Symbol separator icon */
   separator?: string
 }>(), { separator: 'chevron_right' })
 

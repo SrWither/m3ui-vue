@@ -1,4 +1,12 @@
 <script setup lang="ts">
+/**
+ * A Floating Action Button for the primary action of a screen. Supports extended (icon+label), a speed-dial of
+ * small items, or a fully custom expanding panel via the `#content` slot.
+ *
+ * @slot content A panel anchored to the FAB that opens when you press it, instead of the `items` speed dial.
+ *   `close()` closes it.
+ * @event click Emitted when the FAB itself is clicked (not a speed-dial item)
+ */
 import { computed, onMounted, onUnmounted, ref, useSlots } from 'vue'
 import MIcon from './MIcon.vue'
 
@@ -13,14 +21,23 @@ defineOptions({ inheritAttrs: false })
 
 const props = withDefaults(
   defineProps<{
+    /** Material Symbol icon name */
     icon: string
+    /** Extended FAB label text */
     label?: string
+    /** Color scheme */
     color?: 'primary' | 'secondary' | 'tertiary' | 'surface'
+    /** FAB size */
     size?: 'small' | 'regular' | 'medium' | 'large'
+    /** Disables interaction */
     disabled?: boolean
+    /** Speed-dial child items (see `SpeedDialItem`) */
     items?: SpeedDialItem[]
+    /** Speed-dial expand direction */
     direction?: 'up' | 'down' | 'left' | 'right' | 'radial'
+    /** Vue Router destination — renders as RouterLink instead of button */
     to?: string | Record<string, any>
+    /** Keep speed-dial open after clicking an item or clicking outside */
     persistent?: boolean
     /** For the `up`/`down` #content panel only: which edge it anchors to when
      *  it's wider than the FAB itself. 'start' (default) keeps its left edge

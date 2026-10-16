@@ -1,9 +1,23 @@
 <script setup lang="ts">
+/**
+ * Simple previous/next page navigation with an automatically computed page range label. Its texts (“1–10 of
+ * 25”, “Page 1 of 3” and the buttons’ labels) come from the app’s locale.
+ *
+ * @event update:page Emitted when the previous/next button is clicked — drive page with it for v-model-style
+ *   two-way binding
+ */
 import { computed } from 'vue'
 import MIconButton from './MIconButton.vue'
 import { useLocale } from '../composables/useLocale'
 
-const props = defineProps<{ page: number; perPage: number; total: number }>()
+const props = defineProps<{
+  /** Current page (1-based) */
+  page: number
+  /** Items per page */
+  perPage: number
+  /** Total number of items */
+  total: number
+}>()
 const emit = defineEmits<{ 'update:page': [number] }>()
 const t = useLocale()
 

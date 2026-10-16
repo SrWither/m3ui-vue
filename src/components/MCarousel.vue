@@ -10,6 +10,16 @@ export type CarouselFlingBehavior = 'single-advance' | 'multi-browse' | 'no-snap
 </script>
 
 <script setup lang="ts" generic="T = CarouselItem">
+/**
+ * The Material 3 carousel, with its four layouts. Items keep one size and are laid out side by side; as you
+ * scroll, each one is masked down to the space it has, so items grow as they reach the focal position and
+ * shrink as they leave. Drag it (touch or mouse), scroll it with a trackpad or a horizontal wheel, or focus it
+ * and use the arrow keys. For fixed-width slides with arrows and autoplay, see MSimpleCarousel.
+ *
+ * @slot item Content of each item, filling its full (unmasked) box. Replaces the default image and label
+ * @event update:modelValue The current item changed
+ * @event itemClick An item was clicked (not dragged). A partly visible item also scrolls into focus
+ */
 /*
  * M3 carousel, ported from Compose Material3 (carousel/Carousel.kt and the keyline engine in
  * ../composables/_carouselStrategy.ts). Like Compose's pager-based Carousel, every item has the
@@ -45,10 +55,13 @@ import {
 
 const props = withDefaults(
   defineProps<{
+    /** Items to render, required. CarouselItem by default; any type with an #item slot */
     items: T[]
     /** Index of the current (snapped) item; use with v-model to follow or drive it. */
     modelValue?: number
+    /** Carousel layout */
     variant?: CarouselVariant
+    /** Scroll axis */
     orientation?: 'horizontal' | 'vertical'
     /**
      * Size of large items along the scroll axis, in px. Multi-browse and hero treat it as the
@@ -56,14 +69,17 @@ const props = withDefaults(
      * without it fills the container minus its small items; full-screen ignores it.
      */
     itemSize?: number
-    /** Space between items, in px. The M3 spec and every Compose sample use 8. */
+    /** Space between items, in px (M3 uses 8). */
     itemSpacing?: number
     /** Padding at both ends of the scroll axis, in px. Items scroll under it. */
     contentPadding?: number
+    /** Smallest size a small item can take (multi-browse, hero) */
     minSmallItemSize?: number
+    /** Largest size a small item can take (multi-browse, hero) */
     maxSmallItemSize?: number
     /** What a release does. Defaults to 'no-snap' for uncontained, 'single-advance' otherwise. */
     flingBehavior?: CarouselFlingBehavior
+    /** Allow dragging, wheel and keyboard scrolling */
     userScrollEnabled?: boolean
     /** Height of the carousel. Defaults to 205px for a horizontal carousel that isn't full-screen. */
     height?: string

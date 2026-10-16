@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * A trigger-based dropdown menu, composed with `MMenuItem` and `MMenuDivider`. Items support unlimited-depth
+ * nested submenus via the `#children` slot.
+ *
+ * @slot trigger The element that opens the menu when clicked; `open` tells whether it's open.
+ * @slot default The menu's items (MMenuItem, MMenuDivider or your own markup); `close()` closes the menu.
+ */
 import { computed, Fragment, inject, nextTick, onMounted, onUnmounted, provide, ref, useSlots, watch, type VNode } from 'vue'
 import MIcon from './MIcon.vue'
 import MMenuDivider from './MMenuDivider.vue'
@@ -17,13 +24,16 @@ const props = withDefaults(
      */
     submenuMode?: 'flyout' | 'push'
     /**
-     * `'standard'` is M3's baseline menu — square-ish 4dp corners
-     * (`MenuTokens.ContainerShape`/`CornerExtraSmall`).
-     * `'expressive'` is M3's rounder "vertical menu" styling — 16dp corners
-     * (`SegmentedMenuTokens.ContainerShape`/`CornerLarge`). Combine with
-     * `<MMenuDivider gap />` to split the panel into independently-rounded
-     * groups with a visible gap between them, instead of a plain line.
+     * 'standard' is M3's baseline menu (4dp corners). 'expressive' is M3's rounder 'vertical menu' styling
+     * (16dp corners) — combine with <MMenuDivider gap /> to split the panel into independently-rounded groups
+     * with a visible gap, instead of a plain divider line.
      */
+    // `'standard'` is M3's baseline menu — square-ish 4dp corners
+    // (`MenuTokens.ContainerShape`/`CornerExtraSmall`).
+    // `'expressive'` is M3's rounder "vertical menu" styling — 16dp corners
+    // (`SegmentedMenuTokens.ContainerShape`/`CornerLarge`). Combine with
+    // `<MMenuDivider gap />` to split the panel into independently-rounded
+    // groups with a visible gap between them, instead of a plain line.
     variant?: 'standard' | 'expressive'
   }>(),
   { align: 'right', submenuMode: 'flyout', variant: 'standard' },

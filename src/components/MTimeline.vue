@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * A vertical event timeline with icon dots, dates, and colors — standard single-column or alternating
+ * left/right layout.
+ */
 import MIcon from "./MIcon.vue";
 
 export interface TimelineItem {
@@ -12,8 +16,11 @@ export interface TimelineItem {
 
 withDefaults(
   defineProps<{
+    /** Array of timeline entries — required */
     items: TimelineItem[];
+    /** Compact spacing between items */
     dense?: boolean;
+    /** Alternate items left/right of a central line instead of a single left-aligned column */
     alternating?: boolean;
   }>(),
   { dense: false, alternating: false },

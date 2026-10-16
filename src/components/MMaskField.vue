@@ -1,4 +1,10 @@
 <script setup lang="ts">
+/**
+ * A text field with a formatting mask — built-in presets or a custom pattern where `#` stands for a digit.
+ *
+ * @event update:modelValue Emitted on every keystroke — powers v-model
+ * @event debounced Emitted debounce ms after the user stops typing (only when debounce > 0)
+ */
 import { computed, ref, useId, watch } from 'vue'
 import MIcon from './MIcon.vue'
 import { useFieldBg } from '../composables/useFieldBg'
@@ -18,18 +24,33 @@ const PRESETS: Record<MaskPreset, string> = {
 
 const props = withDefaults(
   defineProps<{
+    /** Masked value (v-model) */
     modelValue: string
+    /** Field label */
     label: string
+    /** Mask pattern (# = digit) or a built-in preset name (see `MaskPreset`) */
     mask: string | MaskPreset
+    /** Visual style */
     variant?: 'filled' | 'outlined'
+    /** Error state */
     error?: boolean
+    /** Error message shown when error is true */
     errorLabel?: string
+    /** Hint text */
     hint?: string
+    /** Disables the field */
     disabled?: boolean
+    /** Marks as required — adds a red asterisk after the label */
     required?: boolean
+    /** Material Symbol icon */
     leadingIcon?: string
+    /** Show clear button */
     clearable?: boolean
+    /**
+     * Overrides the auto-detected background color used to cut the floating label out of the outlined border
+     */
     fieldBg?: string
+    /** Delay (ms) before firing the @debounced event */
     debounce?: number
   }>(),
   {

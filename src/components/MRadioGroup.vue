@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * A group of radio buttons sharing a single selection, column or row layout.
+ *
+ * @event update:modelValue Emitted with the selected option's value.
+ */
 import MRadio from './MRadio.vue'
 
 interface Option {
@@ -8,11 +13,17 @@ interface Option {
 }
 
 const props = withDefaults(defineProps<{
+  /** Selected value (v-model) */
   modelValue: unknown
+  /** Radio options */
   options: Option[]
+  /** Group label */
   label?: string
+  /** Layout direction */
   direction?: 'column' | 'row'
+  /** Disables all radios */
   disabled?: boolean
+  /** Radio color */
   color?: 'primary' | 'secondary' | 'tertiary' | 'error'
 }>(), { direction: 'column', disabled: false, color: 'primary' })
 

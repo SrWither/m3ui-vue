@@ -1,10 +1,19 @@
 <script setup lang="ts">
+/**
+ * A placeholder for empty views — icon, title, description, and optional action buttons.
+ *
+ * @slot actions Action buttons rendered below the description
+ */
 import MIcon from './MIcon.vue'
 
 withDefaults(defineProps<{
+  /** Material Symbol icon */
   icon?: string
+  /** Title text — required */
   title: string
+  /** Supporting description */
   description?: string
+  /** Smaller variant (24px icon in a 48px circle, less padding) */
   compact?: boolean
 }>(), { icon: 'inbox' })
 </script>

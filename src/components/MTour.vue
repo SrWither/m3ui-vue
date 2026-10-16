@@ -1,4 +1,12 @@
 <script setup lang="ts">
+/**
+ * A guided, step-by-step walkthrough that highlights a page element per step with an auto-positioned tooltip
+ * and a dimming scrim.
+ *
+ * @event update:modelValue Emitted when the tour opens or closes (Escape-less — closed via the X button,
+ *   clicking the scrim, or finishing) — powers v-model
+ * @event finish Emitted when the user completes the last step (clicks the finish button)
+ */
 import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import MButton from './MButton.vue'
 import MIcon from './MIcon.vue'
@@ -12,10 +20,15 @@ export interface TourStep {
 }
 
 const props = defineProps<{
+  /** Show/hide the tour (v-model) */
   modelValue: boolean
+  /** Ordered list of steps; see `TourStep` */
   steps: TourStep[]
+  /** Label for the Previous button (defaults to the locale string, 'Previous') */
   prevLabel?: string
+  /** Label for the Next button (defaults to the locale string, 'Next') */
   nextLabel?: string
+  /** Label for the final step's button (defaults to the locale string, 'Finish') */
   finishLabel?: string
 }>()
 

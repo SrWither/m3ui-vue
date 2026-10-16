@@ -1,4 +1,15 @@
 <script setup lang="ts">
+/**
+ * A drag-and-drop file upload zone with image previews, per-file size formatting, and progress/status display.
+ * It only selects files: uploading them is up to you, and each entry's status and progress show how it's going.
+ *
+ * @slot dropzone Replaces the default icon + text content of the drop zone
+ * @slot actions Right-aligned row below the list, shown only while it has files. Scope: { files: UploadFile[],
+ *   clear: () => void }. Put your Upload / Clear buttons here
+ * @event update:modelValue Emitted with the new list whenever files are added, removed or cleared (v-model)
+ * @event select Emitted with the newly accepted files whenever files are added (drop or picker)
+ * @event remove Emitted when a file is removed from the list with its remove button
+ */
 import { ref, computed, reactive, watch, onBeforeUnmount } from 'vue'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
@@ -17,13 +28,21 @@ export interface UploadFile {
 
 const props = withDefaults(
   defineProps<{
+    /** Accepted file types (e.g. ".png,.jpg", "image/*") */
     accept?: string
+    /** Allow multiple files */
     multiple?: boolean
+    /** Max file size in bytes — oversized files are silently filtered out */
     maxSize?: number
+    /** Disables the upload area */
     disabled?: boolean
+    /** Drop zone main text (defaults to the locale string) */
     dropText?: string
+    /** Drop zone select link text (defaults to the locale string) */
     selectText?: string
+    /** Prefix shown before the formatted max size (defaults to the locale string) */
     maxSizePrefix?: string
+    /** Aria label for each file row's remove button (defaults to the locale string) */
     removeLabel?: string
     /** Optional v-model. Bind it to own the list: clear it, or update each entry's status/progress. Unbound, the component keeps the list itself. */
     modelValue?: UploadFile[]

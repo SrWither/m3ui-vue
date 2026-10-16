@@ -1,4 +1,15 @@
 <script setup lang="ts">
+/**
+ * A week or day calendar grid. Events sit at their exact times, overlapping ones share the width, and anything
+ * that lasts all day or spans several days runs across the all-day row. Click a day header to open that day.
+ * Dates and times follow the app's locale.
+ *
+ * @slot event Content of each event block; allDay is true in the all-day row
+ * @event eventClick An event (in the grid or the all-day row) was clicked
+ * @event slotClick An empty spot in the grid was clicked
+ * @event update:date Navigation changed the date shown (YYYY-MM-DD)
+ * @event update:view The Day/Week toggle (or a day header) changed the view
+ */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import MIconButton from './MIconButton.vue'
 import { useLocale } from '../composables/useLocale'
@@ -22,12 +33,15 @@ export interface SchedulerEvent {
 
 const props = withDefaults(
   defineProps<{
+    /** Events to show (see `SchedulerEvent`) */
     events?: SchedulerEvent[]
     /** 'week' or 'day'; use v-model:view to follow the header's toggle. */
     view?: 'week' | 'day'
     /** The date shown (`YYYY-MM-DD`), today by default; use v-model:date to follow navigation. */
     date?: string
+    /** First visible hour */
     startHour?: number
+    /** Hour the grid ends at */
     endHour?: number
     /** First day of the week: 0 = Sunday, 1 = Monday. */
     weekStartsOn?: 0 | 1
@@ -35,12 +49,19 @@ const props = withDefaults(
     hourHeight?: number
     /** A line across today's column at the current time. */
     nowIndicator?: boolean
+    /** Locale for dates and times (Intl). Falls back to the app's configured locale */
     locale?: string
+    /** Aria label of the previous button (defaults to the locale string) */
     prevLabel?: string
+    /** Aria label of the next button (defaults to the locale string) */
     nextLabel?: string
+    /** Label of the Today button (defaults to the locale string) */
     todayLabel?: string
+    /** Label of the Day toggle (defaults to the locale string) */
     dayViewLabel?: string
+    /** Label of the Week toggle (defaults to the locale string) */
     weekViewLabel?: string
+    /** Label of the all-day row (defaults to the locale string) */
     allDayLabel?: string
   }>(),
   {

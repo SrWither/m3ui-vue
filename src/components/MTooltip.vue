@@ -1,12 +1,27 @@
 <script setup lang="ts">
+/**
+ * A hover/focus-triggered label — plain text, or a rich variant with a title, detailed content, and action
+ * buttons.
+ *
+ * @slot default The trigger element the tooltip is anchored to
+ * @slot content Rich-tooltip body content (only used when rich is true)
+ * @slot actions Rich-tooltip action buttons row (only used when rich is true)
+ */
 import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 
 defineOptions({ inheritAttrs: false })
 
 const props = withDefaults(defineProps<{
+  /** Tooltip text (plain variant), or the rich variant's title line */
   text?: string
+  /** Tooltip position relative to the trigger */
   placement?: 'top' | 'bottom' | 'left' | 'right'
+  /** Show delay in ms after hover/focus */
   delay?: number
+  /**
+   * Rich tooltip with a #content slot and optional #actions. Stays open when hovering the tooltip itself
+   * instead of closing immediately.
+   */
   rich?: boolean
 }>(), { placement: 'top', delay: 600, rich: false })
 

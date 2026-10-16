@@ -1,12 +1,23 @@
 <script setup lang="ts">
+/**
+ * A terminal emulator built on xterm.js — pre-filled static output, or fully interactive keyboard input.
+ *
+ * @event line Emitted with the buffered text once the user presses Enter — the usual event to handle a
+ *   submitted command
+ * @event input Emitted for every raw keystroke/data chunk xterm receives (not readonly)
+ */
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import MIcon from './MIcon.vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Initial lines to display */
     lines?: string[]
+    /** Disable input */
     readonly?: boolean
+    /** Title bar text */
     title?: string
+    /** Minimum height */
     minHeight?: string
   }>(),
   {

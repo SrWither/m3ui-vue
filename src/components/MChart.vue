@@ -1,13 +1,25 @@
 <script setup lang="ts">
+/**
+ * A thin Chart.js wrapper — line, bar, pie, doughnut, and radar types, with legend/tooltip/axis colors that
+ * automatically track the active M3 theme (light/dark, and any palette swap). Available from the `/chart` entry
+ * point.
+ */
 import { computed, ref, watch, onMounted, onBeforeUnmount, shallowRef, type Component } from 'vue'
 
 type ChartType = 'line' | 'bar' | 'pie' | 'doughnut' | 'radar'
 
 const props = withDefaults(
   defineProps<{
+    /** Chart type. Required — there is no default. */
     type: ChartType
+    /** Chart.js data object with labels and datasets. Required — there is no default. */
     data: Record<string, any>
+    /**
+     * Chart.js options, deep-merged on top of MChart's own M3-themed defaults (legend/tooltip/axis colors that
+     * track the active theme automatically)
+     */
     options?: Record<string, any>
+    /** Chart height */
     height?: string
   }>(),
   { height: '300px' },

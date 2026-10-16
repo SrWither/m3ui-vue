@@ -1,12 +1,27 @@
 <script setup lang="ts">
+/**
+ * The M3 Expressive loading indicator — continuously morphs between rounded shapes (soft burst, cookie,
+ * pentagon, pill, sunny, oval) via an underdamped spring while slowly rotating. Comes in a plain and a
+ * contained (circle-backed) variant.
+ */
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useLocale } from '../composables/useLocale';
 
 const props = withDefaults(
   defineProps<{
+    /**
+     * Overall footprint in px. The active shape sits inset within it (38/48 ratio) unless contained, where it
+     * scales to 55% of size.
+     */
     size?: number;
+    /**
+     * Wraps the shape in a filled container circle, and recolors the shape to the OnXContainer role instead of
+     * the bare X role
+     */
     contained?: boolean;
+    /** Active shape (and container, when contained) color */
     color?: "primary" | "secondary" | "tertiary" | "error";
+    /** Aria label for the indicator's status role — falls back to the locale string ('Loading') when omitted */
     label?: string;
   }>(),
   { size: 48, contained: false, color: "primary" },

@@ -1,12 +1,23 @@
 <script setup lang="ts">
+/**
+ * Pinterest-style column layout that fills the shortest column first. Re-lays out on container resize via
+ * `ResizeObserver` and when the slotted content changes.
+ *
+ * @slot default The items, laid out in columns.
+ */
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick, useSlots } from 'vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Default column count */
     cols?: number
+    /** Columns at sm breakpoint (640px) */
     smCols?: number
+    /** Columns at md breakpoint (768px) */
     mdCols?: number
+    /** Columns at lg breakpoint (1024px) */
     lgCols?: number
+    /** Gap between items */
     gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'
   }>(),
   { cols: 2, gap: 'md' },

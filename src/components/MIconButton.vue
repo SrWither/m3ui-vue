@@ -1,15 +1,28 @@
 <script setup lang="ts">
+/**
+ * A button that shows only an icon — four visual styles, the same 5-tier expressive sizing as MButton.
+ */
 import { computed } from 'vue'
 import MIcon from './MIcon.vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Material Symbol icon name */
     icon: string
+    /** Accessible label (aria-label and title) */
     label?: string
+    /** Visual style */
     variant?: 'standard' | 'filled' | 'tonal' | 'outlined'
+    /**
+     * Button shape — rounded (pill, always) or squared (corner radius scales with size: 12px xs/sm, 16px md,
+     * 28px lg/xl)
+     */
     shape?: 'rounded' | 'squared'
+    /** M3's 5-tier icon button sizing (xs:32, sm:40, md:56, lg:96, xl:136), or a custom pixel value */
     size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | number
+    /** Disables interaction */
     disabled?: boolean
+    /** Vue Router destination — renders as RouterLink instead of button */
     to?: string | Record<string, any>
   }>(),
   {

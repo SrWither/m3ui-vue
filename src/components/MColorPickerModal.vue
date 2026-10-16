@@ -1,13 +1,25 @@
 <script setup lang="ts">
+/**
+ * A modal, centered color picker with saturation/brightness area, hue slider, hex input, and preset swatches —
+ * the sibling of MColorPicker, a fully separate component rather than a shared internal. Only emits on confirm.
+ *
+ * @event update:modelValue Emitted when a color is confirmed — powers v-model. Only fires on confirm, not while
+ *   dragging
+ * @event update:show Emitted when the dialog opens or closes — powers v-model:show
+ */
 import { computed, ref, watch } from 'vue'
 import MButton from './MButton.vue'
 import MIcon from './MIcon.vue'
 import { useLocale } from '../composables/useLocale'
 
 const props = withDefaults(defineProps<{
+  /** Selected color in hex format (v-model) */
   modelValue: string
+  /** Controls dialog visibility (v-model:show) */
   show?: boolean
+  /** Preset color swatches shown in the dialog */
   presets?: string[]
+  /** Dialog title */
   title?: string
 }>(), {
   show: false,

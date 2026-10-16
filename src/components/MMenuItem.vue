@@ -1,12 +1,28 @@
 <script setup lang="ts">
+/**
+ * An item of an MMenu or MContextMenu: icon, label and a shortcut hint. Put more items in its `#children` slot
+ * to make it open a submenu.
+ *
+ * @slot default Item label text.
+ * @slot children Nested submenu items. In the parent MMenu's default 'flyout' mode, clicking or hovering (mouse
+ *   only) the item opens a side panel — supports unlimited nesting depth. In 'push' mode, clicking the item
+ *   instead swaps the whole menu panel to the submenu with a back header; hover does nothing.
+ * @event click Emitted when a leaf item (no #children) is clicked. Not emitted for disabled items or for items
+ *   with #children, since clicking those just opens/toggles the submenu instead.
+ */
 import { computed, inject, ref, useSlots } from 'vue'
 import MIcon from './MIcon.vue'
 
 const props = withDefaults(defineProps<{
+  /** Material Symbol icon name */
   icon?: string
+  /** Keyboard shortcut hint displayed on the right (e.g. "Ctrl+C") — hidden when the item has #children */
   shortcut?: string
+  /** Vue Router destination — renders as RouterLink instead of button */
   to?: string | Record<string, any>
+  /** Disables the item */
   disabled?: boolean
+  /** Danger/destructive styling (error color) */
   danger?: boolean
   /** Keep the menu open after this item is clicked (e.g. checkable/toggle items). */
   keepOpen?: boolean

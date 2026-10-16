@@ -1,13 +1,30 @@
 <script setup lang="ts">
+/**
+ * Wraps its own scrollable container and fires a refresh event when the user pulls past a threshold at the very
+ * top of the scroll.
+ *
+ * @slot default The scrollable content. A pull starts only when it's scrolled to the top; otherwise touch
+ *   scrolls it normally
+ * @event refresh Emitted when the user drags past threshold and releases. Set refreshing to true in the
+ *   handler, then back to false once the fetch resolves.
+ */
 import { ref, watch, onMounted, onBeforeUnmount } from "vue";
 import MLoadingIndicator from "./MLoadingIndicator.vue";
 
 const props = withDefaults(
   defineProps<{
+    /**
+     * Controlled loading state — set it to true in your @refresh handler and back to false once the fetch
+     * resolves; the indicator settles and releases accordingly, same pattern as MInfiniteScroll's loading prop
+     */
     refreshing?: boolean;
+    /** Disables the pull gesture */
     disabled?: boolean;
+    /** Pull distance in px required to trigger a refresh on release */
     threshold?: number;
+    /** Indicator size in px */
     size?: number;
+    /** Indicator color */
     color?: "primary" | "secondary" | "tertiary" | "error";
   }>(),
   { refreshing: false, disabled: false, threshold: 64, size: 36, color: "primary" },

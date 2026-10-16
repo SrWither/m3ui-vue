@@ -1,5 +1,14 @@
 <script setup lang="ts">
-withDefaults(defineProps<{ name: string; size?: number }>(), { size: 24 })
+/**
+ * Renders a Material Symbols Outlined glyph by name. Color follows the surrounding text color (set it with a
+ * Tailwind text-* class).
+ */
+withDefaults(defineProps<{
+  /** Material Symbol name (e.g. "settings", "favorite") */
+  name: string
+  /** Icon size in px */
+  size?: number
+}>(), { size: 24 })
 </script>
 
 <template>

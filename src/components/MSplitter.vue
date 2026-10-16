@@ -1,11 +1,21 @@
 <script setup lang="ts">
+/**
+ * Two resizable panels divided by a draggable handle.
+ *
+ * @slot first Content for the first (left/top) panel
+ * @slot second Content for the second (right/bottom) panel
+ */
 import { ref, computed, onBeforeUnmount } from 'vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Split direction */
     direction?: 'horizontal' | 'vertical'
+    /** Initial split percentage */
     initialSplit?: number
+    /** Minimum panel percentage */
     min?: number
+    /** Maximum panel percentage */
     max?: number
   }>(),
   { direction: 'horizontal', initialSplit: 50, min: 10, max: 90 },

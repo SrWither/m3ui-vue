@@ -1,6 +1,12 @@
 <script setup lang="ts">
+/**
+ * A small heading that labels a group of items inside an MList.
+ *
+ * @slot default Subheader text/content
+ */
 withDefaults(
   defineProps<{
+    /** Align with items that have a leading icon (adds left padding) */
     inset?: boolean
   }>(),
   { inset: false },

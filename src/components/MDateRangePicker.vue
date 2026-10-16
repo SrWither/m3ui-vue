@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * An inline, dropdown-anchored calendar for selecting a start and end date, with range highlighting.
+ *
+ * @event update:modelValue Emitted with the picked range.
+ */
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
@@ -11,20 +16,38 @@ export interface DateRange {
 }
 
 const props = defineProps<{
+  /** Selected date range (v-model); see `DateRange` */
   modelValue: DateRange
+  /** Field label */
   label?: string
+  /** Placeholder shown when no range is selected — falls back to label, then the current locale's string */
   placeholder?: string
+  /** Minimum date (YYYY-MM-DD) */
   min?: string
+  /** Maximum date (YYYY-MM-DD) */
   max?: string
+  /** Disables the picker */
   disabled?: boolean
+  /** Error state */
   error?: boolean
+  /** Error message shown when error is true */
   errorLabel?: string
+  /** Hint text below the field */
   hint?: string
+  /**
+   * Locale for month/day names. Falls back to the app's configured locale (createM3UI({ locale })) — same
+   * pattern as MRelativeTime
+   */
   locale?: string
+  /** Overrides the auto-detected background color used to cut the floating label out of the border */
   fieldBg?: string
+  /** Aria label for the previous-month button — defaults to the current locale's string */
   prevMonthLabel?: string
+  /** Aria label for the next-month button — defaults to the current locale's string */
   nextMonthLabel?: string
+  /** Header text shown while picking the start date — defaults to the current locale's string */
   pickStartText?: string
+  /** Header text shown while picking the end date — defaults to the current locale's string */
   pickEndText?: string
 }>()
 

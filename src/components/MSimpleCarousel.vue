@@ -1,4 +1,12 @@
 <script setup lang="ts">
+/**
+ * A scroll-snap image carousel with three fixed-width layouts — hero (one protagonist item with peeking
+ * neighbors), multi-browse (several items at once, statically sized), and uncontained (variable-width items,
+ * optionally animated by scroll position). For the real M3 multi-browse carousel — where items continuously
+ * resize as you scroll instead of snapping between fixed widths — see MCarousel.
+ *
+ * @event change Fires with the new active item index whenever the track scrolls to a different closest item
+ */
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import MIcon from './MIcon.vue'
 
@@ -12,15 +20,25 @@ export interface SimpleCarouselItem {
 
 const props = withDefaults(
   defineProps<{
+    /** Slides to render — required */
     items: SimpleCarouselItem[]
+    /** Carousel layout style */
     layout?: 'hero' | 'multi-browse' | 'uncontained'
+    /** Track height */
     height?: string
+    /** Show prev/next arrow buttons (fade in on hover) */
     showArrows?: boolean
+    /** Show dot indicators below the track */
     showIndicators?: boolean
+    /** Auto-advance slides — pauses while the pointer is over the carousel */
     autoplay?: boolean
+    /** Autoplay interval in ms */
     interval?: number
+    /** Gap between items in pixels */
     gap?: number
+    /** Number of visible items (multi-browse layout only) */
     visibleItems?: number
+    /** Dynamically grow the centered item and shrink the others while scrolling (uncontained layout only) */
     animated?: boolean
   }>(),
   {

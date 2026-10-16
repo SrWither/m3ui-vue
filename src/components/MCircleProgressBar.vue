@@ -1,14 +1,27 @@
 <script setup lang="ts">
+/**
+ * A circular progress indicator — a smooth arc, or the M3 Expressive wavy ring that fades between a circle and
+ * a bumpy wave near the extremes.
+ *
+ * @slot default Custom content centered inside the ring. When provided, the percentage label is hidden.
+ */
 import { computed, ref, watch, onMounted, onUnmounted, useId } from "vue";
 
 const props = withDefaults(
   defineProps<{
+    /** Progress 0–100 (omit when indeterminate) */
     value?: number;
+    /** Spinning arc — no value needed. Identical for both variants. */
     indeterminate?: boolean;
+    /** Ring color */
     color?: "primary" | "secondary" | "tertiary" | "error";
+    /** wavy: animated bumpy ring that fades to circle near 0% and 100%; circle: smooth arc */
     variant?: "circle" | "wavy";
+    /** Label text below the circle */
     label?: string;
+    /** Diameter in px — matches the real M3 WaveSize/Size tokens per variant */
     size?: number;
+    /** Stroke width of the ring/wave in px, matching the real M3 token */
     thickness?: number;
   }>(),
   {

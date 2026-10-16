@@ -1,14 +1,29 @@
 <script setup lang="ts">
+/**
+ * A vertical list container (MList) with rich, flexible rows (MListItem) and optional section headers
+ * (MListSubheader) — one-line to three-line items, leading/trailing elements, selection, navigation, segmented,
+ * and expandable variants.
+ *
+ * @slot default MListItem / MListSubheader children
+ * @event update:selected Fires when a selectable item is clicked (via v-model:selected)
+ */
 import { computed, provide } from 'vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Compact vertical padding on child items */
     dense?: boolean
+    /** Show separators between items — 'inset' aligns the line past a leading icon/avatar */
     dividers?: boolean | 'inset'
+    /** Navigation variant with rounded (pill) active items, ideal for drawers */
     nav?: boolean
+    /** Segmented style — items each get an individual rounded background instead of a flat list */
     segmented?: boolean
+    /** Enable single-item selection — items compare their value prop against selected */
     selectable?: boolean
+    /** Currently selected item value (v-model:selected) */
     selected?: string | number | null
+    /** Default line count for child items that don't set their own lines prop */
     lines?: 1 | 2 | 3
   }>(),
   { dense: false, dividers: false, nav: false, segmented: false, selectable: false },

@@ -1,4 +1,11 @@
 <script setup lang="ts">
+/**
+ * A button split into a main action and a dropdown toggle — click the main part for the primary action, the
+ * arrow for alternatives.
+ *
+ * @slot menu Custom dropdown content. Used instead of items. Call close() to dismiss.
+ * @event click Emitted when the main (left) button is clicked
+ */
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import MIcon from './MIcon.vue'
 
@@ -12,12 +19,19 @@ export interface SplitButtonItem {
 defineOptions({ inheritAttrs: false })
 
 const props = withDefaults(defineProps<{
+  /** Main button label */
   label: string
+  /** Main button icon */
   icon?: string
+  /** Visual style */
   variant?: 'filled' | 'tonal' | 'outlined' | 'elevated'
+  /** Color scheme */
   color?: 'primary' | 'secondary' | 'tertiary'
+  /** Button size */
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+  /** Disables both parts */
   disabled?: boolean
+  /** Dropdown menu items; see `SplitButtonItem` */
   items?: SplitButtonItem[]
 }>(), {
   variant: 'tonal',

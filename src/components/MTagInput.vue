@@ -1,4 +1,10 @@
 <script setup lang="ts">
+/**
+ * Type and press Enter or comma to add a free-form tag. Backspace on an empty input removes the last tag.
+ *
+ * @event update:modelValue Emitted whenever a tag is added or removed — powers v-model
+ * @event debounced Emitted debounce ms after the tag list stops changing (only when debounce > 0)
+ */
 import { computed, ref, useId } from 'vue'
 import MIcon from './MIcon.vue'
 import { useFieldBg } from '../composables/useFieldBg'
@@ -6,20 +12,37 @@ import { useDebounce } from '../composables/useDebounce'
 
 const props = withDefaults(
   defineProps<{
+    /** Array of tags (v-model) */
     modelValue: string[]
+    /** Floating label text */
     label?: string
+    /** Input placeholder */
     placeholder?: string
+    /** Field style */
     variant?: 'filled' | 'outlined'
+    /** Disables the field */
     disabled?: boolean
+    /** Error state */
     error?: boolean
+    /** Error message shown when error is true */
     errorLabel?: string
+    /** Helper text below field */
     hint?: string
+    /** Marks as required — adds a red asterisk after the label */
     required?: boolean
+    /** Material Symbol icon name */
     leadingIcon?: string
+    /**
+     * Overrides the auto-detected background color used to cut the floating label out of the outlined border
+     */
     fieldBg?: string
+    /** Max number of tags allowed */
     maxTags?: number
+    /** Allow duplicate tags */
     duplicates?: boolean
+    /** Show a clear-all button */
     clearable?: boolean
+    /** Delay (ms) before firing the @debounced event */
     debounce?: number
   }>(),
   {

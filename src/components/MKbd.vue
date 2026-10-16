@@ -1,11 +1,17 @@
 <script setup lang="ts">
+/**
+ * Displays a keyboard shortcut as styled key chips. Purely presentational — pairs well with MHotkeys or
+ * MCommandPalette to show the shortcut that triggers an action.
+ */
 import { computed } from 'vue'
 
 const props = withDefaults(
   defineProps<{
     /** A '+'-delimited string ("Ctrl+Shift+K") or an array of keys (['Ctrl', 'Shift', 'K']). */
     keys: string | string[]
+    /** Key chip size */
     size?: 'sm' | 'md' | 'lg'
+    /** Separator rendered between keys */
     separator?: string
   }>(),
   {

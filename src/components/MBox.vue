@@ -1,13 +1,25 @@
 <script setup lang="ts">
+/**
+ * Generic surface box with padding, radius, elevation, and border — a building block for ad-hoc layout that
+ * doesn't warrant a dedicated component.
+ *
+ * @slot default Content.
+ */
 import { computed } from 'vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Surface color variant */
     surface?: 'default' | 'container' | 'container-low' | 'container-high' | 'container-highest' | 'primary-container' | 'secondary-container' | 'tertiary-container' | 'inverse'
+    /** Padding size */
     padding?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+    /** Border radius */
     rounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full'
+    /** Shadow elevation level */
     elevation?: 0 | 1 | 2 | 3
+    /** Show border */
     border?: boolean
+    /** HTML tag to render */
     tag?: string
   }>(),
   { padding: 'none', rounded: 'none', elevation: 0, border: false, tag: 'div' },

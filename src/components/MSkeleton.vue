@@ -1,9 +1,17 @@
 <script setup lang="ts">
+/**
+ * A loading placeholder shape — text, circular, rectangular, or rounded — with pulse or wave animation.
+ */
 withDefaults(defineProps<{
+  /** Skeleton shape */
   variant?: 'text' | 'circular' | 'rectangular' | 'rounded'
+  /** CSS width (defaults to 100%, or 40px for circular) */
   width?: string
+  /** CSS height (defaults to 14px for text, 40px for circular, 100px otherwise) */
   height?: string
+  /** Number of text lines (text variant only) — the last line renders at 60% width */
   lines?: number
+  /** Animation style */
   animation?: 'pulse' | 'wave' | 'none'
 }>(), {
   variant: 'text',

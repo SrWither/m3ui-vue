@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * A small numeric or dot indicator overlaid on another element, such as an icon button or avatar.
+ *
+ * @slot default The element the badge sits on.
+ */
 import { computed } from 'vue'
 
 export type BadgePosition = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left'
@@ -6,11 +11,17 @@ export type BadgeOverlap = 'inside' | 'outside' | 'edge'
 
 const props = withDefaults(
   defineProps<{
+    /** Numeric badge value */
     count?: number
+    /** Show a small dot instead of a number */
     dot?: boolean
+    /** Badge color */
     color?: 'primary' | 'error' | 'secondary' | 'tertiary'
+    /** Max value before showing "N+" */
     max?: number
+    /** Corner where the badge is placed */
     position?: BadgePosition
+    /** How much the badge overlaps the content */
     overlap?: BadgeOverlap
   }>(),
   {

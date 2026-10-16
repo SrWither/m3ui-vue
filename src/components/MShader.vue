@@ -1,4 +1,16 @@
 <script setup lang="ts">
+/**
+ * A canvas container for hand-written shaders. Give it a GLSL fragment shader (Shadertoy-style — it runs on
+ * WebGL2 and works everywhere) and, optionally, a WGSL fragment shader that runs on WebGPU when the browser
+ * supports it. `renderer="auto"` picks WebGPU whenever both a `wgsl` source and browser support are present,
+ * otherwise it falls back to WebGL2 — so the same component works as a drop-in on old and new browsers alike.
+ *
+ * @slot loading Shown while the backend initializes (default: MSpinner)
+ * @slot fallback Shown when neither WebGL2 nor WebGPU is available at all
+ * @slot error Shown on a shader compile/link/runtime error, with the message
+ * @event error Emitted on a shader compile/link error, or a WebGPU runtime error
+ * @event ready Emitted once the backend has initialized — which backend ended up driving the canvas
+ */
 /// <reference types="@webgpu/types" />
 import { ref, shallowRef, onMounted, onBeforeUnmount, watch } from 'vue'
 import MSpinner from './MSpinner.vue'
@@ -22,6 +34,7 @@ const props = withDefaults(
     renderer?: ShaderRenderer
     /** Custom uniforms. Keys/shape are locked in at mount time; only values are reactive per frame. */
     uniforms?: Record<string, number | number[]>
+    /** Freezes the render loop and the shader clock */
     paused?: boolean
     /** Device pixel ratio to render at. Defaults to devicePixelRatio, capped at 2 for performance. */
     pixelRatio?: number

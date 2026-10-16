@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * An inline, dropdown-anchored calendar date picker with locale support and min/max range clamping.
+ *
+ * @event update:modelValue Emitted with the picked date.
+ */
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
@@ -6,18 +11,34 @@ import { useFieldBg } from '../composables/useFieldBg'
 import { useLocale } from '../composables/useLocale'
 
 const props = defineProps<{
+  /** Selected date (YYYY-MM-DD, v-model) */
   modelValue: string | null
+  /** Field label */
   label?: string
+  /** Placeholder shown when no date is selected — falls back to label, then the current locale's string */
   placeholder?: string
+  /** Minimum selectable date (YYYY-MM-DD) */
   min?: string
+  /** Maximum selectable date (YYYY-MM-DD) */
   max?: string
+  /** Disables the picker */
   disabled?: boolean
+  /** Error state */
   error?: boolean
+  /** Error message shown when error is true */
   errorLabel?: string
+  /** Hint text below the field */
   hint?: string
+  /**
+   * Locale for month/day names. Falls back to the app's configured locale (createM3UI({ locale })) — same
+   * pattern as MRelativeTime
+   */
   locale?: string
+  /** Overrides the auto-detected background color used to cut the floating label out of the border */
   fieldBg?: string
+  /** Aria label for the previous-month button — defaults to the current locale's string */
   prevMonthLabel?: string
+  /** Aria label for the next-month button — defaults to the current locale's string */
   nextMonthLabel?: string
 }>()
 

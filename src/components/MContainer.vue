@@ -1,11 +1,20 @@
 <script setup lang="ts">
+/**
+ * Constrains content width with responsive horizontal padding.
+ *
+ * @slot default Content.
+ */
 import { computed } from 'vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Maximum width breakpoint */
     maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full'
+    /** Full-width (no max constraint) */
     fluid?: boolean
+    /** Center horizontally with mx-auto */
     centered?: boolean
+    /** Add responsive horizontal padding */
     padding?: boolean
   }>(),
   { maxWidth: 'lg', fluid: false, centered: true, padding: true },

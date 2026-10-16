@@ -1,8 +1,20 @@
 <script setup lang="ts">
+/**
+ * A simple, generic slot-based app bar with leading, default, and trailing areas — a lighter-weight alternative
+ * to MTopAppBar for when you don't need its variant/title-row layouts.
+ *
+ * @slot leading Leading area (e.g. back button, menu icon)
+ * @slot default Main content (title text)
+ * @slot trailing Trailing action buttons
+ */
 withDefaults(defineProps<{
+  /** Background color */
   color?: 'surface' | 'primary' | 'secondary' | 'tertiary'
+  /** Add shadow elevation */
   elevated?: boolean
+  /** Compact height (48px vs 64px) */
   dense?: boolean
+  /** Add a bottom border (border-outline-variant) */
   bordered?: boolean
 }>(), { color: 'surface' })
 

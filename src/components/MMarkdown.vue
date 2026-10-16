@@ -1,10 +1,17 @@
 <script setup lang="ts">
+/**
+ * Renders markdown source as styled HTML — headings, lists, tables, blockquotes, links, and fenced code blocks
+ * with optional syntax highlighting, line highlighting, and a copy button.
+ */
 import { computed, ref, onMounted } from 'vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Markdown source text */
     source: string
+    /** Convert single newlines to <br> */
     breaks?: boolean
+    /** Auto-detect bare URLs and turn them into links */
     linkify?: boolean
   }>(),
   { breaks: true, linkify: true },

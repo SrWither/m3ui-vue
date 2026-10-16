@@ -1,4 +1,12 @@
 <script setup lang="ts">
+/**
+ * M3 Expressive's standalone toggle button — morphs its own shape between a pill and a squared corner on check,
+ * and squishes further while pressed, all on a real spring. Distinct from MSegmentedButton/MButtonGroup, which
+ * are groups of options — this is a single button.
+ *
+ * @slot default The button's label, after the icon.
+ * @event update:checked Emitted when clicked — powers v-model:checked
+ */
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import MIcon from './MIcon.vue'
 
@@ -6,9 +14,13 @@ const props = withDefaults(
   defineProps<{
     /** Whether the toggle button is checked/selected — v-model. */
     checked: boolean
+    /** Visual style, matching MButton's naming */
     variant?: 'filled' | 'tonal' | 'outlined' | 'elevated'
+    /** Disables interaction */
     disabled?: boolean
+    /** Material Symbol icon name shown before the label */
     icon?: string
+    /** Same 5-tier expressive sizing as MButton */
     size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
   }>(),
   {

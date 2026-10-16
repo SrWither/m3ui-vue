@@ -9,6 +9,19 @@ export interface TransferItem {
 </script>
 
 <script setup lang="ts" generic="T extends TransferItem = TransferItem">
+/**
+ * Move items between two panes, with select-all, optional search and v-model on the values in the target pane.
+ * Check rows and use the arrows, or double-click a row (or press Enter on its checkbox) to send it straight
+ * across. When the component is narrow, the panes stack and the arrows point up and down.
+ *
+ * @slot item Custom row content. Without bare it replaces the icon and text and keeps the checkbox, highlight
+ *   and hover; with bare it draws the whole row. side is 'source' or 'target', toggle() checks the row, move()
+ *   sends it to the other pane. Buttons, links, fields and elements with data-transfer-action keep their own
+ *   clicks
+ * @slot source-empty Custom content when the source pane is empty
+ * @slot target-empty Custom content when the target pane is empty
+ * @event update:modelValue Emitted whenever items move between panes (v-model)
+ */
 import { computed, ref } from 'vue'
 import MIconButton from './MIconButton.vue'
 import MTransferPane from './_MTransferPane.vue'
@@ -19,16 +32,27 @@ const locale = useLocale()
 type Value = string | number
 
 const props = withDefaults(defineProps<{
+  /** Values in the target (right or bottom) pane (v-model) */
   modelValue: Value[]
+  /** Full list of items; see `TransferItem` (or your own type extending it) */
   items: T[]
+  /** Source pane title (defaults to the locale string) */
   sourceTitle?: string
+  /** Target pane title (defaults to the locale string) */
   targetTitle?: string
+  /** Show a search field in each pane. It matches the label and the description */
   filterable?: boolean
+  /** Search field placeholder (defaults to the locale string) */
   searchPlaceholder?: string
+  /** Text when a pane is empty (defaults to the locale string) */
   emptyText?: string
+  /** Aria label for the move-all-right button (defaults to the locale string) */
   moveAllRightLabel?: string
+  /** Aria label for the move-selected-right button (defaults to the locale string) */
   moveRightLabel?: string
+  /** Aria label for the move-selected-left button (defaults to the locale string) */
   moveLeftLabel?: string
+  /** Aria label for the move-all-left button (defaults to the locale string) */
   moveAllLeftLabel?: string
   /** Height of each list's scroll area (any CSS length). */
   listHeight?: string

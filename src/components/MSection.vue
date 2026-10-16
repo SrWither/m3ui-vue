@@ -1,13 +1,26 @@
 <script setup lang="ts">
+/**
+ * A titled content section with optional subtitle, header actions, and divider.
+ *
+ * @slot title Custom title content (overrides title prop)
+ * @slot subtitle Custom subtitle content (overrides subtitle prop)
+ * @slot actions Action buttons displayed in the header row
+ * @slot default Main section content
+ */
 import { computed } from 'vue'
 import type { TextVariant } from './MText.vue'
 
 const props = withDefaults(
   defineProps<{
+    /** Section title text */
     title?: string
+    /** Section subtitle text */
     subtitle?: string
+    /** Show divider below header */
     divider?: boolean
+    /** Gap between header and content */
     gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+    /** Typography variant for the title */
     titleVariant?: TextVariant
   }>(),
   { gap: 'md', divider: false, titleVariant: 'title-large' },

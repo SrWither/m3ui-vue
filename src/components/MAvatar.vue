@@ -1,7 +1,18 @@
 <script setup lang="ts">
+/**
+ * A circular initials avatar. There's no image-source prop — it always renders extracted initials or a fallback
+ * string, never a photo.
+ */
 import { computed } from 'vue'
 
-const props = withDefaults(defineProps<{ name?: string; fallback?: string; size?: number }>(), { size: 40 })
+const props = withDefaults(defineProps<{
+  /** Full name — initials are extracted automatically (first + last). Takes priority over fallback */
+  name?: string
+  /** Custom text shown when name is not provided (e.g. 'AJ'). Falls back to '?' if neither is set */
+  fallback?: string
+  /** Avatar size in px — also scales the font size proportionally (40%) */
+  size?: number
+}>(), { size: 40 })
 
 const initials = computed(() => {
   if (props.name) {

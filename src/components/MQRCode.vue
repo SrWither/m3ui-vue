@@ -1,16 +1,28 @@
 <script setup lang="ts">
+/**
+ * Renders a QR code as inline SVG — crisp at any size, no canvas or image assets. Available from the `/qrcode`
+ * entry point, so it never adds weight to the main bundle.
+ *
+ * @slot error Shown instead of the SVG when value is too large to encode at the given errorCorrectionLevel
+ */
 import { computed } from 'vue'
 import QRCode from 'qrcode-generator'
 
 const props = withDefaults(
   defineProps<{
+    /** Data to encode. Required — there is no default. */
     value: string
+    /** Width/height in pixels (square) */
     size?: number
     /** Quiet zone around the code, in modules. */
     margin?: number
+    /** Higher levels tolerate more damage/obstruction at the cost of a denser code */
     errorCorrectionLevel?: 'L' | 'M' | 'Q' | 'H'
+    /** Dark module color */
     color?: string
+    /** Light module / background color */
     background?: string
+    /** aria-label for the svg. Defaults to value */
     label?: string
     /** Rounds the outer container corners. */
     rounded?: boolean

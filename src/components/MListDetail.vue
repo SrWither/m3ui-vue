@@ -1,4 +1,15 @@
 <script setup lang="ts">
+/**
+ * Material 3's list-detail layout: a list of items and the details of the selected one. When there's room
+ * (840px and up, the expanded width class) both panes sit side by side; on smaller screens only one shows, the
+ * detail sliding in over the list when you open an item and back out on `back()`. It measures its own width, so
+ * it adapts inside a column or a dialog too. Both panes stay mounted, so the list keeps its scroll position. It
+ * has no default size: give it a height so each pane scrolls on its own.
+ *
+ * @slot list The list pane. Scrolls on its own and keeps its scroll position while the detail is open
+ * @slot detail The detail pane. back() returns to the list; show a back button only when !twoPane
+ * @event update:showDetail Emitted with false when the detail slot calls back()
+ */
 import { computed, ref } from 'vue'
 import { useWindowSizeClass } from '../composables/useWindowSizeClass'
 

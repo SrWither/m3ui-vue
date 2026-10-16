@@ -1,4 +1,10 @@
 <script setup lang="ts">
+/**
+ * M3 Expressive's shorter navigation bar (64dp, vs. MNavigationBar's classic 80dp) — a genuinely separate
+ * component, not just a size variant.
+ *
+ * @event update:modelValue Emitted when an item is clicked — powers v-model
+ */
 import { computed } from 'vue'
 import MIcon from './MIcon.vue'
 import MBadge from './MBadge.vue'
@@ -18,20 +24,28 @@ export interface ShortNavBarItem {
 
 const props = withDefaults(
   defineProps<{
+    /** Active item value, v-model */
     modelValue: string | number
+    /** Array of nav bar items (see `ShortNavBarItem`) */
     items: ShortNavBarItem[]
     /**
-     * 'equal' (ShortNavigationBarArrangement.EqualWeight): items evenly fill the bar — recommended
-     * for small-width screens. 'centered' (.Centered): items are grouped toward the center instead
-     * of stretching edge to edge — recommended for medium-width screens, paired with iconPosition
-     * 'start'. Real Compose computes this via a custom MeasurePolicy at layout time; ported here as
-     * the same closed-form percentage formula (calculateCenteredContentHorizontalPadding), since it
-     * only ever depends on the item count, not on measured content size.
+     * 'equal' fills the bar edge to edge (small screens); 'centered' groups items toward the middle instead,
+     * recommended for medium/landscape screens
      */
+    // 'equal' (ShortNavigationBarArrangement.EqualWeight): items evenly fill the bar — recommended
+    // for small-width screens. 'centered' (.Centered): items are grouped toward the center instead
+    // of stretching edge to edge — recommended for medium-width screens, paired with iconPosition
+    // 'start'. Real Compose computes this via a custom MeasurePolicy at layout time; ported here as
+    // the same closed-form percentage formula (calculateCenteredContentHorizontalPadding), since it
+    // only ever depends on the item count, not on measured content size.
     arrangement?: 'equal' | 'centered'
-    /** NavigationItemIconPosition — 'top' stacks icon above label (ShortNavigationBarItem's
-     *  default); 'start' places the icon beside the label inside a single wider pill, meant for
-     *  the 'centered' arrangement on wider/landscape layouts. */
+    /**
+     * 'top' stacks the icon above the label; 'start' places it beside the label in one wider pill — typically
+     * paired with arrangement='centered'
+     */
+    // NavigationItemIconPosition — 'top' stacks icon above label (ShortNavigationBarItem's
+    //  default); 'start' places the icon beside the label inside a single wider pill, meant for
+    //  the 'centered' arrangement on wider/landscape layouts.
     iconPosition?: 'top' | 'start'
   }>(),
   {

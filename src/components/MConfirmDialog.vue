@@ -1,16 +1,31 @@
 <script setup lang="ts">
+/**
+ * A pre-built confirmation dialog on top of MDialog — title, message, cancel/confirm buttons, a danger color
+ * mode, and a loading state, so you don't have to hand-roll one for every "are you sure?" prompt.
+ *
+ * @event update:modelValue Emitted when the dialog should open/close — powers v-model
+ * @event confirm Emitted when the confirm button is clicked — the dialog stays open until the caller sets
+ *   modelValue to false (or clears loading)
+ */
 import MDialog from './MDialog.vue'
 import MButton from './MButton.vue'
 import { useLocale } from '../composables/useLocale'
 
 const props = withDefaults(
   defineProps<{
+    /** Open/closed state (v-model) */
     modelValue: boolean
+    /** Dialog title */
     title: string
+    /** Confirmation message body */
     message: string
+    /** Confirm button label — falls back to the locale string when omitted */
     confirmLabel?: string
+    /** Cancel button label — falls back to the locale string when omitted */
     cancelLabel?: string
+    /** Error color on the confirm button, for destructive actions */
     danger?: boolean
+    /** Shows a spinner on the confirm button and disables cancel */
     loading?: boolean
     /** Passed straight through to MDialog's `closable` — show/hide the header close (X) button. */
     closable?: boolean

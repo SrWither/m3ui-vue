@@ -1,4 +1,10 @@
 <script setup lang="ts">
+/**
+ * A set of buttons that share selection state — standard (separated) or connected (joined into one pill),
+ * single or multi select, any value type.
+ *
+ * @event update:modelValue Emitted on selection change — powers v-model
+ */
 import { computed } from 'vue'
 import MIcon from './MIcon.vue'
 
@@ -10,12 +16,19 @@ export interface ButtonGroupOption {
 }
 
 const props = withDefaults(defineProps<{
+  /** Selected value(s) — any type (v-model) */
   modelValue: unknown
+  /** The options to choose from; see `ButtonGroupOption`. */
   options: ButtonGroupOption[]
+  /** Standard (separated) or connected (joined) */
   variant?: 'standard' | 'connected'
+  /** Button size */
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+  /** Allow multiple selections */
   multiSelect?: boolean
+  /** At least one must be selected */
   selectionRequired?: boolean
+  /** Selected button color */
   color?: 'primary' | 'secondary' | 'tertiary'
 }>(), {
   variant: 'standard',

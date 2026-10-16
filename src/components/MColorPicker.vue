@@ -1,16 +1,29 @@
 <script setup lang="ts">
+/**
+ * An inline, dropdown-anchored color picker — hue slider, saturation/brightness area, and preset swatches.
+ *
+ * @event update:modelValue Emitted with the picked color.
+ */
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import MIcon from './MIcon.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 
 const props = withDefaults(defineProps<{
+  /** Selected color in hex format (v-model) */
   modelValue: string
+  /** Field label */
   label?: string
+  /** Preset color swatches shown in the panel */
   presets?: string[]
+  /** Disables the picker */
   disabled?: boolean
+  /** Error state */
   error?: boolean
+  /** Error message shown when error is true */
   errorLabel?: string
+  /** Hint text below the field */
   hint?: string
+  /** Overrides the auto-detected background color used to cut the floating label out of the border */
   fieldBg?: string
 }>(), {
   presets: () => [

@@ -1,4 +1,10 @@
 <script setup lang="ts">
+/**
+ * The M3 "FAB Menu" — a thin wrapper around `MFab`'s `#content` slot, so opening/closing, the icon's 45° morph,
+ * outside-click, and scroll-away are all inherited from `MFab` — this component only supplies the row list.
+ * Unlike the small circular buttons of a speed dial (`MFab`'s `items` prop), each row is a full icon+label
+ * pill, revealed one at a time starting from the item closest to the FAB.
+ */
 import { computed } from 'vue'
 import MFab from './MFab.vue'
 import MIcon from './MIcon.vue'
@@ -15,19 +21,33 @@ export interface FabMenuItem {
 
 const props = withDefaults(
   defineProps<{
+    /**
+     * Trigger FAB's Material Symbol icon — use a symmetric one like 'add', since MFab rotates it 45° on open
+     * (turning a + into a ×)
+     */
     icon: string
     /** Shows the trigger as an extended FAB (icon + text) instead of icon-only. */
     label?: string
+    /** The menu's items; see `FabMenuItem`. An item's own color overrides the menu's color for just that row. */
     items: FabMenuItem[]
+    /** Color scheme applied to both the trigger FAB and every menu item row */
     color?: 'primary' | 'secondary' | 'tertiary' | 'surface'
     /** Trigger FAB size — independent from `itemSize` below. */
     size?: 'small' | 'regular' | 'large'
     /** Menu item row size — independent from the trigger FAB's own `size`. */
     itemSize?: 'small' | 'regular' | 'large'
+    /** Which side of the FAB the menu list opens toward */
     direction?: 'up' | 'down'
+    /**
+     * Which edge the (usually wider-than-the-FAB) menu list anchors to — 'end' keeps it from running off-screen
+     * when the FAB sits in a bottom-right corner
+     */
     align?: 'start' | 'end'
+    /** Dim the rest of the screen while the menu is open */
     scrim?: boolean
+    /** Keep the menu open after clicking an item or clicking outside */
     persistent?: boolean
+    /** Disables the trigger FAB */
     disabled?: boolean
   }>(),
   {

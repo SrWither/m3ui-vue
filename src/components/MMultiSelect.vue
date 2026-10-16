@@ -1,4 +1,10 @@
 <script setup lang="ts">
+/**
+ * Select multiple values with removable chips and an optional in-dropdown search.
+ *
+ * @slot no-results Custom content shown in the dropdown when no options match the search query
+ * @event update:modelValue Emitted with the new array of selected values.
+ */
 import { computed, ref, useId, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
@@ -20,24 +26,45 @@ defineOptions({ inheritAttrs: false })
 
 const props = withDefaults(
   defineProps<{
+    /** Selected values (any type — v-model) */
     modelValue: unknown[]
+    /** The options to choose from; see `MultiSelectOption`. */
     options: MultiSelectOption[]
+    /** Field label */
     label?: string
+    /** Placeholder when nothing selected */
     placeholder?: string
+    /** Visual style */
     variant?: 'filled' | 'outlined'
+    /** Dropdown mode: docked (inline) or modal (dialog) */
     mode?: 'docked' | 'modal'
+    /** Disables the field */
     disabled?: boolean
+    /** Error state */
     error?: boolean
+    /** Error message shown when error is true */
     errorLabel?: string
+    /** Hint text below the field */
     hint?: string
+    /** Marks as required — adds a red asterisk after the label */
     required?: boolean
+    /** Material Symbol shown before the trigger */
     leadingIcon?: string
+    /**
+     * Overrides the auto-detected background color used to cut the floating label out of the outlined border
+     */
     fieldBg?: string
+    /** Show search in dropdown */
     searchable?: boolean
+    /** Max visible chips before "+N" */
     maxChips?: number
+    /** Show a clear button to reset all selections */
     clearable?: boolean
+    /** Placeholder for search input in dropdown — defaults to the current locale's string */
     searchPlaceholder?: string
+    /** Text when no options match search — defaults to the current locale's string */
     noResultsText?: string
+    /** Remove already-selected options from the dropdown */
     hideSelected?: boolean
   }>(),
   {
