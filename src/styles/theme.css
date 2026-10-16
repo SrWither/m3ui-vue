@@ -126,6 +126,67 @@
   --text-label-small: 0.6875rem;
   --text-label-small--line-height: 1rem;
 
+  /* Emphasized type scale (M3 Expressive): the same sizes, heavier, with their own tracking */
+  --text-display-large-emphasized: 3.5625rem;
+  --text-display-large-emphasized--line-height: 4rem;
+  --text-display-large-emphasized--font-weight: 500;
+  --text-display-large-emphasized--letter-spacing: 0;
+  --text-display-medium-emphasized: 2.8125rem;
+  --text-display-medium-emphasized--line-height: 3.25rem;
+  --text-display-medium-emphasized--font-weight: 500;
+  --text-display-medium-emphasized--letter-spacing: 0;
+  --text-display-small-emphasized: 2.25rem;
+  --text-display-small-emphasized--line-height: 2.75rem;
+  --text-display-small-emphasized--font-weight: 500;
+  --text-display-small-emphasized--letter-spacing: 0;
+  --text-headline-large-emphasized: 2rem;
+  --text-headline-large-emphasized--line-height: 2.5rem;
+  --text-headline-large-emphasized--font-weight: 500;
+  --text-headline-large-emphasized--letter-spacing: 0;
+  --text-headline-medium-emphasized: 1.75rem;
+  --text-headline-medium-emphasized--line-height: 2.25rem;
+  --text-headline-medium-emphasized--font-weight: 500;
+  --text-headline-medium-emphasized--letter-spacing: 0;
+  --text-headline-small-emphasized: 1.5rem;
+  --text-headline-small-emphasized--line-height: 2rem;
+  --text-headline-small-emphasized--font-weight: 500;
+  --text-headline-small-emphasized--letter-spacing: 0;
+  --text-title-large-emphasized: 1.375rem;
+  --text-title-large-emphasized--line-height: 1.75rem;
+  --text-title-large-emphasized--font-weight: 500;
+  --text-title-large-emphasized--letter-spacing: 0;
+  --text-title-medium-emphasized: 1rem;
+  --text-title-medium-emphasized--line-height: 1.5rem;
+  --text-title-medium-emphasized--font-weight: 700;
+  --text-title-medium-emphasized--letter-spacing: 0.00937rem;
+  --text-title-small-emphasized: 0.875rem;
+  --text-title-small-emphasized--line-height: 1.25rem;
+  --text-title-small-emphasized--font-weight: 700;
+  --text-title-small-emphasized--letter-spacing: 0.00625rem;
+  --text-body-large-emphasized: 1rem;
+  --text-body-large-emphasized--line-height: 1.5rem;
+  --text-body-large-emphasized--font-weight: 500;
+  --text-body-large-emphasized--letter-spacing: 0.00937rem;
+  --text-body-medium-emphasized: 0.875rem;
+  --text-body-medium-emphasized--line-height: 1.25rem;
+  --text-body-medium-emphasized--font-weight: 500;
+  --text-body-medium-emphasized--letter-spacing: 0.01562rem;
+  --text-body-small-emphasized: 0.75rem;
+  --text-body-small-emphasized--line-height: 1rem;
+  --text-body-small-emphasized--font-weight: 500;
+  --text-body-small-emphasized--letter-spacing: 0.025rem;
+  --text-label-large-emphasized: 0.875rem;
+  --text-label-large-emphasized--line-height: 1.25rem;
+  --text-label-large-emphasized--font-weight: 700;
+  --text-label-large-emphasized--letter-spacing: 0.00625rem;
+  --text-label-medium-emphasized: 0.75rem;
+  --text-label-medium-emphasized--line-height: 1rem;
+  --text-label-medium-emphasized--font-weight: 700;
+  --text-label-medium-emphasized--letter-spacing: 0.03125rem;
+  --text-label-small-emphasized: 0.6875rem;
+  --text-label-small-emphasized--line-height: 1rem;
+  --text-label-small-emphasized--font-weight: 700;
+  --text-label-small-emphasized--letter-spacing: 0.03125rem;
 }
 
 /* ---------------------------------------------------------------------- */
