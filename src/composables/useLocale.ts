@@ -49,6 +49,22 @@ export interface M3Locale {
   dayView: string
   weekView: string
   allDay: string
+  emojiSearch: string
+  emojiNoResults: string
+  emojiRecent: string
+  emojiSkinTone: string
+  emojiSkinTones: string
+  emojiCategorySmileys: string
+  emojiCategoryGestures: string
+  emojiCategoryPeople: string
+  emojiCategoryAnimals: string
+  emojiCategoryNature: string
+  emojiCategoryFood: string
+  emojiCategoryActivities: string
+  emojiCategoryTravel: string
+  emojiCategoryObjects: string
+  emojiCategorySymbols: string
+  emojiCategoryFlags: string
 
   // Transfer list
   available: string
@@ -193,6 +209,22 @@ export const defaultLocale: M3Locale = {
   dayView: 'Day',
   weekView: 'Week',
   allDay: 'All day',
+  emojiSearch: 'Search emoji',
+  emojiNoResults: 'No emoji found',
+  emojiRecent: 'Recently used',
+  emojiSkinTone: 'Skin tone',
+  emojiSkinTones: 'No skin tone|Light|Medium-light|Medium|Medium-dark|Dark',
+  emojiCategorySmileys: 'Smileys',
+  emojiCategoryGestures: 'Gestures',
+  emojiCategoryPeople: 'People',
+  emojiCategoryAnimals: 'Animals',
+  emojiCategoryNature: 'Nature',
+  emojiCategoryFood: 'Food & drink',
+  emojiCategoryActivities: 'Activities',
+  emojiCategoryTravel: 'Travel & places',
+  emojiCategoryObjects: 'Objects',
+  emojiCategorySymbols: 'Symbols',
+  emojiCategoryFlags: 'Flags',
 
   available: 'Available',
   selected: 'Selected',

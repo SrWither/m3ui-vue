@@ -294,7 +294,7 @@ const name = ref('')
 |---|---|
 | `MEmoji` | Render emoji by shortcode |
 | `MEmojiButton` | Emoji picker trigger |
-| `MEmojiSelector` | Full emoji picker panel |
+| `MEmojiSelector` | Emoji picker (Emoji 15.0, Android/Gboard style): categories, recently used, skin tones, search by CLDR name in the app's language and English, keyboard navigation |
 
 ### Chat
 

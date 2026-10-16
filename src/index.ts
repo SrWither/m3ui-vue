@@ -180,7 +180,7 @@ export { default as MWindow } from './components/MWindow.vue'
 
 // Re-export types from components that define them
 export type { EmojiCategory } from './data/emojis'
-export { emojiCategories, allEmojis, randomEmoji } from './data/emojis'
+export { emojiCategories, allEmojis, randomEmoji, withSkinTone, toneableEmojis, skinTones } from './data/emojis'
 export type { Placement } from './components/MAbsolute.vue'
 export type { BadgePosition, BadgeOverlap } from './components/MBadge.vue'
 export type { CalendarEvent } from './components/MCalendar.vue'
