@@ -15,8 +15,8 @@ const props = withDefaults(
     padding?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'
     /** Border radius */
     rounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full'
-    /** Shadow elevation level */
-    elevation?: 0 | 1 | 2 | 3
+    /** Shadow elevation level (M3 levels 0–5) */
+    elevation?: 0 | 1 | 2 | 3 | 4 | 5
     /** Show border */
     border?: boolean
     /** HTML tag to render */
@@ -60,6 +60,8 @@ const elevationClasses: Record<number, string> = {
   1: 'shadow-elevation-1',
   2: 'shadow-elevation-2',
   3: 'shadow-elevation-3',
+  4: 'shadow-elevation-4',
+  5: 'shadow-elevation-5',
 }
 
 const classes = computed(() => [
