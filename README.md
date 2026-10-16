@@ -484,3 +484,5 @@ Thanks for using it! ⭐ Starring the repo is also a nice way to show support.
 ## License
 
 MIT
+
+The package bundles code from a few open-source packages (`@material/material-color-utilities`, `shape-morph`, `highlight.js`, `@lezer/highlight`); their licenses ship in `dist/THIRD_PARTY_LICENSES.md`, generated on every build.

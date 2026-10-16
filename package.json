@@ -69,7 +69,7 @@
   ],
   "scripts": {
     "build": "pnpm build:js && pnpm build:types && pnpm build:css && pnpm build:api",
-    "build:js": "vite build && cp dist/m3ui-vue.css dist/styles.css",
+    "build:js": "vite build && cp dist/m3ui-vue.css dist/styles.css && node scripts/third-party-licenses.mjs",
     "build:types": "vue-tsc -p tsconfig.build.json",
     "build:css": "cp -r src/styles dist/",
     "build:api": "node scripts/generate-api.mjs",
