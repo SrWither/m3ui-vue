@@ -7,6 +7,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [0.8.9] - Unreleased
 
+### Added
+- `MCarousel` `variant` prop with the four M3 layouts: `multi-browse` (default), `uncontained`, `hero` (centered) and `full-screen`, plus `orientation` (`horizontal`/`vertical`), `contentPadding`, `flingBehavior` (`single-advance`/`multi-browse`/`no-snap`), `userScrollEnabled`, `label`, `v-model` on the current item, an `itemClick` event, an `#item` slot (with `--m3-carousel-mask-start`/`--m3-carousel-mask-size` CSS variables describing the visible part) and `scrollToItem(index, animate)`
+- `M3Locale` keys `carousel` and `carouselItem` (`'{index} of {count}'`), in all 7 bundled locales
+
+### Changed
+- **`MCarousel` rewritten as a port of Compose Material3's carousel** (keyline arrangement, start/end keyline shifting and snapping). Items now keep one size and are masked and translated as they scroll, instead of changing width, which made scrolling jumpy and fought `scroll-snap`. Scrolling is driven by drag (touch and mouse), wheel/trackpad and arrow keys, and a release moves at most one item, except `uncontained`, which scrolls freely. **Breaking:** `showArrows`, `autoplay`, `interval` and the `change` event are gone (they're not part of the M3 carousel; `MSimpleCarousel` keeps them, and `v-model` replaces `change`); `itemWidth` is now `itemSize` and `minSmallItemWidth`/`maxSmallItemWidth` are `minSmallItemSize`/`maxSmallItemSize`. **Defaults changed:** `itemSpacing` 0 → 8, large item size 280 → 186, height 220px → 205px, and items have 28dp (`--radius-xl`) corners
+
 ### Fixed
 - `createM3UI({ customPalettes })` did nothing: the option was declared but never read. The palettes are now added to `useColorPalette().palettes`, so pickers built from that list show them (an entry with a built-in palette's `id` replaces it). Their CSS is still yours to write
 - **`class`, `style`, `id`, `data-*` and `aria-*` passed to `MMenu`, `MContextMenu`, `MTooltip`, `MFab`, `MSplitButton`, `MLightbox`, `MBarcode`, `MLoadingOverlay` (fullscreen), `MNavigationDrawer` or `MNavigationRail` were silently dropped**, because these components render more than one root node (an element plus a `Teleport`, or a `v-if`/`v-show` pair). They now land on the visible element: the trigger for menus and tooltips, the FAB's wrapper, the split button's container, the barcode's `svg` (or its error message), the fullscreen overlay, and the drawer's or rail's `nav` (the panel for a modal drawer)
