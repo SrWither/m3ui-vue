@@ -43,6 +43,16 @@ export const jaLocale: M3Locale = {
   pickEnd: '終了を選択',
   previousMonth: '前月',
   nextMonth: '翌月',
+  selectColor: '色を選択',
+  colorHue: '色相',
+  colorSaturation: '彩度',
+  colorBrightness: '明度',
+  colorAlpha: '不透明度',
+  colorEyedropper: '画面から色を取得',
+  colorOriginal: '元の色',
+  colorFormat: 'カラー形式',
+  colorRecent: '最近使用',
+  colorPresets: 'プリセット',
 
   // Scheduler
   dayView: '日',

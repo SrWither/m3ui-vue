@@ -43,6 +43,16 @@ export const ptLocale: M3Locale = {
   pickEnd: 'Selecionar fim',
   previousMonth: 'Mês anterior',
   nextMonth: 'Próximo mês',
+  selectColor: 'Selecionar cor',
+  colorHue: 'Matiz',
+  colorSaturation: 'Saturação',
+  colorBrightness: 'Brilho',
+  colorAlpha: 'Opacidade',
+  colorEyedropper: 'Capturar uma cor da tela',
+  colorOriginal: 'Cor original',
+  colorFormat: 'Formato de cor',
+  colorRecent: 'Recentes',
+  colorPresets: 'Predefinidas',
 
   // Scheduler
   dayView: 'Dia',

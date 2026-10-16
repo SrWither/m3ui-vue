@@ -43,6 +43,16 @@ export const esLocale: M3Locale = {
   pickEnd: 'Seleccionar fin',
   previousMonth: 'Mes anterior',
   nextMonth: 'Mes siguiente',
+  selectColor: 'Seleccionar color',
+  colorHue: 'Tono',
+  colorSaturation: 'Saturación',
+  colorBrightness: 'Brillo',
+  colorAlpha: 'Opacidad',
+  colorEyedropper: 'Tomar un color de la pantalla',
+  colorOriginal: 'Color original',
+  colorFormat: 'Formato de color',
+  colorRecent: 'Recientes',
+  colorPresets: 'Predefinidos',
 
   // Scheduler
   dayView: 'Día',

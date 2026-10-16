@@ -43,6 +43,16 @@ export const deLocale: M3Locale = {
   pickEnd: 'Ende auswählen',
   previousMonth: 'Vorheriger Monat',
   nextMonth: 'Nächster Monat',
+  selectColor: 'Farbe auswählen',
+  colorHue: 'Farbton',
+  colorSaturation: 'Sättigung',
+  colorBrightness: 'Helligkeit',
+  colorAlpha: 'Deckkraft',
+  colorEyedropper: 'Farbe vom Bildschirm aufnehmen',
+  colorOriginal: 'Ursprüngliche Farbe',
+  colorFormat: 'Farbformat',
+  colorRecent: 'Zuletzt verwendet',
+  colorPresets: 'Vorgaben',
 
   // Scheduler
   dayView: 'Tag',

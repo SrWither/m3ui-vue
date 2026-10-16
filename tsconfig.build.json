@@ -1,7 +1,7 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
   "include": ["src/**/*", "src/**/*.vue"],
-  "exclude": ["src/components/_MTreeNode.vue", "src/components/_MTransferPane.vue", "src/__tests__"],
+  "exclude": ["src/components/_MTreeNode.vue", "src/components/_MTransferPane.vue", "src/components/_MColorPanel.vue", "src/__tests__"],
   "compilerOptions": {
     "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,

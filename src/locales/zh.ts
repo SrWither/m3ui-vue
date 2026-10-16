@@ -43,6 +43,16 @@ export const zhLocale: M3Locale = {
   pickEnd: '选择结束',
   previousMonth: '上个月',
   nextMonth: '下个月',
+  selectColor: '选择颜色',
+  colorHue: '色相',
+  colorSaturation: '饱和度',
+  colorBrightness: '亮度',
+  colorAlpha: '不透明度',
+  colorEyedropper: '从屏幕取色',
+  colorOriginal: '原始颜色',
+  colorFormat: '颜色格式',
+  colorRecent: '最近使用',
+  colorPresets: '预设',
 
   // Scheduler
   dayView: '日',

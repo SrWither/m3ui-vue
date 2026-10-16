@@ -43,6 +43,16 @@ export const koLocale: M3Locale = {
   pickEnd: '종료 선택',
   previousMonth: '이전 달',
   nextMonth: '다음 달',
+  selectColor: '색상 선택',
+  colorHue: '색조',
+  colorSaturation: '채도',
+  colorBrightness: '밝기',
+  colorAlpha: '불투명도',
+  colorEyedropper: '화면에서 색상 가져오기',
+  colorOriginal: '원래 색상',
+  colorFormat: '색상 형식',
+  colorRecent: '최근 사용',
+  colorPresets: '프리셋',
 
   // Scheduler
   dayView: '일',

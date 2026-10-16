@@ -45,6 +45,18 @@ export interface M3Locale {
   previousMonth: string
   nextMonth: string
 
+  // Color picker
+  selectColor: string
+  colorHue: string
+  colorSaturation: string
+  colorBrightness: string
+  colorAlpha: string
+  colorEyedropper: string
+  colorOriginal: string
+  colorFormat: string
+  colorRecent: string
+  colorPresets: string
+
   // Scheduler
   dayView: string
   weekView: string
@@ -205,6 +217,16 @@ export const defaultLocale: M3Locale = {
   pickEnd: 'Select end',
   previousMonth: 'Previous month',
   nextMonth: 'Next month',
+  selectColor: 'Select color',
+  colorHue: 'Hue',
+  colorSaturation: 'Saturation',
+  colorBrightness: 'Brightness',
+  colorAlpha: 'Opacity',
+  colorEyedropper: 'Pick a color from the screen',
+  colorOriginal: 'Original color',
+  colorFormat: 'Color format',
+  colorRecent: 'Recent',
+  colorPresets: 'Presets',
 
   dayView: 'Day',
   weekView: 'Week',

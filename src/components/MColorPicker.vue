@@ -1,20 +1,33 @@
 <script setup lang="ts">
 /**
- * An inline, dropdown-anchored color picker — hue slider, saturation/brightness area, and preset swatches.
+ * An outlined field that opens a color picker in a dropdown: saturation/brightness area, hue (and optional
+ * opacity) slider, eyedropper, HEX/RGB/HSL fields, recent colors and preset swatches. Updates the value live
+ * while picking.
  *
- * @event update:modelValue Emitted with the picked color.
+ * @event update:modelValue Emitted with the picked color, live while dragging or typing.
  */
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import MIcon from './MIcon.vue'
+import MColorPanel from './_MColorPanel.vue'
 import { useFieldBg } from '../composables/useFieldBg'
+import { useLocale } from '../composables/useLocale'
+import { defaultColorPresets, normalizeHex, pushRecentColor } from '../composables/_colorUtils'
 
 const props = withDefaults(defineProps<{
-  /** Selected color in hex format (v-model) */
+  /** Selected color in hex format (v-model). `#rrggbb`, or `#rrggbbaa` when `alpha` is on and the color isn't opaque. */
   modelValue: string
   /** Field label */
   label?: string
   /** Preset color swatches shown in the panel */
   presets?: string[]
+  /** Adds an opacity slider and an alpha channel to the value */
+  alpha?: boolean
+  /** Remember picked colors and show them above the presets (stored in localStorage, shared by every picker). */
+  recent?: boolean
+  /** How many recent colors to keep. */
+  recentLimit?: number
+  /** Show a button to pick a color from the screen, where the browser supports it (Chrome, Edge). */
+  eyedropper?: boolean
   /** Disables the picker */
   disabled?: boolean
   /** Error state */
@@ -26,150 +39,88 @@ const props = withDefaults(defineProps<{
   /** Overrides the auto-detected background color used to cut the floating label out of the border */
   fieldBg?: string
 }>(), {
-  presets: () => [
-    '#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3',
-    '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39',
-    '#ffeb3b', '#ffc107', '#ff9800', '#ff5722', '#795548', '#607d8b',
-  ],
+  presets: () => defaultColorPresets,
+  alpha: false,
+  recent: true,
+  recentLimit: 7,
+  eyedropper: true,
 })
 
 const emit = defineEmits<{ 'update:modelValue': [string] }>()
+const t = useLocale()
 
 const open = ref(false)
 const triggerEl = ref<HTMLElement | null>(null)
+const buttonEl = ref<HTMLButtonElement | null>(null)
 const panelEl = ref<HTMLElement | null>(null)
+const colorPanel = ref<InstanceType<typeof MColorPanel> | null>(null)
 const dropPos = ref({ top: '0px', left: '0px' })
 const { resolvedFieldBg } = useFieldBg(triggerEl, () => props.fieldBg)
 
-const satBrightEl = ref<HTMLElement>()
-const draggingSB = ref(false)
+// The value when the panel opened: shown as the "before" half of the preview, and compared on close to
+// decide whether the color goes into the recents
+const original = ref('')
 
-// HSV state
-const hue = ref(0)
-const sat = ref(100)
-const bright = ref(100)
-
-function hexToHsv(hex: string) {
-  let c = hex.replace('#', '')
-  if (c.length === 3) c = c[0]!+c[0]!+c[1]!+c[1]!+c[2]!+c[2]!
-  const r = parseInt(c.substring(0, 2), 16) / 255
-  const g = parseInt(c.substring(2, 4), 16) / 255
-  const b = parseInt(c.substring(4, 6), 16) / 255
-  const max = Math.max(r, g, b), min = Math.min(r, g, b)
-  const d = max - min
-  let h = 0
-  if (d !== 0) {
-    if (max === r) h = ((g - b) / d + 6) % 6
-    else if (max === g) h = (b - r) / d + 2
-    else h = (r - g) / d + 4
-    h *= 60
-  }
-  const s = max === 0 ? 0 : (d / max) * 100
-  const v = max * 100
-  return { h, s, v }
-}
-
-function hsvToHex(h: number, s: number, v: number) {
-  s /= 100; v /= 100
-  const c = v * s
-  const x = c * (1 - Math.abs((h / 60) % 2 - 1))
-  const m = v - c
-  let r = 0, g = 0, b = 0
-  if (h < 60) { r = c; g = x }
-  else if (h < 120) { r = x; g = c }
-  else if (h < 180) { g = c; b = x }
-  else if (h < 240) { g = x; b = c }
-  else if (h < 300) { r = x; b = c }
-  else { r = c; b = x }
-  const toHex = (n: number) => Math.round((n + m) * 255).toString(16).padStart(2, '0')
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`
-}
-
-function syncFromProp() {
-  const hsv = hexToHsv(props.modelValue)
-  hue.value = hsv.h
-  sat.value = hsv.s
-  bright.value = hsv.v
-}
-syncFromProp()
-
-watch(() => props.modelValue, syncFromProp)
-
-function emitColor() {
-  emit('update:modelValue', hsvToHex(hue.value, sat.value, bright.value))
-}
-
-const currentHex = computed(() => hsvToHex(hue.value, sat.value, bright.value))
-const hueColor = computed(() => `hsl(${hue.value}, 100%, 50%)`)
-
-function onSBPointerDown(e: PointerEvent) {
-  e.preventDefault()
-  draggingSB.value = true
-  updateSB(e)
-  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
-}
-function onSBPointerMove(e: PointerEvent) {
-  if (!draggingSB.value) return
-  updateSB(e)
-}
-function onSBPointerUp() {
-  draggingSB.value = false
-  emitColor()
-}
-function updateSB(e: PointerEvent) {
-  if (!satBrightEl.value) return
-  const rect = satBrightEl.value.getBoundingClientRect()
-  sat.value = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100))
-  bright.value = Math.max(0, Math.min(100, (1 - (e.clientY - rect.top) / rect.height) * 100))
-}
-
-function onHueInput(e: Event) {
-  hue.value = Number((e.target as HTMLInputElement).value)
-  emitColor()
-}
-
-function selectPreset(color: string) {
-  emit('update:modelValue', color)
-}
-
-function onHexInput(e: Event) {
-  const v = (e.target as HTMLInputElement).value
-  if (/^#[0-9a-fA-F]{6}$/.test(v)) {
-    emit('update:modelValue', v)
-  }
-}
+const GAP = 4
+const MARGIN = 8
 
 function computeDropPos() {
   if (!triggerEl.value) return
   const rect = triggerEl.value.getBoundingClientRect()
-  const panelH = 380
-  const spaceBelow = window.innerHeight - rect.bottom - 8
-  const above = spaceBelow < panelH && rect.top > panelH
-  dropPos.value = {
-    top: above ? `${rect.top - 4 - panelH}px` : `${rect.bottom + 4}px`,
-    left: `${rect.left}px`,
-  }
+  const w = panelEl.value?.offsetWidth ?? 312
+  const ph = panelEl.value?.offsetHeight ?? 480
+  const below = window.innerHeight - rect.bottom - GAP - MARGIN
+  const top = below >= ph || rect.top - GAP - MARGIN < ph
+    ? Math.max(MARGIN, Math.min(rect.bottom + GAP, window.innerHeight - ph - MARGIN))
+    : rect.top - GAP - ph
+  const left = Math.max(MARGIN, Math.min(rect.left, window.innerWidth - w - MARGIN))
+  dropPos.value = { top: `${top}px`, left: `${left}px` }
+}
+
+function close(refocus = false) {
+  if (!open.value) return
+  open.value = false
+  if (refocus) buttonEl.value?.focus()
 }
 
 function onOut(e: MouseEvent) {
-  const t = e.target as Node
-  if (triggerEl.value?.contains(t)) return
-  if (panelEl.value?.contains(t)) return
-  open.value = false
+  const target = e.target as Node
+  if (triggerEl.value?.contains(target) || panelEl.value?.contains(target)) return
+  close()
 }
 
 function onScroll(e: Event) {
   if (!open.value) return
   if (panelEl.value?.contains(e.target as Node)) return
-  open.value = false
+  close()
 }
 
-watch(open, (v) => {
+function onPanelKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') {
+    e.stopPropagation()
+    close(true)
+  }
+}
+
+// The panel is teleported to <body>, so tabbing out of it lands outside the field: close when focus leaves
+function onPanelFocusOut(e: FocusEvent) {
+  const to = e.relatedTarget as Node | null
+  if (!to || panelEl.value?.contains(to) || triggerEl.value?.contains(to)) return
+  close()
+}
+
+watch(open, async (v) => {
   if (v) {
+    original.value = normalizeHex(props.modelValue)
     computeDropPos()
+    await nextTick()
+    computeDropPos()
+    colorPanel.value?.focus()
     setTimeout(() => document.addEventListener('mousedown', onOut), 0)
   } else {
     document.removeEventListener('mousedown', onOut)
+    const picked = normalizeHex(props.modelValue)
+    if (props.recent && picked && picked !== original.value) pushRecentColor(picked, props.recentLimit)
   }
 })
 
@@ -184,23 +135,34 @@ onUnmounted(() => {
   <div class="flex flex-col gap-1">
     <div ref="triggerEl" class="relative mt-2" :style="{ '--field-bg': resolvedFieldBg }">
       <button
+        ref="buttonEl"
         type="button"
-        class="flex h-14 w-full items-center gap-3 rounded-xs border bg-transparent px-4 text-left text-body-large transition-[border-color,border-width] duration-150"
+        aria-haspopup="dialog"
+        :aria-expanded="open"
+        :disabled="disabled"
+        class="flex h-14 w-full items-center gap-3 rounded-xs border bg-transparent px-4 text-left text-body-large outline-none transition-[border-color,border-width] duration-150"
         :class="[
-          disabled ? 'pointer-events-none cursor-not-allowed border-on-surface/12' : 'cursor-pointer',
+          disabled ? 'cursor-not-allowed border-on-surface/12' : 'cursor-pointer',
           !disabled && (open
             ? error ? 'border-2 border-error' : 'border-2 border-primary'
-            : error ? 'border-error' : 'border-outline hover:border-on-surface'),
+            : error
+              ? 'border-error focus-visible:border-2'
+              : 'border-outline hover:border-on-surface focus-visible:border-2 focus-visible:border-primary'),
         ]"
-        @click="!disabled && (open = !open)"
+        @click="open = !open"
       >
         <span
-          class="h-6 w-6 shrink-0 rounded-full border border-outline-variant"
+          class="m3-cp-swatch h-6 w-6 shrink-0 rounded-full"
           :class="disabled ? 'opacity-38' : ''"
-          :style="{ backgroundColor: modelValue }"
+          :style="{ background: `linear-gradient(${modelValue}, ${modelValue}), repeating-conic-gradient(#d4d4d4 0 25%, #fff 0 50%) 0 0 / 8px 8px` }"
         />
         <span class="flex-1 font-mono" :class="disabled ? 'text-on-surface/38' : 'text-on-surface'">{{ modelValue }}</span>
-        <MIcon name="palette" :size="24" class="shrink-0" :class="disabled ? 'text-on-surface/38' : 'text-on-surface-variant'" />
+        <MIcon
+          name="palette"
+          :size="24"
+          class="shrink-0 transition-colors"
+          :class="disabled ? 'text-on-surface/38' : open ? (error ? 'text-error' : 'text-primary') : 'text-on-surface-variant'"
+        />
       </button>
       <label
         v-if="label"
@@ -215,78 +177,27 @@ onUnmounted(() => {
     <p v-else-if="hint" class="px-4 text-body-small text-on-surface-variant">{{ hint }}</p>
 
     <Teleport to="body">
-      <Transition
-        enter-active-class="transition-[opacity,transform] duration-150"
-        enter-from-class="opacity-0 -translate-y-1 scale-[0.98]"
-        leave-active-class="transition-[opacity,transform] duration-100"
-        leave-to-class="opacity-0 -translate-y-1 scale-[0.98]"
-      >
+      <Transition name="m3-cp-drop">
         <div
           v-if="open"
           ref="panelEl"
-          class="fixed z-500 w-[280px] rounded-lg bg-surface-container p-4 shadow-elevation-3"
+          role="dialog"
+          :aria-label="label || t.selectColor"
+          class="fixed z-500 w-[312px] max-w-[calc(100vw-16px)] rounded-lg bg-surface-container p-4 shadow-elevation-2"
           :style="dropPos"
+          @keydown="onPanelKeydown"
+          @focusout="onPanelFocusOut"
         >
-          <!-- Saturation / Brightness area -->
-          <div
-            ref="satBrightEl"
-            class="relative mb-3 h-40 w-full cursor-crosshair overflow-hidden rounded-lg"
-            :style="{ background: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, ${hueColor})`, touchAction: 'none' }"
-            @pointerdown="onSBPointerDown"
-            @pointermove="onSBPointerMove"
-            @pointerup="onSBPointerUp"
-          >
-            <div
-              class="pointer-events-none absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-elevation-1"
-              :style="{
-                left: `${sat}%`,
-                top: `${100 - bright}%`,
-                backgroundColor: currentHex,
-              }"
-            />
-          </div>
-
-          <!-- Hue slider -->
-          <div class="mb-3">
-            <input
-              type="range"
-              min="0"
-              max="360"
-              :value="hue"
-              class="hue-slider h-3 w-full cursor-pointer appearance-none rounded-full outline-none"
-              @input="onHueInput"
-            />
-          </div>
-
-          <!-- Preview + hex input -->
-          <div class="mb-3 flex items-center gap-3">
-            <span
-              class="h-9 w-9 shrink-0 rounded-full border border-outline-variant"
-              :style="{ backgroundColor: currentHex }"
-            />
-            <input
-              type="text"
-              :value="modelValue"
-              maxlength="7"
-              class="flex-1 rounded-xs border border-outline bg-transparent px-3 py-2 font-mono text-body-medium text-on-surface outline-none caret-primary transition-colors focus:border-primary"
-              @input="onHexInput"
-            />
-          </div>
-
-          <!-- Presets -->
-          <div class="flex flex-wrap gap-1.5">
-            <button
-              v-for="color in presets"
-              :key="color"
-              type="button"
-              class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border transition-transform duration-100 hover:scale-110"
-              :class="color === modelValue ? 'border-on-surface' : 'border-transparent'"
-              :style="{ backgroundColor: color }"
-              @click="selectPreset(color)"
-            >
-              <MIcon v-if="color === modelValue" name="check" :size="14" class="text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]" />
-            </button>
-          </div>
+          <MColorPanel
+            ref="colorPanel"
+            :model-value="modelValue"
+            :presets="presets"
+            :alpha="alpha"
+            :recent="recent"
+            :eyedropper="eyedropper"
+            :original="original"
+            @update:model-value="emit('update:modelValue', $event)"
+          />
         </div>
       </Transition>
     </Teleport>
@@ -294,25 +205,18 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.hue-slider {
-  background: linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
+.m3-cp-swatch {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-on-surface) 12%, transparent);
 }
-.hue-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: white;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-  cursor: pointer;
+.m3-cp-drop-enter-active {
+  transition: opacity 150ms cubic-bezier(0.2, 0, 0, 1), transform 250ms cubic-bezier(0.2, 0, 0, 1);
 }
-.hue-slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: white;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-  border: none;
-  cursor: pointer;
+.m3-cp-drop-leave-active {
+  transition: opacity 100ms ease, transform 100ms ease;
+}
+.m3-cp-drop-enter-from,
+.m3-cp-drop-leave-to {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
 }
 </style>
