@@ -30,6 +30,20 @@
   --color-inverse-surface: #2B3230;
   --color-inverse-on-surface: #ECF2EF;
   --color-inverse-primary: #53DBC6;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #74F8E2;
+  --color-primary-fixed-dim: #53DBC6;
+  --color-on-primary-fixed: #00201C;
+  --color-on-primary-fixed-variant: #005048;
+  --color-secondary-fixed: #CDE8E0;
+  --color-secondary-fixed-dim: #B1CCC4;
+  --color-on-secondary-fixed: #07201B;
+  --color-on-secondary-fixed-variant: #334B46;
+  --color-tertiary-fixed: #C7E7FF;
+  --color-tertiary-fixed-dim: #ABC9E4;
+  --color-on-tertiary-fixed: #001E30;
+  --color-on-tertiary-fixed-variant: #2B4A5F;
 }
 [data-palette='teal'].dark {
   --color-primary: #53DBC6;
@@ -96,6 +110,20 @@
   --color-inverse-surface: #2F3036;
   --color-inverse-on-surface: #F1EFF7;
   --color-inverse-primary: #ADC6FF;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #D8E2FF;
+  --color-primary-fixed-dim: #ADC6FF;
+  --color-on-primary-fixed: #001A41;
+  --color-on-primary-fixed-variant: #004494;
+  --color-secondary-fixed: #DBE2F9;
+  --color-secondary-fixed-dim: #BFC6DC;
+  --color-on-secondary-fixed: #141B2C;
+  --color-on-secondary-fixed-variant: #3F4759;
+  --color-tertiary-fixed: #FBD7FC;
+  --color-tertiary-fixed-dim: #DEBCDF;
+  --color-on-tertiary-fixed: #29132D;
+  --color-on-tertiary-fixed-variant: #573E5A;
 }
 [data-palette='blue'].dark {
   --color-primary: #ADC6FF;
@@ -162,6 +190,20 @@
   --color-inverse-surface: #2F312C;
   --color-inverse-on-surface: #EFF1E7;
   --color-inverse-primary: #9DD67D;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #B8F397;
+  --color-primary-fixed-dim: #9DD67D;
+  --color-on-primary-fixed: #062100;
+  --color-on-primary-fixed-variant: #205107;
+  --color-secondary-fixed: #D8E7CB;
+  --color-secondary-fixed-dim: #BDC9B0;
+  --color-on-secondary-fixed: #131F0D;
+  --color-on-secondary-fixed-variant: #3E4B36;
+  --color-tertiary-fixed: #BCEBEE;
+  --color-tertiary-fixed-dim: #A0CFD2;
+  --color-on-tertiary-fixed: #002022;
+  --color-on-tertiary-fixed-variant: #1F4D50;
 }
 [data-palette='green'].dark {
   --color-primary: #9DD67D;
@@ -228,6 +270,20 @@
   --color-inverse-surface: #392E2C;
   --color-inverse-on-surface: #FFEDEA;
   --color-inverse-primary: #FFB4A8;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #FFDAD4;
+  --color-primary-fixed-dim: #FFB4A8;
+  --color-on-primary-fixed: #410000;
+  --color-on-primary-fixed-variant: #930100;
+  --color-secondary-fixed: #FFDAD4;
+  --color-secondary-fixed-dim: #E7BDB6;
+  --color-on-secondary-fixed: #2C1512;
+  --color-on-secondary-fixed-variant: #5D3F3B;
+  --color-tertiary-fixed: #FCDFA6;
+  --color-tertiary-fixed-dim: #DFC38C;
+  --color-on-tertiary-fixed: #261A00;
+  --color-on-tertiary-fixed-variant: #574419;
 }
 [data-palette='red'].dark {
   --color-primary: #FFB4A8;
@@ -294,6 +350,20 @@
   --color-inverse-surface: #372F27;
   --color-inverse-on-surface: #FDEDE2;
   --color-inverse-primary: #FFB86F;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #FFDCBE;
+  --color-primary-fixed-dim: #FFB86F;
+  --color-on-primary-fixed: #2C1600;
+  --color-on-primary-fixed-variant: #6A3C00;
+  --color-secondary-fixed: #FFDCBE;
+  --color-secondary-fixed-dim: #E2C0A4;
+  --color-on-secondary-fixed: #291806;
+  --color-on-secondary-fixed-variant: #59432C;
+  --color-tertiary-fixed: #DFE7B0;
+  --color-tertiary-fixed-dim: #C3CB96;
+  --color-on-tertiary-fixed: #181E00;
+  --color-on-tertiary-fixed-variant: #434A22;
 }
 [data-palette='orange'].dark {
   --color-primary: #FFB86F;
@@ -360,6 +430,20 @@
   --color-inverse-surface: #382E30;
   --color-inverse-on-surface: #FEECED;
   --color-inverse-primary: #FFB1C0;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #FFD9DE;
+  --color-primary-fixed-dim: #FFB1C0;
+  --color-on-primary-fixed: #400017;
+  --color-on-primary-fixed-variant: #7D2940;
+  --color-secondary-fixed: #FFD9DE;
+  --color-secondary-fixed-dim: #E4BDC3;
+  --color-on-secondary-fixed: #2B151B;
+  --color-on-secondary-fixed-variant: #5C3F46;
+  --color-tertiary-fixed: #FFDCB8;
+  --color-tertiary-fixed-dim: #ECBF90;
+  --color-on-tertiary-fixed: #2C1600;
+  --color-on-tertiary-fixed-variant: #5E401E;
 }
 [data-palette='pink'].dark {
   --color-primary: #FFB1C0;
@@ -426,6 +510,20 @@
   --color-inverse-surface: #303036;
   --color-inverse-on-surface: #F2F0F7;
   --color-inverse-primary: #BAC3FF;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #DEE0FF;
+  --color-primary-fixed-dim: #BAC3FF;
+  --color-on-primary-fixed: #00105C;
+  --color-on-primary-fixed-variant: #2C3CA0;
+  --color-secondary-fixed: #E0E1F9;
+  --color-secondary-fixed-dim: #C4C5DD;
+  --color-on-secondary-fixed: #181A2C;
+  --color-on-secondary-fixed-variant: #444559;
+  --color-tertiary-fixed: #FFD7F1;
+  --color-tertiary-fixed-dim: #E6BAD7;
+  --color-on-tertiary-fixed: #2D1228;
+  --color-on-tertiary-fixed-variant: #5D3C55;
 }
 [data-palette='indigo'].dark {
   --color-primary: #BAC3FF;
@@ -492,6 +590,20 @@
   --color-inverse-surface: #333027;
   --color-inverse-on-surface: #F8EFE0;
   --color-inverse-primary: #EFC148;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #FFDF9E;
+  --color-primary-fixed-dim: #EFC148;
+  --color-on-primary-fixed: #261900;
+  --color-on-primary-fixed-variant: #5B4300;
+  --color-secondary-fixed: #F4E0BB;
+  --color-secondary-fixed-dim: #D8C4A0;
+  --color-on-secondary-fixed: #241A00;
+  --color-on-secondary-fixed-variant: #534529;
+  --color-tertiary-fixed: #CFEBC3;
+  --color-tertiary-fixed-dim: #B3CFA8;
+  --color-on-tertiary-fixed: #0B2007;
+  --color-on-tertiary-fixed-variant: #364E2E;
 }
 [data-palette='amber'].dark {
   --color-primary: #EFC148;
@@ -558,6 +670,20 @@
   --color-inverse-surface: #2C3233;
   --color-inverse-on-surface: #ECF2F3;
   --color-inverse-primary: #B1CCD4;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #CCE8F0;
+  --color-primary-fixed-dim: #B1CCD4;
+  --color-on-primary-fixed: #041F25;
+  --color-on-primary-fixed-variant: #324B51;
+  --color-secondary-fixed: #D1E5EB;
+  --color-secondary-fixed-dim: #B5C9CF;
+  --color-on-secondary-fixed: #0B1D22;
+  --color-on-secondary-fixed-variant: #374A4E;
+  --color-tertiary-fixed: #DEE0FF;
+  --color-tertiary-fixed-dim: #C0C3EB;
+  --color-on-tertiary-fixed: #151937;
+  --color-on-tertiary-fixed-variant: #404465;
 }
 [data-palette='slate'].dark {
   --color-primary: #B1CCD4;
@@ -624,6 +750,20 @@
   --color-inverse-surface: #2B3233;
   --color-inverse-on-surface: #ECF2F3;
   --color-inverse-primary: #82D3E0;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #9EEFFD;
+  --color-primary-fixed-dim: #82D3E0;
+  --color-on-primary-fixed: #001F24;
+  --color-on-primary-fixed-variant: #004F58;
+  --color-secondary-fixed: #CDE7ED;
+  --color-secondary-fixed-dim: #B1CBD1;
+  --color-on-secondary-fixed: #051F23;
+  --color-on-secondary-fixed-variant: #334A4F;
+  --color-tertiary-fixed: #DAE2FF;
+  --color-tertiary-fixed-dim: #BAC6EA;
+  --color-on-tertiary-fixed: #0E1B36;
+  --color-on-tertiary-fixed-variant: #3B4764;
 }
 [data-palette='cyan'].dark {
   --color-primary: #82D3E0;
@@ -690,6 +830,20 @@
   --color-inverse-surface: #303128;
   --color-inverse-on-surface: #F2F1E5;
   --color-inverse-primary: #B1D36B;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #CCEF84;
+  --color-primary-fixed-dim: #B1D36B;
+  --color-on-primary-fixed: #142000;
+  --color-on-primary-fixed-variant: #374E00;
+  --color-secondary-fixed: #DEE6C5;
+  --color-secondary-fixed-dim: #C2CAAA;
+  --color-on-secondary-fixed: #171E09;
+  --color-on-secondary-fixed-variant: #424A31;
+  --color-tertiary-fixed: #BCECE6;
+  --color-tertiary-fixed-dim: #A0D0CA;
+  --color-on-tertiary-fixed: #00201D;
+  --color-on-tertiary-fixed-variant: #1F4E4A;
 }
 [data-palette='lime'].dark {
   --color-primary: #B1D36B;
@@ -756,6 +910,20 @@
   --color-inverse-surface: #372F29;
   --color-inverse-on-surface: #FDEEE6;
   --color-inverse-primary: #FFB688;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #FFDBC8;
+  --color-primary-fixed-dim: #FFB688;
+  --color-on-primary-fixed: #321200;
+  --color-on-primary-fixed-variant: #733500;
+  --color-secondary-fixed: #FFDBC8;
+  --color-secondary-fixed-dim: #E6BEAB;
+  --color-on-secondary-fixed: #2C160A;
+  --color-on-secondary-fixed-variant: #5D4032;
+  --color-tertiary-fixed: #EAE5A8;
+  --color-tertiary-fixed-dim: #CDC98F;
+  --color-on-tertiary-fixed: #1E1C00;
+  --color-on-tertiary-fixed-variant: #4B491E;
 }
 [data-palette='deep-orange'].dark {
   --color-primary: #FFB688;
@@ -822,6 +990,20 @@
   --color-inverse-surface: #372F2A;
   --color-inverse-on-surface: #FDEEE5;
   --color-inverse-primary: #DFC0A6;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #FBDCC4;
+  --color-primary-fixed-dim: #DFC0A6;
+  --color-on-primary-fixed: #281100;
+  --color-on-primary-fixed-variant: #56361E;
+  --color-secondary-fixed: #FFE0D0;
+  --color-secondary-fixed-dim: #E5C0B0;
+  --color-on-secondary-fixed: #2C1A11;
+  --color-on-secondary-fixed-variant: #5C4337;
+  --color-tertiary-fixed: #E9E5AB;
+  --color-tertiary-fixed-dim: #CDC990;
+  --color-on-tertiary-fixed: #1E1C00;
+  --color-on-tertiary-fixed-variant: #4A4820;
 }
 [data-palette='brown'].dark {
   --color-primary: #DFC0A6;
@@ -888,6 +1070,20 @@
   --color-inverse-surface: #392E2D;
   --color-inverse-on-surface: #FFEDEB;
   --color-inverse-primary: #FFB4AD;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #FFDAD6;
+  --color-primary-fixed-dim: #FFB4AD;
+  --color-on-primary-fixed: #410005;
+  --color-on-primary-fixed-variant: #802120;
+  --color-secondary-fixed: #FFDAD6;
+  --color-secondary-fixed-dim: #E7BDBA;
+  --color-on-secondary-fixed: #2C1514;
+  --color-on-secondary-fixed-variant: #5D3F3D;
+  --color-tertiary-fixed: #FFDEA3;
+  --color-tertiary-fixed-dim: #E2C28C;
+  --color-on-tertiary-fixed: #271900;
+  --color-on-tertiary-fixed-variant: #594319;
 }
 [data-palette='coral'].dark {
   --color-primary: #FFB4AD;
@@ -954,6 +1150,20 @@
   --color-inverse-surface: #332F35;
   --color-inverse-on-surface: #F6EDF4;
   --color-inverse-primary: #E1B6FF;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #F2DAFF;
+  --color-primary-fixed-dim: #E1B6FF;
+  --color-on-primary-fixed: #2E004E;
+  --color-on-primary-fixed-variant: #63218A;
+  --color-secondary-fixed: #EDE0F6;
+  --color-secondary-fixed-dim: #D1C4D9;
+  --color-on-secondary-fixed: #221529;
+  --color-on-secondary-fixed-variant: #4E4156;
+  --color-tertiary-fixed: #FFD9DD;
+  --color-tertiary-fixed-dim: #F3B7BD;
+  --color-on-tertiary-fixed: #321017;
+  --color-on-tertiary-fixed-variant: #653B41;
 }
 [data-palette='violet'].dark {
   --color-primary: #E1B6FF;
@@ -1020,6 +1230,20 @@
   --color-inverse-surface: #313126;
   --color-inverse-on-surface: #F4F1D9;
   --color-inverse-primary: #CECA75;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #EAE68E;
+  --color-primary-fixed-dim: #CECA75;
+  --color-on-primary-fixed: #1D1D00;
+  --color-on-primary-fixed-variant: #4A4900;
+  --color-secondary-fixed: #E6E4C8;
+  --color-secondary-fixed-dim: #C9C8AD;
+  --color-on-secondary-fixed: #1D1D07;
+  --color-on-secondary-fixed-variant: #494834;
+  --color-tertiary-fixed: #BFECD7;
+  --color-tertiary-fixed-dim: #A3D0BC;
+  --color-on-tertiary-fixed: #002116;
+  --color-on-tertiary-fixed-variant: #254E3F;
 }
 [data-palette='olive'].dark {
   --color-primary: #CECA75;
@@ -1086,6 +1310,20 @@
   --color-inverse-surface: #382D32;
   --color-inverse-on-surface: #FEEBF0;
   --color-inverse-primary: #FFB0CA;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #FFD8E6;
+  --color-primary-fixed-dim: #FFB0CA;
+  --color-on-primary-fixed: #3E0022;
+  --color-on-primary-fixed-variant: #7C2950;
+  --color-secondary-fixed: #FFD8E6;
+  --color-secondary-fixed-dim: #E4BDC9;
+  --color-on-secondary-fixed: #2B1520;
+  --color-on-secondary-fixed-variant: #5B3F4B;
+  --color-tertiary-fixed: #FFDCC3;
+  --color-tertiary-fixed-dim: #EFBE93;
+  --color-on-tertiary-fixed: #2E1500;
+  --color-on-tertiary-fixed-variant: #63401D;
 }
 [data-palette='crimson'].dark {
   --color-primary: #FFB0CA;
@@ -1152,6 +1390,20 @@
   --color-inverse-surface: #303037;
   --color-inverse-on-surface: #F2F0F8;
   --color-inverse-primary: #B6C4FF;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #DCE1FF;
+  --color-primary-fixed-dim: #B6C4FF;
+  --color-on-primary-fixed: #001258;
+  --color-on-primary-fixed-variant: #1E3A88;
+  --color-secondary-fixed: #DFE1F9;
+  --color-secondary-fixed-dim: #C3C5DD;
+  --color-on-secondary-fixed: #171A2C;
+  --color-on-secondary-fixed-variant: #424559;
+  --color-tertiary-fixed: #FFD7F3;
+  --color-tertiary-fixed-dim: #E5BAD9;
+  --color-on-tertiary-fixed: #2C132A;
+  --color-on-tertiary-fixed-variant: #5C3E57;
 }
 [data-palette='navy'].dark {
   --color-primary: #B6C4FF;
@@ -1218,6 +1470,20 @@
   --color-inverse-surface: #333028;
   --color-inverse-on-surface: #F7EFE1;
   --color-inverse-primary: #E0C38B;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #FDDFA4;
+  --color-primary-fixed-dim: #E0C38B;
+  --color-on-primary-fixed: #261900;
+  --color-on-primary-fixed-variant: #574319;
+  --color-secondary-fixed: #F3E2C5;
+  --color-secondary-fixed-dim: #D6C6AA;
+  --color-on-secondary-fixed: #231B09;
+  --color-on-secondary-fixed-variant: #504632;
+  --color-tertiary-fixed: #CCEBC3;
+  --color-tertiary-fixed-dim: #B0CFA8;
+  --color-on-tertiary-fixed: #082008;
+  --color-on-tertiary-fixed-variant: #344E2F;
 }
 [data-palette='sand'].dark {
   --color-primary: #E0C38B;
@@ -1284,6 +1550,20 @@
   --color-inverse-surface: #303030;
   --color-inverse-on-surface: #F2F2F2;
   --color-inverse-primary: #C4C4C4;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #E0E0E0;
+  --color-primary-fixed-dim: #C4C4C4;
+  --color-on-primary-fixed: #1A1A1A;
+  --color-on-primary-fixed-variant: #444444;
+  --color-secondary-fixed: #E3E3E3;
+  --color-secondary-fixed-dim: #C7C7C7;
+  --color-on-secondary-fixed: #1B1B1B;
+  --color-on-secondary-fixed-variant: #474747;
+  --color-tertiary-fixed: #DDDDDD;
+  --color-tertiary-fixed-dim: #C1C1C1;
+  --color-on-tertiary-fixed: #191919;
+  --color-on-tertiary-fixed-variant: #424242;
 }
 [data-palette='graphite'].dark {
   --color-primary: #C4C4C4;
@@ -1350,6 +1630,20 @@
   --color-inverse-surface: #313130;
   --color-inverse-on-surface: #F0F0EF;
   --color-inverse-primary: #BCBCBC;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #D4D4D4;
+  --color-primary-fixed-dim: #BCBCBC;
+  --color-on-primary-fixed: #151515;
+  --color-on-primary-fixed-variant: #3C3C3C;
+  --color-secondary-fixed: #D9D9D7;
+  --color-secondary-fixed-dim: #BDBDBB;
+  --color-on-secondary-fixed: #1A1A18;
+  --color-on-secondary-fixed-variant: #3F3F3D;
+  --color-tertiary-fixed: #D5D5D3;
+  --color-tertiary-fixed-dim: #B9B9B7;
+  --color-on-tertiary-fixed: #181816;
+  --color-on-tertiary-fixed-variant: #3B3B39;
 }
 [data-palette='charcoal'].dark {
   --color-primary: #BCBCBC;
@@ -1416,6 +1710,20 @@
   --color-inverse-surface: #2D3133;
   --color-inverse-on-surface: #EDF1F3;
   --color-inverse-primary: #B8C8D0;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #D4E4EC;
+  --color-primary-fixed-dim: #B8C8D0;
+  --color-on-primary-fixed: #152028;
+  --color-on-primary-fixed-variant: #3A4A52;
+  --color-secondary-fixed: #D6E1E9;
+  --color-secondary-fixed-dim: #BAC5CD;
+  --color-on-secondary-fixed: #131E24;
+  --color-on-secondary-fixed-variant: #3B4750;
+  --color-tertiary-fixed: #D3E4E8;
+  --color-tertiary-fixed-dim: #B7C8CC;
+  --color-on-tertiary-fixed: #142027;
+  --color-on-tertiary-fixed-variant: #394A4E;
 }
 [data-palette='steel'].dark {
   --color-primary: #B8C8D0;
@@ -1482,6 +1790,20 @@
   --color-inverse-surface: #32302E;
   --color-inverse-on-surface: #F5EDEA;
   --color-inverse-primary: #D9C3BA;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #F3DDD5;
+  --color-primary-fixed-dim: #D9C3BA;
+  --color-on-primary-fixed: #241E1B;
+  --color-on-primary-fixed-variant: #534B47;
+  --color-secondary-fixed: #ECE0DC;
+  --color-secondary-fixed-dim: #D0C4C0;
+  --color-on-secondary-fixed: #201B19;
+  --color-on-secondary-fixed-variant: #4D4744;
+  --color-tertiary-fixed: #E9E3DB;
+  --color-tertiary-fixed-dim: #CDC7BF;
+  --color-on-tertiary-fixed: #1F1C17;
+  --color-on-tertiary-fixed-variant: #4B4842;
 }
 [data-palette='ash'].dark {
   --color-primary: #D9C3BA;
@@ -1548,6 +1870,20 @@
   --color-inverse-surface: #2E3133;
   --color-inverse-on-surface: #EFF1F3;
   --color-inverse-primary: #B7BFD0;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #D3DBEA;
+  --color-primary-fixed-dim: #B7BFD0;
+  --color-on-primary-fixed: #0C1520;
+  --color-on-primary-fixed-variant: #39414C;
+  --color-secondary-fixed: #DAE1ED;
+  --color-secondary-fixed-dim: #BEC5D1;
+  --color-on-secondary-fixed: #131A24;
+  --color-on-secondary-fixed-variant: #3F4650;
+  --color-tertiary-fixed: #D5DDE8;
+  --color-tertiary-fixed-dim: #B9C1CC;
+  --color-on-tertiary-fixed: #0E161F;
+  --color-on-tertiary-fixed-variant: #3B434C;
 }
 [data-palette='iron'].dark {
   --color-primary: #B7BFD0;
@@ -1614,6 +1950,20 @@
   --color-inverse-surface: #313034;
   --color-inverse-on-surface: #F4EEF5;
   --color-inverse-primary: #CEC3DB;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #E8DEF5;
+  --color-primary-fixed-dim: #CEC3DB;
+  --color-on-primary-fixed: #1E1A28;
+  --color-on-primary-fixed-variant: #4C4756;
+  --color-secondary-fixed: #E7E0EE;
+  --color-secondary-fixed-dim: #CBC4D2;
+  --color-on-secondary-fixed: #1D1A24;
+  --color-on-secondary-fixed-variant: #4A4650;
+  --color-tertiary-fixed: #E3E0F1;
+  --color-tertiary-fixed-dim: #C7C4D5;
+  --color-on-tertiary-fixed: #1B1B26;
+  --color-on-tertiary-fixed-variant: #474752;
 }
 [data-palette='fog'].dark {
   --color-primary: #CEC3DB;
@@ -1680,6 +2030,20 @@
   --color-inverse-surface: #2E3130;
   --color-inverse-on-surface: #EFF2F0;
   --color-inverse-primary: #C3CBC8;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #DEE7E3;
+  --color-primary-fixed-dim: #C3CBC8;
+  --color-on-primary-fixed: #171F1D;
+  --color-on-primary-fixed-variant: #434B48;
+  --color-secondary-fixed: #E0E7E4;
+  --color-secondary-fixed-dim: #C4CBC9;
+  --color-on-secondary-fixed: #191F1E;
+  --color-on-secondary-fixed-variant: #454C4A;
+  --color-tertiary-fixed: #DCE8E5;
+  --color-tertiary-fixed-dim: #C0CCC9;
+  --color-on-tertiary-fixed: #16201E;
+  --color-on-tertiary-fixed-variant: #424D4B;
 }
 [data-palette='pewter'].dark {
   --color-primary: #C3CBC8;
@@ -1746,6 +2110,20 @@
   --color-inverse-surface: #2C3134;
   --color-inverse-on-surface: #EDF2F4;
   --color-inverse-primary: #B3C4CF;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #CFE0EB;
+  --color-primary-fixed-dim: #B3C4CF;
+  --color-on-primary-fixed: #0A1922;
+  --color-on-primary-fixed-variant: #35444E;
+  --color-secondary-fixed: #D6E3ED;
+  --color-secondary-fixed-dim: #BAC7D1;
+  --color-on-secondary-fixed: #101D25;
+  --color-on-secondary-fixed-variant: #3B4951;
+  --color-tertiary-fixed: #D1E2ED;
+  --color-tertiary-fixed-dim: #B5C6D1;
+  --color-on-tertiary-fixed: #0C1B24;
+  --color-on-tertiary-fixed-variant: #374650;
 }
 [data-palette='smoke'].dark {
   --color-primary: #B3C4CF;
@@ -1812,6 +2190,20 @@
   --color-inverse-surface: #32302C;
   --color-inverse-on-surface: #F5F0E9;
   --color-inverse-primary: #D5CCBF;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #F0E7DD;
+  --color-primary-fixed-dim: #D5CCBF;
+  --color-on-primary-fixed: #231F18;
+  --color-on-primary-fixed-variant: #514C43;
+  --color-secondary-fixed: #ECE4DB;
+  --color-secondary-fixed-dim: #D0C8BF;
+  --color-on-secondary-fixed: #211C16;
+  --color-on-secondary-fixed-variant: #4C4841;
+  --color-tertiary-fixed: #EBE3D8;
+  --color-tertiary-fixed-dim: #CFC7BC;
+  --color-on-tertiary-fixed: #201C15;
+  --color-on-tertiary-fixed-variant: #4B473F;
 }
 [data-palette='stone'].dark {
   --color-primary: #D5CCBF;
@@ -1878,6 +2270,20 @@
   --color-inverse-surface: #2F3132;
   --color-inverse-on-surface: #F1F1F2;
   --color-inverse-primary: #C0C3C6;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #DCDFE2;
+  --color-primary-fixed-dim: #C0C3C6;
+  --color-on-primary-fixed: #16181B;
+  --color-on-primary-fixed-variant: #414446;
+  --color-secondary-fixed: #DEE1E3;
+  --color-secondary-fixed-dim: #C2C5C7;
+  --color-on-secondary-fixed: #171A1C;
+  --color-on-secondary-fixed-variant: #434648;
+  --color-tertiary-fixed: #DADDE0;
+  --color-tertiary-fixed-dim: #BEC1C4;
+  --color-on-tertiary-fixed: #14171A;
+  --color-on-tertiary-fixed-variant: #3F4245;
 }
 [data-palette='zinc'].dark {
   --color-primary: #C0C3C6;
@@ -1944,6 +2350,20 @@
   --color-inverse-surface: #000000;
   --color-inverse-on-surface: #ffffff;
   --color-inverse-primary: #ffffff;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #E4E4E4;
+  --color-primary-fixed-dim: #ffffff;
+  --color-on-primary-fixed: #000000;
+  --color-on-primary-fixed-variant: #3D3D3D;
+  --color-secondary-fixed: #E8E8E8;
+  --color-secondary-fixed-dim: #C6C6C6;
+  --color-on-secondary-fixed: #2B2B2B;
+  --color-on-secondary-fixed-variant: #404040;
+  --color-tertiary-fixed: #ECECEC;
+  --color-tertiary-fixed-dim: #B4B4B4;
+  --color-on-tertiary-fixed: #383838;
+  --color-on-tertiary-fixed-variant: #444444;
 }
 [data-palette='monochrome'].dark {
   --color-primary: #ffffff;
@@ -2009,6 +2429,20 @@
   --color-inverse-surface: #362F2C;
   --color-inverse-on-surface: #FBEEEA;
   --color-inverse-primary: #FFB599;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #FFDBCE;
+  --color-primary-fixed-dim: #FFB599;
+  --color-on-primary-fixed: #370E00;
+  --color-on-primary-fixed-variant: #7D2D07;
+  --color-secondary-fixed: #FFDBCE;
+  --color-secondary-fixed-dim: #E7BEAF;
+  --color-on-secondary-fixed: #2C160D;
+  --color-on-secondary-fixed-variant: #5D4035;
+  --color-tertiary-fixed: #F1E3A8;
+  --color-tertiary-fixed-dim: #D4C78E;
+  --color-on-tertiary-fixed: #211B00;
+  --color-on-tertiary-fixed-variant: #50471A;
 }
 [data-palette='rust'].dark {
   --color-primary: #FFB599;
@@ -2075,6 +2509,20 @@
   --color-inverse-surface: #33302A;
   --color-inverse-on-surface: #F6F0E7;
   --color-inverse-primary: #E6C449;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #FFE17C;
+  --color-primary-fixed-dim: #E6C449;
+  --color-on-primary-fixed: #231B00;
+  --color-on-primary-fixed-variant: #564500;
+  --color-secondary-fixed: #F0E2BB;
+  --color-secondary-fixed-dim: #D3C6A1;
+  --color-on-secondary-fixed: #221B04;
+  --color-on-secondary-fixed-variant: #4F462A;
+  --color-tertiary-fixed: #C7ECCB;
+  --color-tertiary-fixed-dim: #ABD0B0;
+  --color-on-tertiary-fixed: #01210D;
+  --color-on-tertiary-fixed-variant: #2E4E36;
 }
 [data-palette='gold'].dark {
   --color-primary: #E6C449;
@@ -2141,6 +2589,20 @@
   --color-inverse-surface: #2E312E;
   --color-inverse-on-surface: #F0F1EC;
   --color-inverse-primary: #7FD999;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #9BF6B3;
+  --color-primary-fixed-dim: #7FD999;
+  --color-on-primary-fixed: #00210D;
+  --color-on-primary-fixed-variant: #005229;
+  --color-secondary-fixed: #D2E8D3;
+  --color-secondary-fixed-dim: #B6CCB8;
+  --color-on-secondary-fixed: #0D1F12;
+  --color-on-secondary-fixed-variant: #384B3C;
+  --color-tertiary-fixed: #BEEAF6;
+  --color-tertiary-fixed-dim: #A2CED9;
+  --color-on-tertiary-fixed: #001F25;
+  --color-on-tertiary-fixed-variant: #204D56;
 }
 [data-palette='emerald'].dark {
   --color-primary: #7FD999;
@@ -2207,6 +2669,20 @@
   --color-inverse-surface: #2D3131;
   --color-inverse-on-surface: #EFF1F0;
   --color-inverse-primary: #4DDAD6;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #6FF7F3;
+  --color-primary-fixed-dim: #4DDAD6;
+  --color-on-primary-fixed: #00201F;
+  --color-on-primary-fixed-variant: #00504E;
+  --color-secondary-fixed: #CCE8E6;
+  --color-secondary-fixed-dim: #B0CCCA;
+  --color-on-secondary-fixed: #051F1F;
+  --color-on-secondary-fixed-variant: #324B4A;
+  --color-tertiary-fixed: #D2E4FF;
+  --color-tertiary-fixed-dim: #B2C8E8;
+  --color-on-tertiary-fixed: #021D35;
+  --color-on-tertiary-fixed-variant: #324863;
 }
 [data-palette='turquoise'].dark {
   --color-primary: #4DDAD6;
@@ -2273,6 +2749,20 @@
   --color-inverse-surface: #2E3133;
   --color-inverse-on-surface: #F0F1F3;
   --color-inverse-primary: #69D3FF;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #BEE9FF;
+  --color-primary-fixed-dim: #69D3FF;
+  --color-on-primary-fixed: #001F2A;
+  --color-on-primary-fixed-variant: #004D64;
+  --color-secondary-fixed: #D0E6F2;
+  --color-secondary-fixed-dim: #B4CAD6;
+  --color-on-secondary-fixed: #081E27;
+  --color-on-secondary-fixed-variant: #354A54;
+  --color-tertiary-fixed: #E3DFFF;
+  --color-tertiary-fixed-dim: #C6C2EA;
+  --color-on-tertiary-fixed: #1A1836;
+  --color-on-tertiary-fixed-variant: #454364;
 }
 [data-palette='cobalt'].dark {
   --color-primary: #69D3FF;
@@ -2339,6 +2829,20 @@
   --color-inverse-surface: #2F3033;
   --color-inverse-on-surface: #F0F0F4;
   --color-inverse-primary: #95CCFF;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #CDE5FF;
+  --color-primary-fixed-dim: #95CCFF;
+  --color-on-primary-fixed: #001D32;
+  --color-on-primary-fixed-variant: #004A75;
+  --color-secondary-fixed: #D5E4F6;
+  --color-secondary-fixed-dim: #B9C8DA;
+  --color-on-secondary-fixed: #0E1D2A;
+  --color-on-secondary-fixed-variant: #3A4857;
+  --color-tertiary-fixed: #EEDCFF;
+  --color-tertiary-fixed-dim: #D2BFE7;
+  --color-on-tertiary-fixed: #221533;
+  --color-on-tertiary-fixed-variant: #4F4061;
 }
 [data-palette='sapphire'].dark {
   --color-primary: #95CCFF;
@@ -2405,6 +2909,20 @@
   --color-inverse-surface: #313034;
   --color-inverse-on-surface: #F4EFF4;
   --color-inverse-primary: #C5C0FF;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #E3DFFF;
+  --color-primary-fixed-dim: #C5C0FF;
+  --color-on-primary-fixed: #130067;
+  --color-on-primary-fixed-variant: #413A93;
+  --color-secondary-fixed: #E4DFF9;
+  --color-secondary-fixed-dim: #C7C4DC;
+  --color-on-secondary-fixed: #1B1A2C;
+  --color-on-secondary-fixed-variant: #464559;
+  --color-tertiary-fixed: #FFD8E9;
+  --color-tertiary-fixed-dim: #EBB9D0;
+  --color-on-tertiary-fixed: #2F1123;
+  --color-on-tertiary-fixed-variant: #603B4F;
 }
 [data-palette='amethyst'].dark {
   --color-primary: #C5C0FF;
@@ -2471,6 +2989,20 @@
   --color-inverse-surface: #342F32;
   --color-inverse-on-surface: #F7EEF2;
   --color-inverse-primary: #FFA9FF;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #FFD6FA;
+  --color-primary-fixed-dim: #FFA9FF;
+  --color-on-primary-fixed: #36003D;
+  --color-on-primary-fixed-variant: #712578;
+  --color-secondary-fixed: #F5DBF0;
+  --color-secondary-fixed-dim: #D8BFD4;
+  --color-on-secondary-fixed: #261625;
+  --color-on-secondary-fixed-variant: #534152;
+  --color-tertiary-fixed: #FFDAD3;
+  --color-tertiary-fixed-dim: #F6B8AB;
+  --color-on-tertiary-fixed: #33110B;
+  --color-on-tertiary-fixed-variant: #673B32;
 }
 [data-palette='magenta'].dark {
   --color-primary: #FFA9FF;
@@ -2537,6 +3069,20 @@
   --color-inverse-surface: #342F31;
   --color-inverse-on-surface: #F9EEF1;
   --color-inverse-primary: #FFAEDE;
+
+  /* Fixed accent roles (same in dark) */
+  --color-primary-fixed: #FFD8EC;
+  --color-primary-fixed-dim: #FFAEDE;
+  --color-on-primary-fixed: #3B002D;
+  --color-on-primary-fixed-variant: #752A5E;
+  --color-secondary-fixed: #FBD9EA;
+  --color-secondary-fixed-dim: #DEBECE;
+  --color-on-secondary-fixed: #291521;
+  --color-on-secondary-fixed-variant: #57404D;
+  --color-tertiary-fixed: #FFDBCB;
+  --color-tertiary-fixed-dim: #F4BA9E;
+  --color-on-tertiary-fixed: #311303;
+  --color-on-tertiary-fixed-variant: #653D28;
 }
 [data-palette='mauve'].dark {
   --color-primary: #FFAEDE;

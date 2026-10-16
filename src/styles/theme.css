@@ -27,6 +27,20 @@
   --color-tertiary-container: #ffd8e4;
   --color-on-tertiary-container: #31111d;
 
+  /* Fixed accent roles: the same in light and dark (tones 90/80/10/30 of each key palette) */
+  --color-primary-fixed: #eaddff;
+  --color-primary-fixed-dim: #d0bcff;
+  --color-on-primary-fixed: #21005d;
+  --color-on-primary-fixed-variant: #4f378b;
+  --color-secondary-fixed: #e8def8;
+  --color-secondary-fixed-dim: #ccc2dc;
+  --color-on-secondary-fixed: #1d192b;
+  --color-on-secondary-fixed-variant: #4a4458;
+  --color-tertiary-fixed: #ffd8e4;
+  --color-tertiary-fixed-dim: #efb8c8;
+  --color-on-tertiary-fixed: #31111d;
+  --color-on-tertiary-fixed-variant: #633b48;
+
   --color-error: #b3261e;
   --color-on-error: #ffffff;
   --color-error-container: #f9dedc;
@@ -110,6 +124,7 @@
   --text-label-medium--line-height: 1rem;
   --text-label-small: 0.6875rem;
   --text-label-small--line-height: 1rem;
+
 }
 
 /* ---------------------------------------------------------------------- */
