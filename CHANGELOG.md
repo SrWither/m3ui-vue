@@ -7,6 +7,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [0.9.1] - Unreleased
 
+### Added
+- `dist/API.md`: a compact API reference for AI coding agents, generated from the source on every build by `scripts/generate-api.mjs` (vue-component-meta): every component's props with types and defaults, events, slots with their bindings, exposed methods and types, plus composables, locale keys, theme tokens and palettes. `dist/api.json` holds the same data for tooling. New `build:api` script, run at the end of `pnpm build`
+- JSDoc descriptions on every component, prop, event and slot, shown on hover in editors; components describe themselves, their slots (`@slot`) and events (`@event`) in a JSDoc block at the top of `<script setup>`
+
 ### Fixed
 - `MHotkeys`: shortcuts with a modifier never fired. `mod` counted as a modifier of its own on top of Ctrl/Cmd, so `mod+s` was rejected for having Ctrl held and `ctrl+s` for having `mod` held; only single keys worked. `mod` now resolves to Ctrl (Cmd on Mac) and the held modifiers must match the combo exactly
 
