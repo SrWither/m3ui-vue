@@ -215,8 +215,8 @@ const name = ref('')
 | | |
 |---|---|
 | `MAlert` | Inline alerts |
-| `MSnackbar` | Toast notifications (via `useToast`) |
-| `MNotificationHost` | Rich notifications (via `useNotification`) |
+| `MSnackbar` | Toast notifications: call `useToast()`, which mounts it for you |
+| `useNotification()` | Rich notifications; mounts its own host, nothing to place |
 | `MDialog` / `MConfirmDialog` | Modal dialogs |
 | `MBottomSheet` | Bottom sheet |
 | `MSideSheet` | Side sheet |
@@ -329,6 +329,16 @@ import { MTerminal } from '@m3ui-vue/m3ui-vue/terminal'
 import { MChart } from '@m3ui-vue/m3ui-vue/chart'
 import { MQRCode } from '@m3ui-vue/m3ui-vue/qrcode'
 import { MBarcode } from '@m3ui-vue/m3ui-vue/barcode'
+```
+
+### API reference for AI agents
+
+The package ships `dist/API.md`: every component's props (types, defaults), events, slots, exposed methods and
+types, plus the composables, locale keys and theme tokens, in one compact file generated from the source on every
+build. Point your coding agent at it, e.g. in your project's `CLAUDE.md` or `AGENTS.md`:
+
+```md
+UI components come from @m3ui-vue/m3ui-vue; its API is in node_modules/@m3ui-vue/m3ui-vue/dist/API.md.
 ```
 
 ## Composables

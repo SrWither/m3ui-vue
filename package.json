@@ -68,10 +68,11 @@
     "src"
   ],
   "scripts": {
-    "build": "pnpm build:js && pnpm build:types && pnpm build:css",
+    "build": "pnpm build:js && pnpm build:types && pnpm build:css && pnpm build:api",
     "build:js": "vite build && cp dist/m3ui-vue.css dist/styles.css",
     "build:types": "vue-tsc -p tsconfig.build.json",
     "build:css": "cp -r src/styles dist/",
+    "build:api": "node scripts/generate-api.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "prepublishOnly": "pnpm build"
@@ -230,6 +231,7 @@
     "vitest": "^5.0.0",
     "vue": "^3.5.42",
     "vue-chartjs": "^5.3.4",
+    "vue-component-meta": "3.3.11",
     "vue-tsc": "^3.3.11"
   },
   "publishConfig": {
