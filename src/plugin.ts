@@ -1,6 +1,7 @@
 import type { App, MaybeRef } from 'vue'
 import type { Palette } from './composables/useColorPalette'
-import { __forcePalette, palettes } from './composables/useColorPalette'
+import { __defaultPalette, __defaultSeed, __forcePalette, palettes } from './composables/useColorPalette'
+import type { SeedOptions } from './composables/dynamicColor'
 import type { M3Locale } from './composables/useLocale'
 import { M3_LOCALE_KEY, __setAppLocale } from './composables/useLocale'
 
@@ -22,6 +23,14 @@ export interface M3UIOptions {
    * `[data-palette='<id>'].dark { ... }` block, overriding the same tokens as `palettes.css`.
    */
   customPalettes?: Palette[]
+  /**
+   * Generate the whole color scheme (light and dark) from one color instead of using a named palette: Google's
+   * dynamic color, the way Android builds a theme from a wallpaper. `palette` wins when both are given, and like
+   * `palette` it's only the first-visit default unless `persistPalette` is `false`.
+   */
+  seed?: string
+  /** How `seed` becomes a scheme: `variant` (`'tonal-spot'` by default) and `contrast` (0 standard, 0.5 medium, 1 high). */
+  seedOptions?: SeedOptions
   locale?: MaybeRef<Partial<M3Locale>>
 }
 
@@ -35,12 +44,13 @@ export function createM3UI(options: M3UIOptions = {}) {
       }
       if (options.persistPalette === false) {
         if (options.palette) __forcePalette(options.palette, false)
-      } else if (options.palette && options.palette !== 'purple' && !localStorage.getItem('m3-palette')) {
-        // `options.palette` is only the first-visit default — once the user picks a palette via
-        // `useColorPalette().set()` it's persisted to localStorage, and that choice must win on
-        // every later boot instead of being clobbered back to the plugin's static default.
-        document.documentElement.setAttribute('data-palette', options.palette)
-        localStorage.setItem('m3-palette', options.palette)
+        else if (options.seed) void __defaultSeed(options.seed, options.seedOptions, false)
+      } else if (!localStorage.getItem('m3-palette')) {
+        // `palette`/`seed` are only the first-visit default — once the user picks a palette via
+        // `useColorPalette().set()` (or a seed via `setSeed()`) it's persisted to localStorage, and that choice
+        // must win on every later boot instead of being clobbered back to the plugin's static default.
+        if (options.palette && options.palette !== 'purple') __defaultPalette(options.palette)
+        else if (!options.palette && options.seed) void __defaultSeed(options.seed, options.seedOptions, true)
       }
       if (options.locale) {
         app.provide(M3_LOCALE_KEY, options.locale)

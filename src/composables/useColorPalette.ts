@@ -1,8 +1,13 @@
-import { ref, watchEffect } from 'vue'
+import { readonly, ref, watchEffect } from 'vue'
+import { generateScheme, schemeToCss, type SeedOptions } from './dynamicColor'
 
 export interface Palette {
   id: string
   label: string
+  /**
+   * The palette's key color. A custom palette (`createM3UI({ customPalettes })`) with no CSS of its own gets its
+   * scheme generated from it; one with `[data-palette='<id>']` rules keeps them.
+   */
   seed: string
 }
 
@@ -49,44 +54,171 @@ export const palettes: Palette[] = [
   { id: 'mauve',       label: 'Mauve',       seed: '#914277' },
 ]
 
-const current = ref(localStorage.getItem('m3-palette') ?? 'purple')
+// Ids whose CSS ships in palettes.css (plus 'purple', the theme.css baseline): never generated
+const builtInIds = new Set(palettes.map((p) => p.id))
+
+/** The palette id used while a seed color is active (`useColorPalette().setSeed()`). */
+export const SEED_PALETTE = 'seed'
+
+export interface ActiveSeed extends SeedOptions {
+  seed: string
+}
+
+const PALETTE_KEY = 'm3-palette'
+const SEED_KEY = 'm3-seed'
+// The generated CSS of the active palette, so a reload applies it before the generator has loaded
+const CSS_KEY = 'm3-palette-css'
+
+function read<T>(key: string): T | null {
+  try {
+    const v = localStorage.getItem(key)
+    return v == null ? null : (key === PALETTE_KEY ? v : JSON.parse(v)) as T
+  } catch {
+    return null
+  }
+}
+function write(key: string, value: unknown) {
+  try {
+    if (value == null) localStorage.removeItem(key)
+    else localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value))
+  } catch { /* storage blocked */ }
+}
+
+const current = ref(read<string>(PALETTE_KEY) ?? 'purple')
+const activeSeed = ref<ActiveSeed | null>(read<ActiveSeed>(SEED_KEY))
 
 // Whether palette changes are written to localStorage. Defaults to true (existing behavior).
 // An app can disable it via `createM3UI({ persistPalette: false })` or `useColorPalette().setPersistPalette(false)`
 // so its chosen palette can't be overridden by a stored value on the next boot.
 const persistEnabled = ref(true)
 
+function applyAttribute(id: string) {
+  if (id === 'purple') document.documentElement.removeAttribute('data-palette')
+  else document.documentElement.setAttribute('data-palette', id)
+}
+
+// ── Generated palettes ──────────────────────────────────────────────────────────────────────────
+// One <style> element holds the generated CSS of the active palette (a seed, or a custom palette
+// without CSS of its own).
+
+const STYLE_ID = 'm3-dynamic-palette'
+
+function injectCss(css: string) {
+  let el = document.getElementById(STYLE_ID) as HTMLStyleElement | null
+  if (!el) {
+    el = document.createElement('style')
+    el.id = STYLE_ID
+    document.head.appendChild(el)
+  }
+  el.textContent = css
+}
+
+/** Whether a stylesheet (other than our generated one) already styles `[data-palette='<id>']`. */
+function hasPaletteCss(id: string): boolean {
+  const needles = [`[data-palette="${id}"]`, `[data-palette='${id}']`, `[data-palette=${id}]`]
+  const scan = (rules: CSSRuleList): boolean => {
+    for (const rule of Array.from(rules)) {
+      const selector = (rule as CSSStyleRule).selectorText
+      if (selector && needles.some((n) => selector.includes(n))) return true
+      const nested = (rule as CSSGroupingRule).cssRules
+      if (nested && scan(nested)) return true
+    }
+    return false
+  }
+  for (const sheet of Array.from(document.styleSheets)) {
+    if ((sheet.ownerNode as Element | null)?.id === STYLE_ID) continue
+    try {
+      if (scan(sheet.cssRules)) return true
+    } catch { /* cross-origin sheet */ }
+  }
+  return false
+}
+
+let generation = 0
+
+/** Generates and injects the CSS for a palette id from a seed. Resolves false if a newer request won. */
+async function generateInto(id: string, seed: ActiveSeed): Promise<boolean> {
+  const mine = ++generation
+  const css = schemeToCss(await generateScheme(seed.seed, seed), id)
+  if (mine !== generation) return false
+  injectCss(css)
+  if (persistEnabled.value) write(CSS_KEY, { id, css })
+  return true
+}
+
+/** Switches to a palette id with the theme transition. Applied directly, not only through useColorPalette()'s
+ * watcher, so it also works when no component uses the composable (createM3UI's defaults). */
+function switchTo(id: string) {
+  document.documentElement.classList.add('theme-transitioning')
+  void document.documentElement.offsetHeight
+  current.value = id
+  applyAttribute(id)
+  if (persistEnabled.value) write(PALETTE_KEY, id)
+  setTimeout(() => document.documentElement.classList.remove('theme-transitioning'), 300)
+}
+
+/** Picks a palette by id; a custom one with a seed and no CSS of its own is generated first. */
+async function selectPalette(id: string) {
+  generation++
+  const custom = palettes.find((p) => p.id === id)
+  if (custom && !builtInIds.has(id) && custom.seed && !hasPaletteCss(id)) {
+    if (!(await generateInto(id, { seed: custom.seed }))) return
+  }
+  switchTo(id)
+}
+
+/** Activates a seed color: generates its scheme and switches to it. */
+async function selectSeed(seed: string, options: SeedOptions = {}) {
+  const next: ActiveSeed = { seed, ...options }
+  if (!(await generateInto(SEED_PALETTE, next))) return
+  activeSeed.value = next
+  if (persistEnabled.value) write(SEED_KEY, next)
+  switchTo(SEED_PALETTE)
+}
+
 export function useColorPalette() {
   watchEffect(() => {
     const id = current.value
-    if (persistEnabled.value) localStorage.setItem('m3-palette', id)
-
-    if (id === 'purple') {
-      document.documentElement.removeAttribute('data-palette')
-    } else {
-      document.documentElement.setAttribute('data-palette', id)
-    }
+    if (persistEnabled.value) write(PALETTE_KEY, id)
+    applyAttribute(id)
   })
 
+  /** Switches to a palette by id. */
   function set(id: string) {
-    document.documentElement.classList.add('theme-transitioning')
-    void document.documentElement.offsetHeight
-    current.value = id
-    setTimeout(() => document.documentElement.classList.remove('theme-transitioning'), 300)
+    void selectPalette(id)
+  }
+
+  /**
+   * Switches to a scheme generated from a seed color (Google's dynamic color: HCT, `tonal-spot` by default).
+   * `palette` becomes `'seed'`. The last choice wins: `set(id)` afterwards switches back to that palette, and
+   * `seed` keeps the last seed so a picker can offer it again.
+   */
+  function setSeed(seed: string, options?: SeedOptions) {
+    return selectSeed(seed, options)
   }
 
   function setPersistPalette(enabled: boolean) {
     persistEnabled.value = enabled
-    if (enabled) localStorage.setItem('m3-palette', current.value)
+    if (enabled) write(PALETTE_KEY, current.value)
   }
 
-  return { palette: current, palettes, set, persistPalette: persistEnabled, setPersistPalette }
+  return {
+    palette: current,
+    palettes,
+    set,
+    seed: readonly(activeSeed),
+    setSeed,
+    persistPalette: persistEnabled,
+    setPersistPalette,
+  }
 }
 
-// Apply on module load so palette is visible before any component mounts
-const saved = localStorage.getItem('m3-palette')
-if (saved && saved !== 'purple') {
-  document.documentElement.setAttribute('data-palette', saved)
+// Apply on module load so the palette is visible before any component mounts, a generated one included
+{
+  const saved = read<string>(PALETTE_KEY)
+  const cached = read<{ id: string; css: string }>(CSS_KEY)
+  if (saved && cached && cached.id === saved) injectCss(cached.css)
+  if (saved && saved !== 'purple') document.documentElement.setAttribute('data-palette', saved)
 }
 
 /**
@@ -98,10 +230,24 @@ if (saved && saved !== 'purple') {
 export function __forcePalette(id: string, persist: boolean) {
   persistEnabled.value = persist
   current.value = id
-  if (id === 'purple') {
-    document.documentElement.removeAttribute('data-palette')
-  } else {
-    document.documentElement.setAttribute('data-palette', id)
-  }
-  if (persist) localStorage.setItem('m3-palette', id)
+  applyAttribute(id)
+  if (persist) write(PALETTE_KEY, id)
+  if (palettes.some((p) => p.id === id) && !builtInIds.has(id)) void selectPalette(id)
+}
+
+/**
+ * Internal: `createM3UI({ palette })`'s first-visit default. Sets `current` too, so a later `useColorPalette()`
+ * doesn't write its stale initial value back over it.
+ */
+export function __defaultPalette(id: string) {
+  current.value = id
+  applyAttribute(id)
+  write(PALETTE_KEY, id)
+  if (palettes.some((p) => p.id === id) && !builtInIds.has(id)) void selectPalette(id)
+}
+
+/** Internal: `createM3UI({ seed })`. */
+export function __defaultSeed(seed: string, options: SeedOptions | undefined, persist: boolean) {
+  persistEnabled.value = persist
+  return selectSeed(seed, options)
 }

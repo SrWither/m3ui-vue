@@ -361,6 +361,16 @@ UI components come from @m3ui-vue/m3ui-vue; its API is in node_modules/@m3ui-vue
 
 `purple` (default) `indigo` `navy` `blue` `cyan` `teal` `green` `lime` `olive` `amber` `sand` `orange` `deep-orange` `brown` `red` `coral` `crimson` `pink` `violet` `slate` `graphite` `charcoal` `steel` `ash` `iron` `fog` `pewter` `smoke` `stone` `zinc` `monochrome` `rust` `gold` `emerald` `turquoise` `cobalt` `sapphire` `amethyst` `magenta` `mauve`
 
+### Dynamic Color (from a seed)
+
+Instead of a named palette, generate the whole scheme (light and dark) from one color with Google's dynamic color algorithm:
+
+```ts
+app.use(createM3UI({ seed: '#0b57d0', seedOptions: { variant: 'tonal-spot', contrast: 0 } }))
+```
+
+At runtime, `useColorPalette().setSeed('#0b57d0')`; `set(id)` switches back to a named palette (the last choice wins). A named `palette` wins over `seed` in `createM3UI`. `generateScheme(seed, options)` returns the tokens if you want them yourself.
+
 ### Switch at Runtime
 
 ```vue
