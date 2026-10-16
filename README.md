@@ -206,7 +206,7 @@ const name = ref('')
 | `MCalendar` | Event calendar |
 | `MCarousel` | The M3 carousel, ported from Compose Material3: `multi-browse`, `uncontained`, `hero` and `full-screen` layouts, horizontal or vertical. Items keep one size and are masked as they scroll; drag, wheel and keyboard, v-model on the current item, `#item` slot for custom content |
 | `MSimpleCarousel` | Fixed-width slide carousel (hero/multi-browse\*/uncontained layouts) — the old `MCarousel`, renamed since `MCarousel` is now the real M3 carousel. \*its own `multi-browse` layout mode is a simpler fixed-width approximation, not the real masking behavior `MCarousel` implements |
-| `MLightbox` | Fullscreen image lightbox with gallery navigation, swipe, and auto-detected `<img>` scanning |
+| `MLightbox` | **Beta.** Full-screen image viewer: swipe between images, zoom (double tap, pinch, wheel), drag down to close, opens from and closes into the image you tapped; auto-detects `<img>` elements or takes `items` |
 | `MJsonViewer` | JSON tree viewer |
 | `MRelativeTime` | Auto-updating "3 minutes ago" / "in 2 hours" text, locale-aware via `Intl.RelativeTimeFormat` |
 
