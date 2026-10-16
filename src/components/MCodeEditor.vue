@@ -256,7 +256,6 @@ onBeforeUnmount(() => view?.destroy())
   flex: 1;
   min-height: 0;
   font-size: 0.8125rem;
-  line-height: 1.6;
 }
 
 .code-editor-container :deep(.cm-editor.cm-focused) {
@@ -277,8 +276,10 @@ onBeforeUnmount(() => view?.destroy())
      the first place. */
   align-items: stretch !important;
   /* Set here, not on .cm-editor: CodeMirror's base theme declares
-     font-family: monospace on .cm-scroller itself, which beats inheritance */
+     font-family: monospace and line-height: 1.4 on .cm-scroller itself,
+     which beats inheritance */
   font-family: var(--font-mono, 'Roboto Mono', monospace);
+  line-height: 1.6;
 }
 
 .code-editor-container :deep(.cm-content) {
