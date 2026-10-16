@@ -12,6 +12,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - JSDoc descriptions on every component, prop, event and slot, shown on hover in editors; components describe themselves, their slots (`@slot`) and events (`@event`) in a JSDoc block at the top of `<script setup>`
 
 ### Fixed
+- Toasts (`useToast`) and notifications (`useNotification`) now use the locale given to `createM3UI()`. Their hosts are mounted in an app of their own, which the plugin's `provide` didn't reach, so their built-in text was always English; the plugin now also registers the locale as an app-wide fallback for `useLocale()`
+- `MNotificationHost`: the close button had no accessible name; it now reads the locale's `close`
 - `MHotkeys`: shortcuts with a modifier never fired. `mod` counted as a modifier of its own on top of Ctrl/Cmd, so `mod+s` was rejected for having Ctrl held and `ctrl+s` for having `mod` held; only single keys worked. `mod` now resolves to Ctrl (Cmd on Mac) and the held modifiers must match the combo exactly
 
 ## [0.9.0] - 2026-10-16
