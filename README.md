@@ -479,7 +479,7 @@ Install only the packages you need:
 - [x] ~~Material 3 Expressive shape scale (large-increased, extra-large-increased, extra-extra-large)~~
 - [x] ~~Motion tokens: easings, durations and springs, exposed for your own animations~~
 - [x] ~~Contrast levels (medium, high) for the built-in palettes, not only for seed-generated ones~~
-- [ ] Scrollbars: drop the global rule that hides them in Chromium/WebKit (it reaches the whole app, and Firefox shows them anyway) in favor of thin theme-colored scrollbars with `scrollbar-gutter: stable`, hiding them only where a component needs it. For now, set `scrollbar-width: auto` where you want them visible
+- [x] ~~Scrollbars: thin, theme-colored scrollbars instead of the global rule that hid them in Chromium/WebKit, hidden only where a component needs it (and `scrollbar-none` for your own markup)~~
 
 Already in: dynamic color from a seed, fixed color roles, elevation levels 0–5, the emphasized type scale, and the
 Expressive components so far (button groups, split buttons, toggle buttons, loading indicator, FAB menu, toolbars,

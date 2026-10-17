@@ -23,6 +23,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `M3Locale` keys `sheetExpand`, `sheetCollapse` and `sheetDismiss`, in all 7 bundled locales
 
 ### Changed
+- **Scrollbars are visible again in Chromium and WebKit**: `theme.css` no longer hides every scrollbar (`scrollbar-width: none` on `*`, which also reached the app's own markup while Firefox showed them anyway). Every scroll container gets a thin scrollbar in the theme's colors (`scrollbar-color: outline`, transparent track), inside `@layer base` so utilities override it; phones keep their overlay scrollbars. New `scrollbar-none` utility hides one while keeping it scrollable; MNavigationDrawer's item lists, MNavigationRail's modal panel and MBreadcrumbs use it (MTabs, MEmojiSelector's category strip, MLightbox's thumbnails, MSimpleCarousel and MScrollable `scrollbar="none"` already hid theirs)
 - `MChip`'s remove button is labeled from the locale (`remove`) instead of a hardcoded Spanish "Quitar"
 - `MFab` inside an `MBottomAppBar` defaults to `secondary` and has no shadow (`bottomAppBarFabColor`, `bottomAppBarFabElevation`); an explicit `color` still wins. Elsewhere nothing changes
 
