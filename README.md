@@ -357,6 +357,9 @@ UI components come from @m3ui-vue/m3ui-vue; its API is in node_modules/@m3ui-vue
 | `useDevice()` | Responsive breakpoint detection |
 | `useWindowSizeClass()` | M3 width/height size classes (compact → extra-large) for the window or any element |
 | `usePageProgress()` | Shared state for `MPageProgress`'s `start()`/`set()`/`done()` — drive it by hand or let the component auto-wire vue-router |
+| `useSpring()` | Animate numbers on a real spring with M3's motion specs (`motionSprings`), like the components do |
+
+**Motion tokens:** M3's easings are Tailwind `ease-*` utilities (`ease-emphasized`, `ease-emphasized-decelerate`…) and its durations CSS variables (`duration-(--duration-medium-2)`); in JS, `motionSprings` (Standard and Expressive), `motionEasings`, `motionDurations` and `cubicBezier()`.
 
 ## Color Palettes
 
@@ -458,7 +461,7 @@ Install only the packages you need:
 **Foundations**
 
 - [x] ~~Material 3 Expressive shape scale (large-increased, extra-large-increased, extra-extra-large)~~
-- [ ] Motion tokens: easings, durations and springs, exposed for your own animations
+- [x] ~~Motion tokens: easings, durations and springs, exposed for your own animations~~
 - [ ] Contrast levels (medium, high) for the built-in palettes, not only for seed-generated ones
 - [ ] Scrollbars: drop the global rule that hides them in Chromium/WebKit (it reaches the whole app, and Firefox shows them anyway) in favor of thin theme-colored scrollbars with `scrollbar-gutter: stable`, hiding them only where a component needs it. For now, set `scrollbar-width: auto` where you want them visible
 
