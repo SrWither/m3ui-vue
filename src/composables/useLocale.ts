@@ -42,6 +42,9 @@ export interface M3Locale {
   timeHourSelection: string
   timeMinuteSelection: string
   timePeriodToggle: string
+  timeToggleKeyboard: string
+  timeToggleDial: string
+  timeToggleScroll: string
   selectRange: string
   pickStart: string
   pickEnd: string
@@ -218,6 +221,9 @@ export const defaultLocale: M3Locale = {
   timeHourSelection: 'Select hour',
   timeMinuteSelection: 'Select minutes',
   timePeriodToggle: 'Select AM or PM',
+  timeToggleKeyboard: 'Switch to text input mode',
+  timeToggleDial: 'Switch to clock mode',
+  timeToggleScroll: 'Switch to scroll mode',
   selectRange: 'Select range',
   pickStart: 'Select start',
   pickEnd: 'Select end',

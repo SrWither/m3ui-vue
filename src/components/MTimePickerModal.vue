@@ -1,7 +1,8 @@
 <script setup lang="ts">
 /**
- * A modal, centered time picker with a clock dial and a keyboard input mode. Supports AM/PM toggle and 24h
- * format — the sibling of MTimePicker, a fully separate component rather than a shared internal.
+ * A modal, centered time picker with a clock dial (or, with `mode="scroll"`, M3 Expressive's scroll wheels from
+ * MTimeScroll) and a keyboard input mode. Supports AM/PM toggle and 24h format — the sibling of MTimePicker, a
+ * fully separate component rather than a shared internal.
  *
  * @event update:modelValue Emitted when a time is confirmed — powers v-model
  * @event update:show Emitted when the dialog opens or closes — powers v-model:show
@@ -9,6 +10,7 @@
 import { computed, ref, watch } from 'vue'
 import MButton from './MButton.vue'
 import MIconButton from './MIconButton.vue'
+import MTimeScroll from './MTimeScroll.vue'
 import { useLocale } from '../composables/useLocale'
 
 const props = withDefaults(defineProps<{
@@ -22,11 +24,14 @@ const props = withDefaults(defineProps<{
   minuteStep?: number
   /** Dialog title */
   title?: string
+  /** How the time is picked before switching to keyboard input: a clock `dial`, or `scroll` wheels (MTimeScroll) */
+  mode?: 'dial' | 'scroll'
 }>(), {
   modelValue: null,
   show: false,
   use24h: false,
   minuteStep: 5,
+  mode: 'dial',
 })
 
 const locale = useLocale()
@@ -36,7 +41,7 @@ const emit = defineEmits<{
 }>()
 
 const step = ref<'hour' | 'minute'>('hour')
-const inputMode = ref<'dial' | 'input'>('dial')
+const inputMode = ref<'dial' | 'scroll' | 'input'>('dial')
 const period = ref<'AM' | 'PM'>('AM')
 const selectedHour = ref(12)
 const selectedMinute = ref(0)
@@ -61,9 +66,10 @@ watch(() => props.show, (open) => {
       period.value = h >= 12 ? 'PM' : 'AM'
       selectedHour.value = h % 12 || 12
     }
-    selectedMinute.value = m
+    // The minute wheel only has multiples of minuteStep: start on the one it shows
+    selectedMinute.value = props.mode === 'scroll' ? Math.floor(m / props.minuteStep) * props.minuteStep : m
     step.value = 'hour'
-    inputMode.value = 'dial'
+    inputMode.value = props.mode
     document.addEventListener('keydown', onKeydown)
     document.body.style.overflow = 'hidden'
   } else {
@@ -198,6 +204,35 @@ function selectHour(h: number) {
   selectedHour.value = h
   step.value = 'minute'
 }
+
+// ── Scroll mode ────────────────────────────────────────────────────
+// MTimeScroll speaks 24-hour HH:MM; the dialog keeps a 1–12 hour plus period in 12-hour mode
+const scrollTime = computed({
+  get() {
+    let h = selectedHour.value
+    if (!props.use24h) h = (h % 12) + (period.value === 'PM' ? 12 : 0)
+    return `${pad(h)}:${pad(selectedMinute.value)}`
+  },
+  set(t: string) {
+    const { h, m } = parseTime(t)
+    if (props.use24h) {
+      selectedHour.value = h
+    } else {
+      period.value = h >= 12 ? 'PM' : 'AM'
+      selectedHour.value = h % 12 || 12
+    }
+    selectedMinute.value = m
+  },
+})
+
+const toggleIcon = computed(() =>
+  inputMode.value !== 'input' ? 'keyboard' : props.mode === 'scroll' ? 'swipe_vertical' : 'schedule',
+)
+const toggleLabel = computed(() =>
+  inputMode.value !== 'input'
+    ? locale.timeToggleKeyboard
+    : props.mode === 'scroll' ? locale.timeToggleScroll : locale.timeToggleDial,
+)
 
 // ── Input mode ─────────────────────────────────────────────────────
 const inputHour = ref('')
@@ -384,6 +419,11 @@ function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') cancel() }
             </div>
           </template>
 
+          <!-- ── Scroll mode ─────────────────────────────────── -->
+          <div v-else-if="inputMode === 'scroll'" class="flex justify-center pb-4">
+            <MTimeScroll v-model="scrollTime" :use24h="use24h" :minute-step="minuteStep" />
+          </div>
+
           <!-- ── Input mode ──────────────────────────────────── -->
           <div v-else class="mx-auto flex items-center justify-center gap-2 py-8">
             <input
@@ -435,9 +475,9 @@ function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') cancel() }
           <!-- Footer -->
           <div class="mt-2 flex items-center justify-between">
             <MIconButton
-              :icon="inputMode === 'dial' ? 'keyboard' : 'schedule'"
-              :label="inputMode === 'dial' ? 'Switch to keyboard' : 'Switch to dial'"
-              @click="inputMode = inputMode === 'dial' ? 'input' : 'dial'"
+              :icon="toggleIcon"
+              :label="toggleLabel"
+              @click="inputMode = inputMode === 'input' ? mode : 'input'"
             />
             <div class="flex gap-2">
               <MButton variant="text" @click="cancel">{{ locale.cancel }}</MButton>
