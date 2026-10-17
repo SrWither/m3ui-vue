@@ -9,6 +9,7 @@
  */
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import MIcon from './MIcon.vue'
+import { vRipple } from '../directives/vRipple'
 
 const props = withDefaults(
   defineProps<{
@@ -22,6 +23,8 @@ const props = withDefaults(
     icon?: string
     /** Same 5-tier expressive sizing as MButton */
     size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+    /** Any CSS color for the press ripple; defaults to the button's content color */
+    rippleColor?: string
   }>(),
   {
     variant: 'filled',
@@ -106,23 +109,12 @@ const disabledContainerClasses = computed(() => {
 const rootEl = ref<HTMLElement | null>(null)
 const pressed = ref(false)
 
-function onPointerDown(e: PointerEvent) {
+function onPointerDown() {
   if (props.disabled) return
   pressed.value = true
-  createRipple(e)
 }
 function onPointerUp() { pressed.value = false }
 
-function createRipple(event: PointerEvent) {
-  const button = event.currentTarget as HTMLElement
-  const rect = button.getBoundingClientRect()
-  const d = Math.max(rect.width, rect.height) * 2
-  const el = document.createElement('span')
-  el.className = 'm3-ripple'
-  el.style.cssText = `width:${d}px;height:${d}px;top:${event.clientY - rect.top - d / 2}px;left:${event.clientX - rect.left - d / 2}px`
-  button.appendChild(el)
-  el.addEventListener('animationend', () => el.remove(), { once: true })
-}
 
 function toggle() {
   if (props.disabled) return
@@ -188,6 +180,7 @@ onUnmounted(() => cancelAnimationFrame(rafId))
     :aria-pressed="checked"
     :disabled="disabled"
     :class="[base, sizeClasses, containerClasses, disabledContainerClasses]"
+    v-ripple="{ disabled, color: rippleColor }"
     @pointerdown="onPointerDown"
     @pointerup="onPointerUp"
     @pointerleave="onPointerUp"

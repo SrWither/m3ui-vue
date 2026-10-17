@@ -313,6 +313,14 @@ html.theme-transitioning *::after {
   to   { transform: scale(1); opacity: 0; }
 }
 
+.m3-ripple-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
 .m3-ripple {
   position: absolute;
   border-radius: 50%;

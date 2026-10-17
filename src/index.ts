@@ -23,6 +23,10 @@ export type { Notification, NotificationVariant, NotificationPosition, Notificat
 export { useDebounce } from './composables/useDebounce'
 export { usePageProgress } from './composables/usePageProgress'
 
+// Directives
+export { vRipple } from './directives/vRipple'
+export type { RippleOptions, RippleValue } from './directives/vRipple'
+
 // Components
 export { default as MAbsolute } from './components/MAbsolute.vue'
 export { default as MAlert } from './components/MAlert.vue'

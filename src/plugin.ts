@@ -5,6 +5,7 @@ import type { SeedOptions } from './composables/dynamicColor'
 import { syncThemeColor } from './composables/_themeColor'
 import type { M3Locale } from './composables/useLocale'
 import { M3_LOCALE_KEY, __setAppLocale } from './composables/useLocale'
+import { vRipple } from './directives/vRipple'
 
 export interface M3UIOptions {
   palette?: string
@@ -47,6 +48,7 @@ export interface M3UIOptions {
 export function createM3UI(options: M3UIOptions = {}) {
   return {
     install(app: App) {
+      app.directive('ripple', vRipple)
       for (const custom of options.customPalettes ?? []) {
         const i = palettes.findIndex((p) => p.id === custom.id)
         if (i === -1) palettes.push(custom)

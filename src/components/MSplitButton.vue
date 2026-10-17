@@ -8,6 +8,7 @@
  */
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import MIcon from './MIcon.vue'
+import { vRipple } from '../directives/vRipple'
 
 export interface SplitButtonItem {
   label: string
@@ -33,6 +34,8 @@ const props = withDefaults(defineProps<{
   disabled?: boolean
   /** Dropdown menu items; see `SplitButtonItem` */
   items?: SplitButtonItem[]
+  /** Any CSS color for the press ripple; defaults to the button's content color */
+  rippleColor?: string
 }>(), {
   variant: 'tonal',
   color: 'primary',
@@ -134,16 +137,6 @@ function toggleMenu() {
   open.value = !open.value
 }
 
-function createRipple(event: PointerEvent) {
-  const button = event.currentTarget as HTMLElement
-  const rect = button.getBoundingClientRect()
-  const d = Math.max(rect.width, rect.height) * 2
-  const el = document.createElement('span')
-  el.className = 'm3-ripple'
-  el.style.cssText = `width:${d}px;height:${d}px;top:${event.clientY - rect.top - d / 2}px;left:${event.clientX - rect.left - d / 2}px`
-  button.appendChild(el)
-  el.addEventListener('animationend', () => el.remove(), { once: true })
-}
 
 function selectItem(item: SplitButtonItem) {
   if (item.disabled) return
@@ -187,7 +180,7 @@ onUnmounted(() => {
       ]"
       :style="{ borderRadius: `${sizeConfig.r}px ${sizeConfig.ri}px ${sizeConfig.ri}px ${sizeConfig.r}px` }"
       :disabled="disabled"
-      @pointerdown="createRipple"
+      v-ripple="rippleColor"
       @click="emit('click', $event)"
     >
       <MIcon v-if="icon" :name="icon" :size="sizeConfig.icon" />
@@ -205,7 +198,7 @@ onUnmounted(() => {
       ]"
       :style="{ borderRadius: open ? `${sizeConfig.r}px` : `${sizeConfig.ri}px ${sizeConfig.r}px ${sizeConfig.r}px ${sizeConfig.ri}px` }"
       :disabled="disabled"
-      @pointerdown="createRipple"
+      v-ripple="rippleColor"
       @click="toggleMenu"
     >
       <MIcon

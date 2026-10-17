@@ -7,6 +7,7 @@
 import { computed } from 'vue'
 import MSpinner from './MSpinner.vue'
 import MIcon from './MIcon.vue'
+import { vRipple } from '../directives/vRipple'
 
 const NAMED_COLORS = ['primary', 'error'] as const
 type NamedColor = (typeof NAMED_COLORS)[number]
@@ -46,6 +47,8 @@ const props = withDefaults(
     shape?: 'rounded' | 'squared'
     /** Vue Router destination — renders as RouterLink instead of button */
     to?: string | Record<string, any>
+    /** Any CSS color for the press ripple; defaults to the button's content color */
+    rippleColor?: string
   }>(),
   {
     variant: 'filled',
@@ -165,18 +168,6 @@ const variantClasses = computed(() => {
       return ''
   }
 })
-
-function createRipple(event: PointerEvent) {
-  if (props.disabled || props.loading) return
-  const button = event.currentTarget as HTMLElement
-  const rect = button.getBoundingClientRect()
-  const d = Math.max(rect.width, rect.height) * 2
-  const el = document.createElement('span')
-  el.className = 'm3-ripple'
-  el.style.cssText = `width:${d}px;height:${d}px;top:${event.clientY - rect.top - d / 2}px;left:${event.clientX - rect.left - d / 2}px`
-  button.appendChild(el)
-  el.addEventListener('animationend', () => el.remove(), { once: true })
-}
 </script>
 
 <template>
@@ -187,7 +178,7 @@ function createRipple(event: PointerEvent) {
     :disabled="disabled || loading"
     :class="[base, shapeClass, sizeClasses, px, variantClasses, disabledContainerClasses]"
     :style="customStyle"
-    @pointerdown="createRipple"
+    v-ripple="{ disabled: disabled || loading, color: rippleColor }"
   >
     <template v-if="iconPos === 'leading'">
       <MSpinner v-if="loading" :size="spinnerSize" />

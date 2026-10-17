@@ -9,6 +9,7 @@
  */
 import { computed, onMounted, onUnmounted, ref, useSlots } from 'vue'
 import MIcon from './MIcon.vue'
+import { vRipple } from '../directives/vRipple'
 
 export interface SpeedDialItem {
   icon: string
@@ -58,6 +59,8 @@ const props = withDefaults(
      *  the content's own leave animation has time to play instead of just
      *  vanishing. 'none' skips any panel-level transition entirely. */
     contentTransition?: 'scale' | 'fade' | 'none'
+    /** Any CSS color for the press ripple; defaults to the FAB's content color */
+    rippleColor?: string
   }>(),
   {
     color: 'primary',
@@ -197,16 +200,6 @@ function onScroll() {
   open.value = false
 }
 
-function createRipple(event: PointerEvent | MouseEvent, target?: HTMLElement) {
-  const button = (target ?? event.currentTarget) as HTMLElement
-  const rect = button.getBoundingClientRect()
-  const d = Math.max(rect.width, rect.height) * 2
-  const el = document.createElement('span')
-  el.className = 'm3-ripple'
-  el.style.cssText = `width:${d}px;height:${d}px;top:${event.clientY - rect.top - d / 2}px;left:${event.clientX - rect.left - d / 2}px`
-  button.appendChild(el)
-  el.addEventListener('animationend', () => el.remove(), { once: true })
-}
 
 const contentStyle = ref<Record<string, string>>({})
 
@@ -260,8 +253,7 @@ function handleFabClick(e: PointerEvent) {
   }
 }
 
-function handleItemClick(e: PointerEvent, item: SpeedDialItem, buttonEl: HTMLElement) {
-  createRipple(e, buttonEl)
+function handleItemClick(item: SpeedDialItem) {
   if (!props.persistent) open.value = false
   item.onClick?.()
 }
@@ -302,7 +294,7 @@ onUnmounted(() => {
       class="relative inline-flex cursor-pointer items-center justify-center overflow-hidden shadow-elevation-3 transition-shadow duration-150 hover:shadow-elevation-4 active:shadow-elevation-3 disabled:cursor-not-allowed disabled:opacity-[0.38] before:content-[''] before:pointer-events-none before:absolute before:inset-0 before:bg-current before:opacity-0 before:transition-opacity before:duration-150 hover:before:opacity-[0.08] active:before:opacity-[0.12]"
       :class="[colorMap[color], fabSizeClasses]"
       :disabled="disabled"
-      @pointerdown="createRipple"
+      v-ripple="{ disabled, color: rippleColor }"
       @click="handleFabClick"
     >
       <MIcon
@@ -338,7 +330,8 @@ onUnmounted(() => {
           class="relative flex cursor-pointer items-center justify-center overflow-hidden rounded-lg shadow-elevation-3 transition-shadow duration-150 hover:shadow-elevation-4 active:shadow-elevation-3 before:content-[''] before:pointer-events-none before:absolute before:inset-0 before:bg-current before:opacity-0 before:transition-opacity before:duration-150 hover:before:opacity-[0.08] active:before:opacity-[0.12]"
           :class="colorMap[color]"
           :style="{ width: `${ITEM_PX}px`, height: `${ITEM_PX}px` }"
-          @pointerdown="(e: PointerEvent) => handleItemClick(e, item, e.currentTarget as HTMLElement)"
+          v-ripple="rippleColor"
+          @pointerdown="handleItemClick(item)"
         >
           <MIcon :name="item.icon" :size="20" />
         </component>

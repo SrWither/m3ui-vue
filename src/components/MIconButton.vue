@@ -4,6 +4,7 @@
  */
 import { computed } from 'vue'
 import MIcon from './MIcon.vue'
+import { vRipple } from '../directives/vRipple'
 
 const props = withDefaults(
   defineProps<{
@@ -24,6 +25,8 @@ const props = withDefaults(
     disabled?: boolean
     /** Vue Router destination — renders as RouterLink instead of button */
     to?: string | Record<string, any>
+    /** Any CSS color for the press ripple; defaults to the button's content color */
+    rippleColor?: string
   }>(),
   {
     variant: 'standard',
@@ -87,17 +90,6 @@ const disabledContainerClasses = computed(() => {
 
 const shapeClass = computed(() => props.shape === 'squared' ? resolved.value.squareRadius : 'rounded-full')
 
-function createRipple(event: PointerEvent) {
-  if (props.disabled) return
-  const button = event.currentTarget as HTMLElement
-  const rect = button.getBoundingClientRect()
-  const d = Math.max(rect.width, rect.height) * 2
-  const el = document.createElement('span')
-  el.className = 'm3-ripple'
-  el.style.cssText = `width:${d}px;height:${d}px;top:${event.clientY - rect.top - d / 2}px;left:${event.clientX - rect.left - d / 2}px`
-  button.appendChild(el)
-  el.addEventListener('animationend', () => el.remove(), { once: true })
-}
 
 const variantClasses = computed(() => {
   switch (props.variant) {
@@ -125,7 +117,7 @@ const variantClasses = computed(() => {
     :disabled="disabled"
     :class="[base, shapeClass, variantClasses, disabledContainerClasses]"
     :style="{ width: `${resolved.px}px`, height: `${resolved.px}px` }"
-    @pointerdown="createRipple"
+    v-ripple="{ disabled, color: rippleColor }"
   >
     <MIcon :name="icon" :size="resolved.icon" />
   </component>
