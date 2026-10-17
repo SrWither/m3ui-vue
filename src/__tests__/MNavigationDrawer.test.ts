@@ -121,4 +121,40 @@ describe('MNavigationDrawer swipe to close', () => {
     swipe(panel, 100, 300, 16, true, list)
     expect(wrapper!.emitted('update:modelValue')).toEqual([[false]])
   })
+
+  it('claims a top/bottom touch swipe on its first move, so the browser never starts its own pan', () => {
+    const panel = open({ side: 'bottom' })
+    const list = panel.querySelector<HTMLElement>('[data-nd-list]')!
+    let ts = 1000
+    const touch = (type: string, y: number) => {
+      const t = { identifier: 1, clientX: 150, clientY: y, target: list }
+      const ev = new Event(type, { bubbles: true, cancelable: true }) as Event & Record<string, unknown>
+      Object.assign(ev, { touches: type === 'touchend' ? [] : [t], changedTouches: [t] })
+      Object.defineProperty(ev, 'timeStamp', { value: (ts += 400) })
+      list.dispatchEvent(ev)
+      return ev
+    }
+    touch('touchstart', 100)
+    expect(touch('touchmove', 103).defaultPrevented).toBe(true)
+    touch('touchmove', 300)
+    touch('touchend', 300)
+    expect(wrapper!.emitted('update:modelValue')).toEqual([[false]])
+  })
+
+  it('leaves a top/bottom touch swipe toward the open side to the list', () => {
+    const panel = open({ side: 'bottom' })
+    const list = panel.querySelector<HTMLElement>('[data-nd-list]')!
+    const touch = (type: string, y: number) => {
+      const t = { identifier: 1, clientX: 150, clientY: y, target: list }
+      const ev = new Event(type, { bubbles: true, cancelable: true }) as Event & Record<string, unknown>
+      Object.assign(ev, { touches: type === 'touchend' ? [] : [t], changedTouches: [t] })
+      list.dispatchEvent(ev)
+      return ev
+    }
+    touch('touchstart', 300)
+    expect(touch('touchmove', 297).defaultPrevented).toBe(false)
+    expect(touch('touchmove', 100).defaultPrevented).toBe(false)
+    touch('touchend', 100)
+    expect(wrapper!.emitted('update:modelValue')).toBeUndefined()
+  })
 })
