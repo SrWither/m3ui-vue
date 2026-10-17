@@ -24,4 +24,16 @@ describe('MTransition', () => {
     await wait(800)
     expect(wrapper.findAll('.page').map((p) => p.text())).toEqual(['b'])
   })
+
+  it('slides the entering view in from 20% of its width as a Web Animation', async () => {
+    const page = ref('a')
+    wrapper = mount(defineComponent({
+      setup: () => () => h(MTransition, null, () => h('div', { key: page.value, class: 'page' }, page.value)),
+    }), { attachTo: document.body, global: { stubs: { transition: false } } })
+    page.value = 'b'
+    await nextTick()
+    const entering = wrapper.findAll('.page')[1]!.element as HTMLElement
+    const slide = entering.getAnimations().find((a) => 'transform' in (a.effect as KeyframeEffect).getKeyframes()[0]!)
+    expect((slide!.effect as KeyframeEffect).getKeyframes()[0]!.transform).toBe('translateX(20%)')
+  })
 })

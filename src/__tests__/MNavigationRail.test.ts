@@ -20,7 +20,10 @@ function open(props: Record<string, unknown> = {}) {
     attachTo: document.body,
     global: { stubs: { transition: false } },
   })
-  return document.body.querySelector<HTMLElement>('.wnr-panel')!
+  const panel = document.body.querySelector<HTMLElement>('.wnr-panel')!
+  // The slide-in is a Web Animation, and happy-dom's timeline doesn't advance on its own
+  panel?.getAnimations().forEach((a) => a.finish())
+  return panel
 }
 
 // Moves 25px per step, `msPerStep` apart (the events' timeStamp is what the fling velocity is measured from)
@@ -44,6 +47,19 @@ describe('MNavigationRail', () => {
     const panel = open()
     expect(panel).not.toBeNull()
     expect(wrapper!.find('nav').exists()).toBe(false)
+  })
+
+  it('slides the hideOnCollapse panel in as a Web Animation, the open state inline underneath', async () => {
+    wrapper = mount(MNavigationRail, {
+      props: { modelValue: 'inbox', items, modal: true, hideOnCollapse: true, expanded: false },
+      attachTo: document.body,
+      global: { stubs: { transition: false } },
+    })
+    await wrapper.setProps({ expanded: true })
+    const panel = document.body.querySelector<HTMLElement>('.wnr-panel')!
+    const [slide] = panel.getAnimations()
+    expect((slide!.effect as KeyframeEffect).getKeyframes()[0]!.transform).toBe('translateX(-100%)')
+    expect(panel.style.transform).toBe('translateX(0%)')
   })
 
   it('keeps the collapsed rail on screen in the default modal', () => {

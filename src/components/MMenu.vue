@@ -170,16 +170,15 @@ function openTrajectory() {
 // hook on the same still-mounted element without waiting for `done()`. Both
 // `currentIdx` (how far along the trajectory we are, so a reversal continues
 // smoothly from wherever it currently is instead of snapping back to a fixed
-// start) and `cancelActive` (so the previous rAF loop actually stops instead
-// of running alongside the new one, fighting over the same style every
-// frame) have to live outside this function to survive that interruption.
+// start) and `cancelActive` (so the previous animation actually stops instead
+// of running alongside the new one, fighting over the same style) have to live outside this function to survive that interruption.
 let currentIdx = 0
 let cancelActive: (() => void) | null = null
-// Set only while a close is playing: stops the loop *and* calls its `done()`.
+// Set only while a close is playing: stops the animation *and* calls its `done()`.
 // Used on unmount — a menu item that navigates away (e.g. "Log out" ->
 // router.push) unmounts this component mid-close, and Vue only removes the
 // Teleported panel from <body> inside the leave's `done()`, so merely
-// cancelling the loop there left the half-closed panel stranded on screen.
+// cancelling the animation there left the half-closed panel stranded on screen.
 let finishLeave: (() => void) | null = null
 
 function playTrajectory(el: Element, done: () => void, opening: boolean) {
@@ -187,37 +186,39 @@ function playTrajectory(el: Element, done: () => void, opening: boolean) {
   const htmlEl = el as HTMLElement
   const samples = openTrajectory()
   const last = samples.length - 1
-  const direction = opening ? 1 : -1
-  const target = opening ? last : 0
-  let lastTime = 0
-  let rafId = 0
-  let cancelled = false
-
-  function apply(idx: number) {
-    const sample = samples[Math.round(Math.max(0, Math.min(last, idx)))]!
-    htmlEl.style.transform = `scale(${sample.scale})`
-    htmlEl.style.opacity = String(Math.min(1, Math.max(0, sample.alpha)))
+  const from = Math.round(Math.max(0, Math.min(last, currentIdx)))
+  const to = opening ? last : 0
+  const step = opening ? 1 : -1
+  const frames: { scale: number, alpha: number }[] = []
+  for (let i = from; opening ? i <= to : i >= to; i += step) frames.push(samples[i]!)
+  const style = (s: { scale: number, alpha: number }) => ({
+    transform: `scale(${s.scale})`,
+    opacity: String(Math.min(1, Math.max(0, s.alpha))),
+  })
+  // Played as a Web Animation (see _springAnimation.ts), which the compositor runs, so the open isn't janked by
+  // the panel's content mounting at the same moment. The end state goes inline underneath it.
+  Object.assign(htmlEl.style, style(samples[to]!))
+  let ended = false
+  function complete() {
+    if (ended) return
+    ended = true
+    currentIdx = to
+    cancelActive = null
+    finishLeave = null
+    done()
   }
-
-  function step(now: number) {
-    if (cancelled) return
-    const dtSteps = lastTime ? (now - lastTime) / 1000 / trajectoryStep : 1
-    lastTime = now
-    currentIdx = Math.max(0, Math.min(last, currentIdx + direction * dtSteps))
-    apply(currentIdx)
-    if ((opening && currentIdx >= target) || (!opening && currentIdx <= target)) {
-      cancelActive = null
-      finishLeave = null
-      done()
-      return
-    }
-    rafId = requestAnimationFrame(step)
+  if (frames.length < 2 || typeof htmlEl.animate !== 'function') return complete()
+  const anim = htmlEl.animate(frames.map(style), { duration: (frames.length - 1) * trajectoryStep * 1000, easing: 'linear' })
+  anim.finished.catch(() => {})
+  anim.onfinish = complete
+  cancelActive = () => {
+    // Remember where it got to, so the reversal continues from there
+    const t = Number(anim.currentTime ?? 0) / (trajectoryStep * 1000)
+    currentIdx = Math.max(0, Math.min(last, from + step * t))
+    ended = true
+    anim.cancel()
   }
-
-  cancelActive = () => { cancelled = true; cancelAnimationFrame(rafId) }
   finishLeave = opening ? null : () => { cancelActive?.(); cancelActive = null; finishLeave = null; done() }
-  apply(currentIdx)
-  rafId = requestAnimationFrame(step)
 }
 function panelEnter(el: Element, done: () => void) {
   playTrajectory(el, done, true)

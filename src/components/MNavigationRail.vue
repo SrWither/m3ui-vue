@@ -12,6 +12,7 @@ import { computed, ref, watch, onUnmounted } from 'vue'
 import MIcon from './MIcon.vue'
 import MBadge from './MBadge.vue'
 import { useItemLink, type ItemLink } from '../composables/_useItemLink'
+import { sampleSpring, sampleAt, playSamples, prefersReducedMotion } from '../composables/_springAnimation'
 
 export interface NavRailItem {
   value: string | number
@@ -162,35 +163,79 @@ function springValue(
 }
 
 // ── Dismissible panel (hideOnCollapse): slide + swipe ─────────────────────────────────────────
-// The panel's x runs from -width (off-screen) to 0, and the scrim's opacity follows it.
+// The panel's x runs from -1 (off-screen, a fraction of its width) to 0, and the scrim's opacity follows it.
+// Slides play as Web Animations (see _springAnimation.ts), on the compositor, so the open isn't janked by the
+// panel mounting at the same moment; only the drag writes the transform directly.
 let panelX = 0
 let releaseVelocity = 0
+let slideAnim: Animation | null = null
+let slideScrimAnim: Animation | null = null
+let slideSamples: number[] = []
+let slidePanel: HTMLElement | null = null
+let slideScrim: HTMLElement | null = null
+let slideDone: (() => void) | null = null
 
 function setSlide(panel: HTMLElement, scrim: HTMLElement | null, x: number) {
   panelX = x
-  panel.style.transform = `translateX(${x}px)`
-  if (scrim) scrim.style.opacity = String(Math.min(1, Math.max(0, 1 + x / (panel.offsetWidth || PANEL_WIDTH))))
+  panel.style.transform = `translateX(${x * 100}%)`
+  if (scrim) scrim.style.opacity = String(Math.min(1, Math.max(0, 1 + x)))
 }
 
+// Freezes the panel where the running slide has it
+function stopSlide() {
+  if (!slideAnim) return
+  if (slidePanel) setSlide(slidePanel, slideScrim, sampleAt(slideSamples, slideAnim.currentTime))
+  slideAnim.cancel()
+  slideScrimAnim?.cancel()
+  slideAnim = slideScrimAnim = null
+}
+
+function finishSlide() {
+  const cb = slideDone
+  slideDone = null
+  cb?.()
+}
+
+// Without `done`, a pending Transition callback (an enter interrupted by a swipe) is kept for this slide
 function slide(el: Element, to: number, done?: () => void) {
   const panel = (el as HTMLElement).querySelector<HTMLElement>('.wnr-panel')
   const scrim = (el as HTMLElement).querySelector<HTMLElement>('.wnr-scrim')
-  if (!panel) return done?.()
+  if (done) {
+    finishSlide()
+    slideDone = done
+  }
+  if (!panel) return finishSlide()
   if (scrim) scrim.style.transition = 'none'
+  stopSlide()
+  const from = panelX
   const v = releaseVelocity
   releaseVelocity = 0
-  springValue(panel, panelX, to, (x) => setSlide(panel, scrim, x), SLIDE_STIFFNESS, SLIDE_DAMPING, v, done)
+  // The end state goes inline underneath, so nothing jumps when the animation ends
+  setSlide(panel, scrim, to)
+  if (prefersReducedMotion() || from === to) return finishSlide()
+  slideSamples = sampleSpring(from, to, v, { dampingRatio: SLIDE_DAMPING, stiffness: SLIDE_STIFFNESS }, 0.001)
+  const a = playSamples(panel, slideSamples, (x) => ({ transform: `translateX(${x * 100}%)` }))
+  if (!a) return finishSlide()
+  slideScrimAnim = playSamples(scrim, slideSamples, (x) => ({ opacity: String(Math.min(1, Math.max(0, 1 + x))) }))
+  slideAnim = a
+  slidePanel = panel
+  slideScrim = scrim
+  a.onfinish = () => {
+    if (slideAnim !== a) return
+    slideAnim = slideScrimAnim = null
+    finishSlide()
+  }
 }
 
 // AnchoredDraggableDefaults: settles at the nearer anchor (positionalThreshold 50%) unless released faster
 // than 125dp/s, which goes the way of the fling
 const FLING_VELOCITY = 125
-let drag: { id: number; x: number; y: number; startX: number; active: boolean; samples: { t: number; x: number }[] } | null = null
+let drag: { id: number; x: number; y: number; startX: number; width: number; active: boolean; samples: { t: number; x: number }[] } | null = null
 let suppressClick = false
 
 function onPanelPointerDown(e: PointerEvent) {
   if (!props.hideOnCollapse || e.button !== 0) return
-  drag = { id: e.pointerId, x: e.clientX, y: e.clientY, startX: panelX, active: false, samples: [{ t: e.timeStamp, x: e.clientX }] }
+  drag = { id: e.pointerId, x: e.clientX, y: e.clientY, startX: 0, width: 1, active: false, samples: [{ t: e.timeStamp, x: e.clientX }] }
 }
 
 function onPanelPointerMove(e: PointerEvent) {
@@ -202,12 +247,15 @@ function onPanelPointerMove(e: PointerEvent) {
     if (Math.abs(dx) < 8) return
     drag.active = true
     ;(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId)
+    // Stop a running slide; the finger owns the panel from where it is
+    stopSlide()
+    drag.startX = panelX
+    drag.width = (e.currentTarget as HTMLElement).offsetWidth || PANEL_WIDTH
   }
   const panel = e.currentTarget as HTMLElement
-  springTokens.set(panel, (springTokens.get(panel) ?? 0) + 1) // stop a running slide
   const scrim = panel.parentElement?.querySelector<HTMLElement>('.wnr-scrim') ?? null
   if (scrim) scrim.style.transition = 'none'
-  setSlide(panel, scrim, Math.min(0, Math.max(-(panel.offsetWidth || PANEL_WIDTH), drag.startX + dx)))
+  setSlide(panel, scrim, Math.min(0, Math.max(-1, drag.startX + dx / drag.width)))
   drag.samples.push({ t: e.timeStamp, x: e.clientX })
   drag.samples = drag.samples.filter((p) => e.timeStamp - p.t < 100)
 }
@@ -219,14 +267,14 @@ function onPanelPointerUp(e: PointerEvent) {
   const lastSample = drag.samples[drag.samples.length - 1]!
   const dt = (lastSample.t - first.t) / 1000
   const velocity = dt > 0 ? (lastSample.x - first.x) / dt : 0
+  const width = drag.width
   drag = null
   if (!wasActive) return
   suppressClick = true
   setTimeout(() => { suppressClick = false })
   const panel = e.currentTarget as HTMLElement
-  const width = panel.offsetWidth || PANEL_WIDTH
-  const dismiss = Math.abs(velocity) > FLING_VELOCITY ? velocity < 0 : panelX < -width / 2
-  releaseVelocity = velocity
+  const dismiss = Math.abs(velocity) > FLING_VELOCITY ? velocity < 0 : panelX < -0.5
+  releaseVelocity = velocity / width
   if (dismiss) close()
   else slide(panel.parentElement!, 0)
 }
@@ -246,9 +294,14 @@ function onPanelEnter(el: Element, done: () => void) {
   if (props.hideOnCollapse) {
     // Standalone modal: the items are expanded from the start, the panel slides in from off-screen
     panelExpanded.value = true
+    // Reopened mid-close: the old panel goes now
+    finishSlide()
+    slideAnim?.cancel()
+    slideScrimAnim?.cancel()
+    slideAnim = slideScrimAnim = null
     const panel = (el as HTMLElement).querySelector<HTMLElement>('.wnr-panel')
     const scrim = (el as HTMLElement).querySelector<HTMLElement>('.wnr-scrim')
-    if (panel) setSlide(panel, scrim, -(panel.offsetWidth || PANEL_WIDTH))
+    if (panel) setSlide(panel, scrim, -1)
     slide(el, 0, done)
     return
   }
@@ -269,8 +322,7 @@ function onPanelEnter(el: Element, done: () => void) {
 }
 function onPanelLeave(el: Element, done: () => void) {
   if (props.hideOnCollapse) {
-    const panel = (el as HTMLElement).querySelector<HTMLElement>('.wnr-panel')
-    slide(el, -(panel?.offsetWidth || PANEL_WIDTH), done)
+    slide(el, -1, done)
     return
   }
   const panel = (el as HTMLElement).querySelector<HTMLElement>('.wnr-panel')
@@ -295,6 +347,8 @@ watch(
 )
 
 onUnmounted(() => {
+  slideAnim?.cancel()
+  slideScrimAnim?.cancel()
   document.removeEventListener('keydown', onKeydown)
   if (props.modal && props.expanded) document.body.style.overflow = ''
 })
