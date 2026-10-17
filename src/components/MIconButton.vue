@@ -1,10 +1,14 @@
 <script setup lang="ts">
 /**
- * A button that shows only an icon — four visual styles, the same 5-tier expressive sizing as MButton.
+ * A button that shows only an icon — four visual styles, the same 5-tier expressive sizing as MButton. Give it
+ * `checked` (v-model:checked) and it becomes M3's icon toggle button.
+ *
+ * @event update:checked Emitted on click when `checked` is set — powers v-model:checked
  */
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import MIcon from './MIcon.vue'
 import { vRipple } from '../directives/vRipple'
+import { DEFAULT_EFFECTS, useSpring } from '../composables/_useSpring'
 
 const props = withDefaults(
   defineProps<{
@@ -27,16 +31,27 @@ const props = withDefaults(
     to?: string | Record<string, any>
     /** Any CSS color for the press ripple; defaults to the button's content color */
     rippleColor?: string
+    /**
+     * Makes it a toggle button (v-model:checked): selected colors, a filled icon, and a shape that morphs when
+     * pressed and when checked. Leave it unset for a plain icon button
+     */
+    checked?: boolean
+    /** Icon shown while checked, when it differs from `icon` (e.g. 'pause' for 'play_arrow') */
+    checkedIcon?: string
   }>(),
   {
     variant: 'standard',
     shape: 'rounded',
     size: 'sm',
     disabled: false,
+    checked: undefined,
   },
 )
 
-const tag = computed(() => props.to ? 'RouterLink' : 'button')
+const emit = defineEmits<{ 'update:checked': [boolean] }>()
+
+const isToggle = computed(() => props.checked !== undefined)
+const tag = computed(() => props.to && !isToggle.value ? 'RouterLink' : 'button')
 
 // Container height/width (icon buttons are always square by default — real
 // `IconButtonDefaults.<tier>ContainerSize()` also has Narrow/Wide width options not
@@ -44,18 +59,57 @@ const tag = computed(() => props.to ? 'RouterLink' : 'button')
 // per M3's 5-tier `{XSmall,Small,Medium,Large,XLarge}IconButtonTokens.kt`. `squareRadius`
 // matches each tier's own `ContainerShapeSquare` (12px xs/sm, 16px md, 28px lg/xl) — same
 // pattern as MButton's size tiers.
+// Toggle radii (px) from the same token files: `square` is ContainerShapeSquare, `pressed`
+// PressedContainerShape, `checkedRound` SelectedContainerShapeRound (a round button squares off when
+// checked); SelectedContainerShapeSquare is CornerFull (a square one turns round), i.e. px / 2.
 const sizeMap = {
-  xs: { px: 32, icon: 20, squareRadius: 'rounded-md' },
-  sm: { px: 40, icon: 24, squareRadius: 'rounded-md' },
-  md: { px: 56, icon: 24, squareRadius: 'rounded-lg' },
-  lg: { px: 96, icon: 32, squareRadius: 'rounded-xl' },
-  xl: { px: 136, icon: 40, squareRadius: 'rounded-xl' },
+  xs: { px: 32, icon: 20, squareRadius: 'rounded-md', square: 12, pressed: 8, checkedRound: 12 },
+  sm: { px: 40, icon: 24, squareRadius: 'rounded-md', square: 12, pressed: 8, checkedRound: 12 },
+  md: { px: 56, icon: 24, squareRadius: 'rounded-lg', square: 16, pressed: 12, checkedRound: 16 },
+  lg: { px: 96, icon: 32, squareRadius: 'rounded-xl', square: 28, pressed: 16, checkedRound: 28 },
+  xl: { px: 136, icon: 40, squareRadius: 'rounded-xl', square: 28, pressed: 16, checkedRound: 28 },
 }
 
 const resolved = computed(() => {
-  if (typeof props.size === 'number') return { px: props.size, icon: Math.round(props.size * 0.55), squareRadius: 'rounded-md' }
+  if (typeof props.size === 'number') {
+    return { px: props.size, icon: Math.round(props.size * 0.55), squareRadius: 'rounded-md', square: 12, pressed: 8, checkedRound: 12 }
+  }
   return sizeMap[props.size] ?? sizeMap.sm
 })
+
+// Icon toggle shape morph (IconButton.kt's shapeByInteraction: pressed, else checked, else the resting
+// shape), on the DefaultEffects spring the source picks so it doesn't bounce. Plain icon buttons keep
+// a static shape, like Compose's non-`shapes` overloads.
+const rootEl = ref<unknown>(null)
+const pressed = ref(false)
+
+function targetRadius() {
+  const r = resolved.value
+  const full = r.px / 2
+  if (pressed.value) return r.pressed
+  if (props.checked) return props.shape === 'squared' ? full : r.checkedRound
+  return props.shape === 'squared' ? r.square : full
+}
+
+useSpring(
+  () => (isToggle.value ? [targetRadius()] : []),
+  (v) => {
+    // A RouterLink root (plain button with `to`) is a component instance, not an element
+    if (rootEl.value instanceof HTMLElement) rootEl.value.style.borderRadius = v.length ? `${v[0]}px` : ''
+  },
+  DEFAULT_EFFECTS,
+)
+
+function onPointerDown() {
+  if (isToggle.value && !props.disabled) pressed.value = true
+}
+function onPointerUp() {
+  pressed.value = false
+}
+
+function onClick() {
+  if (isToggle.value && !props.disabled) emit('update:checked', !props.checked)
+}
 
 /*
  * State layer via a `before:` overlay (same technique MButton uses) rather than a direct
@@ -79,6 +133,7 @@ const base =
 // `disabled:text-on-surface/38` in `base` above, exactly like the real `outlinedIconButtonBorder`
 // (which literally reuses `LocalContentColor` at the same disabled opacity as the icon).
 const disabledContainerClasses = computed(() => {
+  if (props.variant === 'outlined' && props.checked) return 'disabled:bg-on-surface/10'
   switch (props.variant) {
     case 'filled':
     case 'tonal':
@@ -91,7 +146,25 @@ const disabledContainerClasses = computed(() => {
 const shapeClass = computed(() => props.shape === 'squared' ? resolved.value.squareRadius : 'rounded-full')
 
 
+// Toggle colors: the Selected*/Unselected* tokens of each variant's *IconButtonTokens. Unchecked
+// filled/tonal differ from the plain button's colors, so the checked state stands out.
+const toggleClasses = computed(() => {
+  const on = props.checked
+  switch (props.variant) {
+    case 'filled':
+      return on ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant'
+    case 'tonal':
+      return on ? 'bg-secondary text-on-secondary' : 'bg-secondary-container text-on-secondary-container'
+    case 'outlined':
+      // outlinedIconToggleButtonBorder: no border once checked
+      return on ? 'bg-inverse-surface text-inverse-on-surface' : 'border border-current text-on-surface-variant'
+    default:
+      return on ? 'text-primary' : 'text-on-surface-variant'
+  }
+})
+
 const variantClasses = computed(() => {
+  if (isToggle.value) return toggleClasses.value
   switch (props.variant) {
     case 'filled':
       // Real IconButton.kt has no elevation tokens at all for any variant — flat, unlike Button
@@ -111,14 +184,21 @@ const variantClasses = computed(() => {
 <template>
   <component
     :is="tag"
-    :to="to || undefined"
-    :type="to ? undefined : 'button'"
+    ref="rootEl"
+    :to="tag === 'RouterLink' ? to : undefined"
+    :type="tag === 'RouterLink' ? undefined : 'button'"
     :aria-label="label || undefined"
+    :aria-pressed="isToggle ? checked : undefined"
     :disabled="disabled"
     :class="[base, shapeClass, variantClasses, disabledContainerClasses]"
     :style="{ width: `${resolved.px}px`, height: `${resolved.px}px` }"
     v-ripple="{ disabled, color: rippleColor }"
+    @pointerdown="onPointerDown"
+    @pointerup="onPointerUp"
+    @pointerleave="onPointerUp"
+    @pointercancel="onPointerUp"
+    @click="onClick"
   >
-    <MIcon :name="icon" :size="resolved.icon" />
+    <MIcon :name="checked && checkedIcon ? checkedIcon : icon" :size="resolved.icon" :filled="!!checked" />
   </component>
 </template>

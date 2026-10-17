@@ -8,11 +8,13 @@ withDefaults(defineProps<{
   name: string
   /** Icon size in px */
   size?: number
-}>(), { size: 24 })
+  /** Filled glyph (the Material Symbols FILL axis), as M3 draws a selected icon */
+  filled?: boolean
+}>(), { size: 24, filled: false })
 </script>
 
 <template>
-  <span class="material-symbols-outlined leading-none" :style="{ fontSize: `${size}px` }">{{
+  <span class="material-symbols-outlined leading-none" :style="{ fontSize: `${size}px`, fontVariationSettings: filled ? `'FILL' 1` : undefined }">{{
     name
   }}</span>
 </template>
