@@ -320,9 +320,15 @@
   -webkit-font-smoothing: antialiased;
 }
 
-@supports selector(::-webkit-scrollbar) {
+/* Scrollbars: thin and in the theme's colors wherever something scrolls (M3 has no scrollbar spec; Android's
+   are thin overlays). Phones keep their own overlay scrollbars. Components that scroll as part of their design
+   (tabs, thumbnail strips, carousels) hide theirs; use `scrollbar-none` to do the same in your markup. */
+@layer base {
+  /* In a layer so utilities (scrollbar-none) and components win: an unlayered rule beats every layered one,
+     whatever its specificity */
   * {
-    scrollbar-width: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-outline) transparent;
   }
 }
 
@@ -376,4 +382,12 @@ html.theme-transitioning *::after {
 @keyframes m3-wavy-spin {
   0%   { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Hides an element's scrollbar while keeping it scrollable (wheel, touch, keys) */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }

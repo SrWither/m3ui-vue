@@ -475,7 +475,7 @@ onUnmounted(() => {
           <!-- touch-action stops at the nearest scroll container, so this one needs pan-y of its own or a
                finger landing on an item lets the browser take the horizontal swipe -->
           <div
-            class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 py-3"
+            class="scrollbar-none flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 py-3"
             :class="{
               'touch-pan-y': hideOnCollapse,
               'justify-start': alignment === 'top',

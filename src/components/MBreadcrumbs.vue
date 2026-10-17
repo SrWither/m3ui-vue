@@ -24,7 +24,7 @@ defineEmits<{ select: [BreadcrumbItem, number] }>()
 </script>
 
 <template>
-  <nav aria-label="Breadcrumb" class="flex items-center gap-1 overflow-x-auto text-label-large">
+  <nav aria-label="Breadcrumb" class="scrollbar-none flex items-center gap-1 overflow-x-auto text-label-large">
     <template v-for="(item, i) in items" :key="i">
       <!-- Separator -->
       <MIcon
