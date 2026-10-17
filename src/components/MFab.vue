@@ -10,6 +10,7 @@
 import { computed, inject, onMounted, onUnmounted, ref, useSlots } from 'vue'
 import MIcon from './MIcon.vue'
 import { vRipple } from '../directives/vRipple'
+import { FAST_EFFECTS, FAST_SPATIAL, useSpring } from '../composables/_useSpring'
 
 export interface SpeedDialItem {
   icon: string
@@ -26,9 +27,17 @@ const props = withDefaults(
     icon: string
     /** Extended FAB label text */
     label?: string
+    /**
+     * Extended FAB only: false collapses it to a plain FAB (the label fades out and the width shrinks to a
+     * square), e.g. while the content scrolls. Compose's `expanded`
+     */
+    expanded?: boolean
     /** Color scheme; defaults to primary, or secondary inside an MBottomAppBar */
     color?: 'primary' | 'secondary' | 'tertiary' | 'surface'
-    /** FAB size */
+    /**
+     * FAB size. With a `label`, small/medium/large are M3 Expressive's extended FABs (56/80/96px, title-medium,
+     * title-large and headline-small labels); regular is the baseline extended FAB
+     */
     size?: 'small' | 'regular' | 'medium' | 'large'
     /** Disables interaction */
     disabled?: boolean
@@ -65,6 +74,7 @@ const props = withDefaults(
   {
     color: undefined,
     size: 'regular',
+    expanded: true,
     disabled: false,
     direction: 'up',
     persistent: false,
@@ -98,10 +108,20 @@ const colorMap: Record<string, string> = {
   surface: 'bg-surface-container-high text-primary',
 }
 
+// Extended FABs (androidx FloatingActionButton.kt). Baseline (`regular`): 16dp start, 12dp icon-to-label,
+// 20dp end, 80dp minimum width, labelLarge. Small/Medium/Large (ExtendedFab*Tokens): leading = trailing space,
+// minimum width = height, MediumExtendedFabIconPadding/LargeExtendedFabIconPadding (12/16dp, the tokens'
+// IconLabelSpace is marked incorrect there).
+const EXTENDED = {
+  regular: { px: 56, icon: 24, gap: 12, box: 'h-14 min-w-20 rounded-2xl pl-4 pr-5', text: 'text-label-large font-medium' },
+  small: { px: 56, icon: 24, gap: 8, box: 'h-14 min-w-14 rounded-2xl px-4', text: 'text-title-medium font-medium' },
+  medium: { px: 80, icon: 28, gap: 12, box: 'h-20 min-w-20 rounded-lg-increased px-[26px]', text: 'text-title-large' },
+  large: { px: 96, icon: 32, gap: 16, box: 'h-24 min-w-24 rounded-xl px-7', text: 'text-headline-small' },
+} as const
+const extended = computed(() => (props.label ? EXTENDED[props.size] : null))
+
 const fabSizeClasses = computed(() => {
-  // Extended FAB (androidx FloatingActionButton.kt): 16dp start padding, 12dp
-  // icon-to-label gap, 20dp end padding, 80dp minimum width.
-  if (props.label) return 'h-14 min-w-20 rounded-2xl pl-4 pr-5 gap-3'
+  if (extended.value) return extended.value.box
   switch (props.size) {
     case 'small': return 'h-10 w-10 rounded-md'
     case 'medium': return 'h-20 w-20 rounded-lg-increased'
@@ -111,7 +131,7 @@ const fabSizeClasses = computed(() => {
 })
 
 const fabIconSize = computed(() => {
-  if (props.label) return 24
+  if (extended.value) return extended.value.icon
   switch (props.size) {
     case 'small': return 24
     case 'medium': return 28
@@ -121,7 +141,7 @@ const fabIconSize = computed(() => {
 })
 
 const fabPx = computed(() => {
-  if (props.label) return 56
+  if (extended.value) return extended.value.px
   switch (props.size) {
     case 'small': return 40
     case 'medium': return 80
@@ -129,6 +149,34 @@ const fabPx = computed(() => {
     default: return 56
   }
 })
+
+// Collapsing an extended FAB: the width lerps from the square (the minimum width) to the full width on
+// FastSpatial, the label fades on FastEffects, and it leaves the layout once fully collapsed.
+const fabButton = ref<HTMLElement | { $el: HTMLElement }>()
+const labelEl = ref<HTMLElement>()
+const buttonEl = () => (fabButton.value instanceof HTMLElement ? fabButton.value : fabButton.value?.$el)
+
+useSpring(
+  () => (extended.value ? [props.expanded ? 1 : 0] : []),
+  ([p]) => {
+    const el = buttonEl()
+    if (!el || p === undefined || !extended.value) return
+    if (labelEl.value) labelEl.value.style.display = p <= 0 && !props.expanded ? 'none' : ''
+    el.style.width = ''
+    el.style.minWidth = ''
+    if (p >= 1 && props.expanded) return
+    const full = el.offsetWidth
+    const min = extended.value.px
+    el.style.minWidth = '0'
+    el.style.width = `${min + (full - min) * Math.max(0, p)}px`
+  },
+  FAST_SPATIAL,
+)
+useSpring(
+  () => (extended.value ? [props.expanded ? 1 : 0] : []),
+  ([alpha]) => { if (labelEl.value && alpha !== undefined) labelEl.value.style.opacity = String(Math.min(1, Math.max(0, alpha))) },
+  FAST_EFFECTS,
+)
 
 const ITEM_PX = 40
 const ITEM_GAP = 8
@@ -293,11 +341,13 @@ onUnmounted(() => {
   <div ref="fabEl" v-bind="$attrs" class="relative inline-flex items-center justify-center">
     <component
       :is="fabTag"
+      ref="fabButton"
       :to="to || undefined"
       :type="to ? undefined : 'button'"
-      class="relative inline-flex cursor-pointer items-center justify-center overflow-hidden transition-shadow duration-150 disabled:cursor-not-allowed disabled:opacity-[0.38] before:content-[''] before:pointer-events-none before:absolute before:inset-0 before:bg-current before:opacity-0 before:transition-opacity before:duration-150 hover:before:opacity-[0.08] active:before:opacity-[0.12]"
-      :class="[colorMap[color], fabSizeClasses, inBottomAppBar ? '' : 'shadow-elevation-3 hover:shadow-elevation-4 active:shadow-elevation-3']"
+      class="relative inline-flex cursor-pointer items-center overflow-hidden transition-shadow duration-150 disabled:cursor-not-allowed disabled:opacity-[0.38] before:content-[''] before:pointer-events-none before:absolute before:inset-0 before:bg-current before:opacity-0 before:transition-opacity before:duration-150 hover:before:opacity-[0.08] active:before:opacity-[0.12]"
+      :class="[colorMap[color], fabSizeClasses, extended ? 'justify-start' : 'justify-center', inBottomAppBar ? '' : 'shadow-elevation-3 hover:shadow-elevation-4 active:shadow-elevation-3']"
       :disabled="disabled"
+      :aria-label="label && !expanded ? label : undefined"
       v-ripple="{ disabled, color: rippleColor }"
       @click="handleFabClick"
     >
@@ -307,7 +357,14 @@ onUnmounted(() => {
         class="transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
         :class="isExpandable && open ? 'rotate-45' : ''"
       />
-      <span v-if="label" class="text-label-large font-medium">{{ label }}</span>
+      <!-- The icon-to-label space belongs to the label, so it goes when the label does -->
+      <span
+        v-if="extended"
+        ref="labelEl"
+        class="shrink-0 whitespace-nowrap"
+        :class="extended.text"
+        :style="{ paddingLeft: `${extended.gap}px` }"
+      >{{ label }}</span>
     </component>
   </div>
 
