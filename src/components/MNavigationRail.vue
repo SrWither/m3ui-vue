@@ -6,7 +6,7 @@
  * @slot fab A FAB (or MFabMenu) at the top of the rail, above the items.
  * @event update:modelValue Emitted when an item is clicked — powers v-model
  * @event update:expanded Emitted when the modal panel closes (modal mode only) — pair with :expanded for
- *   v-model:expanded
+ *   v-model:expanded. With `hideOnCollapse`, swiping the panel away closes it too
  */
 import { computed, ref, watch, onUnmounted } from 'vue'
 import MIcon from './MIcon.vue'
@@ -49,7 +49,12 @@ const props = withDefaults(defineProps<{
   // affects the app's layout grid — `ModalWideNavigationRail`'s whole point) and `expanded`
   // instead opens a Teleported, scrim-backed panel that floats above the rest of the app.
   modal?: boolean
-}>(), { alignment: 'top', expanded: false, modal: false })
+  /**
+   * With `modal`: no collapsed rail on screen; the expanded rail slides in from off-screen and can be swiped
+   * away (Compose's `hideOnCollapse`). Open it from your own menu button
+   */
+  hideOnCollapse?: boolean
+}>(), { alignment: 'top', expanded: false, modal: false, hideOnCollapse: false })
 
 const emit = defineEmits<{
   'update:modelValue': [string | number]
@@ -101,6 +106,9 @@ function onKeydown(e: KeyboardEvent) {
 const PANEL_WIDTH = 220
 const SPRING_DAMPING = 0.9
 const SPRING_STIFFNESS = 1400
+// The dismissible (hideOnCollapse) panel slides instead: ModalWideNavigationRailState's DefaultSpatial
+const SLIDE_DAMPING = 0.9
+const SLIDE_STIFFNESS = 700
 
 // Guards against two overlapping spring loops fighting over the same element's
 // `style.width` (e.g. a close fired before a still-running open settles) — each call gets
@@ -109,25 +117,38 @@ const SPRING_STIFFNESS = 1400
 const springTokens = new WeakMap<HTMLElement, number>()
 
 function springWidth(el: HTMLElement, from: number, to: number, done?: () => void) {
+  springValue(el, from, to, (v) => { el.style.width = `${v}px` }, SPRING_STIFFNESS, SPRING_DAMPING, 0, done)
+}
+
+function springValue(
+  el: HTMLElement,
+  from: number,
+  to: number,
+  apply: (v: number) => void,
+  stiffness: number,
+  damping: number,
+  initialVelocity: number,
+  done?: () => void,
+) {
   const token = (springTokens.get(el) ?? 0) + 1
   springTokens.set(el, token)
   let pos = from
-  let vel = 0
+  let vel = initialVelocity
   let last = performance.now()
   const start = last
-  el.style.width = `${from}px`
+  apply(from)
   function finish() {
-    el.style.width = `${to}px`
+    apply(to)
     done?.()
   }
   function tick(now: number) {
     if (springTokens.get(el) !== token) return
     const dt = Math.min((now - last) / 1000, 1 / 30)
     last = now
-    const accel = -SPRING_STIFFNESS * (pos - to) - 2 * SPRING_DAMPING * Math.sqrt(SPRING_STIFFNESS) * vel
+    const accel = -stiffness * (pos - to) - 2 * damping * Math.sqrt(stiffness) * vel
     vel += accel * dt
     pos += vel * dt
-    el.style.width = `${pos}px`
+    apply(pos)
     // Settled normally, or a safety net in case rAF stalls/throttles badly enough that the
     // spring can't converge in reasonable real time (e.g. a backgrounded tab) — either way
     // the panel must never get stuck mid-animation forever.
@@ -140,7 +161,97 @@ function springWidth(el: HTMLElement, from: number, to: number, done?: () => voi
   requestAnimationFrame(tick)
 }
 
+// ── Dismissible panel (hideOnCollapse): slide + swipe ─────────────────────────────────────────
+// The panel's x runs from -width (off-screen) to 0, and the scrim's opacity follows it.
+let panelX = 0
+let releaseVelocity = 0
+
+function setSlide(panel: HTMLElement, scrim: HTMLElement | null, x: number) {
+  panelX = x
+  panel.style.transform = `translateX(${x}px)`
+  if (scrim) scrim.style.opacity = String(Math.min(1, Math.max(0, 1 + x / (panel.offsetWidth || PANEL_WIDTH))))
+}
+
+function slide(el: Element, to: number, done?: () => void) {
+  const panel = (el as HTMLElement).querySelector<HTMLElement>('.wnr-panel')
+  const scrim = (el as HTMLElement).querySelector<HTMLElement>('.wnr-scrim')
+  if (!panel) return done?.()
+  if (scrim) scrim.style.transition = 'none'
+  const v = releaseVelocity
+  releaseVelocity = 0
+  springValue(panel, panelX, to, (x) => setSlide(panel, scrim, x), SLIDE_STIFFNESS, SLIDE_DAMPING, v, done)
+}
+
+// AnchoredDraggableDefaults: settles at the nearer anchor (positionalThreshold 50%) unless released faster
+// than 125dp/s, which goes the way of the fling
+const FLING_VELOCITY = 125
+let drag: { id: number; x: number; y: number; startX: number; active: boolean; samples: { t: number; x: number }[] } | null = null
+let suppressClick = false
+
+function onPanelPointerDown(e: PointerEvent) {
+  if (!props.hideOnCollapse || e.button !== 0) return
+  drag = { id: e.pointerId, x: e.clientX, y: e.clientY, startX: panelX, active: false, samples: [{ t: e.timeStamp, x: e.clientX }] }
+}
+
+function onPanelPointerMove(e: PointerEvent) {
+  if (!drag || e.pointerId !== drag.id) return
+  const dx = e.clientX - drag.x
+  const dy = e.clientY - drag.y
+  if (!drag.active) {
+    if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx)) { drag = null; return }
+    if (Math.abs(dx) < 8) return
+    drag.active = true
+    ;(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId)
+  }
+  const panel = e.currentTarget as HTMLElement
+  springTokens.set(panel, (springTokens.get(panel) ?? 0) + 1) // stop a running slide
+  const scrim = panel.parentElement?.querySelector<HTMLElement>('.wnr-scrim') ?? null
+  if (scrim) scrim.style.transition = 'none'
+  setSlide(panel, scrim, Math.min(0, Math.max(-(panel.offsetWidth || PANEL_WIDTH), drag.startX + dx)))
+  drag.samples.push({ t: e.timeStamp, x: e.clientX })
+  drag.samples = drag.samples.filter((p) => e.timeStamp - p.t < 100)
+}
+
+function onPanelPointerUp(e: PointerEvent) {
+  if (!drag || e.pointerId !== drag.id) return
+  const wasActive = drag.active
+  const first = drag.samples[0]!
+  const lastSample = drag.samples[drag.samples.length - 1]!
+  const dt = (lastSample.t - first.t) / 1000
+  const velocity = dt > 0 ? (lastSample.x - first.x) / dt : 0
+  drag = null
+  if (!wasActive) return
+  suppressClick = true
+  setTimeout(() => { suppressClick = false })
+  const panel = e.currentTarget as HTMLElement
+  const width = panel.offsetWidth || PANEL_WIDTH
+  const dismiss = Math.abs(velocity) > FLING_VELOCITY ? velocity < 0 : panelX < -width / 2
+  releaseVelocity = velocity
+  if (dismiss) close()
+  else slide(panel.parentElement!, 0)
+}
+
+// Belt and braces once a swipe has started: the browser must not scroll or navigate with it
+function onPanelTouchMove(e: TouchEvent) {
+  if (drag?.active && e.cancelable) e.preventDefault()
+}
+
+function onPanelClickCapture(e: MouseEvent) {
+  if (!suppressClick) return
+  e.preventDefault()
+  e.stopPropagation()
+}
+
 function onPanelEnter(el: Element, done: () => void) {
+  if (props.hideOnCollapse) {
+    // Standalone modal: the items are expanded from the start, the panel slides in from off-screen
+    panelExpanded.value = true
+    const panel = (el as HTMLElement).querySelector<HTMLElement>('.wnr-panel')
+    const scrim = (el as HTMLElement).querySelector<HTMLElement>('.wnr-scrim')
+    if (panel) setSlide(panel, scrim, -(panel.offsetWidth || PANEL_WIDTH))
+    slide(el, 0, done)
+    return
+  }
   const panel = (el as HTMLElement).querySelector<HTMLElement>('.wnr-panel')
   const scrim = (el as HTMLElement).querySelector<HTMLElement>('.wnr-scrim')
   panelExpanded.value = false
@@ -157,6 +268,11 @@ function onPanelEnter(el: Element, done: () => void) {
   else done()
 }
 function onPanelLeave(el: Element, done: () => void) {
+  if (props.hideOnCollapse) {
+    const panel = (el as HTMLElement).querySelector<HTMLElement>('.wnr-panel')
+    slide(el, -(panel?.offsetWidth || PANEL_WIDTH), done)
+    return
+  }
   const panel = (el as HTMLElement).querySelector<HTMLElement>('.wnr-panel')
   const scrim = (el as HTMLElement).querySelector<HTMLElement>('.wnr-scrim')
   panelExpanded.value = false
@@ -193,6 +309,7 @@ onUnmounted(() => {
     that actually reacts to `expanded` when `modal` is set.
   -->
   <nav
+    v-if="!(modal && hideOnCollapse)"
     v-bind="$attrs"
     class="flex h-full flex-col border-r border-outline-variant bg-surface transition-[width] duration-200"
     :class="railExpanded ? 'w-[220px]' : 'w-20'"
@@ -341,6 +458,13 @@ onUnmounted(() => {
 
         <nav
           class="wnr-panel fixed inset-y-0 left-0 z-10 flex flex-col overflow-hidden rounded-r-lg bg-surface-container shadow-elevation-2"
+          :class="hideOnCollapse ? 'w-[220px] touch-pan-y' : ''"
+          @pointerdown="onPanelPointerDown"
+          @pointermove="onPanelPointerMove"
+          @pointerup="onPanelPointerUp"
+          @pointercancel="onPanelPointerUp"
+          @touchmove="onPanelTouchMove"
+          @click.capture="onPanelClickCapture"
         >
           <div v-if="$slots.fab" class="flex shrink-0 flex-col items-start gap-2 px-3 pt-3 pb-2">
             <div class="flex min-h-10 min-w-14 shrink-0 items-center justify-center">
@@ -348,9 +472,12 @@ onUnmounted(() => {
             </div>
           </div>
 
+          <!-- touch-action stops at the nearest scroll container, so this one needs pan-y of its own or a
+               finger landing on an item lets the browser take the horizontal swipe -->
           <div
             class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 py-3"
             :class="{
+              'touch-pan-y': hideOnCollapse,
               'justify-start': alignment === 'top',
               'justify-center': alignment === 'center',
               'justify-end': alignment === 'bottom',
