@@ -22,6 +22,9 @@ export { useNotification } from './composables/useNotification'
 export type { Notification, NotificationVariant, NotificationPosition, NotificationOptions } from './composables/useNotification'
 export { useDebounce } from './composables/useDebounce'
 export { usePageProgress } from './composables/usePageProgress'
+export { useSpring } from './composables/_useSpring'
+export { motionSprings, motionEasings, motionDurations, cubicBezier } from './composables/motion'
+export type { SpringSpec } from './composables/motion'
 
 // Directives
 export { vRipple } from './directives/vRipple'

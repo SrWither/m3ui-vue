@@ -15,6 +15,7 @@ import { computed, onMounted, onUnmounted, ref, useSlots, watch } from 'vue'
 import MIconButton from './MIconButton.vue'
 import { useLocale } from '../composables/useLocale'
 import { DEFAULT_EFFECTS } from '../composables/_useSpring'
+import { cubicBezier } from '../composables/motion'
 
 const props = withDefaults(defineProps<{
   /** App bar title */
@@ -104,18 +105,8 @@ let lastScroll = 0
 let target: HTMLElement | Window | null = null
 
 // TopTitleAlphaEasing = CubicBezierEasing(.8, 0, .8, .15); the container lerps on FastOutLinearInEasing
-function bezier(x1: number, y1: number, x2: number, y2: number, t: number) {
-  if (t <= 0) return 0
-  if (t >= 1) return 1
-  let u = t
-  for (let i = 0; i < 8; i++) {
-    const x = 3 * u * (1 - u) ** 2 * x1 + 3 * u ** 2 * (1 - u) * x2 + u ** 3 - t
-    const dx = 3 * (1 - u) ** 2 * x1 + 6 * u * (1 - u) * (x2 - x1) + 3 * u ** 2 * (1 - x2)
-    if (Math.abs(dx) < 1e-6) break
-    u -= x / dx
-  }
-  return 3 * u * (1 - u) ** 2 * y1 + 3 * u ** 2 * (1 - u) * y2 + u ** 3
-}
+const topTitleAlpha = cubicBezier(0.8, 0, 0.8, 0.15)
+const fastOutLinearIn = cubicBezier(0.4, 0, 1, 1)
 
 function write() {
   const f = offset === 0 ? 0 : offset / limit()
@@ -126,13 +117,13 @@ function write() {
   }
   if (!twoRow.value) return
   if (bottomRowEl.value) bottomRowEl.value.style.height = `${expandedHeight.value - COLLAPSED + offset}px`
-  if (smallTitleEl.value) smallTitleEl.value.style.opacity = String(bezier(0.8, 0, 0.8, 0.15, f))
+  if (smallTitleEl.value) smallTitleEl.value.style.opacity = String(topTitleAlpha(f))
   if (bigTitleEl.value) bigTitleEl.value.style.opacity = String(1 - f)
   // A two-row bar's container follows the collapse continuously (TwoRowsTopAppBar's colorTransitionFraction)
   if (barEl.value) {
     barEl.value.style.backgroundColor = props.elevated || f === 0
       ? ''
-      : `color-mix(in srgb, var(--color-surface-container) ${(bezier(0.4, 0, 1, 1, f) * 100).toFixed(1)}%, var(--color-surface))`
+      : `color-mix(in srgb, var(--color-surface-container) ${(fastOutLinearIn(f) * 100).toFixed(1)}%, var(--color-surface))`
   }
 }
 

@@ -1,18 +1,20 @@
-// Internal: a set of numbers (corner radii, sizes...) that springs toward a target, written to the DOM
-// once per frame through `apply`. Same integration as the rest of the library (semi-implicit Euler),
-// in fixed 4ms substeps so a stiff spring stays stable on a dropped frame. Not exported from index.ts.
+// A set of numbers (corner radii, sizes...) that springs toward a target, written to the DOM once per
+// frame through `apply`. Same integration as the rest of the library (semi-implicit Euler), in fixed 4ms
+// substeps so a stiff spring stays stable on a dropped frame. `useSpring` is public (index.ts, with the
+// motion tokens); the constants below are the library's internal shorthands for the Standard scheme.
 import { onMounted, onUnmounted, watch } from 'vue'
+import { cubicBezier, motionSprings, type SpringSpec } from './motion'
 
-export interface SpringSpec { dampingRatio: number; stiffness: number }
+export type { SpringSpec }
 
 /** MotionSchemeKeyTokens.FastSpatial in the Standard scheme (StandardMotionTokens.SpringFastSpatial*) */
-export const FAST_SPATIAL: SpringSpec = { dampingRatio: 0.9, stiffness: 1400 }
+export const FAST_SPATIAL: SpringSpec = motionSprings.standard.fastSpatial
 /** MotionSchemeKeyTokens.FastEffects in the Standard scheme */
-export const FAST_EFFECTS: SpringSpec = { dampingRatio: 1, stiffness: 3800 }
+export const FAST_EFFECTS: SpringSpec = motionSprings.standard.fastEffects
 /** MotionSchemeKeyTokens.DefaultEffects in the Standard scheme */
-export const DEFAULT_EFFECTS: SpringSpec = { dampingRatio: 1, stiffness: 1600 }
+export const DEFAULT_EFFECTS: SpringSpec = motionSprings.standard.defaultEffects
 /** MotionSchemeKeyTokens.DefaultSpatial in the Standard scheme */
-export const DEFAULT_SPATIAL: SpringSpec = { dampingRatio: 0.9, stiffness: 700 }
+export const DEFAULT_SPATIAL: SpringSpec = motionSprings.standard.defaultSpatial
 
 const SUBSTEP = 0.004
 
@@ -76,16 +78,4 @@ export function useSpring(
 }
 
 /** Compose's FastOutSlowInEasing, cubic-bezier(0.4, 0, 0.2, 1) — the easing of a default tween() */
-export function fastOutSlowIn(t: number): number {
-  if (t <= 0) return 0
-  if (t >= 1) return 1
-  // Solve x(u) = t for the curve parameter u (Newton), then return y(u)
-  let u = t
-  for (let i = 0; i < 8; i++) {
-    const x = 3 * u * (1 - u) ** 2 * 0.4 + 3 * u ** 2 * (1 - u) * 0.2 + u ** 3 - t
-    const dx = 3 * (1 - u) ** 2 * 0.4 + 6 * u * (1 - u) * (0.2 - 0.4) + 3 * u ** 2 * 0.8
-    if (Math.abs(dx) < 1e-6) break
-    u -= x / dx
-  }
-  return 3 * u ** 2 * (1 - u) + u ** 3
-}
+export const fastOutSlowIn = cubicBezier(0.4, 0, 0.2, 1)
