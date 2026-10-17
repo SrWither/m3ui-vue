@@ -7,6 +7,8 @@ export interface SpringSpec { dampingRatio: number; stiffness: number }
 
 /** MotionSchemeKeyTokens.FastSpatial in the Standard scheme (StandardMotionTokens.SpringFastSpatial*) */
 export const FAST_SPATIAL: SpringSpec = { dampingRatio: 0.9, stiffness: 1400 }
+/** MotionSchemeKeyTokens.FastEffects in the Standard scheme */
+export const FAST_EFFECTS: SpringSpec = { dampingRatio: 1, stiffness: 3800 }
 /** MotionSchemeKeyTokens.DefaultEffects in the Standard scheme */
 export const DEFAULT_EFFECTS: SpringSpec = { dampingRatio: 1, stiffness: 1600 }
 /** MotionSchemeKeyTokens.DefaultSpatial in the Standard scheme */
