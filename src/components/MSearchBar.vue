@@ -10,11 +10,12 @@
  * @event search Emitted when Enter is pressed in the input, with the current query
  * @event update:expanded Emitted when the expanded state changes — powers v-model:expanded
  */
-import { computed, ref, watch, onMounted, onUnmounted, nextTick, useId } from 'vue'
+import { computed, inject, ref, watch, onMounted, onUnmounted, nextTick, useId } from 'vue'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
 import MSpinner from './MSpinner.vue'
 import { useLocale } from '../composables/useLocale'
+import { searchAppBarKey } from '../composables/_searchAppBar'
 
 // Root is a fragment (bar div + a sibling Teleport for the expanded overlay panel), so Vue
 // can't auto-apply a consumer's class/attrs to either one — forward them onto the bar div below.
@@ -30,8 +31,10 @@ const props = withDefaults(
     placeholder?: string
     /** 'docked' grows into a rounded panel anchored below the bar (default).
      *  'fullscreen' takes over the whole viewport, matching M3's mobile
-     *  search pattern — the leading icon becomes a back button either way. */
-    variant?: 'docked' | 'fullscreen'
+     *  search pattern — the leading icon becomes a back button either way.
+     *  'fullscreen-contained' (M3 Expressive's ExpandedFullScreenContainedSearchBar) also takes the whole
+     *  viewport, on surface-container-low, but keeps the input in its pill shape, with no divider. */
+    variant?: 'docked' | 'fullscreen' | 'fullscreen-contained'
     /** Icon shown in the collapsed bar */
     leadingIcon?: string
     /** Which side of the *collapsed* bar the leading icon sits on. The
@@ -68,6 +71,10 @@ const emit = defineEmits<{
 
 const locale = useLocale()
 const id = useId()
+const fullscreen = computed(() => props.variant !== 'docked')
+const contained = computed(() => props.variant === 'fullscreen-contained')
+// Inside an MAppBarWithSearch the bar is flat and darkens when content scrolls under the app bar
+const appBar = inject(searchAppBarKey, null)
 
 const expanded = ref(props.expanded ?? false)
 watch(
@@ -140,7 +147,7 @@ onUnmounted(() => {
 })
 
 watch(expanded, (v) => {
-  if (v && props.variant === 'fullscreen') document.body.style.overflow = 'hidden'
+  if (v && fullscreen.value) document.body.style.overflow = 'hidden'
   else document.body.style.overflow = ''
 })
 onUnmounted(() => { document.body.style.overflow = '' })
@@ -150,8 +157,12 @@ onUnmounted(() => { document.body.style.overflow = '' })
   <div ref="barEl" class="relative w-full" v-bind="$attrs">
     <div
       v-show="!expanded"
-      class="flex h-14 items-center gap-3 rounded-full bg-surface-container-high px-4 shadow-elevation-3 transition-shadow duration-150 focus-within:outline focus-within:outline-2 focus-within:outline-secondary focus-within:-outline-offset-2"
-      :class="disabled ? 'pointer-events-none opacity-[0.38]' : ''"
+      class="flex h-14 items-center gap-3 rounded-full px-4 transition-[box-shadow,background-color] duration-150 focus-within:outline focus-within:outline-2 focus-within:outline-secondary focus-within:-outline-offset-2"
+      :class="[
+        disabled ? 'pointer-events-none opacity-[0.38]' : '',
+        appBar?.scrolled.value ? 'bg-surface-container-highest' : 'bg-surface-container-high',
+        appBar ? '' : 'shadow-elevation-3',
+      ]"
     >
       <span class="inline-flex shrink-0 items-center" :class="iconPosition === 'end' ? 'order-last' : ''">
         <slot name="leading">
@@ -185,17 +196,22 @@ onUnmounted(() => { document.body.style.overflow = '' })
   </div>
 
   <Teleport to="body">
-    <Transition :name="variant === 'fullscreen' ? 'm3-searchbar-full' : 'm3-searchbar-docked'">
+    <Transition :name="fullscreen ? 'm3-searchbar-full' : 'm3-searchbar-docked'">
       <div
         v-if="expanded"
         ref="panelEl"
-        class="fixed z-500 flex flex-col overflow-hidden bg-surface-container-high"
-        :class="variant === 'fullscreen' ? 'inset-0' : 'max-h-[70vh] rounded-[28px] shadow-elevation-3'"
+        class="fixed z-500 flex flex-col overflow-hidden"
+        :class="[
+          fullscreen ? 'inset-0' : 'max-h-[70vh] rounded-[28px] shadow-elevation-3',
+          contained ? 'bg-surface-container-low' : 'bg-surface-container-high',
+        ]"
         :style="variant === 'docked' ? panelPos : undefined"
       >
+        <!-- Contained: the input keeps the collapsed pill (collapsedContainedSearchBarColor), 8dp from the
+             sides, 4dp from the top and 8dp above the results (FullScreenSearchBarLayout's isContained) -->
         <div
-          class="flex shrink-0 items-center gap-3 px-4"
-          :class="variant === 'fullscreen' ? 'h-[72px]' : 'h-14'"
+          class="flex shrink-0 items-center gap-3"
+          :class="contained ? 'mx-2 mt-1 mb-2 h-14 rounded-full bg-surface-container-high px-1' : variant === 'fullscreen' ? 'h-[72px] px-4' : 'h-14 px-4'"
         >
           <MIconButton
             icon="arrow_back"
@@ -227,7 +243,7 @@ onUnmounted(() => { document.body.style.overflow = '' })
           <slot name="trailing" />
         </div>
 
-        <div class="h-px shrink-0 bg-outline" />
+        <div v-if="!contained" class="h-px shrink-0 bg-outline" />
 
         <div class="flex-1 overflow-y-auto">
           <slot />
