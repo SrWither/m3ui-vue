@@ -12,11 +12,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `rippleColor` on `MButton`, `MIconButton`, `MFab` (main button and speed-dial items), `MSplitButton`, `MToggleButton` and `MButtonGroup`
 - Icon toggle buttons: `MIconButton` takes `checked` (v-model:checked) and `checkedIcon`, a port of Compose's `IconToggleButton` family. Selected/unselected colors per variant from each `*IconButtonTokens` (unchecked filled is `surface-container`, checked outlined is `inverse-surface` with no border), `aria-pressed`, and the Expressive shape morph of `toggleableShapes()` on the `DefaultEffects` spring: a round button squares off while checked, a squared one turns round, both shrink to `PressedContainerShape` while pressed. The icon is filled while checked (an M3 guideline; Compose leaves it to the content). Without `checked` nothing changes
 - `MIcon` `filled`: the Material Symbols FILL axis
+- `MTimeScroll`: M3 Expressive's time scroll picker (port of Compose's `TimeScroll`): hour and minute `MScrollField`s (100×120) with a `:` separator and, in 12-hour mode, the vertical AM/PM toggle (two 56px ToggleButtons, circle → 12dp corners when checked or pressed, `primary-container` and bold when checked). v-model is 24-hour `HH:MM`; `use24h`, `minuteStep`, `disabled`. AM/PM labels come from `Intl` in the app language
+- `M3Locale` keys `timeHourSelection`, `timeMinuteSelection` and `timePeriodToggle`, in all 7 bundled locales
 
 ### Changed
 - Those six buttons draw their ripple with `v-ripple` instead of six copies of the same function, so a right click no longer starts one
 
 ### Fixed
+- `MScrollField` treated its own value, handed back through `v-model` while it was still moving, as an outside change and retargeted the snap: flings stopped short, and on a short wheel (e.g. 4 items) it kept scrolling back and forth forever
 - The package now includes the licenses of the code it bundles (`@material/material-color-utilities`, Apache-2.0; `shape-morph`, `@lezer/highlight`, MIT; `highlight.js`, BSD-3-Clause) in `dist/THIRD_PARTY_LICENSES.md`, as those licenses require. `scripts/third-party-licenses.mjs` writes it on every `build:js`, finding the bundled packages from `src/` imports and `vite.config.ts`'s externals, and fails the build if one has no license file. It also credits the Unicode emoji data and CLDR annotations behind MEmojiSelector (Unicode License v3, now noted in the generated data files too) and the Android Open Source Project for MCarousel's ported keyline engine (Apache-2.0, noted in `_carouselStrategy.ts`)
 
 ## [0.9.2] - 2026-10-16
