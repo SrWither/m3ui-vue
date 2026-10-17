@@ -367,6 +367,22 @@ UI components come from @m3ui-vue/m3ui-vue; its API is in node_modules/@m3ui-vue
 
 `purple` (default) `indigo` `navy` `blue` `cyan` `teal` `green` `lime` `olive` `amber` `sand` `orange` `deep-orange` `brown` `red` `coral` `crimson` `pink` `violet` `slate` `graphite` `charcoal` `steel` `ash` `iron` `fog` `pewter` `smoke` `stone` `zinc` `monochrome` `rust` `gold` `emerald` `turquoise` `cobalt` `sapphire` `amethyst` `magenta` `mauve`
 
+### Contrast levels
+
+Medium and high contrast for every palette (light and dark), as in Android's accessibility settings: import the
+optional stylesheet after `palettes`, then pick a level.
+
+```css
+@import '@m3ui-vue/m3ui-vue/palettes-contrast'; /* ~27 KB gzipped */
+```
+
+```ts
+app.use(createM3UI({ contrast: 'system' })) // 'standard' | 'medium' | 'high' | 'system' (follows prefers-contrast)
+useColorPalette().setContrast('high')       // at runtime, remembered like the palette
+```
+
+A seed palette is regenerated at the chosen level, with or without the stylesheet.
+
 ### Dynamic Color (from a seed)
 
 Instead of a named palette, generate the whole scheme (light and dark) from one color with Google's dynamic color algorithm:
@@ -462,7 +478,7 @@ Install only the packages you need:
 
 - [x] ~~Material 3 Expressive shape scale (large-increased, extra-large-increased, extra-extra-large)~~
 - [x] ~~Motion tokens: easings, durations and springs, exposed for your own animations~~
-- [ ] Contrast levels (medium, high) for the built-in palettes, not only for seed-generated ones
+- [x] ~~Contrast levels (medium, high) for the built-in palettes, not only for seed-generated ones~~
 - [ ] Scrollbars: drop the global rule that hides them in Chromium/WebKit (it reaches the whole app, and Firefox shows them anyway) in favor of thin theme-colored scrollbars with `scrollbar-gutter: stable`, hiding them only where a component needs it. For now, set `scrollbar-width: auto` where you want them visible
 
 Already in: dynamic color from a seed, fixed color roles, elevation levels 0–5, the emphasized type scale, and the
