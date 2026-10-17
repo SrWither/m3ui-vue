@@ -83,6 +83,23 @@ function write() {
   if (sheetEl.value) sheetEl.value.style.transform = `translateY(${y}px)`
   // The content scrolls only once the sheet is fully up; until then a drag on it moves the sheet
   if (contentEl.value) contentEl.value.style.overflowY = settled.value === 'expanded' && target === null ? 'auto' : 'hidden'
+  updateContentTouchAction()
+}
+
+// Wherever touch-action lets the browser pan along the sheet's drag, Chrome treats that drag as a possible scroll
+// and delivers it at 60Hz on a 120Hz phone, so the sheet moves every other frame (see CLAUDE.md). So the sheet is
+// touch-action: none, and the content allows only the scroll that can actually happen: none while it can't
+// scroll, only the finger moving up (pan-down) while it's at its top (down drags the sheet), both ways elsewhere.
+// Browsers without directional pan values (Safari) keep pan-y there.
+function updateContentTouchAction() {
+  const content = contentEl.value
+  if (!content || !props.swipeEnabled) return
+  let action = 'none'
+  if (settled.value === 'expanded' && target === null && content.scrollHeight > content.clientHeight) {
+    const directional = typeof CSS !== 'undefined' && !!CSS.supports?.('touch-action', 'pan-down')
+    action = content.scrollTop <= 0 && directional ? 'pan-down' : 'pan-y'
+  }
+  if (content.style.touchAction !== action) content.style.touchAction = action
 }
 
 function frame(now: number) {
@@ -240,6 +257,7 @@ let observer: ResizeObserver | null = null
 onMounted(() => {
   measure()
   sheetEl.value?.addEventListener('touchmove', onTouchMove, { passive: false })
+  contentEl.value?.addEventListener('scroll', updateContentTouchAction, { passive: true })
   if (typeof ResizeObserver !== 'undefined') {
     observer = new ResizeObserver(() => measure())
     if (sheetEl.value) observer.observe(sheetEl.value)
@@ -250,6 +268,7 @@ onUnmounted(() => {
   cancelAnimationFrame(raf)
   observer?.disconnect()
   sheetEl.value?.removeEventListener('touchmove', onTouchMove)
+  contentEl.value?.removeEventListener('scroll', updateContentTouchAction)
 })
 </script>
 
@@ -267,7 +286,8 @@ onUnmounted(() => {
     <div
       ref="sheetEl"
       role="region"
-      class="absolute inset-x-0 bottom-0 z-10 mx-auto flex max-h-full w-full touch-pan-y select-none flex-col rounded-t-[28px] bg-surface-container-low text-on-surface shadow-elevation-1 after:absolute after:inset-x-0 after:top-full after:h-24 after:bg-surface-container-low"
+      class="absolute inset-x-0 bottom-0 z-10 mx-auto flex max-h-full w-full select-none flex-col rounded-t-[28px] bg-surface-container-low text-on-surface shadow-elevation-1 after:absolute after:inset-x-0 after:top-full after:h-24 after:bg-surface-container-low"
+      :class="swipeEnabled ? 'touch-none' : 'touch-pan-y'"
       :style="{ maxWidth: `${maxWidth}px` }"
       @pointerdown="onPointerDown"
       @pointermove="onPointerMove"
@@ -287,7 +307,8 @@ onUnmounted(() => {
           <span class="h-1 w-8 rounded-full bg-on-surface-variant" />
         </button>
       </div>
-      <!-- touch-action stops at a scroll container, so the content needs its own pan-y -->
+      <!-- touch-action stops at a scroll container, so the content needs its own (pan-y, narrowed by
+           updateContentTouchAction while the sheet can be dragged) -->
       <div ref="contentEl" class="min-h-0 flex-1 touch-pan-y select-text overflow-y-hidden">
         <slot name="sheet" />
       </div>

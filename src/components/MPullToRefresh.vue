@@ -89,6 +89,18 @@ function canStart() {
   return !props.disabled && !props.refreshing && !committed && !!scrollEl.value && scrollEl.value.scrollTop <= 0;
 }
 
+// While a pull can start, the scroller only allows the finger moving up (pan-down): a touch-action that lets the
+// browser pan along the pull makes Chrome deliver it at 60Hz on a 120Hz phone, as a possible scroll waiting on
+// our touchmove listener (see CLAUDE.md). Scrolled, refreshing or disabled, it pans both ways. Browsers without
+// directional pan values (Safari) keep pan-y.
+function updateTouchAction() {
+  const el = scrollEl.value;
+  if (!el) return;
+  const directional = typeof CSS !== "undefined" && !!CSS.supports?.("touch-action", "pan-down");
+  const action = canStart() && directional ? "pan-down" : "pan-y";
+  if (el.style.touchAction !== action) el.style.touchAction = action;
+}
+
 function beginPull(y: number) {
   startY = y;
   pulling = true;
@@ -125,6 +137,7 @@ function finishPull() {
     hideIndicator(true);
   }
   pullDistance = 0;
+  updateTouchAction();
 }
 
 // Mouse/pen: pointer events. Touch is handled separately below — a touch's
@@ -220,8 +233,10 @@ watch(
       committed = false;
       hideIndicator(true);
     }
+    updateTouchAction();
   },
 );
+watch(() => props.disabled, updateTouchAction);
 
 // The indicator's transform/opacity are owned entirely by the functions
 // above, written directly to the DOM — never bound reactively in the
@@ -238,6 +253,8 @@ onMounted(() => {
   // Must be non-passive: preventDefault() here is what stops the native scroll.
   el.addEventListener("touchmove", onTouchMove, { passive: false });
   el.addEventListener("touchend", onTouchEnd);
+  el.addEventListener("scroll", updateTouchAction, { passive: true });
+  updateTouchAction();
   el.addEventListener("touchcancel", onTouchEnd);
 });
 onBeforeUnmount(() => {
@@ -247,6 +264,7 @@ onBeforeUnmount(() => {
   el.removeEventListener("touchstart", onTouchStart);
   el.removeEventListener("touchmove", onTouchMove);
   el.removeEventListener("touchend", onTouchEnd);
+  el.removeEventListener("scroll", updateTouchAction);
   el.removeEventListener("touchcancel", onTouchEnd);
 });
 </script>

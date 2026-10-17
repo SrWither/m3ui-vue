@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import MPullToRefresh from '../components/MPullToRefresh.vue'
 
@@ -102,5 +102,22 @@ describe('MPullToRefresh (mouse)', () => {
     pointer(scrollEl, 'pointerup', 200)
     expect(wrapper.emitted('refresh')).toHaveLength(1)
     wrapper.unmount()
+  })
+
+  it('lets the browser pan only upward while a pull can start, both ways once scrolled or refreshing', async () => {
+    vi.stubGlobal('CSS', { supports: (p: string, v: string) => p === 'touch-action' && v === 'pan-down' })
+    const { wrapper, scrollEl } = mountPtr()
+    const el = scrollEl as HTMLElement
+    expect(el.style.touchAction).toBe('pan-down')
+    el.scrollTop = 120
+    el.dispatchEvent(new Event('scroll'))
+    expect(el.style.touchAction).toBe('pan-y')
+    el.scrollTop = 0
+    el.dispatchEvent(new Event('scroll'))
+    expect(el.style.touchAction).toBe('pan-down')
+    await wrapper.setProps({ refreshing: true })
+    expect(el.style.touchAction).toBe('pan-y')
+    wrapper.unmount()
+    vi.unstubAllGlobals()
   })
 })

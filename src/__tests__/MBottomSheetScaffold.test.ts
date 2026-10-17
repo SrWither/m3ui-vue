@@ -98,4 +98,25 @@ describe('MBottomSheetScaffold', () => {
     drag(content.firstElementChild as HTMLElement, 150)
     expect(wrapper!.emitted('update:modelValue')).toEqual([['partial']])
   })
+
+  it('keeps the sheet\'s drag out of touch-action: none, pan-down at the content\'s top, pan-y once scrolled', () => {
+    vi.stubGlobal('CSS', { supports: (p: string, v: string) => p === 'touch-action' && v === 'pan-down' })
+    let sheet = setup()
+    let content = sheet.querySelector('.content')!.parentElement as HTMLElement
+    expect(sheet.classList.contains('touch-none')).toBe(true)
+    // Partial: the content can't scroll, every drag on it moves the sheet
+    expect(content.style.touchAction).toBe('none')
+    wrapper!.unmount()
+
+    sheet = setup({ modelValue: 'expanded' })
+    content = sheet.querySelector('.content')!.parentElement as HTMLElement
+    Object.defineProperty(content, 'scrollHeight', { value: 1000 })
+    Object.defineProperty(content, 'clientHeight', { value: 300 })
+    content.dispatchEvent(new Event('scroll'))
+    expect(content.style.touchAction).toBe('pan-down')
+    content.scrollTop = 200
+    content.dispatchEvent(new Event('scroll'))
+    expect(content.style.touchAction).toBe('pan-y')
+    vi.unstubAllGlobals()
+  })
 })
