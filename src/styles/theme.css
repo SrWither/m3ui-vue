@@ -82,6 +82,11 @@
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 28px;
+  /* M3 Expressive steps (ShapeKeyTokens CornerLargeIncreased, CornerExtraLargeIncreased, CornerExtraExtraLarge);
+     not 2xl/3xl, which are Tailwind's own defaults (16px/24px) and stay as they are */
+  --radius-lg-increased: 20px;
+  --radius-xl-increased: 32px;
+  --radius-xxl: 48px;
 
   /* Elevation */
   --shadow-elevation-1: 0px 1px 2px 0px rgb(0 0 0 / 0.3), 0px 1px 3px 1px rgb(0 0 0 / 0.15);

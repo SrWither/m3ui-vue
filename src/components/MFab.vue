@@ -100,7 +100,7 @@ const fabSizeClasses = computed(() => {
   if (props.label) return 'h-14 min-w-20 rounded-2xl pl-4 pr-5 gap-3'
   switch (props.size) {
     case 'small': return 'h-10 w-10 rounded-md'
-    case 'medium': return 'h-20 w-20 rounded-[20px]'
+    case 'medium': return 'h-20 w-20 rounded-lg-increased'
     case 'large': return 'h-24 w-24 rounded-[28px]'
     default: return 'h-14 w-14 rounded-2xl'
   }
