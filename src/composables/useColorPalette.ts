@@ -1,4 +1,4 @@
-import { readonly, ref, watchEffect } from 'vue'
+import { computed, readonly, ref, watch, watchEffect } from 'vue'
 import { generateScheme, schemeToCss, type SeedOptions } from './dynamicColor'
 
 export interface Palette {
@@ -66,13 +66,14 @@ export interface ActiveSeed extends SeedOptions {
 
 const PALETTE_KEY = 'm3-palette'
 const SEED_KEY = 'm3-seed'
+const CONTRAST_KEY = 'm3-contrast'
 // The generated CSS of the active palette, so a reload applies it before the generator has loaded
 const CSS_KEY = 'm3-palette-css'
 
 function read<T>(key: string): T | null {
   try {
     const v = localStorage.getItem(key)
-    return v == null ? null : (key === PALETTE_KEY ? v : JSON.parse(v)) as T
+    return v == null ? null : (key === PALETTE_KEY || key === CONTRAST_KEY ? v : JSON.parse(v)) as T
   } catch {
     return null
   }
@@ -86,6 +87,37 @@ function write(key: string, value: unknown) {
 
 const current = ref(read<string>(PALETTE_KEY) ?? 'purple')
 const activeSeed = ref<ActiveSeed | null>(read<ActiveSeed>(SEED_KEY))
+
+// ── Contrast ─────────────────────────────────────────────────────────────────────────────────────
+/**
+ * M3's contrast levels. `system` follows the OS (`prefers-contrast: more` → high). Built-in palettes need
+ * `@m3ui-vue/m3ui-vue/palettes-contrast` imported for medium and high; seed palettes are regenerated.
+ */
+export type ContrastLevel = 'standard' | 'medium' | 'high' | 'system'
+const CONTRAST_LEVELS: readonly ContrastLevel[] = ['standard', 'medium', 'high', 'system']
+const storedContrast = read<string>(CONTRAST_KEY)
+const contrast = ref<ContrastLevel>(CONTRAST_LEVELS.includes(storedContrast as ContrastLevel) ? storedContrast as ContrastLevel : 'standard')
+const systemMore = ref(false)
+if (typeof window !== 'undefined' && window.matchMedia) {
+  const mq = window.matchMedia('(prefers-contrast: more)')
+  systemMore.value = mq.matches
+  mq.addEventListener?.('change', (e) => { systemMore.value = e.matches })
+}
+/** The level in effect: `system` resolved to standard or high. */
+const activeContrast = computed<Exclude<ContrastLevel, 'system'>>(() =>
+  contrast.value === 'system' ? (systemMore.value ? 'high' : 'standard') : contrast.value)
+const CONTRAST_AMOUNT = { standard: 0, medium: 0.5, high: 1 } as const
+
+/** A seed's options with the active contrast level applied (standard keeps the seed's own `contrast`). */
+function withContrast(seed: ActiveSeed): ActiveSeed {
+  return activeContrast.value === 'standard' ? seed : { ...seed, contrast: CONTRAST_AMOUNT[activeContrast.value] }
+}
+
+function applyContrast(level: Exclude<ContrastLevel, 'system'>) {
+  if (typeof document === 'undefined') return
+  if (level === 'standard') document.documentElement.removeAttribute('data-contrast')
+  else document.documentElement.setAttribute('data-contrast', level)
+}
 
 // Whether palette changes are written to localStorage. Defaults to true (existing behavior).
 // An app can disable it via `createM3UI({ persistPalette: false })` or `useColorPalette().setPersistPalette(false)`
@@ -139,7 +171,8 @@ let generation = 0
 /** Generates and injects the CSS for a palette id from a seed. Resolves false if a newer request won. */
 async function generateInto(id: string, seed: ActiveSeed): Promise<boolean> {
   const mine = ++generation
-  const css = schemeToCss(await generateScheme(seed.seed, seed), id)
+  const options = withContrast(seed)
+  const css = schemeToCss(await generateScheme(options.seed, options), id)
   if (mine !== generation) return false
   injectCss(css)
   if (persistEnabled.value) write(CSS_KEY, { id, css })
@@ -176,6 +209,26 @@ async function selectSeed(seed: string, options: SeedOptions = {}) {
   switchTo(SEED_PALETTE)
 }
 
+/** Sets the contrast level, with the theme transition; a generated palette (seed, custom) is regenerated. */
+async function selectContrast(level: ContrastLevel, persist = persistEnabled.value) {
+  contrast.value = level
+  if (persist) write(CONTRAST_KEY, level)
+}
+
+// Applied on every change of the effective level (a setting or the OS preference), for every palette kind
+watch(activeContrast, async (level) => {
+  document.documentElement.classList.add('theme-transitioning')
+  void document.documentElement.offsetHeight
+  applyContrast(level)
+  const id = current.value
+  if (id === SEED_PALETTE && activeSeed.value) await generateInto(SEED_PALETTE, activeSeed.value)
+  else {
+    const custom = palettes.find((p) => p.id === id)
+    if (custom && !builtInIds.has(id) && custom.seed && !hasPaletteCss(id)) await generateInto(id, { seed: custom.seed })
+  }
+  setTimeout(() => document.documentElement.classList.remove('theme-transitioning'), 300)
+})
+
 export function useColorPalette() {
   watchEffect(() => {
     const id = current.value
@@ -202,12 +255,24 @@ export function useColorPalette() {
     if (enabled) write(PALETTE_KEY, current.value)
   }
 
+  /**
+   * Sets M3's contrast level: `standard`, `medium`, `high`, or `system` (follows `prefers-contrast`). Built-in
+   * palettes need `@m3ui-vue/m3ui-vue/palettes-contrast` imported; a seed palette is regenerated at that level.
+   * Remembered like the palette.
+   */
+  function setContrast(level: ContrastLevel) {
+    void selectContrast(level)
+  }
+
   return {
     palette: current,
     palettes,
     set,
     seed: readonly(activeSeed),
     setSeed,
+    contrast: readonly(contrast),
+    activeContrast,
+    setContrast,
     persistPalette: persistEnabled,
     setPersistPalette,
   }
@@ -219,6 +284,7 @@ export function useColorPalette() {
   const cached = read<{ id: string; css: string }>(CSS_KEY)
   if (saved && cached && cached.id === saved) injectCss(cached.css)
   if (saved && saved !== 'purple') document.documentElement.setAttribute('data-palette', saved)
+  applyContrast(activeContrast.value)
 }
 
 /**
@@ -250,4 +316,10 @@ export function __defaultPalette(id: string) {
 export function __defaultSeed(seed: string, options: SeedOptions | undefined, persist: boolean) {
   persistEnabled.value = persist
   return selectSeed(seed, options)
+}
+
+/** Internal: `createM3UI({ contrast })`, the first-visit default (or forced with `persistPalette: false`). */
+export function __defaultContrast(level: ContrastLevel, persist: boolean) {
+  if (persist && read<string>(CONTRAST_KEY)) return
+  void selectContrast(level, persist)
 }

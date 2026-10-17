@@ -1,6 +1,7 @@
 import type { App, MaybeRef } from 'vue'
 import type { Palette } from './composables/useColorPalette'
-import { __defaultPalette, __defaultSeed, __forcePalette, palettes } from './composables/useColorPalette'
+import { __defaultContrast, __defaultPalette, __defaultSeed, __forcePalette, palettes } from './composables/useColorPalette'
+import type { ContrastLevel } from './composables/useColorPalette'
 import type { SeedOptions } from './composables/dynamicColor'
 import { syncThemeColor } from './composables/_themeColor'
 import type { M3Locale } from './composables/useLocale'
@@ -33,6 +34,12 @@ export interface M3UIOptions {
   seed?: string
   /** How `seed` becomes a scheme: `variant` (`'tonal-spot'` by default) and `contrast` (0 standard, 0.5 medium, 1 high). */
   seedOptions?: SeedOptions
+  /**
+   * M3's contrast level: `'standard'`, `'medium'`, `'high'`, or `'system'` (follows the OS's `prefers-contrast`).
+   * Like `palette`, only the first-visit default unless `persistPalette` is `false`. Built-in palettes need
+   * `@m3ui-vue/m3ui-vue/palettes-contrast` imported for medium and high; seed palettes are regenerated.
+   */
+  contrast?: ContrastLevel
   locale?: MaybeRef<Partial<M3Locale>>
   /**
    * Keep `<meta name="theme-color">` (the color phones give the browser bar and status bar) in sync with a color
@@ -64,6 +71,7 @@ export function createM3UI(options: M3UIOptions = {}) {
         if (options.palette && options.palette !== 'purple') __defaultPalette(options.palette)
         else if (!options.palette && options.seed) void __defaultSeed(options.seed, options.seedOptions, true)
       }
+      if (options.contrast) __defaultContrast(options.contrast, options.persistPalette !== false)
       if (options.themeColor) syncThemeColor(options.themeColor)
       if (options.locale) {
         app.provide(M3_LOCALE_KEY, options.locale)

@@ -58,6 +58,7 @@
     "./styles": "./dist/styles.css",
     "./theme": "./src/styles/theme.css",
     "./palettes": "./src/styles/palettes.css",
+    "./palettes-contrast": "./src/styles/palettes-contrast.css",
     "./locales": {
       "types": "./dist/locales/index.d.ts",
       "import": "./dist/locales/index.js"
@@ -73,6 +74,7 @@
     "build:types": "vue-tsc -p tsconfig.build.json",
     "build:css": "cp -r src/styles dist/",
     "build:api": "node scripts/generate-api.mjs",
+    "generate:contrast": "node scripts/generate-contrast-palettes.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "prepublishOnly": "pnpm build"
