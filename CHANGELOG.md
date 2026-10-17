@@ -10,6 +10,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 - `v-ripple`: the library's first directive, M3's press ripple on any element (`v-ripple`, `v-ripple="false"`, `v-ripple="'#e91e63'"` or `v-ripple="{ disabled, color }"`). Exported as `vRipple` (with the `RippleOptions` and `RippleValue` types) and registered globally by `createM3UI()`. Each ripple draws in its own `.m3-ripple-layer` with `border-radius: inherit`, so the element needs no `overflow: hidden`; a statically positioned element is made `relative` on the first press
 - `rippleColor` on `MButton`, `MIconButton`, `MFab` (main button and speed-dial items), `MSplitButton`, `MToggleButton` and `MButtonGroup`
+- Icon toggle buttons: `MIconButton` takes `checked` (v-model:checked) and `checkedIcon`, a port of Compose's `IconToggleButton` family. Selected/unselected colors per variant from each `*IconButtonTokens` (unchecked filled is `surface-container`, checked outlined is `inverse-surface` with no border), `aria-pressed`, and the Expressive shape morph of `toggleableShapes()` on the `DefaultEffects` spring: a round button squares off while checked, a squared one turns round, both shrink to `PressedContainerShape` while pressed. The icon is filled while checked (an M3 guideline; Compose leaves it to the content). Without `checked` nothing changes
+- `MIcon` `filled`: the Material Symbols FILL axis
 
 ### Changed
 - Those six buttons draw their ripple with `v-ripple` instead of six copies of the same function, so a right click no longer starts one
