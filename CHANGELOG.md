@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.9.3] - Unreleased
+## [0.9.3] - 2026-10-17
 
 ### Added
 - `v-ripple`: the library's first directive, M3's press ripple on any element (`v-ripple`, `v-ripple="false"`, `v-ripple="'#e91e63'"` or `v-ripple="{ disabled, color }"`). Exported as `vRipple` (with the `RippleOptions` and `RippleValue` types) and registered globally by `createM3UI()`. Each ripple draws in its own `.m3-ripple-layer` with `border-radius: inherit`, so the element needs no `overflow: hidden`; a statically positioned element is made `relative` on the first press
