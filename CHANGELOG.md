@@ -14,11 +14,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MIcon` `filled`: the Material Symbols FILL axis
 - `MTimeScroll`: M3 Expressive's time scroll picker (port of Compose's `TimeScroll`): hour and minute `MScrollField`s (100×120) with a `:` separator and, in 12-hour mode, the vertical AM/PM toggle (two 56px ToggleButtons, circle → 12dp corners when checked or pressed, `primary-container` and bold when checked). v-model is 24-hour `HH:MM`; `use24h`, `minuteStep`, `disabled`. AM/PM labels come from `Intl` in the app language
 - `M3Locale` keys `timeHourSelection`, `timeMinuteSelection` and `timePeriodToggle`, in all 7 bundled locales
+- `MTimePickerModal` `mode` (`'dial'` | `'scroll'`, default `'dial'`): `scroll` picks the time with MTimeScroll's wheels instead of the clock dial (Compose's `TimePickerDisplayMode.Scroll`); the footer toggle then switches between the wheels and keyboard input (`keyboard` / `swipe_vertical` icons, as `ScrollDisplayModeToggle`). The minute starts on the nearest lower multiple of `minuteStep`, the one the wheel shows
+- `M3Locale` keys `timeToggleKeyboard`, `timeToggleDial` and `timeToggleScroll`, in all 7 bundled locales
+- `MTabs` `iconPosition` (`'top'` | `'leading'`): `leading` puts the icon beside the label in a 48px tab (Compose's `LeadingIconTab`: 16px side padding, 8px from icon to label), `top` stacks it above in a 64px tab. Defaults to `top` for primary tabs and `leading` for secondary ones, as they already looked
 
 ### Changed
 - Those six buttons draw their ripple with `v-ripple` instead of six copies of the same function, so a right click no longer starts one
+- **Secondary `MTabs` with icons have 16px side padding instead of 24px**, LeadingIconTab's; text-only tabs keep 24px
 
 ### Fixed
+- `MTimePickerModal`'s mode toggle had its accessible label hardcoded in English; it now comes from the locale
 - `MScrollField` treated its own value, handed back through `v-model` while it was still moving, as an outside change and retargeted the snap: flings stopped short, and on a short wheel (e.g. 4 items) it kept scrolling back and forth forever
 - The package now includes the licenses of the code it bundles (`@material/material-color-utilities`, Apache-2.0; `shape-morph`, `@lezer/highlight`, MIT; `highlight.js`, BSD-3-Clause) in `dist/THIRD_PARTY_LICENSES.md`, as those licenses require. `scripts/third-party-licenses.mjs` writes it on every `build:js`, finding the bundled packages from `src/` imports and `vite.config.ts`'s externals, and fails the build if one has no license file. It also credits the Unicode emoji data and CLDR annotations behind MEmojiSelector (Unicode License v3, now noted in the generated data files too) and the Android Open Source Project for MCarousel's ported keyline engine (Apache-2.0, noted in `_carouselStrategy.ts`)
 
