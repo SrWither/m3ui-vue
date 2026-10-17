@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, vi } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import MNavigationDrawer from '../components/MNavigationDrawer.vue'
 
@@ -156,5 +156,30 @@ describe('MNavigationDrawer swipe to close', () => {
     expect(touch('touchmove', 100).defaultPrevented).toBe(false)
     touch('touchend', 100)
     expect(wrapper!.emitted('update:modelValue')).toBeUndefined()
+  })
+
+  it('keeps a top/bottom swipe out of the list\'s touch-action while the list is at that edge', async () => {
+    vi.stubGlobal('CSS', { supports: (p: string, v: string) => p === 'touch-action' && v === 'pan-down' })
+    const nextFrame = () => new Promise((r) => requestAnimationFrame(r))
+    let panel = open({ side: 'bottom' })
+    let list = panel.querySelector<HTMLElement>('[data-nd-list]')!
+    Object.defineProperty(list, 'scrollHeight', { value: 600 })
+    Object.defineProperty(list, 'clientHeight', { value: 200 })
+    await nextFrame()
+    // At the top only the finger moving up scrolls natively; down is the drawer's
+    expect(list.style.touchAction).toBe('pan-down')
+    expect(panel.classList.contains('touch-none')).toBe(true)
+    list.scrollTop = 50
+    list.dispatchEvent(new Event('scroll'))
+    expect(list.style.touchAction).toBe('pan-y')
+    wrapper!.unmount()
+
+    panel = open({ side: 'top' })
+    list = panel.querySelector<HTMLElement>('[data-nd-list]')!
+    Object.defineProperty(list, 'scrollHeight', { value: 200 })
+    Object.defineProperty(list, 'clientHeight', { value: 200 })
+    await nextFrame()
+    expect(list.style.touchAction).toBe('pan-up')
+    vi.unstubAllGlobals()
   })
 })

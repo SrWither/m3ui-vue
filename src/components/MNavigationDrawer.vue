@@ -84,6 +84,7 @@ function isSectionOpen(section: DrawerSection, index: number) {
 }
 
 function toggleSection(section: DrawerSection, index: number) {
+  refreshListTouchAction();
   const key = section.title ?? `__${index}`;
   openSections.value[key] = !isSectionOpen(section, index);
 }
@@ -93,6 +94,7 @@ function isItemOpen(item: DrawerItem) {
 }
 
 function toggleItem(item: DrawerItem) {
+  refreshListTouchAction();
   openItems[item.value] = !openItems[item.value];
 }
 
@@ -115,6 +117,7 @@ function onChildSelect(item: DrawerItem) {
 }
 
 function onChildToggle(item: DrawerItem) {
+  refreshListTouchAction();
   openItems[item.value] = !openItems[item.value];
 }
 
@@ -240,6 +243,38 @@ function animateTo(to: number, spring: SpringSpec, done?: () => void) {
   };
 }
 
+// Top/bottom: wherever the touch-action lets the browser pan along the drawer's swipe, Chrome treats that drag as
+// a possible scroll waiting on our touchmove listener and delivers it at 60Hz on a 120Hz phone (measured on a
+// device: the panel visibly moved every other frame, while the left/right swipe, crosswise to pan-y, came at
+// 120Hz). So the list only allows the scroll that can actually happen: at the edge the drawer closes toward,
+// only scrolling away from it (bottom: pan-down, the finger moving up; top: pan-up), elsewhere both ways. Outside
+// the list the panel is touch-action: none. Browsers without directional pan values (Safari) keep pan-y.
+let listEl: HTMLElement | null = null;
+
+function updateListTouchAction() {
+  const list = listEl;
+  if (!list || horizontal() || !props.swipeEnabled) return;
+  const atEdge = props.side === "bottom"
+    ? list.scrollTop <= 0
+    : list.scrollTop + list.clientHeight >= list.scrollHeight - 1;
+  const directional = typeof CSS !== "undefined" && !!CSS.supports?.("touch-action", "pan-down");
+  list.style.touchAction = atEdge && directional ? (props.side === "bottom" ? "pan-down" : "pan-up") : "pan-y";
+}
+
+// Expanding a section or item changes how far the list scrolls without a scroll event: re-check once it settles
+function refreshListTouchAction() {
+  setTimeout(updateListTouchAction, 400);
+}
+
+function watchList(root: Element | null) {
+  listEl?.removeEventListener("scroll", updateListTouchAction);
+  listEl = root?.querySelector<HTMLElement>("[data-nd-list]") ?? null;
+  if (!listEl) return;
+  listEl.addEventListener("scroll", updateListTouchAction, { passive: true });
+  // After the first layout, so the open doesn't force one
+  requestAnimationFrame(updateListTouchAction);
+}
+
 function onModalEnter(el: Element, done: () => void) {
   // Reopened mid-close: the old panel goes now
   settled?.();
@@ -248,6 +283,7 @@ function onModalEnter(el: Element, done: () => void) {
   scrimAnim?.cancel();
   anim = scrimAnim = null;
   bindModal(el);
+  watchList(el);
   offset = closedDir;
   velocity = 0;
   animateTo(0, DEFAULT_SPATIAL, done);
@@ -256,12 +292,14 @@ function onModalEnter(el: Element, done: () => void) {
 function onModalLeave(el: Element, done: () => void) {
   bindModal(el);
   drag = null;
+  watchList(null);
   animateTo(closedDir, FAST_EFFECTS, done);
 }
 
 onBeforeUnmount(() => {
   anim?.cancel();
   scrimAnim?.cancel();
+  watchList(null);
 });
 
 // Positions below are along the drawer's axis: x for left/right, y for top/bottom.
@@ -414,7 +452,7 @@ function onPanelClickCapture(e: MouseEvent) {
               : 'h-full max-w-[85vw]',
             side === 'top' || side === 'bottom' || width ? '' : 'w-[22.5rem]',
             side === 'right' ? 'rounded-l-lg' : side === 'left' ? 'rounded-r-lg' : side === 'bottom' ? 'rounded-t-lg' : '',
-            swipeEnabled ? 'touch-pan-y' : '',
+            swipeEnabled ? (side === 'left' || side === 'right' ? 'touch-pan-y' : 'touch-none') : '',
           ]"
           :style="side !== 'top' && side !== 'bottom' && width ? { width } : undefined"
           @pointerdown="onPanelPointerDown"
@@ -437,7 +475,8 @@ function onPanelClickCapture(e: MouseEvent) {
           </div>
 
           <!-- touch-action stops at the nearest scroll container, so this one needs pan-y of its own or a
-               finger landing on an item lets the browser take a left/right drawer's swipe -->
+               finger landing on an item lets the browser take a left/right drawer's swipe (top/bottom: the
+               script narrows it, see updateListTouchAction) -->
           <div
             data-nd-list
             class="scrollbar-none flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-2"
