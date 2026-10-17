@@ -457,34 +457,6 @@ Install only the packages you need:
 | `MQRCode` | `qrcode-generator` |
 | `MBarcode` | `jsbarcode` |
 
-## Roadmap to 1.0.0
-
-1.0.0 ships once all of Material 3's core is in the library. Crossed-out items are done (in the next release, or already published):
-
-**Components**
-
-- [x] ~~Bottom app bar (`BottomAppBar`) and the Expressive flexible bottom app bar~~
-- [x] ~~Standard (non-modal) bottom sheet~~
-- [x] ~~Wheel time picker (`TimeScroll`)~~
-- [x] ~~Icon toggle buttons (standard, filled, tonal and outlined, with a selected state)~~
-- [x] ~~Top app bar scroll behaviors (collapse on scroll, hide on scroll) and the Expressive medium/large flexible app bars with subtitle~~
-- [x] ~~Selectable and checkable menu items~~
-- [x] ~~Search in the top app bar, and the contained full-screen search~~
-- [x] ~~The four chip types (assist, filter, input, suggestion) and their elevated variants~~
-- [x] ~~Tabs with the icon beside the label~~
-- [x] ~~Swipe to close the modal navigation rail~~
-
-**Foundations**
-
-- [x] ~~Material 3 Expressive shape scale (large-increased, extra-large-increased, extra-extra-large)~~
-- [x] ~~Motion tokens: easings, durations and springs, exposed for your own animations~~
-- [x] ~~Contrast levels (medium, high) for the built-in palettes, not only for seed-generated ones~~
-- [x] ~~Scrollbars: thin, theme-colored scrollbars instead of the global rule that hid them in Chromium/WebKit, hidden only where a component needs it (and `scrollbar-none` for your own markup)~~
-
-Already in: dynamic color from a seed, fixed color roles, elevation levels 0–5, the emphasized type scale, and the
-Expressive components so far (button groups, split buttons, toggle buttons, loading indicator, FAB menu, toolbars,
-shapes, carousel, scroll field, short navigation bar…).
-
 ## About this project
 
 M3UI Vue started as a set of components I built for my own projects. Over time it grew
