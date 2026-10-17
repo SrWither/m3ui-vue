@@ -45,6 +45,9 @@ export interface M3Locale {
   timeToggleKeyboard: string
   timeToggleDial: string
   timeToggleScroll: string
+  sheetExpand: string
+  sheetCollapse: string
+  sheetDismiss: string
   selectRange: string
   pickStart: string
   pickEnd: string
@@ -224,6 +227,9 @@ export const defaultLocale: M3Locale = {
   timeToggleKeyboard: 'Switch to text input mode',
   timeToggleDial: 'Switch to clock mode',
   timeToggleScroll: 'Switch to scroll mode',
+  sheetExpand: 'Expand bottom sheet',
+  sheetCollapse: 'Collapse bottom sheet',
+  sheetDismiss: 'Dismiss bottom sheet',
   selectRange: 'Select range',
   pickStart: 'Select start',
   pickEnd: 'Select end',
