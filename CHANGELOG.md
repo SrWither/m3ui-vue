@@ -7,6 +7,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [0.9.3] - Unreleased
 
+### Added
+- `v-ripple`: the library's first directive, M3's press ripple on any element (`v-ripple`, `v-ripple="false"`, `v-ripple="'#e91e63'"` or `v-ripple="{ disabled, color }"`). Exported as `vRipple` (with the `RippleOptions` and `RippleValue` types) and registered globally by `createM3UI()`. Each ripple draws in its own `.m3-ripple-layer` with `border-radius: inherit`, so the element needs no `overflow: hidden`; a statically positioned element is made `relative` on the first press
+- `rippleColor` on `MButton`, `MIconButton`, `MFab` (main button and speed-dial items), `MSplitButton`, `MToggleButton` and `MButtonGroup`
+
+### Changed
+- Those six buttons draw their ripple with `v-ripple` instead of six copies of the same function, so a right click no longer starts one
+
 ### Fixed
 - The package now includes the licenses of the code it bundles (`@material/material-color-utilities`, Apache-2.0; `shape-morph`, `@lezer/highlight`, MIT; `highlight.js`, BSD-3-Clause) in `dist/THIRD_PARTY_LICENSES.md`, as those licenses require. `scripts/third-party-licenses.mjs` writes it on every `build:js`, finding the bundled packages from `src/` imports and `vite.config.ts`'s externals, and fails the build if one has no license file. It also credits the Unicode emoji data and CLDR annotations behind MEmojiSelector (Unicode License v3, now noted in the generated data files too) and the Android Open Source Project for MCarousel's ported keyline engine (Apache-2.0, noted in `_carouselStrategy.ts`)
 
