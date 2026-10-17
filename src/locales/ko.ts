@@ -38,6 +38,9 @@ export const koLocale: M3Locale = {
   // Pickers
   selectDate: '날짜 선택',
   selectTime: '시간 선택',
+  timeHourSelection: '시간 선택',
+  timeMinuteSelection: '분 선택',
+  timePeriodToggle: '오전 또는 오후 선택',
   selectRange: '범위 선택',
   pickStart: '시작 선택',
   pickEnd: '종료 선택',

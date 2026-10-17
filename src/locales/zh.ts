@@ -38,6 +38,9 @@ export const zhLocale: M3Locale = {
   // Pickers
   selectDate: '选择日期',
   selectTime: '选择时间',
+  timeHourSelection: '选择小时',
+  timeMinuteSelection: '选择分钟',
+  timePeriodToggle: '选择上午或下午',
   selectRange: '选择范围',
   pickStart: '选择开始',
   pickEnd: '选择结束',

@@ -38,6 +38,9 @@ export const jaLocale: M3Locale = {
   // Pickers
   selectDate: '日付を選択',
   selectTime: '時刻を選択',
+  timeHourSelection: '時間を選択',
+  timeMinuteSelection: '分を選択',
+  timePeriodToggle: '午前または午後を選択',
   selectRange: '範囲を選択',
   pickStart: '開始を選択',
   pickEnd: '終了を選択',

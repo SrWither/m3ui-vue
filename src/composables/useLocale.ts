@@ -39,6 +39,9 @@ export interface M3Locale {
   // Pickers
   selectDate: string
   selectTime: string
+  timeHourSelection: string
+  timeMinuteSelection: string
+  timePeriodToggle: string
   selectRange: string
   pickStart: string
   pickEnd: string
@@ -212,6 +215,9 @@ export const defaultLocale: M3Locale = {
 
   selectDate: 'Select date',
   selectTime: 'Select time',
+  timeHourSelection: 'Select hour',
+  timeMinuteSelection: 'Select minutes',
+  timePeriodToggle: 'Select AM or PM',
   selectRange: 'Select range',
   pickStart: 'Select start',
   pickEnd: 'Select end',

@@ -38,6 +38,9 @@ export const frLocale: M3Locale = {
   // Pickers
   selectDate: 'Sélectionner la date',
   selectTime: "Sélectionner l'heure",
+  timeHourSelection: "Sélectionner l'heure",
+  timeMinuteSelection: 'Sélectionner les minutes',
+  timePeriodToggle: 'Sélectionner AM ou PM',
   selectRange: 'Sélectionner la plage',
   pickStart: 'Sélectionner le début',
   pickEnd: 'Sélectionner la fin',

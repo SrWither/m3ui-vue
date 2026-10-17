@@ -38,6 +38,9 @@ export const deLocale: M3Locale = {
   // Pickers
   selectDate: 'Datum auswählen',
   selectTime: 'Uhrzeit auswählen',
+  timeHourSelection: 'Stunde auswählen',
+  timeMinuteSelection: 'Minuten auswählen',
+  timePeriodToggle: 'AM oder PM auswählen',
   selectRange: 'Bereich auswählen',
   pickStart: 'Anfang auswählen',
   pickEnd: 'Ende auswählen',
