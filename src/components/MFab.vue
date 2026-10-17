@@ -7,7 +7,7 @@
  *   `close()` closes it.
  * @event click Emitted when the FAB itself is clicked (not a speed-dial item)
  */
-import { computed, onMounted, onUnmounted, ref, useSlots } from 'vue'
+import { computed, inject, onMounted, onUnmounted, ref, useSlots } from 'vue'
 import MIcon from './MIcon.vue'
 import { vRipple } from '../directives/vRipple'
 
@@ -26,7 +26,7 @@ const props = withDefaults(
     icon: string
     /** Extended FAB label text */
     label?: string
-    /** Color scheme */
+    /** Color scheme; defaults to primary, or secondary inside an MBottomAppBar */
     color?: 'primary' | 'secondary' | 'tertiary' | 'surface'
     /** FAB size */
     size?: 'small' | 'regular' | 'medium' | 'large'
@@ -63,7 +63,7 @@ const props = withDefaults(
     rippleColor?: string
   }>(),
   {
-    color: 'primary',
+    color: undefined,
     size: 'regular',
     disabled: false,
     direction: 'up',
@@ -86,6 +86,10 @@ const contentEl = ref<HTMLElement>()
 const hasItems = computed(() => !!props.items?.length)
 const hasContent = computed(() => !!slots.content)
 const isExpandable = computed(() => hasItems.value || hasContent.value)
+
+// Inside an MBottomAppBar: secondary and flat (bottomAppBarFabColor, bottomAppBarFabElevation)
+const inBottomAppBar = inject('m-bottom-app-bar', false)
+const color = computed(() => props.color ?? (inBottomAppBar ? 'secondary' : 'primary'))
 
 const colorMap: Record<string, string> = {
   primary: 'bg-primary-container text-on-primary-container',
@@ -291,8 +295,8 @@ onUnmounted(() => {
       :is="fabTag"
       :to="to || undefined"
       :type="to ? undefined : 'button'"
-      class="relative inline-flex cursor-pointer items-center justify-center overflow-hidden shadow-elevation-3 transition-shadow duration-150 hover:shadow-elevation-4 active:shadow-elevation-3 disabled:cursor-not-allowed disabled:opacity-[0.38] before:content-[''] before:pointer-events-none before:absolute before:inset-0 before:bg-current before:opacity-0 before:transition-opacity before:duration-150 hover:before:opacity-[0.08] active:before:opacity-[0.12]"
-      :class="[colorMap[color], fabSizeClasses]"
+      class="relative inline-flex cursor-pointer items-center justify-center overflow-hidden transition-shadow duration-150 disabled:cursor-not-allowed disabled:opacity-[0.38] before:content-[''] before:pointer-events-none before:absolute before:inset-0 before:bg-current before:opacity-0 before:transition-opacity before:duration-150 hover:before:opacity-[0.08] active:before:opacity-[0.12]"
+      :class="[colorMap[color], fabSizeClasses, inBottomAppBar ? '' : 'shadow-elevation-3 hover:shadow-elevation-4 active:shadow-elevation-3']"
       :disabled="disabled"
       v-ripple="{ disabled, color: rippleColor }"
       @click="handleFabClick"
