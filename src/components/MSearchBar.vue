@@ -155,13 +155,14 @@ onUnmounted(() => { document.body.style.overflow = '' })
 
 <template>
   <div ref="barEl" class="relative w-full" v-bind="$attrs">
+    <!-- Flat, told apart by its color: Compose's SearchBarDefaults.ShadowElevation is Level0 for every variant
+         (SearchBarTokens.ContainerElevation's Level3 isn't used by any of them) -->
     <div
       v-show="!expanded"
-      class="flex h-14 items-center gap-3 rounded-full px-4 transition-[box-shadow,background-color] duration-150 focus-within:outline focus-within:outline-2 focus-within:outline-secondary focus-within:-outline-offset-2"
+      class="flex h-14 items-center gap-3 rounded-full px-4 transition-[background-color] duration-150 focus-within:outline focus-within:outline-2 focus-within:outline-secondary focus-within:-outline-offset-2"
       :class="[
         disabled ? 'pointer-events-none opacity-[0.38]' : '',
         appBar?.scrolled.value ? 'bg-surface-container-highest' : 'bg-surface-container-high',
-        appBar ? '' : 'shadow-elevation-3',
       ]"
     >
       <span class="inline-flex shrink-0 items-center" :class="iconPosition === 'end' ? 'order-last' : ''">
@@ -202,7 +203,7 @@ onUnmounted(() => { document.body.style.overflow = '' })
         ref="panelEl"
         class="fixed z-500 flex flex-col overflow-hidden"
         :class="[
-          fullscreen ? 'inset-0' : 'max-h-[70vh] rounded-[28px] shadow-elevation-3',
+          fullscreen ? 'inset-0' : 'max-h-[70vh] rounded-[28px]',
           contained ? 'bg-surface-container-low' : 'bg-surface-container-high',
         ]"
         :style="variant === 'docked' ? panelPos : undefined"

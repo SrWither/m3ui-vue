@@ -45,6 +45,18 @@ describe('MSearchBar fullscreen-contained', () => {
   })
 })
 
+describe('MSearchBar elevation', () => {
+  it('is flat standalone and docked, as Compose (ShadowElevation = Level0)', async () => {
+    wrapper = mount(MSearchBar, { props: { variant: 'docked' }, attachTo: document.body })
+    expect(pill().classes().some((c) => c.startsWith('shadow-'))).toBe(false)
+    await wrapper.setProps({ expanded: true })
+    await nextTick()
+    const panel = document.body.querySelector('.fixed.rounded-\\[28px\\]')!
+    expect(panel).not.toBeNull()
+    expect([...panel.classList].some((c) => c.startsWith('shadow-'))).toBe(false)
+  })
+})
+
 describe('MAppBarWithSearch', () => {
   it('lays out navigation, a flat search bar and actions', () => {
     wrapper = mount(MAppBarWithSearch, {
