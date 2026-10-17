@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.0.0] - Unreleased
+## [1.0.0] - 2026-10-17
 
 ### Added
 - `MBottomAppBar`: M3's bottom app bar (port of Compose's `BottomAppBar`): 80px on `surface-container`, actions at the start, a `#fab` slot at the end (12dp from the top, 16dp from the end edge), bottom safe-area inset. `flexible` makes it M3 Expressive's `FlexibleBottomAppBar` (64px, 16px side padding, `DockedToolbarTokens`), with `arrangement` (`start` | `between` | `around` | `evenly` | `fixed`, the last centered 32px apart). `color` takes `surface` or a color's container for a vibrant bar. `scrollBehavior="exit-always"` (`BottomAppBarDefaults.exitAlwaysScrollBehavior`) shrinks the bar's height with the content scrolling down and grows it back scrolling up, following `scrollTarget` (an element or selector, the window by default); left half-way it snaps to the closer end on the FastSpatial spring. Not ported: dragging the bar itself, the fling decay (the browser's momentum scrolling drives it instead), and turning it off under a screen reader
