@@ -12,6 +12,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 - `MBottomSheet`, `MSideSheet`, `MNavigationRail`'s `hideOnCollapse` panel, `MMenu`, `MContextMenu` and `MTransition` play their enter/exit springs as Web Animations (simulated up front, same curves and release velocity) instead of stepping them in a rAF loop, so the compositor runs them and the content mounting at the same moment no longer janks them on phones. Drags still follow the finger directly
+
+### Fixed
+- `MBottomSheetScaffold`'s drag and `MPullToRefresh`'s pull stuttered on 120Hz phones: wherever touch-action let the browser pan along the drag, Chrome delivered it at 60Hz (a possible scroll waiting on the listener), so they moved every other frame. The sheet is now touch-action none and its content allows only the scroll that can happen (none while it can't scroll, pan-down at its top, pan-y once scrolled); the pull-to-refresh scroller is pan-down while a pull can start. Browsers without directional pan values (Safari) keep pan-y
 - **`MNavigationDrawer` (modal) opens and closes on Compose's springs** (DefaultSpatial in, FastEffects out) instead of a 300ms CSS transition. Each spring is simulated up front and played as a Web Animation, so it runs on the compositor like the old transition and isn't janked by the drawer mounting at the same moment (a rAF loop was, on phones)
 
 ---
