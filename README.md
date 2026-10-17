@@ -219,6 +219,7 @@ const name = ref('')
 | `useNotification()` | Rich notifications; mounts its own host, nothing to place |
 | `MDialog` / `MConfirmDialog` | Modal dialogs |
 | `MBottomSheet` | Bottom sheet |
+| `MBottomSheetScaffold` | Standard (non-modal) bottom sheet over a screen, peeking until dragged up |
 | `MSideSheet` | Side sheet |
 | `MProgressBar` | Linear progress |
 | `MCircleProgressBar` | Circular progress (circle or wavy variant) |
@@ -246,8 +247,10 @@ const name = ref('')
 | `MShortNavigationBar` | M3 Expressive's shorter (64dp) navigation bar — `equal` or `centered` item arrangement, `top` or `start` icon position |
 | `MNavigationRail` | Side navigation rail |
 | `MNavigationDrawer` | Collapsible side drawer |
-| `MTopAppBar` / `MAppBar` | Top app bar |
-| `MSearchBar` | M3 search bar — docked (dropdown-style) or fullscreen expansion, drop it anywhere including a `MTopAppBar` title slot |
+| `MTopAppBar` / `MAppBar` | Top app bar: small, center-aligned, medium, large and the flexible ones, with scroll behaviors |
+| `MBottomAppBar` | Bottom app bar with actions and a FAB, or the Expressive flexible one; can hide on scroll |
+| `MAppBarWithSearch` | Top app bar with a search bar in place of the title (or only the search field) |
+| `MSearchBar` | M3 search bar — docked (dropdown-style), fullscreen or contained fullscreen expansion, drop it anywhere including a `MTopAppBar` title slot |
 | `MToolbar` | Action toolbar |
 
 ### Layout
@@ -437,25 +440,26 @@ Install only the packages you need:
 
 ## Roadmap to 1.0.0
 
-1.0.0 ships once all of Material 3's core is in the library. Still to come:
+1.0.0 ships once all of Material 3's core is in the library. Crossed-out items are done (in the next release, or already published):
 
 **Components**
 
-- [ ] Bottom app bar (`BottomAppBar`) and the Expressive flexible bottom app bar
-- [ ] Standard (non-modal) bottom sheet
-- [ ] Wheel time picker (`TimeScroll`)
-- [ ] Icon toggle buttons (standard, filled, tonal and outlined, with a selected state)
-- [ ] Top app bar scroll behaviors (collapse on scroll, hide on scroll) and the Expressive medium/large flexible app bars with subtitle
-- [ ] Selectable and checkable menu items
-- [ ] Search in the top app bar, and the contained full-screen search
-- [ ] The four chip types (assist, filter, input, suggestion) and their elevated variants
-- [ ] Tabs with the icon beside the label
-- [ ] Swipe to close the modal navigation rail
+- [x] ~~Bottom app bar (`BottomAppBar`) and the Expressive flexible bottom app bar~~
+- [x] ~~Standard (non-modal) bottom sheet~~
+- [x] ~~Wheel time picker (`TimeScroll`)~~
+- [x] ~~Icon toggle buttons (standard, filled, tonal and outlined, with a selected state)~~
+- [x] ~~Top app bar scroll behaviors (collapse on scroll, hide on scroll) and the Expressive medium/large flexible app bars with subtitle~~
+- [x] ~~Selectable and checkable menu items~~
+- [x] ~~Search in the top app bar, and the contained full-screen search~~
+- [x] ~~The four chip types (assist, filter, input, suggestion) and their elevated variants~~
+- [x] ~~Tabs with the icon beside the label~~
+- [x] ~~Swipe to close the modal navigation rail~~
 
 **Foundations**
 
-- [ ] Material 3 Expressive shape scale (large-increased, extra-large-increased, extra-extra-large)
+- [x] ~~Material 3 Expressive shape scale (large-increased, extra-large-increased, extra-extra-large)~~
 - [ ] Motion tokens: easings, durations and springs, exposed for your own animations
+- [ ] Contrast levels (medium, high) for the built-in palettes, not only for seed-generated ones
 - [ ] Scrollbars: drop the global rule that hides them in Chromium/WebKit (it reaches the whole app, and Firefox shows them anyway) in favor of thin theme-colored scrollbars with `scrollbar-gutter: stable`, hiding them only where a component needs it. For now, set `scrollbar-width: auto` where you want them visible
 
 Already in: dynamic color from a seed, fixed color roles, elevation levels 0–5, the emphasized type scale, and the
