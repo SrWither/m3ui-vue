@@ -95,13 +95,18 @@ function write() {
 let raf = 0
 let last = 0
 let dragging = false
+// The value this wheel itself last emitted: v-model hands it back while the wheel is still moving
+let lastEmitted: number | null = null
 
 function setSelected() {
   const page = Math.round(pos)
   if (page === selectedPage.value) return
   selectedPage.value = page
   updatePages()
-  if (props.count > 0) emit('update:modelValue', mod(page))
+  if (props.count > 0) {
+    lastEmitted = mod(page)
+    emit('update:modelValue', lastEmitted)
+  }
 }
 
 function frame(now: number) {
@@ -164,7 +169,10 @@ watch(selectedPage, (page, prev) => {
 
 // Outside changes take the short way around the wheel
 watch(() => props.modelValue, (v) => {
-  if (props.count <= 0) return
+  // Our own value coming back through v-model mid-fling isn't an outside change. Treating it as one
+  // retargeted the snap toward an item the wheel had already passed, and on a short wheel (4 items)
+  // the shortest-way-around math flipped the target back and forth forever.
+  if (props.count <= 0 || v === lastEmitted) return
   const current = target ?? Math.round(pos)
   let d = mod(v) - mod(current)
   if (d > props.count / 2) d -= props.count
