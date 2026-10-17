@@ -281,6 +281,10 @@ const colorTokens = tokens('color')
 const textTokens = tokens('text').filter((t) => !t.includes('--'))
 const radiusTokens = tokens('radius')
 const shadowTokens = tokens('shadow')
+const easeTokens = tokens('ease')
+const durationTokens = tokens('duration')
+// Utilities theme.css adds on top of the tokens' own (`@utility scrollbar-none { … }`)
+const utilities = [...themeCss.matchAll(/^@utility\s+([\w-]+)/gm)].map((m) => m[1])
 
 const palettes = [...read('src/composables/useColorPalette.ts').matchAll(/\{\s*id:\s*'([^']+)'/g)].map((m) => m[1])
 
@@ -298,7 +302,7 @@ const api = {
   components: componentList,
   values,
   types: looseTypes,
-  theme: { colors: colorTokens, text: textTokens, radius: radiusTokens, shadow: shadowTokens, palettes },
+  theme: { colors: colorTokens, text: textTokens, radius: radiusTokens, shadow: shadowTokens, ease: easeTokens, duration: durationTokens, utilities, palettes },
   locale: { keys: localeKeys, presets: localeExports },
 }
 
@@ -337,6 +341,7 @@ Material Design 3 components for Vue 3 + Tailwind CSS v4. Generated from the sou
 @import 'tailwindcss';
 @import '${PKG}/theme';
 @import '${PKG}/palettes';
+@import '${PKG}/palettes-contrast'; /* optional: medium and high contrast */
 @import '${PKG}/styles';
 \`\`\`
 
@@ -352,7 +357,9 @@ app.use(createM3UI({ palette: 'blue', locale: esLocale }))
 - Import components by name: \`import { MButton, MDialog } from '${PKG}'\`. Components with heavy optional peer
   dependencies live in their own entry points (noted on each one): ${api.entries.filter((e) => e !== PKG).map(code).join(', ')}.
 - Dark mode is the \`dark\` class on \`<html>\` (\`useTheme()\` manages it); palettes are \`data-palette="<id>"\` on \`<html>\`
-  (\`useColorPalette()\`).
+  (\`useColorPalette()\`, or a scheme generated from any color with \`setSeed()\` / \`createM3UI({ seed })\`); contrast levels
+  are \`data-contrast="medium|high"\` (\`setContrast()\` / \`createM3UI({ contrast })\`, needs the \`palettes-contrast\` import).
+- \`createM3UI()\` also registers the \`v-ripple\` directive globally (or import \`vRipple\`).
 - Style your own markup with the M3 tokens as Tailwind utilities: \`bg-surface-container\`, \`text-on-surface-variant\`,
   \`text-title-medium\`, \`rounded-lg\`, \`shadow-elevation-2\`.
 - Two-way props are \`v-model\` (\`modelValue\`) or \`v-model:<name>\`, marked "(v-model)" below.
@@ -380,6 +387,9 @@ ${localeKeys.join(', ')}
 - Type scale (\`text-*\`): ${textTokens.join(', ')}
 - Radius (\`rounded-*\`): ${radiusTokens.join(', ')}
 - Shadows (\`shadow-*\`): ${shadowTokens.join(', ')}
+- Easing (\`ease-*\`, CSS \`--ease-*\`): ${easeTokens.join(', ')}
+- Durations (CSS \`--duration-*\`, e.g. \`duration-(--duration-medium-2)\`): ${durationTokens.join(', ')}
+- Utilities: ${utilities.map(code).join(', ')}
 - Palettes (\`useColorPalette().set(id)\` / \`createM3UI({ palette })\`): ${palettes.join(', ')}
 `
 
