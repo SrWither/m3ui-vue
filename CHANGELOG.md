@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MNavigationDrawer` `swipeEnabled` (default `true`): **the modal drawer can be swiped closed toward its edge**, like Compose's `ModalNavigationDrawer` (`gesturesEnabled`): released past half its size or faster than 400px/s (DrawerPositionalThreshold, DrawerVelocityThreshold) it closes, otherwise it springs back on DefaultSpatial carrying the finger's velocity, with the scrim following. Left/right drawers take horizontal drags and leave vertical ones to the list; top/bottom ones (which Compose doesn't have) scroll the list first and follow the finger once it's at its end, like a bottom sheet's nested scroll. A drag that started on an item doesn't select it; if the parent doesn't close it, it springs back open
 
 ### Changed
+- `MBottomSheet`, `MSideSheet`, `MNavigationRail`'s `hideOnCollapse` panel, `MMenu`, `MContextMenu` and `MTransition` play their enter/exit springs as Web Animations (simulated up front, same curves and release velocity) instead of stepping them in a rAF loop, so the compositor runs them and the content mounting at the same moment no longer janks them on phones. Drags still follow the finger directly
 - **`MNavigationDrawer` (modal) opens and closes on Compose's springs** (DefaultSpatial in, FastEffects out) instead of a 300ms CSS transition. Each spring is simulated up front and played as a Web Animation, so it runs on the compositor like the old transition and isn't janked by the drawer mounting at the same moment (a rAF loop was, on phones)
 
 ---
