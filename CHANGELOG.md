@@ -27,6 +27,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **Theme, palette and contrast switches run smoothly in Chrome, Edge and Safari**: instead of transitioning six color properties on every element (`.theme-transitioning`, which Chromium recalculated element by element on every frame and stuttered), the color tokens themselves transition once on `<html>`, registered as `<color>` with `@property` only for the 250ms of the switch (so `getPropertyValue('--color-*')` still reads them as written). Components' own color transitions are paused meanwhile, so the navbar and buttons no longer trail behind the rest. Firefox (detected by `-moz-appearance` or its user agent) and browsers without `@property` keep `.theme-transitioning`; with `prefers-reduced-motion` nothing animates. `createM3UI({ themeColor })` also follows contrast changes and a seed palette regenerated in place
 - `MChip`'s remove button is labeled from the locale (`remove`) instead of a hardcoded Spanish "Quitar"
 - `MFab` inside an `MBottomAppBar` defaults to `secondary` and has no shadow (`bottomAppBarFabColor`, `bottomAppBarFabElevation`); an explicit `color` still wins. Elsewhere nothing changes
+- `dist/API.md` (and `api.json`) covers the new foundations: its setup shows the optional `palettes-contrast` import, `data-contrast` / `setContrast()`, seed palettes and the global `v-ripple`, and its theme tokens list the easings (`ease-*`), durations (`--duration-*`) and the `scrollbar-none` utility
 
 ## [0.9.3] - 2026-10-17
 
