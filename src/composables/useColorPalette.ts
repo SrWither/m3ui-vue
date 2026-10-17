@@ -1,5 +1,6 @@
 import { computed, readonly, ref, watch, watchEffect } from 'vue'
 import { generateScheme, schemeToCss, type SeedOptions } from './dynamicColor'
+import { themeTransition } from './_themeTransition'
 
 export interface Palette {
   id: string
@@ -168,26 +169,30 @@ function hasPaletteCss(id: string): boolean {
 
 let generation = 0
 
-/** Generates and injects the CSS for a palette id from a seed. Resolves false if a newer request won. */
-async function generateInto(id: string, seed: ActiveSeed): Promise<boolean> {
+/** Generates the CSS for a palette id from a seed. Resolves null if a newer request won. */
+async function generateCss(id: string, seed: ActiveSeed): Promise<string | null> {
   const mine = ++generation
   const options = withContrast(seed)
   const css = schemeToCss(await generateScheme(options.seed, options), id)
-  if (mine !== generation) return false
-  injectCss(css)
-  if (persistEnabled.value) write(CSS_KEY, { id, css })
-  return true
+  return mine === generation ? css : null
 }
 
-/** Switches to a palette id with the theme transition. Applied directly, not only through useColorPalette()'s
- * watcher, so it also works when no component uses the composable (createM3UI's defaults). */
-function switchTo(id: string) {
-  document.documentElement.classList.add('theme-transitioning')
-  void document.documentElement.offsetHeight
-  current.value = id
-  applyAttribute(id)
+/** Puts a generated palette's CSS in the page and caches it for the next load. */
+function applyCss(id: string, css: string) {
+  injectCss(css)
+  if (persistEnabled.value) write(CSS_KEY, { id, css })
+}
+
+/** Switches to a palette id with the theme transition, injecting its generated CSS (if any) inside it. Applied
+ * directly, not only through useColorPalette()'s watcher, so it also works when no component uses the composable
+ * (createM3UI's defaults). */
+function switchTo(id: string, css?: string) {
   if (persistEnabled.value) write(PALETTE_KEY, id)
-  setTimeout(() => document.documentElement.classList.remove('theme-transitioning'), 300)
+  themeTransition(() => {
+    if (css) applyCss(id, css)
+    current.value = id
+    applyAttribute(id)
+  })
 }
 
 /** Picks a palette by id; a custom one with a seed and no CSS of its own is generated first. */
@@ -195,18 +200,20 @@ async function selectPalette(id: string) {
   generation++
   const custom = palettes.find((p) => p.id === id)
   if (custom && !builtInIds.has(id) && custom.seed && !hasPaletteCss(id)) {
-    if (!(await generateInto(id, { seed: custom.seed }))) return
-  }
-  switchTo(id)
+    const css = await generateCss(id, { seed: custom.seed })
+    if (css === null) return
+    switchTo(id, css)
+  } else switchTo(id)
 }
 
 /** Activates a seed color: generates its scheme and switches to it. */
 async function selectSeed(seed: string, options: SeedOptions = {}) {
   const next: ActiveSeed = { seed, ...options }
-  if (!(await generateInto(SEED_PALETTE, next))) return
+  const css = await generateCss(SEED_PALETTE, next)
+  if (css === null) return
   activeSeed.value = next
   if (persistEnabled.value) write(SEED_KEY, next)
-  switchTo(SEED_PALETTE)
+  switchTo(SEED_PALETTE, css)
 }
 
 /** Sets the contrast level, with the theme transition; a generated palette (seed, custom) is regenerated. */
@@ -215,18 +222,22 @@ async function selectContrast(level: ContrastLevel, persist = persistEnabled.val
   if (persist) write(CONTRAST_KEY, level)
 }
 
-// Applied on every change of the effective level (a setting or the OS preference), for every palette kind
-watch(activeContrast, async (level) => {
-  document.documentElement.classList.add('theme-transitioning')
-  void document.documentElement.offsetHeight
-  applyContrast(level)
+// Applied on every change of the effective level (a setting or the OS preference), for every palette kind. A
+// generated palette is regenerated first, then swapped in with the attribute in one transition.
+watch(activeContrast, async () => {
   const id = current.value
-  if (id === SEED_PALETTE && activeSeed.value) await generateInto(SEED_PALETTE, activeSeed.value)
+  let css: string | null | undefined
+  if (id === SEED_PALETTE && activeSeed.value) css = await generateCss(SEED_PALETTE, activeSeed.value)
   else {
     const custom = palettes.find((p) => p.id === id)
-    if (custom && !builtInIds.has(id) && custom.seed && !hasPaletteCss(id)) await generateInto(id, { seed: custom.seed })
+    if (custom && !builtInIds.has(id) && custom.seed && !hasPaletteCss(id)) css = await generateCss(id, { seed: custom.seed })
   }
-  setTimeout(() => document.documentElement.classList.remove('theme-transitioning'), 300)
+  // A newer request (a palette, a seed, another level) superseded the generation: it generates at the active
+  // level itself, but the attribute still has to follow
+  themeTransition(() => {
+    applyContrast(activeContrast.value)
+    if (css) applyCss(id, css)
+  })
 })
 
 export function useColorPalette() {

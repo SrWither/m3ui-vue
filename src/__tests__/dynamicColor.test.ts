@@ -162,6 +162,23 @@ describe('createM3UI themeColor', () => {
     document.documentElement.style.setProperty('--color-surface', '#fef7ff')
   })
 
+  // Reproduces the old observer's miss only when run alone (-t): the seed tests above leave theme-transitioning
+  // timers that touch <html> later and update the meta anyway
+  it('follows a generated palette rewritten in place (same seed id, new contrast)', async () => {
+    const { createM3UI } = await fresh()
+    createApp({}).use(createM3UI({ themeColor: 'surface' }))
+    const meta = () => document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')!
+    const style = document.createElement('style')
+    style.id = 'm3-dynamic-palette'
+    document.head.appendChild(style)
+    await settle()
+    // Only the <style>'s text changes; <html>'s attributes stay the same
+    document.documentElement.style.setProperty('--color-surface', '#faf8ff')
+    style.textContent = '[data-palette="seed"] { --color-surface: #faf8ff }'
+    await settle()
+    expect(meta().content).toBe('#faf8ff')
+  })
+
   it('creates the meta and follows the palette', async () => {
     const { createM3UI } = await fresh()
     createApp({}).use(createM3UI({ themeColor: 'surface' }))

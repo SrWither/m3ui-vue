@@ -1,4 +1,5 @@
 import { ref, watchEffect, onMounted, onUnmounted } from 'vue'
+import { themeTransition } from './_themeTransition'
 
 export type Theme = 'light' | 'dark' | 'system'
 
@@ -11,18 +12,9 @@ function applyTheme(t: Theme) {
   const isDark = t === 'dark' || (t === 'system' && prefersDark)
 
   const isChange = _appliedDark !== null && _appliedDark !== isDark
-
-  if (isChange) {
-    // Force reflow so transition property takes effect before the color change
-    document.documentElement.classList.add('theme-transitioning')
-    void document.documentElement.offsetHeight
-  }
-
-  document.documentElement.classList.toggle('dark', isDark)
-
-  if (isChange) {
-    setTimeout(() => document.documentElement.classList.remove('theme-transitioning'), 300)
-  }
+  const apply = () => document.documentElement.classList.toggle('dark', isDark)
+  if (isChange) themeTransition(apply)
+  else apply()
 
   _appliedDark = isDark
 }

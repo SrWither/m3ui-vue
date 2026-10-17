@@ -341,6 +341,7 @@
   100% { left: 110%; width: 40% }
 }
 
+/* Theme switch in Firefox and browsers without @property (_themeTransition.ts) */
 html.theme-transitioning *,
 html.theme-transitioning *::before,
 html.theme-transitioning *::after {
