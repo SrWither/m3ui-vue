@@ -1,7 +1,8 @@
 <script setup lang="ts">
 /**
  * A slide-out or inline drawer of grouped, badge-able, optionally-nested navigation items — modal (Teleported,
- * scrim-backed) or inline (participates in layout, supports a collapsed icon-only mode).
+ * scrim-backed, swiped closed toward its edge) or inline (participates in layout, supports a collapsed
+ * icon-only mode).
  *
  * @slot header Custom header content (e.g. profile card, logo). Fully generic, no positioning constraints
  *   applied — overrides the title prop.
@@ -13,7 +14,7 @@
  * @event update:modelValue Open/closed state for v-model
  * @event select Fires when an item is clicked — use to track the selected item
  */
-import { ref, reactive, watch, provide, computed } from "vue";
+import { ref, reactive, watch, provide, computed, nextTick, onBeforeUnmount } from "vue";
 import MIcon from "./MIcon.vue";
 import MDrawerItemList from "./_MDrawerItemList.vue";
 
@@ -61,8 +62,10 @@ const props = withDefaults(
      * variant always renders on left or right.
      */
     side?: 'left' | 'right' | 'top' | 'bottom';
+    /** Lets the modal drawer be swiped closed toward its edge; with false it only closes through v-model or the scrim */
+    swipeEnabled?: boolean;
   }>(),
-  { modal: true, side: 'left' },
+  { modal: true, side: 'left', swipeEnabled: true },
 );
 
 const emit = defineEmits<{
@@ -153,12 +156,238 @@ watch(
     }
   },
 );
+
+// ── Modal: slide in/out + swipe to close ────────────────────────────────────────────────────
+// After ModalNavigationDrawer (NavigationDrawer.kt), which is left/right only; top/bottom add a bottom sheet's
+// nested scroll (see onPanelPointerMove). Opens with DefaultSpatial (0.9 / 700), closes with
+// FastEffects (1.0 / 3800); a released swipe settles at the nearer anchor (DrawerPositionalThreshold 50%)
+// unless flung faster than DrawerVelocityThreshold (400dp/s), with DefaultSpatial. The scrim's alpha follows
+// the panel's offset.
+//
+// Unlike the library's usual rAF springs (see CLAUDE.md), each spring is simulated up front and played as a
+// Web Animation: transform/opacity animations run on the compositor, so the open isn't janked by the main
+// thread mounting the drawer and re-laying out the page at that very moment (a rAF loop was, visibly, on
+// phones). Only the drag itself writes styles directly. Offsets are fractions of the panel's size, so opening
+// never has to read layout.
+interface Spring { damping: number; stiffness: number }
+const DEFAULT_SPATIAL: Spring = { damping: 0.9, stiffness: 700 }
+const FAST_EFFECTS: Spring = { damping: 1, stiffness: 3800 }
+const FLING_VELOCITY = 400
+const FRAME = 1000 / 60
+// FastEffects diverges at a 16ms Euler step, so integrate in fixed 4ms substeps
+const SUBSTEP = 0.004
+
+let panelEl: HTMLElement | null = null
+let scrimEl: HTMLElement | null = null
+// 0 = open, `closedDir` (-1 for left/top, 1 for right/bottom) = off-screen, in fractions of the panel's size
+let offset = 0
+let velocity = 0
+let closedDir = -1
+let anim: Animation | null = null
+let scrimAnim: Animation | null = null
+let samples: number[] = []
+let settled: (() => void) | null = null
+
+const horizontal = () => props.side === "left" || props.side === "right";
+const transformAt = (p: number) => (horizontal() ? `translateX(${p * 100}%)` : `translateY(${p * 100}%)`);
+const opacityAt = (p: number) => String(Math.min(1, Math.max(0, 1 - p / closedDir)));
+
+function bindModal(root: Element) {
+  panelEl = root.querySelector<HTMLElement>(".nd-panel");
+  scrimEl = root.querySelector<HTMLElement>(".nd-scrim");
+  closedDir = props.side === "left" || props.side === "top" ? -1 : 1;
+}
+
+function writeModal() {
+  if (panelEl) panelEl.style.transform = transformAt(offset);
+  if (scrimEl) scrimEl.style.opacity = opacityAt(offset);
+}
+
+// The spring from `from` to `to`, one sample per 60Hz frame until it settles
+function simulate(from: number, to: number, v0: number, s: Spring) {
+  const out = [from];
+  let pos = from;
+  let vel = v0;
+  for (let i = 0; i < 180; i++) {
+    for (let left = FRAME / 1000; left > 1e-9; left -= SUBSTEP) {
+      const h = Math.min(SUBSTEP, left);
+      vel += (-s.stiffness * (pos - to) - 2 * s.damping * Math.sqrt(s.stiffness) * vel) * h;
+      pos += vel * h;
+    }
+    out.push(pos);
+    if (Math.abs(pos - to) < 0.001 && Math.abs(vel) < 0.01) break;
+  }
+  out[out.length - 1] = to;
+  return out;
+}
+
+// Where the running animation has the panel right now
+function currentOffset() {
+  if (!anim) return offset;
+  const t = Number(anim.currentTime ?? 0) / FRAME;
+  const i = Math.floor(t);
+  if (i >= samples.length - 1) return samples[samples.length - 1]!;
+  return samples[i]! + (samples[i + 1]! - samples[i]!) * (t - i);
+}
+
+// Freezes the panel where the running animation has it
+function stopAnim() {
+  if (!anim) return;
+  offset = currentOffset();
+  writeModal();
+  anim.cancel();
+  scrimAnim?.cancel();
+  anim = scrimAnim = null;
+}
+
+function settle() {
+  const cb = settled;
+  settled = null;
+  cb?.();
+}
+
+// Without `done`, a pending Transition callback (an enter interrupted by a swipe) is kept for this run
+function animateTo(to: number, s: Spring, done?: () => void) {
+  if (done) {
+    settled?.();
+    settled = done;
+  }
+  stopAnim();
+  const v = velocity;
+  velocity = 0;
+  const from = offset;
+  // The end state goes inline underneath, so nothing jumps when the animation ends
+  offset = to;
+  writeModal();
+  const reduced = typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  if (reduced || !panelEl?.animate || from === to) return settle();
+  samples = simulate(from, to, v, s);
+  const timing = { duration: (samples.length - 1) * FRAME, easing: "linear" };
+  const a = panelEl.animate(samples.map((p) => ({ transform: transformAt(p) })), timing);
+  scrimAnim = scrimEl?.animate(samples.map((p) => ({ opacity: opacityAt(p) })), timing) ?? null;
+  anim = a;
+  // cancel() rejects `finished`; nothing waits on it
+  a.finished.catch(() => {});
+  scrimAnim?.finished.catch(() => {});
+  a.onfinish = () => {
+    if (anim !== a) return;
+    anim = scrimAnim = null;
+    settle();
+  };
+}
+
+function onModalEnter(el: Element, done: () => void) {
+  // Reopened mid-close: the old panel goes now
+  settled?.();
+  settled = null;
+  anim?.cancel();
+  scrimAnim?.cancel();
+  anim = scrimAnim = null;
+  bindModal(el);
+  offset = closedDir;
+  velocity = 0;
+  animateTo(0, DEFAULT_SPATIAL, done);
+}
+
+function onModalLeave(el: Element, done: () => void) {
+  bindModal(el);
+  drag = null;
+  animateTo(closedDir, FAST_EFFECTS, done);
+}
+
+onBeforeUnmount(() => {
+  anim?.cancel();
+  scrimAnim?.cancel();
+});
+
+// Positions below are along the drawer's axis: x for left/right, y for top/bottom
+let drag: { id: number; main: number; cross: number; start: number; size: number; active: boolean; list: HTMLElement | null; samples: { t: number; p: number }[] } | null = null;
+let suppressClick = false;
+
+const mainOf = (e: PointerEvent) => (horizontal() ? e.clientX : e.clientY);
+const crossOf = (e: PointerEvent) => (horizontal() ? e.clientY : e.clientX);
+
+function onPanelPointerDown(e: PointerEvent) {
+  if (!props.swipeEnabled || e.button !== 0) return;
+  const list = (e.target as Element).closest<HTMLElement>("[data-nd-list]");
+  drag = { id: e.pointerId, main: mainOf(e), cross: crossOf(e), start: 0, size: 1, active: false, list, samples: [{ t: e.timeStamp, p: mainOf(e) }] };
+}
+
+function onPanelPointerMove(e: PointerEvent) {
+  if (!drag || e.pointerId !== drag.id) return;
+  const d = mainOf(e) - drag.main;
+  const dc = crossOf(e) - drag.cross;
+  if (!drag.active) {
+    if (Math.abs(dc) > 8 && Math.abs(dc) > Math.abs(d)) { drag = null; return; }
+    // Top/bottom share the list's scroll axis, so they claim the gesture early (before the browser's slop)
+    if (Math.abs(d) < (horizontal() ? 8 : 4)) return;
+    if (!horizontal()) {
+      bindModal((e.currentTarget as HTMLElement).parentElement!);
+      // Like a bottom sheet's nested scroll: dragging away from the edge only scrolls, and a drag toward it
+      // scrolls the list first, the drawer following once the list can't scroll that way any more
+      const list = drag.list;
+      const listScrolls = !!list && (d > 0 ? list.scrollTop > 0 : list.scrollTop + list.clientHeight < list.scrollHeight - 1);
+      if (Math.sign(d) !== closedDir || listScrolls) { drag = null; return; }
+    }
+    drag.active = true;
+    drag.main = mainOf(e);
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    bindModal((e.currentTarget as HTMLElement).parentElement!);
+    // Stop a running slide; the finger owns the panel now
+    stopAnim();
+    velocity = 0;
+    drag.start = offset;
+    const panel = e.currentTarget as HTMLElement;
+    drag.size = (horizontal() ? panel.offsetWidth : panel.offsetHeight) || 1;
+  }
+  const min = Math.min(0, closedDir);
+  const max = Math.max(0, closedDir);
+  offset = Math.min(max, Math.max(min, drag.start + (mainOf(e) - drag.main) / drag.size));
+  writeModal();
+  drag.samples.push({ t: e.timeStamp, p: mainOf(e) });
+  drag.samples = drag.samples.filter((s) => e.timeStamp - s.t < 100);
+}
+
+function onPanelPointerUp(e: PointerEvent) {
+  if (!drag || e.pointerId !== drag.id) return;
+  const wasActive = drag.active;
+  const first = drag.samples[0]!;
+  const lastSample = drag.samples[drag.samples.length - 1]!;
+  const dt = (lastSample.t - first.t) / 1000;
+  const v = dt > 0 ? (lastSample.p - first.p) / dt : 0;
+  const size = drag.size;
+  drag = null;
+  if (!wasActive) return;
+  suppressClick = true;
+  setTimeout(() => { suppressClick = false; });
+  const dismiss = Math.abs(v) > FLING_VELOCITY
+    ? Math.sign(v) === closedDir
+    : Math.abs(offset) > 0.5;
+  velocity = v / size;
+  if (!dismiss) return animateTo(0, DEFAULT_SPATIAL);
+  close();
+  // The parent may not close it (no v-model bound): spring back instead of staying mid-swipe
+  nextTick(() => {
+    if (props.modelValue) animateTo(0, DEFAULT_SPATIAL);
+  });
+}
+
+// Belt and braces once a swipe has started: the browser must not scroll or navigate with it
+function onPanelTouchMove(e: TouchEvent) {
+  if (drag?.active && e.cancelable) e.preventDefault();
+}
+
+function onPanelClickCapture(e: MouseEvent) {
+  if (!suppressClick) return;
+  e.preventDefault();
+  e.stopPropagation();
+}
 </script>
 
 <template>
   <!-- ── Modal variant ──────────────────────────────────────── -->
   <Teleport v-if="modal" to="body">
-    <Transition name="nd" :duration="{ enter: 300, leave: 280 }" appear>
+    <Transition :css="false" @enter="onModalEnter" @leave="onModalLeave" appear>
       <div
         v-if="modelValue"
         class="fixed inset-0 z-100 flex"
@@ -168,20 +397,27 @@ watch(
           side === 'top' ? 'flex-col' : '',
         ]"
       >
-        <div class="nd-scrim absolute inset-0 bg-scrim/32" @click="close" />
+        <!-- will-change: a drag writes their transform/opacity directly, without the layer an animation gets -->
+        <div class="nd-scrim absolute inset-0 bg-scrim/32 will-change-[opacity]" @click="close" />
 
         <nav
           v-bind="$attrs"
           :class="[
-            'nd-panel relative flex flex-col bg-surface-container-low shadow-elevation-1',
-            `nd-panel-${side}`,
+            'nd-panel relative flex flex-col bg-surface-container-low shadow-elevation-1 will-change-transform',
             side === 'top' || side === 'bottom'
               ? 'w-full max-h-[85vh]'
               : 'h-full max-w-[85vw]',
             side === 'top' || side === 'bottom' || width ? '' : 'w-[22.5rem]',
             side === 'right' ? 'rounded-l-lg' : side === 'left' ? 'rounded-r-lg' : side === 'bottom' ? 'rounded-t-lg' : '',
+            swipeEnabled ? 'touch-pan-y' : '',
           ]"
           :style="side !== 'top' && side !== 'bottom' && width ? { width } : undefined"
+          @pointerdown="onPanelPointerDown"
+          @pointermove="onPanelPointerMove"
+          @pointerup="onPanelPointerUp"
+          @pointercancel="onPanelPointerUp"
+          @touchmove="onPanelTouchMove"
+          @click.capture="onPanelClickCapture"
         >
           <div v-if="$slots.header" class="shrink-0">
             <slot name="header" />
@@ -192,7 +428,13 @@ watch(
             </h2>
           </div>
 
-          <div class="scrollbar-none flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-2">
+          <!-- touch-action stops at the nearest scroll container, so this one needs pan-y of its own or a
+               finger landing on an item lets the browser take a left/right drawer's swipe -->
+          <div
+            data-nd-list
+            class="scrollbar-none flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-2"
+            :class="swipeEnabled ? 'touch-pan-y' : ''"
+          >
             <template v-for="(section, si) in sections" :key="si">
               <div v-if="si > 0" class="my-1 border-t border-outline-variant" />
 
@@ -444,35 +686,6 @@ watch(
 </template>
 
 <style scoped>
-/* ── Modal transitions ─────────────────────────────────── */
-.nd-scrim {
-  transition: opacity 280ms ease;
-}
-.nd-enter-from .nd-scrim,
-.nd-leave-to .nd-scrim {
-  opacity: 0;
-}
-
-.nd-panel {
-  transition: transform 300ms cubic-bezier(0.2, 0, 0, 1);
-}
-.nd-enter-from .nd-panel-left,
-.nd-leave-to .nd-panel-left {
-  transform: translateX(-100%);
-}
-.nd-enter-from .nd-panel-right,
-.nd-leave-to .nd-panel-right {
-  transform: translateX(100%);
-}
-.nd-enter-from .nd-panel-top,
-.nd-leave-to .nd-panel-top {
-  transform: translateY(-100%);
-}
-.nd-enter-from .nd-panel-bottom,
-.nd-leave-to .nd-panel-bottom {
-  transform: translateY(100%);
-}
-
 /* ── Section collapse animation ────────────────────────── */
 .nd-section-grid {
   display: grid;
