@@ -5,7 +5,7 @@
  *
  * @event update:modelValue Emitted with the value of the tab you picked.
  */
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import MIcon from './MIcon.vue'
 
 interface Tab {
@@ -27,7 +27,15 @@ const props = withDefaults(defineProps<{
   variant?: 'primary' | 'secondary'
   /** Fixed (default, M3 `TabRow`): tabs evenly share the available width, no scrolling — use for 2-5 tabs. Scrollable (M3 `ScrollableTabRow`): tabs keep their natural width and the row scrolls horizontally when they overflow — use for many tabs. */
   scrollable?: boolean
+  /**
+   * Where a tab's icon goes: `top`, stacked above the label in a 64px tab (Compose's `Tab`), or `leading`,
+   * beside the label in a 48px tab (Compose's `LeadingIconTab`). Defaults to `top` for primary tabs and
+   * `leading` for secondary ones.
+   */
+  iconPosition?: 'top' | 'leading'
 }>(), { variant: 'primary', scrollable: false })
+
+const leading = computed(() => (props.iconPosition ?? (props.variant === 'primary' ? 'top' : 'leading')) === 'leading')
 
 const emit = defineEmits<{ 'update:modelValue': [string | number] }>()
 
@@ -125,6 +133,7 @@ watch(() => props.modelValue, () => updateIndicator(true))
 // modelValue-triggered animation. Re-running the same animated update is a
 // no-op when the target hasn't actually moved, so this is safe either way.
 watch(() => props.tabs, () => updateIndicator(true), { deep: true })
+watch(leading, () => updateIndicator(true))
 
 function select(tab: Tab) {
   if (!tab.disabled) emit('update:modelValue', tab.value)
@@ -140,10 +149,11 @@ function select(tab: Tab) {
         :key="tab.value"
         :ref="(el) => { if (el) tabEls[tabs.indexOf(tab)] = el as HTMLElement }"
         type="button"
-        class="relative flex flex-col items-center justify-center gap-1 px-6 text-title-small transition-colors duration-150 focus-visible:outline-none"
+        class="relative flex items-center justify-center pb-1.5 text-title-small transition-colors duration-150 focus-visible:outline-none"
         :class="[
           scrollable ? 'shrink-0' : 'flex-1 min-w-0',
-          tab.icon ? 'h-16 pb-1.5' : 'h-12 pb-1.5',
+          // LeadingIconTab: 48dp row, 16dp side padding, 8dp from the icon to the label
+          leading ? 'h-12 flex-row gap-2 px-4' : ['flex-col gap-1 px-6', tab.icon ? 'h-16' : 'h-12'],
           tab.value === modelValue
             ? 'text-primary'
             : tab.disabled
@@ -171,9 +181,10 @@ function select(tab: Tab) {
         :key="tab.value"
         :ref="(el) => { if (el) tabEls[tabs.indexOf(tab)] = el as HTMLElement }"
         type="button"
-        class="relative flex h-12 items-center justify-center gap-2 px-6 text-title-small transition-colors duration-150 focus-visible:outline-none"
+        class="relative flex items-center justify-center text-title-small transition-colors duration-150 focus-visible:outline-none"
         :class="[
           scrollable ? 'shrink-0' : 'flex-1 min-w-0',
+          leading ? 'h-12 flex-row gap-2 px-4' : ['flex-col gap-1 px-6', tab.icon ? 'h-16' : 'h-12'],
           tab.value === modelValue
             ? 'text-on-surface'
             : tab.disabled
@@ -184,7 +195,7 @@ function select(tab: Tab) {
         @click="select(tab)"
       >
         <MIcon v-if="tab.icon" :name="tab.icon" :size="24" />
-        {{ tab.label }}
+        <span>{{ tab.label }}</span>
       </button>
       <div
         class="absolute bottom-0 h-[3px] bg-primary"
