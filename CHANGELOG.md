@@ -5,6 +5,12 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.0.2] - Unreleased
+
+### Fixed
+- `MShader` applies a new `pixelRatio` right away: changing it after mount only took effect on the next resize of the component. Its docs now list what it declares in front of your GLSL (`#version`, precision, `iTime`, `iResolution`, `iMouse`, `iFrame` and one uniform per `uniforms` key) and how custom uniforms map to WGSL
+- `dist/API.md` cut descriptions short at any `@word` (TypeScript's JSDoc parser reads `@debounced`, `@click`, `@refresh` as tags): nine props had a truncated description, among them the `debounce` of the text, number and autocomplete fields and `MListItem`'s `clickable`. `MSearchBar`'s entry now says its expanded panel is teleported to `<body>` and attributes land on the collapsed bar
+
 ## [1.0.1] - 2026-10-17
 
 ### Added
