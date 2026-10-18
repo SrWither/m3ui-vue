@@ -147,6 +147,19 @@ const checker = createChecker(path.join(root, 'tsconfig.build.json'), {
 
 const stripUndefined = (t) => t.replace(/\s*\|\s*undefined\b/g, '').trim()
 
+// TypeScript's JSDoc parser reads any `@word` as a tag, even mid-sentence ("fires @debounced",
+// "auto-true when href, to, @click…"), and cuts the description there. Put those back.
+const JSDOC_TAGS = new Set(['default', 'defaultValue', 'deprecated', 'internal', 'see', 'example', 'param', 'returns', 'since'])
+function fullDescription(m) {
+  let text = m.description ?? ''
+  for (const t of m.tags ?? []) {
+    if (JSDOC_TAGS.has(t.name)) continue
+    const rest = t.text ?? ''
+    text += `${text ? ' ' : ''}@${t.name}${rest && !/^[,.;:()]/.test(rest) ? ' ' : ''}${rest}`
+  }
+  return text
+}
+
 function componentApi(name, { file, from }) {
   const meta = checker.getComponentMeta(path.join(root, file))
   const header = componentHeader(file)
@@ -157,22 +170,22 @@ function componentApi(name, { file, from }) {
       type: stripUndefined(p.type),
       required: p.required,
       default: p.default == null || p.default === 'undefined' ? null : p.default,
-      description: mdText(p.description),
+      description: mdText(fullDescription(p)),
     }))
   const models = new Set(meta.events.filter((e) => e.name.startsWith('update:')).map((e) => e.name.slice(7)))
   const events = meta.events.map((e) => ({
     name: e.name,
     args: e.type.replace(/^\[|\]$/g, ''),
-    description: mdText(e.description) || header.events[e.name] || '',
+    description: mdText(fullDescription(e)) || header.events[e.name] || '',
   }))
   const slots = meta.slots.map((s) => ({
     name: s.name,
     bindings: s.type === '{}' || s.type === 'any' ? null : s.type,
-    description: mdText(s.description) || header.slots[s.name] || '',
+    description: mdText(fullDescription(s)) || header.slots[s.name] || '',
   }))
   const exposed = meta.exposed
     .filter((x) => !x.name.startsWith('$') && !props.some((p) => p.name === x.name))
-    .map((x) => ({ name: x.name, type: x.type, description: mdText(x.description) }))
+    .map((x) => ({ name: x.name, type: x.type, description: mdText(fullDescription(x)) }))
   // Exported types, plus any type declared in the file that its API mentions (e.g. a local
   // `type ChartType = …` used by a prop), so the reader knows the allowed values.
   const apiText = JSON.stringify([props, events, slots, exposed])

@@ -25,18 +25,24 @@ export type ShaderStatus = 'loading' | 'ready' | 'error' | 'fallback'
 const props = withDefaults(
   defineProps<{
     /** GLSL fragment shader body (Shadertoy-style): must define `mainImage(out vec4 fragColor, in vec2 fragCoord)`.
-     *  Runs on WebGL2. Always required as the compatible baseline. */
+     *  Runs on WebGL2. Always required as the compatible baseline. Don't write the `#version`, the precision or any
+     *  uniform: the component puts them in front of your code, with Shadertoy's `iTime` (seconds, stops while
+     *  paused), `iResolution` (canvas size in device pixels), `iMouse` and `iFrame`, plus one per `uniforms` key. */
     code: string
     /** Optional WGSL fragment shader module, e.g. `@fragment fn fs_main(@builtin(position) pos: vec4f) -> @location(0) vec4f`.
      *  Runs on WebGPU when available. Must declare its own bindings — see docs for the required uniform buffer layout. */
     wgsl?: string
     /** Which backend to use. 'auto' picks WebGPU when `wgsl` is set and supported, else WebGL2. */
     renderer?: ShaderRenderer
-    /** Custom uniforms. Keys/shape are locked in at mount time; only values are reactive per frame. */
+    /** Custom uniforms, read every frame. In GLSL each key is declared for you, as a `float` for a number or a
+     *  `vec2`–`vec4` for an array; in WGSL they're binding 1, one `vec4f` per key in this order. Keys and shapes
+     *  are fixed when the shader compiles (on mount, or when `code`/`wgsl`/`renderer` change); values can change
+     *  freely, e.g. to drive the shader from your own clock instead of `iTime`. */
     uniforms?: Record<string, number | number[]>
     /** Freezes the render loop and the shader clock */
     paused?: boolean
-    /** Device pixel ratio to render at. Defaults to devicePixelRatio, capped at 2 for performance. */
+    /** Device pixels per CSS pixel to render at. Defaults to devicePixelRatio, capped at 2 for performance. Lower it to
+     *  render fewer pixels (a "quality" setting); the canvas is resized when it changes. */
     pixelRatio?: number
   }>(),
   { renderer: 'auto' },
@@ -531,6 +537,8 @@ watch(
     await setup()
   },
 )
+
+watch(() => props.pixelRatio, () => resize())
 
 watch(
   () => props.paused,

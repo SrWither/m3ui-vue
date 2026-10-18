@@ -1,7 +1,10 @@
 <script setup lang="ts">
 /**
  * A collapsed search field that expands into a docked panel or a fullscreen overlay, with results shown below
- * the input.
+ * the input. The expanded panel is teleported to `<body>`; `class`, `style` and other attributes you pass land on
+ * the collapsed bar. So with a fullscreen variant you can hide the bar (e.g. `class="hidden"` on phones) and open
+ * search from your own icon button through `v-model:expanded`. The docked panel is placed under the bar, so it
+ * needs the bar visible.
  *
  * @slot leading Overrides the collapsed bar's leading icon
  * @slot trailing Trailing content in both the collapsed bar and the expanded header (e.g. an avatar)

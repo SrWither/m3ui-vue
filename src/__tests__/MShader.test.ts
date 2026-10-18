@@ -47,4 +47,20 @@ describe('MShader', () => {
     expect(typeof wrapper.vm.play).toBe('function')
     expect(typeof wrapper.vm.restart).toBe('function')
   })
+
+  it('resizes the canvas when pixelRatio changes', async () => {
+    const wrapper = mount(MShader, { props: { code: BASIC_CODE, pixelRatio: 1 } })
+    await flushPromises()
+    const canvas = wrapper.vm.canvas as HTMLCanvasElement
+    // happy-dom has no layout: give the canvas's container a size.
+    const container = canvas.parentElement!
+    Object.defineProperty(container, 'clientWidth', { value: 200 })
+    Object.defineProperty(container, 'clientHeight', { value: 100 })
+
+    await wrapper.setProps({ pixelRatio: 2 })
+    expect([canvas.width, canvas.height]).toEqual([400, 200])
+
+    await wrapper.setProps({ pixelRatio: 0.5 })
+    expect([canvas.width, canvas.height]).toEqual([100, 50])
+  })
 })
