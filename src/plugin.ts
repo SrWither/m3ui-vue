@@ -7,6 +7,7 @@ import { syncThemeColor } from './composables/_themeColor'
 import type { M3Locale } from './composables/useLocale'
 import { M3_LOCALE_KEY, __setAppLocale } from './composables/useLocale'
 import { vRipple } from './directives/vRipple'
+import { M3_HYDRATING_KEY } from './composables/_hydration'
 
 export interface M3UIOptions {
   palette?: string
@@ -50,12 +51,20 @@ export interface M3UIOptions {
    * mode (they keep their own dark bar); installed apps (PWA) still get it.
    */
   themeColor?: 'surface' | 'surface-container' | 'primary' | (string & {})
+  /**
+   * Server-side rendering: tells the components whether the app is still hydrating the server's HTML (Nuxt's
+   * `() => nuxtApp.isHydrating`, which `@m3ui-vue/nuxt` passes). The adaptive layouts (`MNavigationSuite`,
+   * `MListDetail`, `MSupportingPane`) and `useWindowSizeClass()` then render their first frame at the server's size
+   * (compact: it has no window) so it matches the HTML, and adapt once mounted.
+   */
+  isHydrating?: () => boolean
 }
 
 export function createM3UI(options: M3UIOptions = {}) {
   return {
     install(app: App) {
       app.directive('ripple', vRipple)
+      if (options.isHydrating) app.provide(M3_HYDRATING_KEY, options.isHydrating)
       for (const custom of options.customPalettes ?? []) {
         const i = palettes.findIndex((p) => p.id === custom.id)
         if (i === -1) palettes.push(custom)

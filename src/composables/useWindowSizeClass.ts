@@ -1,4 +1,5 @@
 import { computed, onMounted, onUnmounted, ref, toValue, watch, type MaybeRefOrGetter, type Ref } from 'vue'
+import { isHydrating } from './_hydration'
 
 /*
  * M3 window size classes, with the breakpoints from androidx `WindowSizeClass`
@@ -48,10 +49,19 @@ function updateWindow() {
 export function useWindowSizeClass(target?: MaybeRefOrGetter<HTMLElement | null | undefined>): WindowSizeClassInfo {
   let width: Ref<number>
   let height: Ref<number>
+  // Hydrating server-rendered HTML: start from the server's size (none, so compact) to match it, then measure
+  const hydrating = isHydrating()
 
   if (target === undefined) {
-    width = winWidth
-    height = winHeight
+    if (hydrating) {
+      const mounted = ref(false)
+      onMounted(() => { mounted.value = true })
+      width = computed(() => (mounted.value ? winWidth.value : 0)) as Ref<number>
+      height = computed(() => (mounted.value ? winHeight.value : 0)) as Ref<number>
+    } else {
+      width = winWidth
+      height = winHeight
+    }
     onMounted(() => {
       if (winListeners++ === 0) {
         updateWindow()
@@ -63,8 +73,8 @@ export function useWindowSizeClass(target?: MaybeRefOrGetter<HTMLElement | null 
     })
   } else {
     // Until the element is measured, guess from the window so the first paint is usually right.
-    width = ref(winWidth.value)
-    height = ref(winHeight.value)
+    width = ref(hydrating ? 0 : winWidth.value)
+    height = ref(hydrating ? 0 : winHeight.value)
     let observer: ResizeObserver | undefined
     const observe = (el: HTMLElement | null | undefined) => {
       observer?.disconnect()
