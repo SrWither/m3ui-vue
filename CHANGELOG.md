@@ -7,7 +7,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [1.0.2] - Unreleased
 
+### Added
+- `themeInitScript({ palette, contrast, persistPalette })`: a script to inline in `<head>` of a server-rendered page, so dark mode, the palette and the contrast level are on `<html>` before the first paint. It applies the stored choice or the given `createM3UI` defaults with the plugin's rules, plus the cached CSS of a generated palette (a `seed` default can't be generated that early: its first visit shows the baseline until the app loads)
+
 ### Fixed
+- The library works under server-side rendering (Nuxt, Vite SSR): importing it read `localStorage`, `window` and `document` at module load, so the server crashed before rendering anything. `useTheme`, `useColorPalette` and `createM3UI` now apply the theme, palette, contrast and theme-color only in the browser (the plugin still provides the locale and registers `v-ripple` on the server), `MLightbox` rendered open on the server opens on the client, and `MChart` no longer reads computed styles during setup. A test renders every component, open overlays and the plugin with each option without a DOM. In the browser nothing changes
 - `MShader` applies a new `pixelRatio` right away: changing it after mount only took effect on the next resize of the component. Its docs now list what it declares in front of your GLSL (`#version`, precision, `iTime`, `iResolution`, `iMouse`, `iFrame` and one uniform per `uniforms` key) and how custom uniforms map to WGSL
 - `dist/API.md` cut descriptions short at any `@word` (TypeScript's JSDoc parser reads `@debounced`, `@click`, `@refresh` as tags): nine props had a truncated description, among them the `debounce` of the text, number and autocomplete fields and `MListItem`'s `clickable`. `MSearchBar`'s entry now says its expanded panel is teleported to `<body>` and attributes land on the collapsed bar
 
