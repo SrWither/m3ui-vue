@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.0.2] - Unreleased
+## [1.0.2] - 2026-10-19
 
 ### Added
 - `themeInitScript({ palette, contrast, persistPalette })`: a script to inline in `<head>` of a server-rendered page, so dark mode, the palette and the contrast level are on `<html>` before the first paint. It applies the stored choice or the given `createM3UI` defaults with the plugin's rules, plus the cached CSS of a generated palette (a `seed` default can't be generated that early: its first visit shows the baseline until the app loads)
