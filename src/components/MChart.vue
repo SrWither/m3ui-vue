@@ -30,8 +30,9 @@ const chartComponent = shallowRef<Component | null>(null)
 const componentMap = shallowRef<Record<string, Component>>({})
 
 function getM3Colors() {
-  const style = getComputedStyle(document.documentElement)
-  const get = (v: string) => style.getPropertyValue(v).trim()
+  // No DOM on the server (SSR): the chart only draws on the client, which reads them again in onMounted
+  const style = typeof document === 'undefined' ? null : getComputedStyle(document.documentElement)
+  const get = (v: string) => style?.getPropertyValue(v).trim() ?? ''
   return {
     primary: get('--color-primary'),
     onSurface: get('--color-on-surface'),

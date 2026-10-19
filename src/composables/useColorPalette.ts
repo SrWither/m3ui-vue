@@ -65,11 +65,11 @@ export interface ActiveSeed extends SeedOptions {
   seed: string
 }
 
-const PALETTE_KEY = 'm3-palette'
+export const PALETTE_KEY = 'm3-palette'
 const SEED_KEY = 'm3-seed'
-const CONTRAST_KEY = 'm3-contrast'
+export const CONTRAST_KEY = 'm3-contrast'
 // The generated CSS of the active palette, so a reload applies it before the generator has loaded
-const CSS_KEY = 'm3-palette-css'
+export const CSS_KEY = 'm3-palette-css'
 
 function read<T>(key: string): T | null {
   try {
@@ -126,6 +126,7 @@ function applyContrast(level: Exclude<ContrastLevel, 'system'>) {
 const persistEnabled = ref(true)
 
 function applyAttribute(id: string) {
+  if (typeof document === 'undefined') return
   if (id === 'purple') document.documentElement.removeAttribute('data-palette')
   else document.documentElement.setAttribute('data-palette', id)
 }
@@ -134,9 +135,10 @@ function applyAttribute(id: string) {
 // One <style> element holds the generated CSS of the active palette (a seed, or a custom palette
 // without CSS of its own).
 
-const STYLE_ID = 'm3-dynamic-palette'
+export const STYLE_ID = 'm3-dynamic-palette'
 
 function injectCss(css: string) {
+  if (typeof document === 'undefined') return
   let el = document.getElementById(STYLE_ID) as HTMLStyleElement | null
   if (!el) {
     el = document.createElement('style')
@@ -148,6 +150,7 @@ function injectCss(css: string) {
 
 /** Whether a stylesheet (other than our generated one) already styles `[data-palette='<id>']`. */
 function hasPaletteCss(id: string): boolean {
+  if (typeof document === 'undefined') return false
   const needles = [`[data-palette="${id}"]`, `[data-palette='${id}']`, `[data-palette=${id}]`]
   const scan = (rules: CSSRuleList): boolean => {
     for (const rule of Array.from(rules)) {
@@ -289,8 +292,9 @@ export function useColorPalette() {
   }
 }
 
-// Apply on module load so the palette is visible before any component mounts, a generated one included
-{
+// Apply on module load so the palette is visible before any component mounts, a generated one included (not on
+// the server: the client does it when the module loads there)
+if (typeof document !== 'undefined') {
   const saved = read<string>(PALETTE_KEY)
   const cached = read<{ id: string; css: string }>(CSS_KEY)
   if (saved && cached && cached.id === saved) injectCss(cached.css)

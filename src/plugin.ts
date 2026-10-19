@@ -61,18 +61,22 @@ export function createM3UI(options: M3UIOptions = {}) {
         if (i === -1) palettes.push(custom)
         else palettes[i] = custom
       }
-      if (options.persistPalette === false) {
-        if (options.palette) __forcePalette(options.palette, false)
-        else if (options.seed) void __defaultSeed(options.seed, options.seedOptions, false)
-      } else if (!localStorage.getItem('m3-palette')) {
-        // `palette`/`seed` are only the first-visit default — once the user picks a palette via
-        // `useColorPalette().set()` (or a seed via `setSeed()`) it's persisted to localStorage, and that choice
-        // must win on every later boot instead of being clobbered back to the plugin's static default.
-        if (options.palette && options.palette !== 'purple') __defaultPalette(options.palette)
-        else if (!options.palette && options.seed) void __defaultSeed(options.seed, options.seedOptions, true)
+      // Palette, seed, contrast and theme-color live on the page and in localStorage: on the server (SSR) there's
+      // neither, and the client applies them when it installs the plugin
+      if (typeof window !== 'undefined') {
+        if (options.persistPalette === false) {
+          if (options.palette) __forcePalette(options.palette, false)
+          else if (options.seed) void __defaultSeed(options.seed, options.seedOptions, false)
+        } else if (!localStorage.getItem('m3-palette')) {
+          // `palette`/`seed` are only the first-visit default — once the user picks a palette via
+          // `useColorPalette().set()` (or a seed via `setSeed()`) it's persisted to localStorage, and that choice
+          // must win on every later boot instead of being clobbered back to the plugin's static default.
+          if (options.palette && options.palette !== 'purple') __defaultPalette(options.palette)
+          else if (!options.palette && options.seed) void __defaultSeed(options.seed, options.seedOptions, true)
+        }
+        if (options.contrast) __defaultContrast(options.contrast, options.persistPalette !== false)
+        if (options.themeColor) syncThemeColor(options.themeColor)
       }
-      if (options.contrast) __defaultContrast(options.contrast, options.persistPalette !== false)
-      if (options.themeColor) syncThemeColor(options.themeColor)
       if (options.locale) {
         app.provide(M3_LOCALE_KEY, options.locale)
         __setAppLocale(options.locale)

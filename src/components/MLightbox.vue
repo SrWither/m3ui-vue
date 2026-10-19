@@ -336,7 +336,12 @@ function hide() {
   animate()
 }
 
-watch(() => props.modelValue, (v) => (v ? !rendered.value && show() : rendered.value && hide()), { immediate: true })
+// Not on the server (SSR): it renders closed there, and an open one opens on the client
+watch(() => props.modelValue, (v) => {
+  if (typeof document === 'undefined') return
+  if (v) !rendered.value && show()
+  else rendered.value && hide()
+}, { immediate: true })
 watch(() => props.index, (v) => {
   if (v === currentIndex.value || !galleryItems.value[v]) return
   // Closed, or still opening (a consumer usually sets the index and opens in the same tick): show
