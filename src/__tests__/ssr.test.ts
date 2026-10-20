@@ -95,7 +95,48 @@ describe('SSR', () => {
     expect(await render(lib.MPagination, { modelValue: 1, total: 50 }, { locale: lib.defaultLocale })).toBeTruthy()
   })
 
-  it.each(['useTheme', 'useColorPalette', 'useDevice', 'useLocale', 'useWindowSizeClass', 'useToast', 'useNotification'] as const)(
+  describe('initialState', () => {
+    // What a component renders from the composables, server-side
+    async function state(options: object) {
+      const app = createSSRApp({
+        setup() {
+          const { theme } = lib.useTheme()
+          const { palette, contrast, activeContrast } = lib.useColorPalette()
+          return () => h('p', `${theme.value} ${palette.value} ${contrast.value} ${activeContrast.value}`)
+        },
+      })
+      app.use(lib.createM3UI(options))
+      return (await renderToString(app)).replace(/<\/?p>/g, '')
+    }
+
+    it('reports the user\'s choice on the server', async () => {
+      expect(await state({ initialState: { theme: 'dark', palette: 'blue', contrast: 'high' } })).toBe('dark blue high high')
+    })
+
+    it('falls back to the plugin\'s defaults, like a first visit', async () => {
+      expect(await state({ palette: 'red', contrast: 'medium', initialState: {} })).toBe('system red medium medium')
+      expect(await state({ seed: '#6750a4', initialState: {} })).toBe('system seed standard standard')
+    })
+
+    it('resolves system contrast to standard (the server can\'t know the OS preference)', async () => {
+      expect(await state({ initialState: { contrast: 'system' } })).toBe('system purple system standard')
+    })
+
+    it('lets persistPalette: false win over the stored choice', async () => {
+      expect(await state({ palette: 'red', contrast: 'high', persistPalette: false, initialState: { palette: 'blue', contrast: 'medium' } }))
+        .toBe('system red high high')
+    })
+
+    it('ignores invalid values (cookies are user input)', async () => {
+      expect(await state({ initialState: { theme: 'pink', contrast: 'max' } as object })).toBe('system purple standard standard')
+    })
+
+    it('without it, keeps reporting the module defaults', async () => {
+      expect(await state({ palette: 'red' })).toBe('system purple standard standard')
+    })
+  })
+
+  it.each(['useTheme','useColorPalette', 'useDevice', 'useLocale', 'useWindowSizeClass', 'useToast', 'useNotification'] as const)(
     '%s() works in setup', async (name) => {
       const app = createSSRApp({
         setup() {

@@ -1,6 +1,7 @@
-import { computed, readonly, ref, watch, watchEffect } from 'vue'
+import { computed, readonly, ref, watch, watchEffect, type Ref } from 'vue'
 import { generateScheme, schemeToCss, type SeedOptions } from './dynamicColor'
 import { themeTransition } from './_themeTransition'
+import { initialState, ssrValue, writeCookie } from './_ssrState'
 
 export interface Palette {
   id: string
@@ -80,6 +81,8 @@ function read<T>(key: string): T | null {
   }
 }
 function write(key: string, value: unknown) {
+  // The palette and the contrast level also go in cookies (createM3UI({ cookies: true })) for a server to read
+  if (key === PALETTE_KEY || key === CONTRAST_KEY) writeCookie(key, value == null ? null : String(value))
   try {
     if (value == null) localStorage.removeItem(key)
     else localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value))
@@ -278,14 +281,17 @@ export function useColorPalette() {
     void selectContrast(level)
   }
 
+  // Server-side rendering with `createM3UI({ initialState })`: the user's choice as the server knows it (it can't
+  // know the OS's contrast preference, so `system` is standard there)
+  const initial = initialState()
   return {
-    palette: current,
+    palette: ssrValue(current, initial?.palette),
     palettes,
     set,
     seed: readonly(activeSeed),
     setSeed,
-    contrast: readonly(contrast),
-    activeContrast,
+    contrast: ssrValue(readonly(contrast) as Ref<ContrastLevel>, initial?.contrast) as Readonly<Ref<ContrastLevel>>,
+    activeContrast: ssrValue(activeContrast, initial ? (initial.contrast === 'system' ? 'standard' : initial.contrast) : undefined),
     setContrast,
     persistPalette: persistEnabled,
     setPersistPalette,

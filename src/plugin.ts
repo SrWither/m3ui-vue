@@ -8,6 +8,10 @@ import type { M3Locale } from './composables/useLocale'
 import { M3_LOCALE_KEY, __setAppLocale } from './composables/useLocale'
 import { vRipple } from './directives/vRipple'
 import { M3_HYDRATING_KEY } from './composables/_hydration'
+import { M3_INITIAL_STATE_KEY, enableCookies, writeCookie, type M3InitialState } from './composables/_ssrState'
+import { THEME_KEY } from './composables/_storageKeys'
+import type { Theme } from './composables/useTheme'
+import { CONTRAST_KEY, PALETTE_KEY, SEED_PALETTE } from './composables/useColorPalette'
 
 export interface M3UIOptions {
   palette?: string
@@ -58,6 +62,35 @@ export interface M3UIOptions {
    * (compact: it has no window) so it matches the HTML, and adapt once mounted.
    */
   isHydrating?: () => boolean
+  /**
+   * Also keep the theme, the palette and the contrast level in cookies (`m3-theme`, `m3-palette`, `m3-contrast`,
+   * a year, `SameSite=Lax`), so a server can read them and render with the user's choice through `initialState`.
+   */
+  cookies?: boolean
+  /**
+   * Server-side rendering: the user's theme, palette and contrast as the server knows them (from the cookies that
+   * `cookies` writes), on the server and on the client alike. `useTheme()` and `useColorPalette()` report them on
+   * the server, and on the client while hydrating (with `isHydrating`), so what's rendered from them matches the
+   * server's HTML. What's missing falls back to this plugin's defaults, like a first visit.
+   */
+  initialState?: M3InitialState
+}
+
+const THEMES: readonly Theme[] = ['light', 'dark', 'system']
+const CONTRASTS: readonly string[] = ['standard', 'medium', 'high', 'system']
+
+/** `initialState` with what it lacks (or holds invalid, cookies being user input) taken from the plugin's defaults,
+ * by the same rules as the client: a stored choice wins unless `persistPalette` is false. */
+function resolveInitialState(options: M3UIOptions): Required<M3InitialState> {
+  const state = options.initialState ?? {}
+  const forced = options.persistPalette === false
+  const fallbackPalette = options.palette ?? (options.seed ? SEED_PALETTE : 'purple')
+  const contrast = state.contrast && CONTRASTS.includes(state.contrast) ? state.contrast : undefined
+  return {
+    theme: state.theme && THEMES.includes(state.theme) ? state.theme : 'system',
+    palette: forced ? fallbackPalette : state.palette || fallbackPalette,
+    contrast: (forced && options.contrast) || contrast || options.contrast || 'standard',
+  }
 }
 
 export function createM3UI(options: M3UIOptions = {}) {
@@ -65,6 +98,8 @@ export function createM3UI(options: M3UIOptions = {}) {
     install(app: App) {
       app.directive('ripple', vRipple)
       if (options.isHydrating) app.provide(M3_HYDRATING_KEY, options.isHydrating)
+      if (options.initialState) app.provide(M3_INITIAL_STATE_KEY, resolveInitialState(options))
+      if (options.cookies && typeof window !== 'undefined') enableCookies()
       for (const custom of options.customPalettes ?? []) {
         const i = palettes.findIndex((p) => p.id === custom.id)
         if (i === -1) palettes.push(custom)
@@ -85,6 +120,14 @@ export function createM3UI(options: M3UIOptions = {}) {
         }
         if (options.contrast) __defaultContrast(options.contrast, options.persistPalette !== false)
         if (options.themeColor) syncThemeColor(options.themeColor)
+        // Cookies for what's already stored (a user from before `cookies`, or the defaults just applied)
+        if (options.cookies) {
+          for (const key of [THEME_KEY, PALETTE_KEY, CONTRAST_KEY]) {
+            let value: string | null = null
+            try { value = localStorage.getItem(key) } catch { /* storage blocked */ }
+            writeCookie(key, value)
+          }
+        }
       }
       if (options.locale) {
         app.provide(M3_LOCALE_KEY, options.locale)

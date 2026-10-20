@@ -1,6 +1,7 @@
 // Plugin
 export { createM3UI } from './plugin'
 export type { M3UIOptions } from './plugin'
+export type { M3InitialState } from './composables/_ssrState'
 
 // Composables
 export { useTheme } from './composables/useTheme'

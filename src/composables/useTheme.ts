@@ -1,9 +1,11 @@
 import { ref, watchEffect, onMounted, onUnmounted } from 'vue'
 import { themeTransition } from './_themeTransition'
+import { initialState, ssrValue, writeCookie } from './_ssrState'
+import { THEME_KEY } from './_storageKeys'
 
 export type Theme = 'light' | 'dark' | 'system'
 
-export const THEME_KEY = 'm3-theme'
+export { THEME_KEY }
 
 // No DOM on the server (SSR): nothing is read or applied there, the client does it when the module loads.
 const inBrowser = typeof window !== 'undefined'
@@ -37,6 +39,7 @@ export function useTheme() {
   watchEffect(() => {
     if (!inBrowser) return
     localStorage.setItem(THEME_KEY, theme.value)
+    writeCookie(THEME_KEY, theme.value)
     applyTheme(theme.value)
   })
 
@@ -49,5 +52,6 @@ export function useTheme() {
     theme.value = order[(idx + 1) % order.length]!
   }
 
-  return { theme, cycle }
+  // Server-side rendering with `createM3UI({ initialState })`: the user's theme as the server knows it
+  return { theme: ssrValue(theme, initialState()?.theme), cycle }
 }
