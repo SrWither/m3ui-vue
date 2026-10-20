@@ -5,6 +5,12 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.1.1] - Unreleased
+
+### Fixed
+- `MShape` ignored a position or display class passed to it: its root carried `relative inline-block` as utilities, so `class="absolute inset-0"` or `block` won or lost depending on Tailwind's stylesheet order (`relative` won, and a shape meant to sit behind an icon pushed it below instead). The defaults now live in `@layer base`, which any utility overrides
+- `MShape`'s outline was wobbly on large shapes: the path was built at size 1 and `shape-morph` writes 2 decimals, so every point snapped to 1% of the shape (4px steps on a 400px shape). It's built at size 100 and scaled down in the clip path now, also while morphing
+
 ## [1.1.0] - 2026-10-20
 
 ### Added
