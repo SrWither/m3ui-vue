@@ -16,6 +16,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MBottomSheet`'s `fullHeight` is deprecated: it equals `max-height="92vh"`
 - Modal sheets' drag release (`MBottomSheet`, `MSideSheet`): a fast flick decides the direction even after a long drag, so flinging a sheet back after dragging it 100px out keeps it open instead of dismissing it
 
+### Fixed
+- `MMenu` went off screen when its `align` edge left no room (on a phone, the default right-aligned menu on a button near the left edge opened leftwards past it): it now keeps on screen as Compose's `DropdownMenuPositionProvider` does, trying the `align` edge of the trigger, then the other one, then the window edge on the trigger's side, 8px in from the edges, and centers a menu wider than that. Its width is capped at the window minus those margins, and it grows from the trigger wherever it ended up (from the bottom when it opens above). `MMenuItem`'s flyout submenus measure themselves too: right of the item, else left, else clamped, and moved up when they'd pass the bottom
+
 ## [1.0.3] - 2026-10-19
 
 ### Added
