@@ -19,6 +19,7 @@ import MIconButton from './MIconButton.vue'
 import MSpinner from './MSpinner.vue'
 import { useLocale } from '../composables/useLocale'
 import { searchAppBarKey } from '../composables/_searchAppBar'
+import { useScrollLock } from '../composables/_useScrollLock'
 
 // Root is a fragment (bar div + a sibling Teleport for the expanded overlay panel), so Vue
 // can't auto-apply a consumer's class/attrs to either one — forward them onto the bar div below.
@@ -149,11 +150,7 @@ onUnmounted(() => {
   window.removeEventListener('scroll', onScroll, true)
 })
 
-watch(expanded, (v) => {
-  if (v && fullscreen.value) document.body.style.overflow = 'hidden'
-  else document.body.style.overflow = ''
-})
-onUnmounted(() => { document.body.style.overflow = '' })
+useScrollLock(() => expanded.value && fullscreen.value)
 </script>
 
 <template>

@@ -13,6 +13,7 @@ import { useFieldBg } from '../composables/useFieldBg'
 import { useLocale } from '../composables/useLocale'
 import { useDebounce } from '../composables/useDebounce'
 import type { MultiSelectOption } from './MMultiSelect.vue'
+import { useScrollLock } from '../composables/_useScrollLock'
 
 // Root is a fragment (field div + a sibling Teleport for the dropdown panel), so Vue can't
 // auto-apply a consumer's class/attrs to either one — forward them onto the field div below.
@@ -215,9 +216,7 @@ function closeDropdown() {
   highlightIndex.value = -1
 }
 
-watch(modalOpen, (v) => {
-  document.body.style.overflow = v ? 'hidden' : ''
-})
+useScrollLock(modalOpen)
 
 function onInputFocus() {
   openDropdown()
@@ -311,7 +310,6 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('mousedown', onOutsideClick)
   window.removeEventListener('scroll', onScroll, true)
-  document.body.style.overflow = ''
 })
 
 watch(filteredOptions, () => {

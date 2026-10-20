@@ -13,6 +13,7 @@ import MIcon from './MIcon.vue'
 import MBadge from './MBadge.vue'
 import { useItemLink, type ItemLink } from '../composables/_useItemLink'
 import { sampleSpring, sampleAt, playSamples, prefersReducedMotion } from '../composables/_springAnimation'
+import { useScrollLock } from '../composables/_useScrollLock'
 
 export interface NavRailItem {
   value: string | number
@@ -338,10 +339,8 @@ watch(
   (open) => {
     if (open) {
       document.addEventListener('keydown', onKeydown)
-      document.body.style.overflow = 'hidden'
     } else {
       document.removeEventListener('keydown', onKeydown)
-      document.body.style.overflow = ''
     }
   },
 )
@@ -350,8 +349,8 @@ onUnmounted(() => {
   slideAnim?.cancel()
   slideScrimAnim?.cancel()
   document.removeEventListener('keydown', onKeydown)
-  if (props.modal && props.expanded) document.body.style.overflow = ''
 })
+useScrollLock(() => props.modal && props.expanded)
 </script>
 
 <template>

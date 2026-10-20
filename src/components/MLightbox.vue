@@ -31,6 +31,7 @@ import { isHydrating } from '../composables/_hydration'
 import MIconButton from './MIconButton.vue'
 import MSpinner from './MSpinner.vue'
 import { useLocale } from '../composables/useLocale'
+import { useScrollLock } from '../composables/_useScrollLock'
 
 export interface LightboxItem {
   src: string
@@ -285,6 +286,9 @@ function originTransform(): Origin | null {
   }
 }
 
+// The page doesn't scroll from when it opens until its close animation ends
+const scrollLock = useScrollLock()
+
 async function show() {
   restoreFocus = document.activeElement as HTMLElement | null
   rendered.value = true
@@ -296,7 +300,7 @@ async function show() {
   setNow(backdrop, 0)
   backdrop.k = 300
   document.addEventListener('keydown', onKeydown)
-  document.body.style.overflow = 'hidden'
+  scrollLock.set(true)
   await nextTick()
   measure()
   backdrop.target = 1
@@ -330,7 +334,7 @@ function hide() {
   }
   onSettled = () => {
     rendered.value = false
-    document.body.style.overflow = ''
+    scrollLock.set(false)
     restoreFocus?.focus?.()
     restoreFocus = null
   }
@@ -788,7 +792,6 @@ onBeforeUnmount(() => {
   if (raf) cancelAnimationFrame(raf)
   if (tapTimer) clearTimeout(tapTimer)
   document.removeEventListener('keydown', onKeydown)
-  if (rendered.value) document.body.style.overflow = ''
 })
 
 defineExpose({ open, close, next, prev })

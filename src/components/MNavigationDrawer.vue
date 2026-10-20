@@ -19,6 +19,7 @@ import MIcon from "./MIcon.vue";
 import MDrawerItemList from "./_MDrawerItemList.vue";
 import { motionSprings, type SpringSpec } from "../composables/motion";
 import { sampleSpring, sampleAt, playSamples, prefersReducedMotion } from "../composables/_springAnimation";
+import { useScrollLock } from '../composables/_useScrollLock'
 
 export interface DrawerItem {
   value: string | number;
@@ -153,14 +154,7 @@ function itemTag(item: DrawerItem) {
   return item.to && !item.disabled ? "RouterLink" : "button";
 }
 
-watch(
-  () => props.modelValue,
-  (open) => {
-    if (props.modal) {
-      document.body.style.overflow = open ? "hidden" : "";
-    }
-  },
-);
+useScrollLock(() => props.modal && props.modelValue);
 
 // ── Modal: slide in/out + swipe to close ────────────────────────────────────────────────────
 // After ModalNavigationDrawer (NavigationDrawer.kt), which is left/right only; top/bottom add a bottom sheet's

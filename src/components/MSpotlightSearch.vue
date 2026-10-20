@@ -12,6 +12,7 @@ import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import MIcon from './MIcon.vue'
 import MSpinner from './MSpinner.vue'
 import { useLocale } from '../composables/useLocale'
+import { useScrollLock } from '../composables/_useScrollLock'
 
 const locale = useLocale()
 
@@ -148,14 +149,11 @@ function onGlobalKeydown(e: KeyboardEvent) {
 watch(
   () => props.modelValue,
   (open) => {
-    if (open) {
-      document.body.style.overflow = 'hidden'
-      nextTick(() => inputRef.value?.focus())
-    } else {
-      document.body.style.overflow = ''
-    }
+    if (open) nextTick(() => inputRef.value?.focus())
   },
 )
+
+useScrollLock(() => props.modelValue)
 
 watch(query, () => {
   activeIndex.value = 0

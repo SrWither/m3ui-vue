@@ -11,6 +11,7 @@ import MIconButton from './MIconButton.vue'
 import MCheckbox from './MCheckbox.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 import { useLocale } from '../composables/useLocale'
+import { useScrollLock } from '../composables/_useScrollLock'
 
 const locale = useLocale()
 
@@ -195,9 +196,7 @@ const modalFilteredOptions = computed(() => {
   return opts.filter((o) => o.label.toLowerCase().includes(q))
 })
 
-watch(modalOpen, (v) => {
-  document.body.style.overflow = v ? 'hidden' : ''
-})
+useScrollLock(modalOpen)
 
 function onOutsideClick(e: MouseEvent) {
   if (modalOpen.value) return
@@ -218,7 +217,6 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('mousedown', onOutsideClick)
   window.removeEventListener('scroll', onScroll, true)
-  document.body.style.overflow = ''
 })
 
 const triggerClasses = computed(() => {

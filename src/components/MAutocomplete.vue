@@ -12,6 +12,7 @@ import { useFieldBg } from '../composables/useFieldBg'
 import { useLocale } from '../composables/useLocale'
 import { useDebounce } from '../composables/useDebounce'
 import type { SelectOption } from './MSelect.vue'
+import { useScrollLock } from '../composables/_useScrollLock'
 
 // Root is a fragment (field div + a sibling Teleport for the dropdown panel), so Vue can't
 // auto-apply a consumer's class/attrs to either one — forward them onto the field div below.
@@ -164,9 +165,7 @@ function select(opt: SelectOption) {
   nextTick(() => inputEl.value?.blur())
 }
 
-watch(modalOpen, (v) => {
-  document.body.style.overflow = v ? 'hidden' : ''
-})
+useScrollLock(modalOpen)
 
 function onInputFocus() {
   search.value = ''
@@ -255,7 +254,6 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('mousedown', onOutsideClick)
   window.removeEventListener('scroll', onScroll, true)
-  document.body.style.overflow = ''
 })
 
 // Recompute dropdown position when filtered options change while open

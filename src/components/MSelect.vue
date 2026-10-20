@@ -9,6 +9,7 @@ import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 import { useLocale } from '../composables/useLocale'
+import { useScrollLock } from '../composables/_useScrollLock'
 
 export interface SelectOption {
   label: string
@@ -147,13 +148,7 @@ function onKeydown(e: KeyboardEvent) {
   }
 }
 
-watch(modalOpen, (v) => {
-  if (v) {
-    document.body.style.overflow = 'hidden'
-  } else {
-    document.body.style.overflow = ''
-  }
-})
+useScrollLock(modalOpen)
 
 function closeModal() { modalOpen.value = false }
 
@@ -164,7 +159,6 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('mousedown', onOutsideClick)
   window.removeEventListener('scroll', onScroll, true)
-  document.body.style.overflow = ''
 })
 
 const triggerClasses = computed(() => {
