@@ -1,5 +1,6 @@
 import { computed, onMounted, onUnmounted, ref, toValue, watch, type MaybeRefOrGetter, type Ref } from 'vue'
 import { isHydrating } from './_hydration'
+import { initialState } from './_ssrState'
 
 /*
  * M3 window size classes, with the breakpoints from androidx `WindowSizeClass`
@@ -49,15 +50,23 @@ function updateWindow() {
 export function useWindowSizeClass(target?: MaybeRefOrGetter<HTMLElement | null | undefined>): WindowSizeClassInfo {
   let width: Ref<number>
   let height: Ref<number>
-  // Hydrating server-rendered HTML: start from the server's size (none, so compact) to match it, then measure
+  // Server rendering, and hydrating its HTML: the size the server rendered at, so both match, then measure. That's
+  // the window size it was given (createM3UI({ initialState: { viewport } }), from a cookie), or none (compact).
   const hydrating = isHydrating()
+  const server = typeof window === 'undefined'
+  const start = server || hydrating ? initialState()?.viewport : undefined
+  const startWidth = start?.width ?? 0
+  const startHeight = start?.height ?? 0
 
   if (target === undefined) {
     if (hydrating) {
       const mounted = ref(false)
       onMounted(() => { mounted.value = true })
-      width = computed(() => (mounted.value ? winWidth.value : 0)) as Ref<number>
-      height = computed(() => (mounted.value ? winHeight.value : 0)) as Ref<number>
+      width = computed(() => (mounted.value ? winWidth.value : startWidth)) as Ref<number>
+      height = computed(() => (mounted.value ? winHeight.value : startHeight)) as Ref<number>
+    } else if (server) {
+      width = ref(startWidth)
+      height = ref(startHeight)
     } else {
       width = winWidth
       height = winHeight
@@ -73,8 +82,8 @@ export function useWindowSizeClass(target?: MaybeRefOrGetter<HTMLElement | null 
     })
   } else {
     // Until the element is measured, guess from the window so the first paint is usually right.
-    width = ref(hydrating ? 0 : winWidth.value)
-    height = ref(hydrating ? 0 : winHeight.value)
+    width = ref(server || hydrating ? startWidth : winWidth.value)
+    height = ref(server || hydrating ? startHeight : winHeight.value)
     let observer: ResizeObserver | undefined
     const observe = (el: HTMLElement | null | undefined) => {
       observer?.disconnect()

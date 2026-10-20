@@ -1,5 +1,6 @@
 import { computed, hasInjectionContext, inject, onMounted, ref, type InjectionKey, type Ref } from 'vue'
 import { isHydrating } from './_hydration'
+import { VIEWPORT_KEY } from './_storageKeys'
 import type { Theme } from './useTheme'
 import type { ContrastLevel } from './useColorPalette'
 
@@ -8,12 +9,17 @@ export interface M3InitialState {
   theme?: Theme
   palette?: string
   contrast?: ContrastLevel
+  /** The browser window's size: the adaptive layouts and `useWindowSizeClass()` render for it instead of compact. */
+  viewport?: { width: number; height: number }
 }
 
-// Internal: `createM3UI({ initialState })`, resolved against the plugin's defaults
-export const M3_INITIAL_STATE_KEY: InjectionKey<Required<M3InitialState>> = Symbol('m3-initial-state')
+/** `initialState` with the plugin's defaults filled in (the viewport stays optional: there's no default for it). */
+export type ResolvedInitialState = Required<Omit<M3InitialState, 'viewport'>> & Pick<M3InitialState, 'viewport'>
 
-export function initialState(): Required<M3InitialState> | null {
+// Internal: `createM3UI({ initialState })`, resolved against the plugin's defaults
+export const M3_INITIAL_STATE_KEY: InjectionKey<ResolvedInitialState> = Symbol('m3-initial-state')
+
+export function initialState(): ResolvedInitialState | null {
   return hasInjectionContext() ? inject(M3_INITIAL_STATE_KEY, null) : null
 }
 
@@ -41,6 +47,21 @@ let cookiesEnabled = false
 
 export function enableCookies() {
   cookiesEnabled = true
+}
+
+let trackingViewport = false
+
+/** Keeps the window's size in a cookie, for the server to render the adaptive layouts at it. */
+export function trackViewport() {
+  if (!cookiesEnabled || trackingViewport || typeof window === 'undefined') return
+  trackingViewport = true
+  const write = () => writeCookie(VIEWPORT_KEY, `${window.innerWidth}x${window.innerHeight}`)
+  let timer: ReturnType<typeof setTimeout> | undefined
+  write()
+  window.addEventListener('resize', () => {
+    clearTimeout(timer)
+    timer = setTimeout(write, 300)
+  })
 }
 
 export function writeCookie(key: string, value: string | null) {

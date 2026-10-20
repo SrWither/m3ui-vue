@@ -8,7 +8,7 @@ import type { M3Locale } from './composables/useLocale'
 import { M3_LOCALE_KEY, __setAppLocale } from './composables/useLocale'
 import { vRipple } from './directives/vRipple'
 import { M3_HYDRATING_KEY } from './composables/_hydration'
-import { M3_INITIAL_STATE_KEY, enableCookies, writeCookie, type M3InitialState } from './composables/_ssrState'
+import { M3_INITIAL_STATE_KEY, enableCookies, trackViewport, writeCookie, type M3InitialState, type ResolvedInitialState } from './composables/_ssrState'
 import { THEME_KEY } from './composables/_storageKeys'
 import type { Theme } from './composables/useTheme'
 import { CONTRAST_KEY, PALETTE_KEY, SEED_PALETTE } from './composables/useColorPalette'
@@ -64,14 +64,17 @@ export interface M3UIOptions {
   isHydrating?: () => boolean
   /**
    * Also keep the theme, the palette and the contrast level in cookies (`m3-theme`, `m3-palette`, `m3-contrast`,
-   * a year, `SameSite=Lax`), so a server can read them and render with the user's choice through `initialState`.
+   * a year, `SameSite=Lax`), and the window's size (`m3-viewport`, `<width>x<height>`), so a server can read them
+   * and render with the user's choice and for their screen through `initialState`.
    */
   cookies?: boolean
   /**
    * Server-side rendering: the user's theme, palette and contrast as the server knows them (from the cookies that
    * `cookies` writes), on the server and on the client alike. `useTheme()` and `useColorPalette()` report them on
    * the server, and on the client while hydrating (with `isHydrating`), so what's rendered from them matches the
-   * server's HTML. What's missing falls back to this plugin's defaults, like a first visit.
+   * server's HTML. What's missing falls back to this plugin's defaults, like a first visit. With `viewport`, the
+   * adaptive layouts (`MNavigationSuite`, `MListDetail`, `MSupportingPane`) and `useWindowSizeClass()` render for
+   * that window size instead of compact.
    */
   initialState?: M3InitialState
 }
@@ -81,12 +84,15 @@ const CONTRASTS: readonly string[] = ['standard', 'medium', 'high', 'system']
 
 /** `initialState` with what it lacks (or holds invalid, cookies being user input) taken from the plugin's defaults,
  * by the same rules as the client: a stored choice wins unless `persistPalette` is false. */
-function resolveInitialState(options: M3UIOptions): Required<M3InitialState> {
+function resolveInitialState(options: M3UIOptions): ResolvedInitialState {
   const state = options.initialState ?? {}
   const forced = options.persistPalette === false
   const fallbackPalette = options.palette ?? (options.seed ? SEED_PALETTE : 'purple')
   const contrast = state.contrast && CONTRASTS.includes(state.contrast) ? state.contrast : undefined
+  const size = (n: unknown) => typeof n === 'number' && Number.isFinite(n) && n > 0 && n < 100_000
+  const viewport = state.viewport && size(state.viewport.width) && size(state.viewport.height) ? state.viewport : undefined
   return {
+    viewport,
     theme: state.theme && THEMES.includes(state.theme) ? state.theme : 'system',
     palette: forced ? fallbackPalette : state.palette || fallbackPalette,
     contrast: (forced && options.contrast) || contrast || options.contrast || 'standard',
@@ -127,6 +133,7 @@ export function createM3UI(options: M3UIOptions = {}) {
             try { value = localStorage.getItem(key) } catch { /* storage blocked */ }
             writeCookie(key, value)
           }
+          trackViewport()
         }
       }
       if (options.locale) {

@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createSSRApp, h, nextTick } from 'vue'
 
+// Each test imports the whole library afresh: a cold import can take seconds when the suite runs in parallel
+vi.setConfig({ testTimeout: 30_000 })
+
 // Fresh modules per test: the theme, palette and cookie switch live at module level
 async function load() {
   vi.resetModules()
@@ -13,7 +16,7 @@ function cookie(name: string) {
 
 beforeEach(() => {
   localStorage.clear()
-  for (const name of ['m3-theme', 'm3-palette', 'm3-contrast']) document.cookie = `${name}=; Max-Age=0; Path=/`
+  for (const name of ['m3-theme', 'm3-palette', 'm3-contrast', 'm3-viewport']) document.cookie = `${name}=; Max-Age=0; Path=/`
 })
 
 afterEach(() => {
@@ -103,11 +106,31 @@ describe('cookies', () => {
     expect(cookie('m3-contrast')).toBe('high')
   })
 
+  it('keeps the window size, following resizes', async () => {
+    vi.useFakeTimers()
+    try {
+      Object.defineProperty(window, 'innerWidth', { value: 1280, configurable: true })
+      Object.defineProperty(window, 'innerHeight', { value: 800, configurable: true })
+      const lib = await load()
+      createSSRApp({ render: () => null }).use(lib.createM3UI({ cookies: true }))
+      expect(cookie('m3-viewport')).toBe('1280x800')
+      Object.defineProperty(window, 'innerWidth', { value: 390, configurable: true })
+      window.dispatchEvent(new Event('resize'))
+      // Debounced: not on every resize event
+      expect(cookie('m3-viewport')).toBe('1280x800')
+      vi.advanceTimersByTime(300)
+      expect(cookie('m3-viewport')).toBe('390x800')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('writes none without the option', async () => {
     localStorage.setItem('m3-theme', 'dark')
     const lib = await load()
     createSSRApp({ render: () => null }).use(lib.createM3UI({ palette: 'red' }))
     expect(cookie('m3-theme')).toBeUndefined()
     expect(cookie('m3-palette')).toBeUndefined()
+    expect(cookie('m3-viewport')).toBeUndefined()
   })
 })

@@ -131,6 +131,25 @@ describe('SSR', () => {
       expect(await state({ initialState: { theme: 'pink', contrast: 'max' } as object })).toBe('system purple standard standard')
     })
 
+    it('renders the adaptive layouts for the given viewport', async () => {
+      const suite = (options: object) => render(lib.MNavigationSuite, { modelValue: 'a', items: [{ value: 'a', label: 'A', icon: 'home' }] }, options)
+      // A desktop window: a rail beside the content (a row); none known: compact, a bar under it (a column)
+      expect(await suite({ initialState: { viewport: { width: 1280, height: 800 } } })).toMatch(/^<div class="[^"]*flex-row/)
+      expect(await suite({ initialState: {} })).toMatch(/^<div class="[^"]*flex-col/)
+      expect(await suite({ initialState: { viewport: { width: -1, height: 800 } } })).toMatch(/^<div class="[^"]*flex-col/)
+    })
+
+    it('reports the viewport through useWindowSizeClass()', async () => {
+      const app = createSSRApp({
+        setup() {
+          const { widthClass, heightClass } = lib.useWindowSizeClass()
+          return () => h('p', `${widthClass.value} ${heightClass.value}`)
+        },
+      })
+      app.use(lib.createM3UI({ initialState: { viewport: { width: 1280, height: 800 } } }))
+      expect(await renderToString(app)).toBe('<p>large medium</p>')
+    })
+
     it('without it, keeps reporting the module defaults', async () => {
       expect(await state({ palette: 'red' })).toBe('system purple standard standard')
     })

@@ -2,6 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createSSRApp, h, nextTick, type Component } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 
+// Each test imports the whole library afresh: a cold import can take seconds when the suite runs in parallel
+vi.setConfig({ testTimeout: 30_000 })
+
 /** A fresh copy of the library seeing a window of this width (the window size is read when its modules load). */
 async function load(width: number) {
   Object.defineProperty(window, 'innerWidth', { value: width, configurable: true })
@@ -69,6 +72,36 @@ describe('hydrating server-rendered adaptive layouts', () => {
     // Compact (the server's) is a short navigation bar; at 1200px it's a rail, laid out in a row
     expect(container.firstElementChild!.className).toContain('flex-row')
     expect(container.textContent).toContain('content')
+  })
+
+  it('with a viewport (from a cookie), renders the right layout from the server on, without a jump', async () => {
+    const props = { modelValue: 'a', items }
+    const slots = { default: () => 'content' }
+    const viewport = { width: 1200, height: 800 }
+    const server = await load(0)
+    // Under happy-dom there is a window, so the flag stands in for the server's (ssr.test.ts renders it without one)
+    const html = await renderToString(createSSRApp({ render: () => h(server.MNavigationSuite, props, slots) }).use(server.createM3UI({ initialState: { viewport }, isHydrating: () => true })))
+    expect(html).toMatch(/^<div class="[^"]*flex-row/)
+
+    const lib = await load(1200)
+    const container = document.createElement('div')
+    container.innerHTML = html
+    document.body.appendChild(container)
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const layouts: string[] = []
+    const app = createSSRApp({
+      render: () => h(lib.MNavigationSuite, { ...props, onVnodeUpdated: () => layouts.push(container.firstElementChild!.className) }, slots),
+    })
+    app.use(lib.createM3UI({ initialState: { viewport }, isHydrating: () => true }))
+    // happy-dom has no layout: what the browser measures once mounted
+    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(1200)
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(800)
+    app.mount(container)
+    await nextTick()
+    expect(warn.mock.calls.map((c) => String(c[0])).filter((m) => m.includes('Hydration'))).toEqual([])
+    // Never compact on the client either
+    expect(container.firstElementChild!.className).toContain('flex-row')
+    expect(layouts.filter((c) => c.includes('flex-col'))).toEqual([])
   })
 
   it('without isHydrating, guesses from the window on the first render (client-only apps)', async () => {
