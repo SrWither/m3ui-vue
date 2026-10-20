@@ -232,8 +232,10 @@ const pressed = ref(false)
 const focused = ref(false)
 const hovered = ref(false)
 
-// The line thickens under the pointer, as a video player's does
+// The line thickens under the pointer, as a video player's does; the wavy line's unplayed part is as thick as the
+// wave's stroke (WavyProgressIndicatorDefaults: the same stroke for indicator and track)
 const trackH = computed(() => {
+  if (props.variant === 'wavy') return s.value.wave
   const t = s.value.track
   return props.variant === 'line' && !inactive.value && (hovered.value || pressed.value) ? t + Math.max(2, t / 4) : t
 })

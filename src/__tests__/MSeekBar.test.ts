@@ -137,6 +137,13 @@ describe('MSeekBar', () => {
     expect(piece().style.height).toBe('4px')
   })
 
+  it('the wavy line\'s unplayed part is as thick as the wave', async () => {
+    const w = mount(MSeekBar, { props: { modelValue: 50, duration: 100, variant: 'wavy', size: 'md' } })
+    await nextTick()
+    const piece = w.find('[role="slider"] > div.overflow-hidden').element as HTMLElement
+    expect(piece.style.height).toBe(w.find('path').attributes('stroke-width') + 'px')
+  })
+
   it('advances on its own while playing', async () => {
     vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance'] })
     const w = mount(MSeekBar, { props: { modelValue: 10, duration: 100, playing: true } })
