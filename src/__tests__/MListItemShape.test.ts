@@ -4,6 +4,7 @@ import { h } from 'vue'
 import MList from '../components/MList.vue'
 import MListItem from '../components/MListItem.vue'
 import MListSubheader from '../components/MListSubheader.vue'
+import MListGroup from '../components/MListGroup.vue'
 
 let wrapper: VueWrapper | undefined
 afterEach(() => {
@@ -62,6 +63,39 @@ describe('MListItem shape morph', () => {
       '4px 4px 16px 16px',
       '16px',
     ])
+  })
+
+  it('gives each MListGroup a segmented run of its own', async () => {
+    wrapper = mount(MList, {
+      props: { segmented: true },
+      slots: {
+        default: () => [
+          h(MListItem, { title: 'Alone' }),
+          h(MListGroup, null, () => [h(MListItem, { title: 'A' }), h(MListItem, { title: 'B' }), h(MListItem, { title: 'C' })]),
+          h(MListGroup, { title: 'Privacy' }, () => [h(MListItem, { title: 'D' })]),
+          h(MListItem, { title: 'After' }),
+        ],
+      },
+      attachTo: document.body,
+    })
+    await settle()
+    const rows = wrapper.findAll('[role="listitem"]').map((w) => w.element)
+    expect(rows.map(radius)).toEqual(['16px', '16px 16px 4px 4px', '4px', '4px 4px 16px 16px', '16px', '16px'])
+  })
+
+  it('names an MListGroup by its title and keeps the list\'s selection inside it', async () => {
+    wrapper = mount(MList, {
+      props: { selectable: true, selected: 'b' },
+      slots: { default: () => [h(MListGroup, { title: 'Privacy' }, () => [h(MListItem, { title: 'A', value: 'a' }), h(MListItem, { title: 'B', value: 'b' })])] },
+      attachTo: document.body,
+    })
+    const group = wrapper.find('ul ul')
+    const title = wrapper.find(`#${group.attributes('aria-labelledby')}`)
+    expect(title.text()).toBe('Privacy')
+    const rows = wrapper.findAll('[role="listitem"]')
+    expect(rows[1]!.classes()).toContain('bg-secondary-container')
+    await rows[0]!.trigger('click')
+    expect(wrapper.emitted('update:selected')?.[0]).toEqual(['a'])
   })
 
   it('keeps the pill in nav lists', async () => {

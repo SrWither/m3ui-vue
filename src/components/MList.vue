@@ -2,12 +2,13 @@
 /**
  * A vertical list container (MList) with rich, flexible rows (MListItem) and optional section headers
  * (MListSubheader) — one-line to three-line items, leading/trailing elements, selection, navigation, segmented,
- * and expandable variants.
+ * and expandable variants. MListGroup splits a list into groups (separate rounded runs in a segmented list).
  *
- * @slot default MListItem / MListSubheader children
+ * @slot default MListItem / MListSubheader / MListGroup children
  * @event update:selected Fires when a selectable item is clicked (via v-model:selected)
  */
-import { computed, onMounted, onUnmounted, provide, ref, shallowRef } from 'vue'
+import { computed, provide, ref } from 'vue'
+import { useSegmentRuns } from '../composables/_useSegmentRuns'
 
 const props = withDefaults(
   defineProps<{
@@ -33,36 +34,13 @@ const emit = defineEmits<{
   'update:selected': [value: string | number | null]
 }>()
 
-// Segmented items need to know whether they open or close their run of items (SegmentedListItem's
-// segmentedShapes(index, count)). A subheader or any other non-item child starts a new run.
+// Segmented items need to know whether they open or close their run of items. A subheader, an MListGroup
+// or any other non-item child starts a new run.
 const listEl = ref<HTMLElement>()
-const positions = shallowRef(new Map<Element, 'single' | 'first' | 'middle' | 'last'>())
-function measure() {
-  const map = new Map<Element, 'single' | 'first' | 'middle' | 'last'>()
-  let run: Element[] = []
-  const flush = () => {
-    run.forEach((el, i) => map.set(el, run.length === 1 ? 'single' : i === 0 ? 'first' : i === run.length - 1 ? 'last' : 'middle'))
-    run = []
-  }
-  for (const child of listEl.value?.children ?? []) {
-    if (child.getAttribute('role') === 'listitem') run.push(child)
-    else flush()
-  }
-  flush()
-  positions.value = map
-}
-let observer: MutationObserver | undefined
-onMounted(() => {
-  measure()
-  if (listEl.value) {
-    observer = new MutationObserver(measure)
-    observer.observe(listEl.value, { childList: true })
-  }
-})
-onUnmounted(() => observer?.disconnect())
+const segmentPosition = useSegmentRuns(listEl)
 
 provide('m-list', {
-  segmentPosition: (el: Element | null | undefined) => (el ? positions.value.get(el) : undefined),
+  segmentPosition,
   dense: computed(() => props.dense),
   nav: computed(() => props.nav),
   segmented: computed(() => props.segmented),
