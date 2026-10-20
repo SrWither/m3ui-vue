@@ -21,6 +21,8 @@ import { markRaw, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch } 
 import type * as Maplibre from 'maplibre-gl'
 import { useLocale } from '../composables/useLocale'
 import { MAP_KEY, type MaplibreModule } from '../composables/useMap'
+import { createLayerState, readLayerState } from '../composables/useMapLayers'
+import type { MapAdapter, MapLayerModel } from '../composables/mapAdapters'
 
 export type MapControlPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
 
@@ -53,6 +55,11 @@ const props = withDefaults(
     attribution?: boolean | MapControlPosition
     /** Anything else for MapLibre's `Map` constructor (`maxZoom`, `maxBounds`, `cooperativeGestures`…) */
     options?: Partial<Omit<Maplibre.MapOptions, 'container' | 'style'>>
+    /**
+     * Reads the style's conventions (layer names, groups, base layers, what to identify or show on hover) for
+     * `MMapLayers`, `MMapBaseLayers`, `MMapIdentify` and `MMapHover`: `genericAdapter`, `orvianAdapter()`, or your own
+     */
+    adapter?: MapAdapter
   }>(),
   {
     persist: false,
@@ -78,7 +85,17 @@ const container = ref<HTMLElement>()
 const map = shallowRef<Maplibre.Map>()
 const maplibre = shallowRef<MaplibreModule>()
 const styleVersion = ref(0)
-provide(MAP_KEY, { map, maplibre, styleVersion })
+const model = shallowRef<MapLayerModel>()
+const layerState = createLayerState()
+provide(MAP_KEY, { map, maplibre, styleVersion, model, layerState })
+
+/** The adapter's model of the current style, and the layers' visibility and opacity in it. */
+function readModel(m: Maplibre.Map) {
+  model.value = props.adapter
+    ? props.adapter(m.getStyle(), { styleUrl: typeof props.mapStyle === 'string' ? props.mapStyle : undefined })
+    : undefined
+  readLayerState(layerState, m, model.value)
+}
 
 const t = useLocale()
 
@@ -184,7 +201,10 @@ onMounted(async () => {
   }))
   maplibre.value = ml
 
-  m.on('style.load', () => { styleVersion.value++ })
+  m.on('style.load', () => {
+    readModel(m)
+    styleVersion.value++
+  })
   m.on('click', (e) => emit('click', e))
   m.on('moveend', () => {
     const v = currentView(m)
@@ -230,6 +250,7 @@ watch(() => props.bearing, (bearing) => {
 watch(() => props.pitch, (pitch) => {
   if (map.value && pitch !== undefined && !near(map.value.getPitch(), pitch)) map.value.jumpTo({ pitch })
 })
+watch(() => props.adapter, () => { if (map.value) readModel(map.value) })
 // A full reload (no diff): style.load fires, and components re-add their sources and layers
 watch(() => props.mapStyle, (style) => map.value?.setStyle(style, { diff: false }))
 
@@ -277,6 +298,10 @@ defineExpose({
 }
 .m3-map .maplibregl-ctrl button:not(:disabled):active {
   background-color: color-mix(in srgb, var(--color-on-surface) 12%, transparent);
+}
+.m3-map .maplibregl-ctrl-group button[aria-pressed='true'] {
+  background-color: var(--color-primary-container);
+  color: var(--color-on-primary-container);
 }
 .m3-map .maplibregl-ctrl button:focus-visible {
   box-shadow: inset 0 0 0 2px var(--color-secondary);
@@ -356,6 +381,7 @@ defineExpose({
   background: var(--color-surface-container-high);
   color: var(--color-on-surface);
   box-shadow: var(--shadow-elevation-2);
+  overflow: hidden;
   font: inherit;
   font-size: var(--text-body-medium);
   line-height: var(--text-body-medium--line-height);

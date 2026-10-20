@@ -1,5 +1,7 @@
 import { computed, getCurrentInstance, inject, onBeforeUnmount, onMounted, watch, type ComputedRef, type InjectionKey, type Ref, type ShallowRef } from 'vue'
 import type * as Maplibre from 'maplibre-gl'
+import type { MapLayerModel } from './mapAdapters'
+import type { MapLayerState } from './useMapLayers'
 
 /** The `maplibre-gl` module (its classes: `Map`, `Marker`, `Popup`…) */
 export type MaplibreModule = typeof import('maplibre-gl')
@@ -12,6 +14,10 @@ export interface MapContext {
   maplibre: ShallowRef<MaplibreModule | undefined>
   /** Bumped on every `style.load`: sources and layers added by components are re-added after a style change */
   styleVersion: Ref<number>
+  /** The style as `MMap`'s `adapter` reads it (undefined without one) */
+  model: ShallowRef<MapLayerModel | undefined>
+  /** Visibility and opacity of the model's layers */
+  layerState: MapLayerState
 }
 
 // Internal: provided by MMap

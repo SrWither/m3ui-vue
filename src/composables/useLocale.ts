@@ -202,6 +202,16 @@ export interface M3Locale {
   mapCtrlScroll: string
   mapCmdScroll: string
   mapTwoFingers: string
+  mapLayers: string
+  mapSearchLayers: string
+  mapNoLayers: string
+  mapShowLayer: string
+  mapHideLayer: string
+  mapOpacity: string
+  mapDownload: string
+  mapNoBaseLayer: string
+  mapHoverInfo: string
+  mapNoValue: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -389,6 +399,16 @@ export const defaultLocale: M3Locale = {
   mapCtrlScroll: 'Use Ctrl + scroll to zoom the map',
   mapCmdScroll: 'Use ⌘ + scroll to zoom the map',
   mapTwoFingers: 'Use two fingers to move the map',
+  mapLayers: 'Layers',
+  mapSearchLayers: 'Search layers',
+  mapNoLayers: 'No layers',
+  mapShowLayer: 'Show layer',
+  mapHideLayer: 'Hide layer',
+  mapOpacity: 'Opacity',
+  mapDownload: 'Download',
+  mapNoBaseLayer: 'No base layer',
+  mapHoverInfo: 'Info on hover',
+  mapNoValue: 'Not available',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')
