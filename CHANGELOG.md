@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.1.0] - Unreleased
+## [1.1.0] - 2026-10-20
 
 ### Added
 - `MBottomSheet` `partial` (`true` = half the screen, or a ratio): a sheet taller than that share of the screen opens partially expanded, as Compose's `ModalBottomSheet` does, and expands to its full height by dragging the handle or the content up, tapping the handle (now a button with `sheetExpand`/`sheetCollapse` labels when there's a partial state, Enter/Space too) or scrolling the wheel down. The content scrolls once the sheet is expanded, and dragging it down from its top collapses or dismisses the sheet (touch events with `touch-action` narrowed to the possible scroll, like `MNavigationDrawer`). `v-model:expanded` reads and sets the state (back to `false` on close, so it reopens partially expanded). With `partial` the sheet may grow to the whole screen (minus the top safe area); `squareCornersWhenFull` squares its corners while the expanded sheet fills it, as Android's views sheet does
