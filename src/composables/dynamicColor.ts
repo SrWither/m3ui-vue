@@ -83,3 +83,69 @@ export function schemeToCss(scheme: GeneratedScheme, id: string): string {
     Object.entries(tokens).map(([k, v]) => `  --color-${k}: ${v};`).join('\n')
   return `[data-palette='${id}'] {\n${block(scheme.light)}\n}\n[data-palette='${id}'].dark {\n  color-scheme: dark;\n${block(scheme.dark)}\n}\n`
 }
+
+/**
+ * The seed color of an image's pixels (RGBA bytes, as `ImageData.data`): its colors quantized and scored the way
+ * Android picks a wallpaper's source color (QuantizerCelebi + Score). Fully transparent pixels are skipped.
+ */
+export async function seedFromPixels(rgba: ArrayLike<number>): Promise<string> {
+  const mcu = await import('@material/material-color-utilities')
+  // QuantizerWsmeans starts from Math.random() cluster assignments, so the same image could give a different seed
+  // on every read. Android's Java version seeds its Random with 0x42688: run it on a generator seeded the same way
+  // (the quantization is synchronous, so nothing else sees the swap).
+  const random = Math.random
+  let state = 0x42688
+  Math.random = () => {
+    state = (state + 0x6d2b79f5) | 0
+    let t = Math.imul(state ^ (state >>> 15), state | 1)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+  try {
+    return mcu.hexFromArgb(mcu.sourceColorFromImageBytes(rgba as Uint8ClampedArray))
+  } finally {
+    Math.random = random
+  }
+}
+
+// Android's WallpaperColors scales a wallpaper down to about this many pixels before quantizing: plenty for
+// picking a color, and fast whatever the image's size.
+const EXTRACTION_AREA = 112 * 112
+
+/**
+ * The seed color of an image, for `generateScheme`, `useColorPalette().setSeed()` or `MScheme`: what Android does
+ * with the wallpaper. Takes a URL (cross-origin images need CORS headers, or the canvas can't be read), an `<img>`,
+ * an `ImageBitmap` or a `Blob` (a file the user picked). Browser only.
+ */
+export async function seedFromImage(source: string | HTMLImageElement | ImageBitmap | Blob): Promise<string> {
+  let image: CanvasImageSource & { width: number; height: number }
+  let objectUrl: string | undefined
+  if (typeof source === 'string' || source instanceof Blob) {
+    // A Blob goes through an <img> too: createImageBitmap decodes colors differently (another seed for the same
+    // file than its URL gives)
+    if (typeof source !== 'string') objectUrl = URL.createObjectURL(source)
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.src = objectUrl ?? (source as string)
+    try {
+      await img.decode()
+    } finally {
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+    image = img
+  } else {
+    if (source instanceof HTMLImageElement && !source.complete) await source.decode()
+    image = source
+  }
+  const w = (image as HTMLImageElement).naturalWidth || image.width
+  const h = (image as HTMLImageElement).naturalHeight || image.height
+  if (!w || !h) throw new Error('seedFromImage: the image has no size')
+  const scale = Math.min(1, Math.sqrt(EXTRACTION_AREA / (w * h)))
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.max(1, Math.round(w * scale))
+  canvas.height = Math.max(1, Math.round(h * scale))
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })
+  if (!ctx) throw new Error('seedFromImage: no 2D canvas')
+  ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
+  return seedFromPixels(ctx.getImageData(0, 0, canvas.width, canvas.height).data)
+}

@@ -159,8 +159,8 @@ function injectCss(css: string) {
   el.textContent = css
 }
 
-/** Whether a stylesheet (other than our generated one) already styles `[data-palette='<id>']`. */
-function hasPaletteCss(id: string): boolean {
+/** Whether a stylesheet (other than our generated one) already styles `[data-palette='<id>']`. Also used by MScheme; not exported from index.ts. */
+export function hasPaletteCss(id: string): boolean {
   if (typeof document === 'undefined') return false
   const needles = [`[data-palette="${id}"]`, `[data-palette='${id}']`, `[data-palette=${id}]`]
   const scan = (rules: CSSRuleList): boolean => {
