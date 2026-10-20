@@ -108,6 +108,8 @@ const titleId = `m3-dialog-${useId()}`
 watch(
   () => props.modelValue,
   async (open) => {
+    // Server rendering (a dialog open on load runs this immediately): nothing to measure or observe
+    if (typeof window === 'undefined') return
     if (open) {
       await nextTick()
       updateDividerVisibility()
