@@ -18,6 +18,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 - `MMenu` went off screen when its `align` edge left no room (on a phone, the default right-aligned menu on a button near the left edge opened leftwards past it): it now keeps on screen as Compose's `DropdownMenuPositionProvider` does, trying the `align` edge of the trigger, then the other one, then the window edge on the trigger's side, 8px in from the edges, and centers a menu wider than that. Its width is capped at the window minus those margins, and it grows from the trigger wherever it ended up (from the bottom when it opens above). `MMenuItem`'s flyout submenus measure themselves too: right of the item, else left, else clamped, and moved up when they'd pass the bottom
+- `MSplitButton`'s menu and the dropdowns of `MDatePicker`, `MDateRangePicker` and `MTimePicker` went off screen the same way: they always started at the left edge of their button or field (a picker's 360px panel ran past the right edge of a phone), and chose to open above from a guessed height (44px per split button item, so a custom `#menu` never moved up; a fixed 320–400px for the pickers). They now measure themselves and keep on screen like `MMenu`, and their width is capped at the window minus 16px
 
 ## [1.0.3] - 2026-10-19
 
