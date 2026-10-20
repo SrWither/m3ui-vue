@@ -10,6 +10,7 @@
 import { computed, Fragment, inject, nextTick, onMounted, onUnmounted, provide, ref, useSlots, watch, type VNode } from 'vue'
 import MIcon from './MIcon.vue'
 import MMenuDivider from './MMenuDivider.vue'
+import { POPUP_MARGIN, fitPopup } from '../composables/_popupPosition'
 
 defineOptions({ inheritAttrs: false })
 
@@ -75,6 +76,7 @@ const isGrouped = computed(() => !!groups.value && groups.value.length > 1)
 
 const visible = ref(false)
 const adjustedPos = ref({ x: 0, y: 0 })
+const origin = ref('left top')
 const panelEl = ref<HTMLElement | null>(null)
 
 // See MMenu.vue for why this is needed: a menu nested inside another
@@ -255,6 +257,7 @@ function popNav() {
 }
 
 async function showAt(x: number, y: number) {
+  origin.value = 'left top'
   if (siblingGroup && siblingGroup.current && siblingGroup.current !== hide) {
     siblingGroup.current()
   }
@@ -265,10 +268,19 @@ async function showAt(x: number, y: number) {
   await nextTick()
   if (!panelEl.value) return
   const el = panelEl.value
-  adjustedPos.value = {
-    x: Math.min(x, window.innerWidth - el.offsetWidth - 8),
-    y: Math.min(y, window.innerHeight - el.offsetHeight - 8),
-  }
+  // Opens right of and below the point, else flipped left or up, else clamped on screen (see _popupPosition.ts).
+  // Measured at the window's left edge: near the right edge the browser would narrow it to the room left there.
+  el.style.left = '0px'
+  const w = el.offsetWidth
+  const h = el.offsetHeight
+  const left = fitPopup([x, x - w], w, window.innerWidth)
+  const top = fitPopup([y, y - h], h, window.innerHeight)
+  adjustedPos.value = { x: left, y: top }
+  el.style.left = `${left}px`
+  // The animation grows from the point
+  const ox = left === x ? 'left' : left === x - w ? 'right' : `${Math.min(w, Math.max(0, x - left))}px`
+  const oy = top === y ? 'top' : top === y - h ? 'bottom' : `${Math.min(h, Math.max(0, y - top))}px`
+  origin.value = `${ox} ${oy}`
   focusableItems()[0]?.focus()
 }
 
@@ -365,7 +377,7 @@ onUnmounted(() => {
           variant === 'expressive' ? 'rounded-lg' : 'rounded-xs',
           isGrouped ? '' : 'shadow-elevation-2',
         ]"
-        :style="{ left: `${adjustedPos.x}px`, top: `${adjustedPos.y}px`, transformOrigin: 'top left' }"
+        :style="{ left: `${adjustedPos.x}px`, top: `${adjustedPos.y}px`, transformOrigin: origin, maxWidth: `calc(100vw - ${2 * POPUP_MARGIN}px)` }"
         @contextmenu.prevent
       >
         <!-- overflow-hidden (for the rounded-corner clip and to clip the push
@@ -373,8 +385,10 @@ onUnmounted(() => {
              shadow-elevation-2 on the same box — overflow-hidden clips an
              element's own box-shadow too, so the two have to be on separate
              elements or the shadow gets cut off -->
+        <!-- Scrolls when taller than the window -->
         <div
           class="overflow-hidden py-1"
+          :style="{ maxHeight: `calc(100vh - ${2 * POPUP_MARGIN}px)`, overflowY: 'auto' }"
           :class="[
             variant === 'expressive' ? 'rounded-lg' : 'rounded-xs',
             isGrouped ? '' : 'bg-surface-container',

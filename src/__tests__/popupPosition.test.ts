@@ -3,6 +3,7 @@ import { defineComponent, h, nextTick } from 'vue'
 import { mount } from '@vue/test-utils'
 import MMenu from '../components/MMenu.vue'
 import MMenuItem from '../components/MMenuItem.vue'
+import MContextMenu from '../components/MContextMenu.vue'
 import MSplitButton from '../components/MSplitButton.vue'
 import MDatePicker from '../components/MDatePicker.vue'
 import MDateRangePicker from '../components/MDateRangePicker.vue'
@@ -178,5 +179,46 @@ describe.each([
     const panel = await open(rect(20, 500, 300, 56))
     expect(panel.style.top).toBe('116px')
     expect(panel.style.left).toBe('20px')
+  })
+})
+
+describe('MContextMenu stays on screen', () => {
+  beforeEach(() => {
+    document.body.innerHTML = ''
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(360)
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(700)
+    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(200)
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(150)
+  })
+  afterEach(() => vi.restoreAllMocks())
+
+  const openAt = async (x: number, y: number) => {
+    const w = mount(MContextMenu, {
+      slots: { trigger: () => h('div', 'area'), default: () => h(MMenuItem, null, () => 'Copy') },
+      attachTo: document.body,
+      global: { stubs: { transition: false } },
+    })
+    await (w.vm as unknown as { showAt: (x: number, y: number) => Promise<void> }).showAt(x, y)
+    await nextTick()
+    return document.querySelector<HTMLElement>('.fixed.z-\\[500\\]')!
+  }
+
+  it('opens right of and below the point when it fits', async () => {
+    const panel = await openAt(40, 100)
+    expect(panel.style.left).toBe('40px')
+    expect(panel.style.top).toBe('100px')
+    expect(panel.style.transformOrigin).toBe('left top')
+  })
+
+  it('near the right edge it flips to the left of the point, instead of sliding under the finger', async () => {
+    const panel = await openAt(350, 100)
+    expect(panel.style.left).toBe('150px')
+    expect(panel.style.transformOrigin).toBe('right top')
+  })
+
+  it('near the bottom it flips above the point', async () => {
+    const panel = await openAt(40, 650)
+    expect(panel.style.top).toBe('500px')
+    expect(panel.style.transformOrigin).toBe('left bottom')
   })
 })
