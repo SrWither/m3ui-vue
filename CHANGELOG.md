@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.1.3] - Unreleased
+
+### Added
+- `MListGroup`: groups items inside an `MList`. In a segmented list each group is a rounded run of its own (its first and last items take the large outer corners) set apart from what's around it by 12px, like the grouped cards of a settings screen; before, splitting runs took an empty element between items. An optional `title` (or `#title` slot, `inset` to align it) heads the group like `MListSubheader` and names it for assistive technology (a nested list labelled by it). The list's selection, `dense`, `dividers` and `nav` reach its items as usual
+
 ## [1.1.2] - 2026-10-20
 
 ### Fixed
