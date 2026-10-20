@@ -66,6 +66,96 @@ function onTipLeave() {
   visible.value = false
 }
 
+// Input as Compose's BasicTooltip: a mouse shows it on hover; touch and pen on a long press, which also swallows
+// the click it would end in (a long-pressed button doesn't fire) and hides it TOUCH_DURATION after the finger
+// lifts (BasicTooltipDefaults.TooltipDuration); focus only from the keyboard. Before, the mouse events a browser
+// emulates for a tap (and the focus a tap gives a button) showed it on every tap, and it stuck around.
+const LONG_PRESS = 500
+const TOUCH_DURATION = 1500
+let press: { id: number; x: number; y: number; timer: ReturnType<typeof setTimeout> } | null = null
+let longPressed = false
+
+function onPointerEnter(e: PointerEvent) {
+  if (e.pointerType === 'mouse') show()
+}
+function onPointerLeave(e: PointerEvent) {
+  if (e.pointerType === 'mouse') hide()
+}
+
+function endPress() {
+  if (press) clearTimeout(press.timer)
+  press = null
+  window.removeEventListener('pointermove', onPressMove)
+  window.removeEventListener('pointerup', onPressUp)
+  window.removeEventListener('pointercancel', onPressCancel)
+}
+function onPointerDown(e: PointerEvent) {
+  if (e.pointerType === 'mouse') return
+  endPress()
+  longPressed = false
+  press = {
+    id: e.pointerId,
+    x: e.clientX,
+    y: e.clientY,
+    timer: setTimeout(async () => {
+      longPressed = true
+      cancelTimers()
+      visible.value = true
+      await nextTick()
+      reposition()
+    }, LONG_PRESS),
+  }
+  window.addEventListener('pointermove', onPressMove)
+  window.addEventListener('pointerup', onPressUp)
+  window.addEventListener('pointercancel', onPressCancel)
+}
+function onPressMove(e: PointerEvent) {
+  if (press && e.pointerId === press.id && Math.hypot(e.clientX - press.x, e.clientY - press.y) > 10) endPress()
+}
+function onPressUp(e: PointerEvent) {
+  if (!press || e.pointerId !== press.id) return
+  endPress()
+  if (!longPressed) return
+  cancelTimers()
+  // A rich tooltip may hold actions to tap: it stays until a touch outside it (Compose's persistent tooltips)
+  if (props.rich) document.addEventListener('pointerdown', onOutsideTouch, true)
+  else hideTimer = setTimeout(() => { visible.value = false }, TOUCH_DURATION)
+}
+function onOutsideTouch(e: PointerEvent) {
+  const t = e.target as Node
+  if (tipEl.value?.contains(t) || triggerEl.value?.contains(t)) return
+  document.removeEventListener('pointerdown', onOutsideTouch, true)
+  visible.value = false
+}
+// The browser took the touch (a scroll)
+function onPressCancel(e: PointerEvent) {
+  if (!press || e.pointerId !== press.id) return
+  endPress()
+  if (longPressed) hide()
+}
+// The click a long press ends in, and the context menu it may open, belong to the tooltip
+function onClickCapture(e: MouseEvent) {
+  if (!longPressed) return
+  longPressed = false
+  e.preventDefault()
+  e.stopPropagation()
+}
+function onContextMenu(e: Event) {
+  if (press || longPressed) e.preventDefault()
+}
+
+function onFocusIn(e: FocusEvent) {
+  let keyboard = true
+  try { keyboard = (e.target as Element).matches(':focus-visible') } catch { /* no :focus-visible: show */ }
+  if (keyboard) show()
+}
+function onKeyDown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && visible.value) {
+    cancelTimers()
+    visible.value = false
+  }
+}
+
 function onScroll() {
   if (visible.value) {
     cancelTimers()
@@ -96,6 +186,8 @@ onMounted(() => window.addEventListener('scroll', onScroll, true))
 onUnmounted(() => {
   window.removeEventListener('scroll', onScroll, true)
   cancelTimers()
+  endPress()
+  document.removeEventListener('pointerdown', onOutsideTouch, true)
 })
 </script>
 
@@ -104,10 +196,14 @@ onUnmounted(() => {
     ref="triggerEl"
     v-bind="$attrs"
     class="inline-flex"
-    @mouseenter="show"
-    @mouseleave="hide"
-    @focusin="show"
+    @pointerenter="onPointerEnter"
+    @pointerleave="onPointerLeave"
+    @pointerdown="onPointerDown"
+    @click.capture="onClickCapture"
+    @contextmenu="onContextMenu"
+    @focusin="onFocusIn"
     @focusout="hide"
+    @keydown="onKeyDown"
   >
     <slot />
   </span>
