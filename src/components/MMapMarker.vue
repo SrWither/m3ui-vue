@@ -12,6 +12,7 @@
 import { onBeforeUnmount, ref, useSlots, watch } from 'vue'
 import type * as Maplibre from 'maplibre-gl'
 import { useMap } from '../composables/useMap'
+import { PIN_OFFSET } from '../composables/_mapPin'
 
 // Attributes (class, style…) go on what's shown on the map, not on the hidden wrapper it's rendered in
 defineOptions({ inheritAttrs: false })
@@ -24,9 +25,12 @@ const props = withDefaults(
     color?: string
     /** Let the user drag it */
     draggable?: boolean
-    /** Which part of the marker sits on `lngLat`. Defaults to `bottom` for the pin, `center` for custom content */
+    /**
+     * Which part of the marker sits on `lngLat`. By default the pin's tip (MapLibre's placement: its center, offset
+     * `[0, -14]`), and the center of custom content
+     */
     anchor?: Maplibre.PositionAnchor
-    /** Offset in pixels, `[x, y]` */
+    /** Offset in pixels, `[x, y]`. The pin's default is MapLibre's `[0, -14]`, which puts its tip on `lngLat` */
     offset?: [number, number]
     /** Rotation in degrees */
     rotation?: number
@@ -45,14 +49,16 @@ const popupContent = ref<HTMLElement>()
 const { onReady } = useMap()
 
 let marker: Maplibre.Marker | undefined
+let custom = false
 
 onReady((map, ml) => {
-  const custom = !!slots.default && content.value
+  custom = !!slots.default && !!content.value
   marker = new ml.Marker({
     ...(custom ? { element: content.value } : { color: props.color ?? 'currentColor' }),
     draggable: props.draggable,
-    anchor: props.anchor ?? (custom ? 'center' : 'bottom'),
-    offset: props.offset,
+    // Left out for the pin unless given: MapLibre's own placement puts its tip on the point (see _mapPin.ts)
+    ...(props.anchor ? { anchor: props.anchor } : custom ? { anchor: 'center' as const } : {}),
+    ...(props.offset ? { offset: props.offset } : {}),
     rotation: props.rotation,
   })
   if (!custom && !props.color) marker.getElement().classList.add('m3-map-marker--default')
@@ -63,7 +69,8 @@ onReady((map, ml) => {
     emit('update:lngLat', [lng, lat])
   })
   if (slots.popup && popupContent.value) {
-    marker.setPopup(new ml.Popup({ offset: custom ? 16 : 32, maxWidth: '320px' }).setDOMContent(popupContent.value))
+    // The pin's popup gets MapLibre's per-side offsets, which it only applies when `offset` isn't set at all
+    marker.setPopup(new ml.Popup({ ...(custom ? { offset: 16 } : {}), maxWidth: '320px' }).setDOMContent(popupContent.value))
   }
 })
 
@@ -75,7 +82,7 @@ function onClick(e: MouseEvent) {
 watch(() => props.lngLat.join(','), () => marker?.setLngLat(props.lngLat))
 watch(() => props.draggable, (draggable) => marker?.setDraggable(draggable))
 watch(() => props.rotation, (rotation) => marker?.setRotation(rotation))
-watch(() => props.offset?.join(','), () => marker?.setOffset(props.offset ?? [0, 0]))
+watch(() => props.offset?.join(','), () => marker?.setOffset(props.offset ?? (custom ? [0, 0] : PIN_OFFSET)))
 
 onBeforeUnmount(() => {
   marker?.getElement().removeEventListener('click', onClick)

@@ -26,12 +26,15 @@ const props = withDefaults(
     closeOnClick?: boolean
     /** Where the popup sits relative to `lngLat`. By default MapLibre picks the side with room */
     anchor?: Maplibre.PositionAnchor
-    /** Offset in pixels from `lngLat` */
-    offset?: number
+    /**
+     * Offset from `lngLat`: pixels, `[x, y]`, or one per side (`{ bottom: [0, -38], … }`, MapLibre's `Offset`).
+     * By default none: its tip touches the point
+     */
+    offset?: Maplibre.Offset
     /** Maximum width (CSS) */
     maxWidth?: string
   }>(),
-  { open: true, closeButton: true, closeOnClick: true, offset: 8, maxWidth: '320px' },
+  { open: true, closeButton: true, closeOnClick: true, maxWidth: '320px' },
 )
 
 const emit = defineEmits<{ 'update:open': [open: boolean] }>()
@@ -56,7 +59,7 @@ onReady((m, ml) => {
     closeOnClick: props.closeOnClick,
     closeOnMove: false,
     anchor: props.anchor,
-    offset: props.offset,
+    ...(props.offset !== undefined ? { offset: props.offset } : {}),
     maxWidth: props.maxWidth,
     focusAfterOpen: false,
   })
@@ -77,6 +80,7 @@ watch(() => props.open, (open) => {
 })
 watch(() => props.lngLat.join(','), () => popup?.setLngLat(props.lngLat))
 watch(() => props.maxWidth, (w) => popup?.setMaxWidth(w))
+watch(() => props.offset, (offset) => popup?.setOffset(offset ?? 0))
 
 onBeforeUnmount(() => {
   closingFromProp = true

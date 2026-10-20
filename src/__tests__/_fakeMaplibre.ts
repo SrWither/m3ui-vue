@@ -145,6 +145,7 @@ export class FakePopup extends Evented {
   addTo() { this.opened = true; return this }
   isOpen() { return this.opened }
   remove() { if (this.opened) { this.opened = false; this.fire('close') } return this }
+  setOffset(o: unknown) { this.options.offset = o; return this }
 }
 
 class Control { constructor(public options?: unknown) {} }

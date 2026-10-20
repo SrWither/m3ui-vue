@@ -174,6 +174,21 @@ describe('MMapMarker', () => {
     expect(custom!.options.anchor).toBe('center')
   })
 
+  it('leaves the pin to MapLibre\'s placement, which puts its tip on the point', async () => {
+    // MapLibre centers its pin and offsets it [0, -14] when neither is given; anchoring it at the bottom (plus that
+    // offset) put the tip about 20px above the point
+    await mountMap({}, () => [
+      h(MMapMarker, { lngLat: [1, 2] }, { popup: () => h('b', 'Info') }),
+      h(MMapMarker, { lngLat: [3, 4] }, { default: () => h('span', 'here'), popup: () => h('b', 'Info') }),
+    ])
+    const [pin, custom] = created.markers
+    expect('anchor' in pin!.options).toBe(false)
+    expect('offset' in pin!.options).toBe(false)
+    // Its popup gets MapLibre's per-side offsets, applied only when the key is missing
+    expect('offset' in pin!.popup!.options).toBe(false)
+    expect(custom!.popup!.options.offset).toBe(16)
+  })
+
   it('emits its new position after a drag, and opens its #popup slot', async () => {
     const onUpdate = vi.fn()
     await mountMap({}, () => h(MMapMarker, { lngLat: [1, 2], draggable: true, 'onUpdate:lngLat': onUpdate }, { popup: () => h('b', 'Info') }))
@@ -198,6 +213,8 @@ describe('MMapPopup', () => {
     await nextTick()
     await nextTick()
     const popup = created.popups[0]!
+    // No offset of its own: its tip touches the point
+    expect('offset' in popup.options).toBe(false)
     expect(popup.isOpen()).toBe(true)
     expect(popup.content?.textContent).toBe('Hello')
     await wrapper.setProps({ open: false })

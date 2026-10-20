@@ -16,6 +16,7 @@ import MMapFeatureInfo from './MMapFeatureInfo.vue'
 import { useMap } from '../composables/useMap'
 import { useMapLayers } from '../composables/useMapLayers'
 import { identifyFeatures, type MapIdentifyResult } from '../composables/mapAdapters'
+import { PIN_POPUP_OFFSET } from '../composables/_mapPin'
 
 // Attributes (class, style…) go on the popup's content
 defineOptions({ inheritAttrs: false })
@@ -92,7 +93,7 @@ defineExpose({ close })
   <!-- One root (the marker and the popup move their content into the map) -->
   <div class="hidden">
     <MMapMarker v-if="marker && open" :lng-lat="lngLat" />
-    <MMapPopup v-if="popup && results.length" v-model:open="open" :lng-lat="lngLat" max-width="360px" :offset="marker ? 40 : 8">
+    <MMapPopup v-if="popup && results.length" v-model:open="open" :lng-lat="lngLat" max-width="360px" :offset="marker ? PIN_POPUP_OFFSET : undefined">
       <div class="max-h-80 overflow-y-auto" v-bind="$attrs">
         <slot :results="results" :lng-lat="lngLat" :close="close">
           <MMapFeatureInfo :results="results" />
