@@ -176,6 +176,78 @@ function mapLocale() {
   }
 }
 
+// ── Control tooltips ───────────────────────────────────────────────────────────────────────────
+// MapLibre's buttons (and yours, in MMapControl) carry a `title`, which the browser shows as its own tooltip: it's
+// moved to data-m3-tip (and aria-label when there's none) and shown as an M3 plain tooltip, inside the map so it's
+// there in fullscreen too
+
+const TIP_DELAY = 600 // MTooltip's
+const tip = ref<{ text: string; x: number; y: number; left: boolean } | null>(null)
+let tipTimer: ReturnType<typeof setTimeout> | undefined
+let tipObserver: MutationObserver | undefined
+
+function adoptTitle(el: Element) {
+  const title = el.getAttribute('title')
+  if (!title || !el.closest('.maplibregl-ctrl')) return
+  el.setAttribute('data-m3-tip', title)
+  if (!el.hasAttribute('aria-label')) el.setAttribute('aria-label', title)
+  el.removeAttribute('title')
+}
+
+function showTip(el: HTMLElement) {
+  const text = el.getAttribute('data-m3-tip')
+  const box = root.value?.getBoundingClientRect()
+  if (!text || !box) return
+  const r = el.getBoundingClientRect()
+  // Toward the inside of the map: left of a control on the right half, right of one on the left
+  const left = r.left + r.width / 2 > box.left + box.width / 2
+  tip.value = { text, left, x: (left ? r.left - 8 : r.right + 8) - box.left, y: r.top + r.height / 2 - box.top }
+}
+
+function hideTip() {
+  clearTimeout(tipTimer)
+  tip.value = null
+}
+
+const tipTarget = (e: Event) => (e.target as Element | null)?.closest?.<HTMLElement>('.maplibregl-ctrl [data-m3-tip]') ?? null
+
+function onTipOver(e: PointerEvent) {
+  const el = tipTarget(e)
+  if (!el || e.pointerType === 'touch') return
+  clearTimeout(tipTimer)
+  tipTimer = setTimeout(() => showTip(el), TIP_DELAY)
+}
+function onTipOut(e: PointerEvent) {
+  const el = tipTarget(e)
+  if (el && !el.contains(e.relatedTarget as Node | null)) hideTip()
+}
+function onTipFocus(e: FocusEvent) {
+  const el = tipTarget(e)
+  if (el?.matches(':focus-visible')) showTip(el)
+}
+
+onMounted(() => {
+  const el = root.value
+  if (!el) return
+  el.querySelectorAll('[title]').forEach(adoptTitle)
+  tipObserver = new MutationObserver((records) => {
+    for (const r of records) {
+      if (r.type === 'attributes') adoptTitle(r.target as Element)
+      else r.addedNodes.forEach((n) => {
+        if (!(n instanceof Element)) return
+        adoptTitle(n)
+        n.querySelectorAll('[title]').forEach(adoptTitle)
+      })
+    }
+  })
+  tipObserver.observe(el, { subtree: true, childList: true, attributes: true, attributeFilter: ['title'] })
+})
+
+onBeforeUnmount(() => {
+  tipObserver?.disconnect()
+  clearTimeout(tipTimer)
+})
+
 let destroyed = false
 
 onMounted(async () => {
@@ -261,10 +333,34 @@ defineExpose({
 </script>
 
 <template>
-  <div ref="root" class="m3-map relative overflow-hidden">
+  <div
+    ref="root"
+    class="m3-map relative overflow-hidden"
+    @pointerover="onTipOver"
+    @pointerout="onTipOut"
+    @pointerdown="hideTip"
+    @focusin="onTipFocus"
+    @focusout="hideTip"
+  >
     <!-- Sized, not positioned: MapLibre's CSS makes it position: relative (.maplibregl-map), which would undo absolute -->
     <div ref="container" class="h-full w-full" />
     <slot v-if="map" />
+    <Transition
+      enter-active-class="transition-opacity duration-150"
+      enter-from-class="opacity-0"
+      leave-active-class="transition-opacity duration-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="tip"
+        role="tooltip"
+        class="pointer-events-none absolute z-10 min-h-6 max-w-[200px] -translate-y-1/2 rounded bg-inverse-surface px-2 py-1 text-body-small whitespace-nowrap text-inverse-on-surface"
+        :class="tip.left ? '-translate-x-full' : ''"
+        :style="{ left: `${tip.x}px`, top: `${tip.y}px` }"
+      >
+        {{ tip.text }}
+      </div>
+    </Transition>
   </div>
 </template>
 

@@ -97,6 +97,30 @@ describe('MMap', () => {
   })
 })
 
+describe('MMap control tooltips', () => {
+  it('shows an M3 tooltip instead of the browser\'s for buttons in its controls', async () => {
+    vi.useFakeTimers()
+    try {
+      const { wrapper } = await mountMap({}, () => h('div', { class: 'maplibregl-ctrl' }, [h('button', { title: 'Layers' })]))
+      await nextTick()
+      const button = wrapper.find('.maplibregl-ctrl button')
+      // No native tooltip; the text stays as its accessible name
+      expect(button.attributes('title')).toBeUndefined()
+      expect(button.attributes('data-m3-tip')).toBe('Layers')
+      expect(button.attributes('aria-label')).toBe('Layers')
+      await button.trigger('pointerover', { pointerType: 'mouse' })
+      expect(wrapper.find('[role="tooltip"]').exists()).toBe(false)
+      vi.advanceTimersByTime(600)
+      await nextTick()
+      expect(wrapper.find('[role="tooltip"]').text()).toBe('Layers')
+      await button.trigger('pointerout', { relatedTarget: document.body })
+      expect(wrapper.find('[role="tooltip"]').exists()).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
+
 describe('MMapMarker', () => {
   it('places a theme-colored pin, and a custom element from its slot', async () => {
     await mountMap({}, () => [
