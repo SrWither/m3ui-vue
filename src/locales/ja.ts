@@ -207,4 +207,10 @@ export const jaLocale: M3Locale = {
   mapNoBaseLayer: 'ベースレイヤーなし',
   mapHoverInfo: 'ホバーで情報を表示',
   mapNoValue: '利用できません',
+  mapMeasureDistance: '距離を測定',
+  mapMeasureArea: '面積を測定',
+  mapClearMeasurements: '測定をクリア',
+  mapDeleteMeasurement: '測定を削除',
+  mapTotal: '合計',
+  mapSearchPlaces: '場所を検索',
 }

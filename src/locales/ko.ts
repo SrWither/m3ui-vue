@@ -207,4 +207,10 @@ export const koLocale: M3Locale = {
   mapNoBaseLayer: '기본 레이어 없음',
   mapHoverInfo: '마우스오버 시 정보 표시',
   mapNoValue: '사용할 수 없음',
+  mapMeasureDistance: '거리 측정',
+  mapMeasureArea: '면적 측정',
+  mapClearMeasurements: '측정 지우기',
+  mapDeleteMeasurement: '측정 삭제',
+  mapTotal: '합계',
+  mapSearchPlaces: '장소 검색',
 }

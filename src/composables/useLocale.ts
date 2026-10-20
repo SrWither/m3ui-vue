@@ -212,6 +212,12 @@ export interface M3Locale {
   mapNoBaseLayer: string
   mapHoverInfo: string
   mapNoValue: string
+  mapMeasureDistance: string
+  mapMeasureArea: string
+  mapClearMeasurements: string
+  mapDeleteMeasurement: string
+  mapTotal: string
+  mapSearchPlaces: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -409,6 +415,12 @@ export const defaultLocale: M3Locale = {
   mapNoBaseLayer: 'No base layer',
   mapHoverInfo: 'Info on hover',
   mapNoValue: 'Not available',
+  mapMeasureDistance: 'Measure distance',
+  mapMeasureArea: 'Measure area',
+  mapClearMeasurements: 'Clear measurements',
+  mapDeleteMeasurement: 'Delete measurement',
+  mapTotal: 'Total',
+  mapSearchPlaces: 'Search places',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')

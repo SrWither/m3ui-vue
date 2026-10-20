@@ -207,4 +207,10 @@ export const zhLocale: M3Locale = {
   mapNoBaseLayer: '无底图',
   mapHoverInfo: '悬停显示信息',
   mapNoValue: '不可用',
+  mapMeasureDistance: '测量距离',
+  mapMeasureArea: '测量面积',
+  mapClearMeasurements: '清除测量',
+  mapDeleteMeasurement: '删除测量',
+  mapTotal: '总计',
+  mapSearchPlaces: '搜索地点',
 }

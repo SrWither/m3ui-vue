@@ -207,4 +207,10 @@ export const frLocale: M3Locale = {
   mapNoBaseLayer: 'Aucun fond de carte',
   mapHoverInfo: 'Infos au survol',
   mapNoValue: 'Non disponible',
+  mapMeasureDistance: 'Mesurer une distance',
+  mapMeasureArea: 'Mesurer une surface',
+  mapClearMeasurements: 'Effacer les mesures',
+  mapDeleteMeasurement: 'Supprimer la mesure',
+  mapTotal: 'Total',
+  mapSearchPlaces: 'Rechercher un lieu',
 }

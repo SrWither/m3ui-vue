@@ -24,3 +24,9 @@ export type {
   MapLayerModel,
   OrvianAdapterOptions,
 } from './composables/mapAdapters'
+export { default as MMapMeasure } from './components/MMapMeasure.vue'
+export { default as MMapFilter } from './components/MMapFilter.vue'
+export { useMapFilter } from './composables/useMapFilter'
+export { default as MMapSearch } from './components/MMapSearch.vue'
+export { nominatimProvider } from './composables/mapSearch'
+export type { MapSearchProvider, MapSearchResult, NominatimOptions } from './composables/mapSearch'

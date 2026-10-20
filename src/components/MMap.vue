@@ -87,7 +87,8 @@ const maplibre = shallowRef<MaplibreModule>()
 const styleVersion = ref(0)
 const model = shallowRef<MapLayerModel>()
 const layerState = createLayerState()
-provide(MAP_KEY, { map, maplibre, styleVersion, model, layerState })
+const activeTool = ref<string | null>(null)
+provide(MAP_KEY, { map, maplibre, styleVersion, model, layerState, activeTool })
 
 /** The adapter's model of the current style, and the layers' visibility and opacity in it. */
 function readModel(m: Maplibre.Map) {

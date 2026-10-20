@@ -207,4 +207,10 @@ export const deLocale: M3Locale = {
   mapNoBaseLayer: 'Keine Grundkarte',
   mapHoverInfo: 'Infos beim Überfahren',
   mapNoValue: 'Nicht verfügbar',
+  mapMeasureDistance: 'Entfernung messen',
+  mapMeasureArea: 'Fläche messen',
+  mapClearMeasurements: 'Messungen löschen',
+  mapDeleteMeasurement: 'Messung löschen',
+  mapTotal: 'Gesamt',
+  mapSearchPlaces: 'Orte suchen',
 }

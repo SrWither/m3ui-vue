@@ -79,6 +79,19 @@ export class FakeMap extends Evented {
   setLayoutProperty(id: string, prop: string, value: unknown) { const l = this.styleLayer(id); if (l) l.layout = { ...l.layout, [prop]: value } }
   getPaintProperty(id: string, prop: string) { return this.styleLayer(id)?.paint?.[prop] }
   setPaintProperty(id: string, prop: string, value: unknown) { const l = this.styleLayer(id); if (l) l.paint = { ...l.paint, [prop]: value } }
+  // Screen position: 1px per 0.001° (enough to tell near from far)
+  project([lng, lat]: number[]) { return { x: lng! * 1000, y: -lat! * 1000 } }
+  doubleClickZoom = { enabled: true, enable() { this.enabled = true }, disable() { this.enabled = false } }
+  dragPan = { enabled: true, enable() { this.enabled = true }, disable() { this.enabled = false } }
+  filters = new Map<string, unknown>()
+  getFilter(id: string) { return this.filters.get(id) ?? (this.styleLayer(id) as { filter?: unknown } | undefined)?.filter }
+  setFilter(id: string, filter: unknown) { this.filters.set(id, filter) }
+  /** A source's loaded features, set by tests */
+  sourceFeatures: { properties: Record<string, unknown> }[] = []
+  querySourceFeatures() { return this.sourceFeatures }
+  flights: unknown[] = []
+  flyTo(o: unknown) { this.flights.push(['flyTo', o]) }
+  fitBounds(b: unknown, o?: unknown) { this.flights.push(['fitBounds', b, o]) }
   /** Features "under the pointer", set by tests */
   rendered: { layer: { id: string }; properties: Record<string, unknown> }[] = []
   queryRenderedFeatures(_point: unknown, options?: { layers?: string[] }) { return this.rendered.filter((f) => !options?.layers || options.layers.includes(f.layer.id)) }

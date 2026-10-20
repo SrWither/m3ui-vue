@@ -18,6 +18,11 @@ export interface MapContext {
   model: ShallowRef<MapLayerModel | undefined>
   /** Visibility and opacity of the model's layers */
   layerState: MapLayerState
+  /**
+   * The tool that owns the map's clicks right now (`'measure'` while measuring), or null: `MMapIdentify` stays quiet
+   * meanwhile. Set it from tools of your own the same way
+   */
+  activeTool: Ref<string | null>
 }
 
 // Internal: provided by MMap
@@ -84,6 +89,8 @@ export function useMap() {
     map: computed(() => ctx.map.value) as ComputedRef<Maplibre.Map | undefined>,
     maplibre: computed(() => ctx.maplibre.value) as ComputedRef<MaplibreModule | undefined>,
     styleVersion: computed(() => ctx.styleVersion.value),
+    /** The tool that owns the map's clicks (null: none): set it while yours does, and leave it alone otherwise */
+    activeTool: ctx.activeTool,
     onReady,
     on,
     onLayer,

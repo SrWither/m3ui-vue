@@ -22,7 +22,7 @@ defineOptions({ inheritAttrs: false })
 
 const props = withDefaults(
   defineProps<{
-    /** Listen to clicks (pause it while another tool uses them, e.g. measuring) */
+    /** Listen to clicks. It also pauses by itself while another tool owns them (`MMapMeasure` measuring) */
     enabled?: boolean
     /** Show the results in a popup at the click */
     popup?: boolean
@@ -34,7 +34,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{ identify: [results: MapIdentifyResult[], lngLat: [number, number]] }>()
 
-const { on, onReady } = useMap()
+const { on, onReady, activeTool } = useMap()
 const { model } = useMapLayers()
 
 const results = shallowRef<MapIdentifyResult[]>([])
@@ -42,7 +42,8 @@ const lngLat = ref<[number, number]>([0, 0])
 const open = ref(false)
 
 on('click', (e) => {
-  if (!props.enabled) return
+  // Another tool (measuring…) owns the clicks
+  if (!props.enabled || activeTool.value) return
   const map = e.target as Maplibre.Map
   results.value = identifyFeatures(map, e.point, model.value)
   lngLat.value = [e.lngLat.lng, e.lngLat.lat]
@@ -58,7 +59,7 @@ watch(() => props.enabled, (enabled) => { if (!enabled) close() })
 // A hand over the layers that answer to a click
 let map: Maplibre.Map | undefined
 let hovered: string[] = []
-const enter = () => { if (props.enabled && map) map.getCanvas().style.cursor = 'pointer' }
+const enter = () => { if (props.enabled && !activeTool.value && map) map.getCanvas().style.cursor = 'pointer' }
 const leave = () => { if (map) map.getCanvas().style.cursor = '' }
 function bindCursor() {
   if (!map) return

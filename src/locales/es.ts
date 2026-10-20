@@ -207,4 +207,10 @@ export const esLocale: M3Locale = {
   mapNoBaseLayer: 'Sin capa base',
   mapHoverInfo: 'Información al pasar el cursor',
   mapNoValue: 'No disponible',
+  mapMeasureDistance: 'Medir distancia',
+  mapMeasureArea: 'Medir área',
+  mapClearMeasurements: 'Borrar mediciones',
+  mapDeleteMeasurement: 'Borrar medición',
+  mapTotal: 'Total',
+  mapSearchPlaces: 'Buscar lugares',
 }
