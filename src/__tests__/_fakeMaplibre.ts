@@ -78,6 +78,8 @@ export class FakeMap extends Evented {
   }
   removeLayer(id: string) { this.layers = this.layers.filter((l) => l.id !== id) }
   getCanvas() { return this.canvas }
+  container = document.createElement('div')
+  getContainer() { return this.container }
   /** The style getStyle() returns (with `layers` and `metadata`), set by tests */
   style: { name?: string; metadata?: unknown; layers: { id: string; type: string; metadata?: unknown; layout?: Record<string, unknown>; paint?: Record<string, unknown> }[] } = { layers: [] }
   getStyle() { return this.style }

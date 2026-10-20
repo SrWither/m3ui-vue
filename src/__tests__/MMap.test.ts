@@ -50,9 +50,46 @@ describe('MMap', () => {
 
   it('adds the default controls at their corners, and follows the props', async () => {
     const { wrapper, map } = await mountMap()
-    expect(controlNames(map)).toEqual(['NavigationControl@top-right', 'ScaleControl@bottom-left', 'AttributionControl@bottom-right'])
+    expect(controlNames(map)).toEqual(['NavigationControl@top-right', 'ScaleControl@bottom-left'])
     await wrapper.setProps({ geolocate: true, navigation: 'top-left', scale: false })
-    expect(controlNames(map).sort()).toEqual(['AttributionControl@bottom-right', 'GeolocateControl@top-right', 'NavigationControl@top-left'])
+    expect(controlNames(map).sort()).toEqual(['GeolocateControl@top-right', 'NavigationControl@top-left'])
+  })
+
+  it('credits the sources the style uses in an attribution of its own, open until the map is dragged', async () => {
+    const wrapper = mount(MMap, { props: { mapStyle: 's' }, attachTo: document.body })
+    await flushPromises()
+    const map = created.maps.at(-1)!
+    Object.assign(map.style, {
+      sources: {
+        osm: { attribution: '<a href="https://osm.org">© OpenStreetMap</a>' },
+        tiles: { attribution: '© OpenStreetMap' },
+        unused: { attribution: 'Not drawn' },
+      },
+      layers: [{ id: 'a', type: 'raster', source: 'osm' }, { id: 'b', type: 'fill', source: 'tiles' }],
+    })
+    map.load()
+    await nextTick()
+    await nextTick()
+    const attribution = () => map.controls.find((c) => c.position === 'bottom-right')?.control.onAdd!(map)
+    const el = attribution()!
+    expect(el.classList.contains('m3-map-attrib')).toBe(true)
+    // Unused sources left out, one contained in another dropped, links kept
+    expect(el.querySelector('.m3-map-attrib-text')!.textContent).toBe('© OpenStreetMap')
+    expect(el.querySelector('a')?.getAttribute('href')).toBe('https://osm.org')
+
+    map.fire('dragstart')
+    await nextTick()
+    expect(el.querySelector('.m3-map-attrib-text')).toBeNull()
+    el.querySelector<HTMLElement>('button')!.click()
+    await nextTick()
+    expect(el.querySelector('.m3-map-attrib-text')).not.toBeNull()
+
+    await wrapper.setProps({ attribution: 'top-left' })
+    await nextTick()
+    expect(map.controls.some((c) => c.position === 'top-left')).toBe(true)
+    await wrapper.setProps({ attribution: false })
+    await nextTick()
+    expect(map.controls.map((c) => c.position).sort()).toEqual(['bottom-left', 'top-right'])
   })
 
   it('emits the view on moveend (v-model) and remembers it with persist', async () => {
@@ -253,6 +290,82 @@ describe('MMapControl', () => {
     expect(el.textContent).toBe('Layers')
     await wrapper.setProps({ show: false })
     expect(map.controls.some((c) => c.position === 'top-left')).toBe(false)
+  })
+  /** An MMapControl with a #panel: a layers button that expands into a list. */
+  async function mountExpanding(expanded?: boolean) {
+    const onExpanded = vi.fn()
+    const wrapper = await mountMap({}, () =>
+      h(MMapControl, { position: 'top-left', expanded, 'onUpdate:expanded': onExpanded }, {
+        default: ({ toggle }: { toggle: () => void }) => h('button', { class: 'open', onClick: toggle }, 'Layers'),
+        panel: ({ close }: { close: () => void }) => h('div', { class: 'panel' }, [h('span', 'Satellite'), h('button', { class: 'shut', onClick: close }, 'x')]),
+      }),
+    )
+    const control = wrapper.map.controls.find((c) => c.position === 'top-left')!
+    const el = control.control.onAdd!(wrapper.map) as HTMLElement
+    document.body.appendChild(el)
+    return { ...wrapper, el, onExpanded }
+  }
+
+  it('a #panel expands the control in place on toggle, and closes from inside it, on Escape or outside', async () => {
+    const { el, onExpanded } = await mountExpanding()
+    expect(el.classList.contains('maplibregl-ctrl-group')).toBe(true)
+    el.querySelector<HTMLElement>('.open')!.click()
+    await nextTick()
+    expect(onExpanded).toHaveBeenLastCalledWith(true)
+    expect(el.querySelector('.panel')).not.toBeNull()
+    // The panel isn't a control group: its buttons keep their own look
+    expect(el.classList.contains('maplibregl-ctrl-group')).toBe(false)
+    expect(el.classList.contains('m3-map-control-panel')).toBe(true)
+
+    el.querySelector<HTMLElement>('.shut')!.click()
+    await nextTick()
+    expect(onExpanded).toHaveBeenLastCalledWith(false)
+    expect(el.querySelector('.panel')).toBeNull()
+
+    el.querySelector<HTMLElement>('.open')!.click()
+    await nextTick()
+    // A press inside it doesn't close it
+    el.querySelector('.panel')!.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
+    await nextTick()
+    expect(el.querySelector('.panel')).not.toBeNull()
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    await nextTick()
+    expect(el.querySelector('.panel')).toBeNull()
+
+    el.querySelector<HTMLElement>('.open')!.click()
+    await nextTick()
+    document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
+    await nextTick()
+    expect(el.querySelector('.panel')).toBeNull()
+  })
+
+  it('opens expanded from v-model:expanded', async () => {
+    const { el } = await mountExpanding(true)
+    expect(el.querySelector('.panel')).not.toBeNull()
+  })
+
+  it('springs its size from the old one when its content resizes', async () => {
+    let report: () => void = () => {}
+    vi.stubGlobal('ResizeObserver', class { constructor(cb: () => void) { report = cb } observe() {} disconnect() {} })
+    const sizes = [{ w: 40, h: 40 }, { w: 220, h: 160 }]
+    let i = 0
+    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(() => sizes[i]!.w)
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(() => sizes[i]!.h)
+    const { el } = await mountExpanding()
+    report()
+    i = 1
+    el.querySelector<HTMLElement>('.open')!.click()
+    await nextTick()
+    report()
+    const [grow] = el.getAnimations()
+    const frames = (grow!.effect as KeyframeEffect).getKeyframes()
+    expect([frames[0]!.width, frames[0]!.height]).toEqual(['40px', '40px'])
+    expect([frames.at(-1)!.width, frames.at(-1)!.height]).toEqual(['220px', '160px'])
+    expect(el.style.overflow).toBe('hidden')
+    grow!.finish()
+    expect(el.style.overflow).toBe('')
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
   })
 })
 

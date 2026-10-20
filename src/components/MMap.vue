@@ -19,6 +19,7 @@
  */
 import { markRaw, onBeforeUnmount, onMounted, onUnmounted, provide, ref, shallowRef, watch } from 'vue'
 import type * as Maplibre from 'maplibre-gl'
+import MMapAttribution from './_MMapAttribution.vue'
 import { useLocale } from '../composables/useLocale'
 import { MAP_KEY, type MaplibreModule } from '../composables/useMap'
 import { createLayerState, readLayerState } from '../composables/useMapLayers'
@@ -51,7 +52,7 @@ const props = withDefaults(
     fullscreen?: boolean | MapControlPosition
     /** A metric scale bar: `false`, or a corner (`true` is bottom-left) */
     scale?: boolean | MapControlPosition
-    /** The style's attribution, compact: `false`, or a corner (`true` is bottom-right). Most tile providers require it */
+    /** The credits of the style's sources, an info button that opens into a pill: `false`, or a corner (`true` is bottom-right). Most tile providers require it */
     attribution?: boolean | MapControlPosition
     /** Anything else for MapLibre's `Map` constructor (`maxZoom`, `maxBounds`, `cooperativeGestures`…) */
     options?: Partial<Omit<Maplibre.MapOptions, 'container' | 'style'>>
@@ -123,7 +124,8 @@ function currentView(m: Maplibre.Map): View {
 
 // ── Controls ───────────────────────────────────────────────────────────────────────────────────
 
-type ControlName = 'navigation' | 'geolocate' | 'fullscreen' | 'scale' | 'attribution'
+// The attribution is a component of ours (_MMapAttribution, in the template), not MapLibre's control
+type ControlName = 'navigation' | 'geolocate' | 'fullscreen' | 'scale'
 const CONTROLS: Record<ControlName, { corner: MapControlPosition; create: (ml: MaplibreModule) => Maplibre.IControl }> = {
   navigation: { corner: 'top-right', create: (ml) => new ml.NavigationControl() },
   geolocate: {
@@ -132,7 +134,6 @@ const CONTROLS: Record<ControlName, { corner: MapControlPosition; create: (ml: M
   },
   fullscreen: { corner: 'top-right', create: (ml) => new ml.FullscreenControl({ container: root.value }) },
   scale: { corner: 'bottom-left', create: (ml) => new ml.ScaleControl({ maxWidth: 100, unit: 'metric' }) },
-  attribution: { corner: 'bottom-right', create: (ml) => new ml.AttributionControl({ compact: true }) },
 }
 const added = new Map<ControlName, Maplibre.IControl>()
 
@@ -347,6 +348,8 @@ defineExpose({
   >
     <!-- Sized, not positioned: MapLibre's CSS makes it position: relative (.maplibregl-map), which would undo absolute -->
     <div ref="container" class="h-full w-full" />
+    <!-- Before the slot: added to its corner first, so it stays at the corner's edge -->
+    <MMapAttribution v-if="map && attribution" :position="attribution === true ? 'bottom-right' : attribution" />
     <slot v-if="map" />
     <Transition
       enter-active-class="transition-opacity duration-150"
@@ -384,6 +387,25 @@ defineExpose({
 .m3-map .maplibregl-ctrl-group:not(:empty) {
   box-shadow: var(--shadow-elevation-2);
 }
+/* MMapControl: switching group on or off, or expanding into its panel, fades the surface instead of snapping */
+.m3-map .m3-map-control {
+  transition: background-color 200ms, box-shadow 200ms, border-radius 200ms;
+}
+.m3-map .m3-map-control-panel {
+  background: var(--color-surface-container-high);
+  color: var(--color-on-surface);
+  border-radius: 16px;
+  box-shadow: var(--shadow-elevation-2);
+}
+.m3-map .m3-map-control-panel-in {
+  animation: m3-map-control-in 200ms 60ms both;
+}
+@keyframes m3-map-control-in {
+  from { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .m3-map .m3-map-control-panel-in { animation: none; }
+}
 .m3-map .maplibregl-ctrl-group button {
   width: 40px;
   height: 40px;
@@ -392,20 +414,20 @@ defineExpose({
 .m3-map .maplibregl-ctrl-group button + button {
   border-top: 1px solid var(--color-outline-variant);
 }
-.m3-map .maplibregl-ctrl button:not(:disabled):hover {
+.m3-map .maplibregl-ctrl:not(.m3-map-control-panel) button:not(:disabled):hover {
   background-color: color-mix(in srgb, var(--color-on-surface) 8%, transparent);
 }
-.m3-map .maplibregl-ctrl button:not(:disabled):active {
+.m3-map .maplibregl-ctrl:not(.m3-map-control-panel) button:not(:disabled):active {
   background-color: color-mix(in srgb, var(--color-on-surface) 12%, transparent);
 }
 .m3-map .maplibregl-ctrl-group button[aria-pressed='true'] {
   background-color: var(--color-primary-container);
   color: var(--color-on-primary-container);
 }
-.m3-map .maplibregl-ctrl button:focus-visible {
+.m3-map .maplibregl-ctrl:not(.m3-map-control-panel) button:focus-visible {
   box-shadow: inset 0 0 0 2px var(--color-secondary);
 }
-.m3-map .maplibregl-ctrl button:disabled {
+.m3-map .maplibregl-ctrl:not(.m3-map-control-panel) button:disabled {
   color: color-mix(in srgb, var(--color-on-surface) 38%, transparent);
 }
 .m3-map .maplibregl-ctrl button .maplibregl-ctrl-icon {
@@ -414,8 +436,7 @@ defineExpose({
   justify-content: center;
   background-image: none !important;
 }
-.m3-map .maplibregl-ctrl button .maplibregl-ctrl-icon::before,
-.m3-map .maplibregl-ctrl-attrib-button::before {
+.m3-map .maplibregl-ctrl button .maplibregl-ctrl-icon::before {
   font-family: 'Material Symbols Outlined';
   font-size: 20px;
   line-height: 1;
@@ -440,31 +461,56 @@ defineExpose({
 .m3-map .maplibregl-ctrl-fullscreen .maplibregl-ctrl-icon::before { content: 'fullscreen'; }
 .m3-map .maplibregl-ctrl-shrink .maplibregl-ctrl-icon::before { content: 'fullscreen_exit'; }
 
-/* Compact attribution: a surface pill with an info button */
-.m3-map .maplibregl-ctrl-attrib {
-  background: color-mix(in srgb, var(--color-surface-container-high) 90%, transparent);
+/* Attribution (_MMapAttribution): a round icon button that opens into a pill with the credits. The surface is the
+   control itself, so MMapControl's size spring reveals the text; the row keeps its own width (max-content, capped at
+   the map's) so the text doesn't reflow while the control's size animates. */
+.m3-map .m3-map-attrib {
+  border-radius: 16px;
+  background: var(--color-surface-container-high);
+  box-shadow: var(--shadow-elevation-2);
   color: var(--color-on-surface-variant);
 }
-.m3-map .maplibregl-ctrl-attrib a {
-  color: inherit;
-}
-.m3-map .maplibregl-ctrl-attrib.maplibregl-compact {
-  min-height: 28px;
-  border-radius: 14px;
-}
-.m3-map .maplibregl-ctrl-attrib-button {
+.m3-map .m3-map-attrib-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 14px;
-  background: none !important;
-  color: var(--color-on-surface-variant);
+  width: max-content;
 }
-.m3-map .maplibregl-ctrl-attrib-button::before {
-  content: 'info';
-  font-size: 18px;
+.m3-map .m3-map-attrib-button {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  color: var(--color-on-surface-variant);
+  cursor: pointer;
+  transition: background-color 150ms, color 150ms;
+}
+.m3-map .m3-map-attrib-button:hover {
+  background-color: color-mix(in srgb, var(--color-on-surface) 8%, transparent);
+}
+.m3-map .m3-map-attrib-button:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--color-secondary);
+}
+.m3-map .m3-map-attrib-open .m3-map-attrib-button {
+  color: var(--color-primary);
+}
+.m3-map .m3-map-attrib-text {
+  min-width: 0;
+  padding-block: 8px;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.4px;
+  animation: m3-map-control-in 200ms 60ms both;
+}
+.m3-map .m3-map-attrib-text a {
+  color: var(--color-on-surface);
+  text-decoration: none;
+}
+.m3-map .m3-map-attrib-text a:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 .m3-map .maplibregl-ctrl-scale {
   background: color-mix(in srgb, var(--color-surface-container-high) 85%, transparent);
