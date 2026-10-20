@@ -9,6 +9,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import MIcon from './MIcon.vue'
 import { vRipple } from '../directives/vRipple'
+import { POPUP_MARGIN, dropdownX, fitPopup } from '../composables/_popupPosition'
 
 export interface SplitButtonItem {
   label: string
@@ -114,21 +115,34 @@ const buttonStateClasses = computed(() => {
   ]
 })
 
+// At least as wide as the button, at the window's left edge until placeMenu() can measure it (once it's in the
+// DOM, before it paints) and keep it on screen (see _popupPosition.ts): under the button, aligned with its start
+// edge, else its end edge or the window edge; above it when it doesn't fit below
+let anchorRect: DOMRect | null = null
 function computeMenuPos() {
   if (!containerEl.value) return
   const rect = containerEl.value.getBoundingClientRect()
-  const menuH = (props.items?.length ?? 0) * 44 + 16
-  const spaceBelow = window.innerHeight - rect.bottom - 8
-  const above = spaceBelow < menuH && rect.top > menuH
+  anchorRect = rect
   menuStyle.value = {
     position: 'fixed',
     zIndex: '500',
-    left: `${rect.left}px`,
+    left: '0px',
+    top: `${rect.bottom + 4}px`,
     minWidth: `${rect.width}px`,
-    ...(above
-      ? { bottom: `${window.innerHeight - rect.top + 4}px` }
-      : { top: `${rect.bottom + 4}px` }),
+    maxWidth: `${window.innerWidth - 2 * POPUP_MARGIN}px`,
   }
+}
+
+function placeMenu(el: Element) {
+  if (!anchorRect) return
+  const menu = el as HTMLElement
+  const w = menu.offsetWidth
+  const h = menu.offsetHeight
+  const left = dropdownX(anchorRect, w, window.innerWidth, 'start')
+  const top = fitPopup([anchorRect.bottom + 4, anchorRect.top - 4 - h], h, window.innerHeight)
+  menuStyle.value = { ...menuStyle.value, left: `${left}px`, top: `${top}px` }
+  menu.style.left = `${left}px`
+  menu.style.top = `${top}px`
 }
 
 function toggleMenu() {
@@ -217,6 +231,7 @@ onUnmounted(() => {
       enter-from-class="opacity-0 -translate-y-1 scale-[0.98]"
       leave-active-class="transition-[opacity,transform] duration-100"
       leave-to-class="opacity-0 -translate-y-1 scale-[0.98]"
+      @enter="placeMenu"
     >
       <div
         v-if="open && items?.length"
@@ -245,6 +260,7 @@ onUnmounted(() => {
       enter-from-class="opacity-0 -translate-y-1 scale-[0.98]"
       leave-active-class="transition-[opacity,transform] duration-100"
       leave-to-class="opacity-0 -translate-y-1 scale-[0.98]"
+      @enter="placeMenu"
     >
       <div
         v-if="open && !items?.length && $slots.menu"

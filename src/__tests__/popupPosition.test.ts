@@ -3,6 +3,10 @@ import { defineComponent, h, nextTick } from 'vue'
 import { mount } from '@vue/test-utils'
 import MMenu from '../components/MMenu.vue'
 import MMenuItem from '../components/MMenuItem.vue'
+import MSplitButton from '../components/MSplitButton.vue'
+import MDatePicker from '../components/MDatePicker.vue'
+import MDateRangePicker from '../components/MDateRangePicker.vue'
+import MTimePicker from '../components/MTimePicker.vue'
 import { dropdownX, fitPopup } from '../composables/_popupPosition'
 
 const rect = (left: number, top: number, width: number, height: number) =>
@@ -96,5 +100,83 @@ describe('MMenu stays on screen', () => {
     // Right of it (350) overflows a 360px window; its left (150 - 200 = -50) too: clamped to the margin
     expect(sub.style.left).toBe('8px')
     expect(sub.style.top).toBe('140px')
+  })
+})
+
+describe('MSplitButton\'s menu stays on screen', () => {
+  beforeEach(() => {
+    document.body.innerHTML = ''
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(360)
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(700)
+    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(200)
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(150)
+  })
+  afterEach(() => vi.restoreAllMocks())
+
+  const open = async (button: DOMRect, slots?: Record<string, () => unknown>) => {
+    const w = mount(MSplitButton, {
+      props: { label: 'Save', items: slots ? undefined : [{ label: 'Save as draft' }, { label: 'Save and close' }] },
+      slots,
+      attachTo: document.body,
+      global: { stubs: { transition: false } },
+    })
+    // Two roots (the button and its Teleport): the button's container is the toggle's parent
+    w.find('.toggle-btn').element.parentElement!.getBoundingClientRect = () => button
+    await w.find('.toggle-btn').trigger('click')
+    await nextTick()
+    return w
+  }
+
+  it('near the right edge, it aligns with the button\'s end instead of running off', async () => {
+    // A 120px split button 8px from the right edge of a phone
+    await open(rect(232, 100, 120, 40))
+    const menu = document.querySelector<HTMLElement>('.rounded-xl.bg-surface-container')!
+    expect(menu.style.left).toBe('152px')
+    expect(menu.style.top).toBe('144px')
+  })
+
+  it('a custom menu that doesn\'t fit below opens above, measured rather than guessed', async () => {
+    await open(rect(20, 600, 120, 40), { menu: () => h('div', { class: 'custom' }, 'Custom') })
+    const menu = document.querySelector<HTMLElement>('.custom')!.parentElement!
+    expect(menu.style.top).toBe('446px')
+    expect(menu.style.left).toBe('20px')
+  })
+})
+
+describe.each([
+  ['MDatePicker', MDatePicker, null],
+  ['MDateRangePicker', MDateRangePicker, { start: null, end: null }],
+  ['MTimePicker', MTimePicker, null],
+] as const)('%s\'s dropdown stays on screen', (_, Comp, value) => {
+  beforeEach(() => {
+    document.body.innerHTML = ''
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(360)
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(700)
+    // The panel's real size, whatever its content
+    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(300)
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(380)
+  })
+  afterEach(() => vi.restoreAllMocks())
+
+  const open = async (field: DOMRect) => {
+    const w = mount(Comp as any, { props: { modelValue: value }, attachTo: document.body, global: { stubs: { transition: false } } })
+    const button = w.find('button')
+    button.element.parentElement!.getBoundingClientRect = () => field
+    await button.trigger('click')
+    await nextTick()
+    return document.querySelector<HTMLElement>('.fixed.z-500')!
+  }
+
+  it('a field on the right half aligns the panel with its end edge', async () => {
+    const panel = await open(rect(200, 100, 152, 56))
+    expect(panel.style.left).toBe('52px')
+    expect(panel.style.top).toBe('160px')
+    expect(panel.style.maxWidth).toBe('344px')
+  })
+
+  it('opens above when the measured panel doesn\'t fit below', async () => {
+    const panel = await open(rect(20, 500, 300, 56))
+    expect(panel.style.top).toBe('116px')
+    expect(panel.style.left).toBe('20px')
   })
 })

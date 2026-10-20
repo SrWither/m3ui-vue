@@ -9,6 +9,7 @@ import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 import { useLocale } from '../composables/useLocale'
+import { POPUP_MARGIN, dropdownX, fitPopup } from '../composables/_popupPosition'
 
 export interface DateRange {
   start: string | null
@@ -65,7 +66,7 @@ const triggerEl = ref<HTMLElement | null>(null)
 const panelEl = ref<HTMLElement | null>(null)
 const picking = ref<'start' | 'end'>('start')
 const hovered = ref<string | null>(null)
-const dropPos = ref({ top: '0px', left: '0px' })
+const dropPos = ref<Record<string, string>>({ top: '0px', left: '0px' })
 const { resolvedFieldBg } = useFieldBg(triggerEl, () => props.fieldBg)
 
 const viewDate = ref(
@@ -160,16 +161,31 @@ const displayValue = computed(() => {
 
 function clear() { emit('update:modelValue', { start: null, end: null }); picking.value = 'start' }
 
+// The panel's size isn't known until it's in the DOM: placeDrop() keeps it on screen once it is, before it paints
+// (see _popupPosition.ts): under the field, aligned with its start edge, else its end edge or the window edge;
+// above it when it doesn't fit below. Until then it waits at the window's left edge, where nothing narrows it.
+let anchorRect: DOMRect | null = null
 function computeDropPos() {
   if (!triggerEl.value) return
   const rect = triggerEl.value.getBoundingClientRect()
-  const panelH = 400
-  const spaceBelow = window.innerHeight - rect.bottom - 8
-  const above = spaceBelow < panelH && rect.top > panelH
+  anchorRect = rect
   dropPos.value = {
-    top: above ? `${rect.top - 4 - panelH}px` : `${rect.bottom + 4}px`,
-    left: `${rect.left}px`,
+    top: `${rect.bottom + 4}px`,
+    left: '0px',
+    maxWidth: `${window.innerWidth - 2 * POPUP_MARGIN}px`,
   }
+}
+
+function placeDrop(el: Element) {
+  if (!anchorRect) return
+  const panel = el as HTMLElement
+  const w = panel.offsetWidth
+  const h = panel.offsetHeight
+  const left = dropdownX(anchorRect, w, window.innerWidth, 'start')
+  const top = fitPopup([anchorRect.bottom + 4, anchorRect.top - 4 - h], h, window.innerHeight)
+  dropPos.value = { ...dropPos.value, left: `${left}px`, top: `${top}px` }
+  panel.style.left = `${left}px`
+  panel.style.top = `${top}px`
 }
 
 function onOut(e: MouseEvent) {
@@ -245,6 +261,7 @@ onUnmounted(() => {
         enter-from-class="opacity-0 -translate-y-1 scale-[0.98]"
         leave-active-class="transition-[opacity,transform] duration-100"
         leave-to-class="opacity-0 -translate-y-1 scale-[0.98]"
+        @enter="placeDrop"
       >
         <div
           v-if="open"
