@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.1.1] - Unreleased
+## [1.1.1] - 2026-10-20
 
 ### Fixed
 - `MShape` ignored a position or display class passed to it: its root carried `relative inline-block` as utilities, so `class="absolute inset-0"` or `block` won or lost depending on Tailwind's stylesheet order (`relative` won, and a shape meant to sit behind an icon pushed it below instead). The defaults now live in `@layer base`, which any utility overrides
