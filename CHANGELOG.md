@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.1.2] - Unreleased
+## [1.1.2] - 2026-10-20
 
 ### Fixed
 - Server rendering (Nuxt, Vite SSR) failed with `ResizeObserver is not defined` on a page with an `MDialog` open on load (also `MConfirmDialog` and the picker dialogs, built on it), since 1.1.0: the dialog's open watcher now runs immediately so a dialog mounted open gets Escape and the scroll lock, and on the server it went on to observe its content's size
