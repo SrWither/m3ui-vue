@@ -16,6 +16,7 @@
 import { computed, inject, nextTick, onMounted, onUnmounted, ref, useSlots, watch } from 'vue'
 import MIcon from './MIcon.vue'
 import { FAST_EFFECTS, FAST_SPATIAL, useSpring } from '../composables/_useSpring'
+import { POPUP_MARGIN, fitPopup } from '../composables/_popupPosition'
 
 const props = withDefaults(defineProps<{
   /** Material Symbol icon name */
@@ -123,18 +124,33 @@ const iconSlotEl = ref<HTMLElement>()
 const showSub = ref(false)
 const subStyle = ref<Record<string, string>>({})
 
+// To the item's right, else its left, else clamped on screen (see _popupPosition.ts); placeSub() settles it once
+// the submenu is in the DOM and its size is known, before it paints
 function positionSub() {
   if (!itemEl.value) return
   const rect = itemEl.value.getBoundingClientRect()
-  const right = rect.right + 200 > window.innerWidth
   subStyle.value = {
     position: 'fixed',
     top: `${rect.top}px`,
-    ...(right
-      ? { right: `${window.innerWidth - rect.left}px` }
-      : { left: `${rect.right}px` }),
+    left: `${rect.right}px`,
+    maxWidth: `${window.innerWidth - 2 * POPUP_MARGIN}px`,
     zIndex: '501',
   }
+}
+
+function placeSub(el: Element) {
+  if (!itemEl.value) return
+  const sub = el as HTMLElement
+  const rect = itemEl.value.getBoundingClientRect()
+  // Measured at the window's left edge, where nothing narrows it
+  sub.style.left = '0px'
+  const w = sub.offsetWidth
+  const h = sub.offsetHeight
+  const left = fitPopup([rect.right, rect.left - w], w, window.innerWidth)
+  const top = fitPopup([rect.top, rect.bottom - h], h, window.innerHeight)
+  subStyle.value = { ...subStyle.value, left: `${left}px`, top: `${top}px` }
+  sub.style.left = `${left}px`
+  sub.style.top = `${top}px`
 }
 
 function toggleSub() {
@@ -246,6 +262,7 @@ function onSubPointerLeave(e: PointerEvent) {
         enter-from-class="opacity-0"
         leave-active-class="transition-opacity duration-75"
         leave-to-class="opacity-0"
+        @enter="placeSub"
       >
         <div
           v-if="showSub"

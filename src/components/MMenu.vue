@@ -9,6 +9,7 @@
 import { computed, Fragment, inject, nextTick, onMounted, onUnmounted, provide, ref, useSlots, watch, type VNode } from 'vue'
 import MIcon from './MIcon.vue'
 import MMenuDivider from './MMenuDivider.vue'
+import { POPUP_MARGIN, dropdownX } from '../composables/_popupPosition'
 
 defineOptions({ inheritAttrs: false })
 
@@ -221,6 +222,7 @@ function playTrajectory(el: Element, done: () => void, opening: boolean) {
   finishLeave = opening ? null : () => { cancelActive?.(); cancelActive = null; finishLeave = null; done() }
 }
 function panelEnter(el: Element, done: () => void) {
+  placeX(el as HTMLElement)
   playTrajectory(el, done, true)
 }
 function panelLeave(el: Element, done: () => void) {
@@ -275,29 +277,48 @@ onUnmounted(() => {
 const siblingGroup = inject<{ current: (() => void) | null } | null>('m-menu-sibling-group', null)
 provide('m-menu-sibling-group', { current: null })
 
+// The vertical side and height from the trigger alone; the horizontal position needs the panel's width, so
+// placeX() sets it once the panel is in the DOM (in its enter hook, before it paints). Until then it sits at the
+// window's left edge, where nothing narrows it while it's measured.
+let anchorRect: DOMRect | null = null
+const openAbove = ref(false)
 function computePos() {
   if (!triggerEl.value) return
   const rect = triggerEl.value.getBoundingClientRect()
+  anchorRect = rect
   const spaceBelow = window.innerHeight - rect.bottom - 8
-  const openAbove = spaceBelow < 200 && rect.top > spaceBelow
+  openAbove.value = spaceBelow < 200 && rect.top > spaceBelow
 
   const style: Record<string, string> = {
-    maxHeight: `${Math.min(openAbove ? rect.top - 12 : spaceBelow, 400)}px`,
+    maxHeight: `${Math.min(openAbove.value ? rect.top - 12 : spaceBelow, 400)}px`,
+    maxWidth: `${window.innerWidth - 2 * POPUP_MARGIN}px`,
+    left: '0px',
   }
 
-  if (openAbove) {
+  if (openAbove.value) {
     style.bottom = `${window.innerHeight - rect.top + 4}px`
   } else {
     style.top = `${rect.bottom + 4}px`
   }
 
-  if (props.align === 'right') {
-    style.right = `${window.innerWidth - rect.right}px`
-  } else {
-    style.left = `${rect.left}px`
-  }
-
   dropStyle.value = style
+}
+
+// Keeps the panel on screen (Compose's DropdownMenuPositionProvider, see _popupPosition.ts): aligned with the
+// trigger's `align` edge if it fits there, else its other edge, else against the window edge on its side. The
+// animation grows from the trigger, wherever the panel ended up.
+const originX = ref(props.align === 'right' ? 'right' : 'left')
+function placeX(el: HTMLElement) {
+  if (!anchorRect) return
+  const width = el.offsetWidth
+  const x = dropdownX(anchorRect, width, window.innerWidth, props.align === 'right' ? 'end' : 'start')
+  const pivot = Math.min(width, Math.max(0, (anchorRect.left + anchorRect.right) / 2 - x))
+  const fromEdge = Math.abs(x - anchorRect.left) < 1 ? 'left' : Math.abs(x + width - anchorRect.right) < 1 ? 'right' : `${pivot}px`
+  originX.value = fromEdge
+  dropStyle.value = { ...dropStyle.value, left: `${x}px` }
+  // Now, not on the next render: the enter animation starts this frame
+  el.style.left = `${x}px`
+  el.style.transformOrigin = `${fromEdge} ${openAbove.value ? 'bottom' : 'top'}`
 }
 
 function focusableItems() {
@@ -392,9 +413,7 @@ onUnmounted(() => {
   else cancelActive?.()
 })
 
-const origin = computed(() =>
-  props.align === 'right' ? 'top right' : 'top left',
-)
+const origin = computed(() => `${originX.value} ${openAbove.value ? 'bottom' : 'top'}`)
 </script>
 
 <template>
