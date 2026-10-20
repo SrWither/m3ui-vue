@@ -45,9 +45,12 @@ const props = withDefaults(
 
 const clipId = `m3-shape-${useId()}`
 
-// Normalized 0-1 coordinates (size: 1) so the path works as an objectBoundingBox clipPath,
-// which scales correctly with the element's actual rendered size instead of a fixed px box.
-const pathD = ref(toSvgPath(getShape(props.shape), 1))
+// The clip path uses objectBoundingBox units (0-1), so it scales with the element's actual
+// rendered size instead of a fixed px box. The path itself is built at size 100 and scaled down
+// by the clipPath's transform: shape-morph writes 2 decimals, which at size 1 snapped every point
+// to 1% of the shape (4px steps on a 400px shape, a visibly wobbly outline).
+const SIZE = 100
+const pathD = ref(toSvgPath(getShape(props.shape), SIZE))
 
 let morph: AnimatedMorph | null = null
 let settledShape = props.shape
@@ -70,7 +73,7 @@ watch(() => props.shape, (next, prev) => {
   if (!prev || next === prev) return
   morph?.dispose()
   if (!props.animate) {
-    pathD.value = toSvgPath(getShape(next), 1)
+    pathD.value = toSvgPath(getShape(next), SIZE)
     settledShape = next
     return
   }
@@ -79,7 +82,7 @@ watch(() => props.shape, (next, prev) => {
   // the last shape that had actually settled rather than the current on-screen outline.
   morph = new AnimatedMorph(settledShape, next, {
     spring: springFor(props.speed),
-    size: 1,
+    size: SIZE,
     onFrame: (frame) => { pathD.value = frame.pathD },
   })
   // The constructor only emits the start shape at progress 0 — setting `progress` is what
@@ -94,11 +97,11 @@ onUnmounted(() => morph?.dispose())
 </script>
 
 <template>
-  <span class="relative inline-block">
+  <span class="m3-shape">
     <svg width="0" height="0" class="absolute">
       <defs>
         <clipPath :id="clipId" clipPathUnits="objectBoundingBox">
-          <path :d="pathD" />
+          <path :d="pathD" :transform="`scale(${1 / SIZE})`" />
         </clipPath>
       </defs>
     </svg>
@@ -106,8 +109,19 @@ onUnmounted(() => morph?.dispose())
     <div v-if="$slots.default" class="h-full w-full" :style="{ clipPath: `url(#${clipId})` }">
       <slot />
     </div>
-    <svg v-else viewBox="0 0 1 1" class="h-full w-full">
+    <svg v-else :viewBox="`0 0 ${SIZE} ${SIZE}`" class="h-full w-full">
       <path :d="pathD" :fill="fill" />
     </svg>
   </span>
 </template>
+
+<style>
+/* Defaults in the base layer, not utilities on the root: any class the consumer passes
+   (absolute, block, ...) is a utility and always beats them, whatever Tailwind's order. */
+@layer base {
+  .m3-shape {
+    position: relative;
+    display: inline-block;
+  }
+}
+</style>
