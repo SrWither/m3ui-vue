@@ -18,17 +18,34 @@ import { sampleSpring, sampleAt, playSamples, prefersReducedMotion } from './_sp
  *
  * Wire it to a `<Transition :css="false" @enter @leave>` around a root holding
  * `[data-sheet-panel]` and `[data-sheet-scrim]`.
+ *
+ * Resting offsets other than fully open (MBottomSheet's partially expanded state) come from
+ * `anchors`: a released drag goes to the next anchor its fling points at, or past
+ * DISMISS_DISTANCE (or halfway to the next anchor, if closer) to the anchor nearest where it was
+ * dropped on that side, else back to the one it started from; off-screen (1) is always the last
+ * one and dismisses.
  */
 
 const DEFAULT_SPATIAL = motionSprings.standard.defaultSpatial
 const FAST_EFFECTS = motionSprings.standard.fastEffects
 const DEFAULT_EFFECTS = motionSprings.standard.defaultEffects
 
-/** Past this many px, or this fast (px/s) toward closing, a released drag dismisses. */
+/** Past this many px, or this fast (px/s), a released drag leaves its anchor (off-screen = dismissed). */
 const DISMISS_DISTANCE = 100
 const DISMISS_VELOCITY = 1000
 
-export function useSheetMotion(axis: 'x' | 'y', onDismiss: () => void) {
+export interface SheetMotionOptions {
+  /** Resting offsets while open, as fractions of the panel's size (0 = fully open). Default [0]. */
+  anchors?: (panel: HTMLElement) => number[]
+  /** The anchor an open lands on. Default 0. */
+  openAt?: (panel: HTMLElement) => number
+  /** The sheet is heading for this resting anchor (on open, a drag release or snapTo). */
+  onAnchor?: (anchor: number, panel: HTMLElement | null) => void
+  /** A drag took over the panel (true) or let go (false). */
+  onDrag?: (active: boolean) => void
+}
+
+export function useSheetMotion(axis: 'x' | 'y', onDismiss: () => void, opts: SheetMotionOptions = {}) {
   let panel: HTMLElement | null = null
   let scrim: HTMLElement | null = null
   // 0 = open, 1 = off-screen (a fraction of the panel's size); alpha is the scrim's opacity
@@ -43,7 +60,7 @@ export function useSheetMotion(axis: 'x' | 'y', onDismiss: () => void) {
   let settled: (() => void) | null = null
 
   let dragging = false
-  let dragStart = 0
+  let dragStart0 = 0
   let dragOrigin = 0
   let size = 1
   let lastMove = { at: 0, pos: 0 }
@@ -138,7 +155,9 @@ export function useSheetMotion(axis: 'x' | 'y', onDismiss: () => void) {
     alphaTarget = 0
     velocity = 0
     write()
-    animate(0, DEFAULT_SPATIAL, 1, done)
+    const to = panel && opts.openAt ? opts.openAt(panel) : 0
+    animate(to, DEFAULT_SPATIAL, 1, done)
+    opts.onAnchor?.(to, panel)
   }
 
   function onLeave(el: Element, done: () => void) {
@@ -147,48 +166,91 @@ export function useSheetMotion(axis: 'x' | 'y', onDismiss: () => void) {
     animate(1, FAST_EFFECTS, 0, done)
   }
 
-  function onDragStart(e: PointerEvent) {
-    // A sheet mounted already open never ran onEnter: find its elements from the handle.
-    const root = (e.currentTarget as HTMLElement).closest('[data-sheet-panel]')?.parentElement
+  // A drag along the axis, from any element in the panel; positions are clientX/clientY
+  function dragStart(from: Element, pos: number) {
+    // A sheet mounted already open never ran onEnter: find its elements from the target.
+    const root = from.closest('[data-sheet-panel]')?.parentElement
     if (root) bind(root)
     stopOffset()
     dragging = true
     size = (panel ? (axis === 'y' ? panel.offsetHeight : panel.offsetWidth) : 0) || 1
-    dragStart = axis === 'y' ? e.clientY : e.clientX
+    dragStart0 = pos
     dragOrigin = offset * size
     dragVelocity = 0
     lastMove = { at: performance.now(), pos: dragOrigin }
-    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+    opts.onDrag?.(true)
   }
 
-  function onDragMove(e: PointerEvent) {
-    if (!dragging) return
+  // Returns how far (px) the finger went past fully open, which the panel doesn't follow
+  function dragMove(pos: number): number {
+    if (!dragging) return 0
     const now = performance.now()
-    const pos = Math.max(0, dragOrigin + (axis === 'y' ? e.clientY : e.clientX) - dragStart)
+    const raw = dragOrigin + pos - dragStart0
+    const p = Math.max(0, raw)
     const dt = (now - lastMove.at) / 1000
-    if (dt > 0) dragVelocity = (pos - lastMove.pos) / dt
-    lastMove = { at: now, pos }
-    offset = pos / size
+    if (dt > 0) dragVelocity = (p - lastMove.pos) / dt
+    lastMove = { at: now, pos: p }
+    offset = p / size
     if (panel) panel.style.transform = translate(offset)
+    return Math.max(0, -raw)
   }
 
-  function onDragEnd() {
+  function dragEnd() {
     if (!dragging) return
     dragging = false
+    opts.onDrag?.(false)
     // A pause before lifting the finger means no fling.
     if (performance.now() - lastMove.at > 100) dragVelocity = 0
     velocity = dragVelocity / size
-    if (offset * size > DISMISS_DISTANCE || dragVelocity > DISMISS_VELOCITY) {
-      onDismiss()
+    const stops = [...(panel && opts.anchors ? opts.anchors(panel) : [0]), 1].sort((a, b) => a - b)
+    const nearest = (list: number[], x: number) =>
+      list.reduce((best, s) => (Math.abs(s - x) < Math.abs(best - x) ? s : best), list[0]!)
+    const start = nearest(stops, dragOrigin / size)
+    let to = start
+    if (Math.abs(dragVelocity) > DISMISS_VELOCITY) {
+      const ahead = dragVelocity > 0
+        ? stops.filter((s) => s > offset + 1e-3)
+        : stops.filter((s) => s < offset - 1e-3).reverse()
+      to = ahead[0] ?? (dragVelocity > 0 ? stops[stops.length - 1]! : stops[0]!)
     } else {
-      animate(0, DEFAULT_SPATIAL, alphaTarget)
+      // Past DISMISS_DISTANCE, or halfway to the next anchor when that's closer
+      const side = stops.filter((s) => (offset > start ? s > start : s < start))
+      const next = side.length ? nearest(side, start) : start
+      if (side.length && Math.abs(offset - start) > Math.min(DISMISS_DISTANCE / size, Math.abs(next - start) / 2)) {
+        to = nearest(side, offset)
+      }
     }
+    if (to >= 1) return onDismiss()
+    animate(to, DEFAULT_SPATIAL, alphaTarget)
+    opts.onAnchor?.(to, panel)
   }
+
+  function onDragStart(e: PointerEvent) {
+    const el = e.currentTarget as HTMLElement
+    dragStart(el, axis === 'y' ? e.clientY : e.clientX)
+    el.setPointerCapture(e.pointerId)
+  }
+
+  function onDragMove(e: PointerEvent) {
+    dragMove(axis === 'y' ? e.clientY : e.clientX)
+  }
+
+  const onDragEnd = dragEnd
+
+  /** Springs an open sheet to a resting anchor (not while a drag holds it). */
+  function snapTo(anchor: number) {
+    if (!panel || dragging || Math.abs(offset - anchor) < 1e-3) return
+    animate(anchor, DEFAULT_SPATIAL, alphaTarget)
+    opts.onAnchor?.(anchor, panel)
+  }
+
+  /** Where the panel is headed (or sits), as a fraction of its size. */
+  const target = () => offset
 
   onBeforeUnmount(() => {
     offsetAnim?.cancel()
     alphaAnim?.cancel()
   })
 
-  return { onEnter, onLeave, onDragStart, onDragMove, onDragEnd }
+  return { onEnter, onLeave, onDragStart, onDragMove, onDragEnd, dragStart, dragMove, dragEnd, snapTo, target }
 }
