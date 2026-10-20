@@ -27,6 +27,7 @@
  * dampingRatio 0.9 / stiffness 700) stepped in one rAF loop that writes transforms directly.
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { isHydrating } from '../composables/_hydration'
 import MIconButton from './MIconButton.vue'
 import MSpinner from './MSpinner.vue'
 import { useLocale } from '../composables/useLocale'
@@ -336,12 +337,15 @@ function hide() {
   animate()
 }
 
-// Not on the server (SSR): it renders closed there, and an open one opens on the client
+// Not on the server (SSR): it renders closed there, and an open one opens on the client. Hydrating that HTML
+// (createM3UI({ isHydrating })), the first render has to stay closed to match it: open once mounted instead
+const hydrating = isHydrating()
 watch(() => props.modelValue, (v) => {
   if (typeof document === 'undefined') return
   if (v) !rendered.value && show()
   else rendered.value && hide()
-}, { immediate: true })
+}, { immediate: !hydrating })
+if (hydrating) onMounted(() => { if (props.modelValue && !rendered.value) show() })
 watch(() => props.index, (v) => {
   if (v === currentIndex.value || !galleryItems.value[v]) return
   // Closed, or still opening (a consumer usually sets the index and opens in the same tick): show
