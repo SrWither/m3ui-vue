@@ -215,7 +215,23 @@ describe('MMapGeoJson', () => {
     expect(map.getSource('roads')).toBeTruthy()
     expect(map.layers.map((l) => l.id)).toEqual(['roads-0'])
     wrapper.unmount()
-    expect(map.getSource('roads')).toBeUndefined()
+    // Removed by MMapGeoJson before MMap removed the map
+    expect(map.sources.has('roads')).toBe(false)
+  })
+})
+
+describe('unmounting', () => {
+  it('lets the map components clean up before removing the map (leaving the page)', async () => {
+    const errors: unknown[] = []
+    const { wrapper, map } = await mountMap({}, () => [
+      h(MMapGeoJson, { id: 'zones', data: { type: 'FeatureCollection', features: [] } }),
+      h(MMapMarker, { lngLat: [0, 0] }),
+      h(MMapControl, () => h('button', 'x')),
+    ])
+    wrapper.vm.$.appContext.config.errorHandler = (e) => { errors.push(e) }
+    wrapper.unmount()
+    expect(errors).toEqual([])
+    expect(map.removed).toBe(true)
   })
 })
 

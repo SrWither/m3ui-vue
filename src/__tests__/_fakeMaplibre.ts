@@ -65,10 +65,17 @@ export class FakeMap extends Evented {
     const source = { data: spec.data, setData: (d: unknown) => { source.data = d } }
     this.sources.set(id, source)
   }
-  getSource(id: string) { return this.sources.get(id) }
+  getSource(id: string) {
+    if (this.removed) throw new TypeError("can't access property \"getSource\", this.style is undefined")
+    return this.sources.get(id)
+  }
   removeSource(id: string) { this.sources.delete(id) }
   addLayer(layer: { id: string }, before?: string) { this.layers.push({ ...layer, before }) }
-  getLayer(id: string) { return this.layers.find((l) => l.id === id) ?? this.styleLayer(id) }
+  getLayer(id: string) {
+    // Like MapLibre: a removed map has no style left
+    if (this.removed) throw new TypeError("can't access property \"getLayer\", this.style is undefined")
+    return this.layers.find((l) => l.id === id) ?? this.styleLayer(id)
+  }
   removeLayer(id: string) { this.layers = this.layers.filter((l) => l.id !== id) }
   getCanvas() { return this.canvas }
   /** The style getStyle() returns (with `layers` and `metadata`), set by tests */

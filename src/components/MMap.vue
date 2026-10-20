@@ -17,7 +17,7 @@
  * @event update:bearing The rotation changed (on `moveend`)
  * @event update:pitch The tilt changed (on `moveend`)
  */
-import { markRaw, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch } from 'vue'
+import { markRaw, onBeforeUnmount, onMounted, onUnmounted, provide, ref, shallowRef, watch } from 'vue'
 import type * as Maplibre from 'maplibre-gl'
 import { useLocale } from '../composables/useLocale'
 import { MAP_KEY, type MaplibreModule } from '../composables/useMap'
@@ -298,7 +298,9 @@ onMounted(async () => {
   })
 })
 
-onBeforeUnmount(() => {
+// After the children's unmount hooks (a parent's beforeUnmount runs before theirs): they remove their layers, markers
+// and controls from a map that still exists
+onUnmounted(() => {
   destroyed = true
   map.value?.remove()
   map.value = undefined
