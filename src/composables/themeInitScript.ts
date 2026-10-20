@@ -1,9 +1,9 @@
 import { THEME_KEY } from './useTheme'
-import { CONTRAST_KEY, CSS_KEY, PALETTE_KEY, STYLE_ID, type ContrastLevel } from './useColorPalette'
+import { CONTRAST_KEY, CSS_KEY, PALETTE_KEY, STYLE_ID, type ContrastLevel, type PaletteId } from './useColorPalette'
 
 export interface ThemeInitOptions {
   /** `createM3UI`'s `palette`: the first-visit default, or forced with `persistPalette: false`. */
-  palette?: string
+  palette?: PaletteId | (string & {})
   /** `createM3UI`'s `contrast`, with the same rules as `palette`. */
   contrast?: ContrastLevel
   /** `createM3UI`'s `persistPalette`. */

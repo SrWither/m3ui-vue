@@ -13,7 +13,7 @@ export interface Palette {
   seed: string
 }
 
-export const palettes: Palette[] = [
+const builtInPalettes = [
   { id: 'purple',      label: 'Purple',      seed: '#6750A4' },
   { id: 'indigo',      label: 'Indigo',      seed: '#4355B9' },
   { id: 'navy',        label: 'Navy',        seed: '#354BA0' },
@@ -54,7 +54,13 @@ export const palettes: Palette[] = [
   { id: 'amethyst',    label: 'Amethyst',    seed: '#5953AC' },
   { id: 'magenta',     label: 'Magenta',     seed: '#8D3F92' },
   { id: 'mauve',       label: 'Mauve',       seed: '#914277' },
-]
+] as const
+
+/** The id of a palette that ships with the library (`palettes.css`, plus the `purple` baseline). */
+export type PaletteId = (typeof builtInPalettes)[number]['id']
+
+/** Every palette: the built-in ones, plus `createM3UI({ customPalettes })`. */
+export const palettes: Palette[] = [...builtInPalettes]
 
 // Ids whose CSS ships in palettes.css (plus 'purple', the theme.css baseline): never generated
 const builtInIds = new Set(palettes.map((p) => p.id))
@@ -254,7 +260,7 @@ export function useColorPalette() {
   })
 
   /** Switches to a palette by id. */
-  function set(id: string) {
+  function set(id: PaletteId | (string & {})) {
     void selectPalette(id)
   }
 

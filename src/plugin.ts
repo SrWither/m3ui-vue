@@ -1,5 +1,5 @@
 import type { App, MaybeRef } from 'vue'
-import type { Palette } from './composables/useColorPalette'
+import type { Palette, PaletteId } from './composables/useColorPalette'
 import { __defaultContrast, __defaultPalette, __defaultSeed, __forcePalette, palettes } from './composables/useColorPalette'
 import type { ContrastLevel } from './composables/useColorPalette'
 import type { SeedOptions } from './composables/dynamicColor'
@@ -14,7 +14,7 @@ import type { Theme } from './composables/useTheme'
 import { CONTRAST_KEY, PALETTE_KEY, SEED_PALETTE } from './composables/useColorPalette'
 
 export interface M3UIOptions {
-  palette?: string
+  palette?: PaletteId | (string & {})
   /**
    * Set to `false` to make `palette` a hard default that always wins on boot, ignoring
    * whatever is already stored in localStorage, and to stop future `useColorPalette().set()`
