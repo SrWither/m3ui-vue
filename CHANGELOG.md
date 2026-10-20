@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.0.3] - Unreleased
+## [1.0.3] - 2026-10-19
 
 ### Added
 - `MMap`, a MapLibre GL map, in a new `/map` entry point with `maplibre-gl` (^5) as an optional peer dependency (the app imports `maplibre-gl/dist/maplibre-gl.css`). Not an M3 spec component. `mapStyle` takes any style URL or object (an MVT server like mvt-rs, OpenFreeMap, MapTiler…); `center`, `zoom`, `bearing` and `pitch` are v-models (on `moveend`); `persist` remembers the view in localStorage; `navigation`, `geolocate`, `fullscreen`, `scale` and `attribution` turn MapLibre's controls on or move them to a corner; `options` reaches MapLibre's `Map` constructor. The controls, popups and default marker take the M3 look and follow the theme (Material Symbols icons, surface colors, elevation), and MapLibre's strings come from `M3Locale` (new `map*` keys in every locale). MapLibre loads in the browser: server-side rendering renders the empty container. Inside it: `MMapMarker` (a theme-colored pin or your own content, `draggable` with a `lngLat` v-model, a `#popup` slot), `MMapPopup` (`open` v-model), `MMapGeoJson` (an object or URL, drawn by default in the theme's primary and redrawn on theme changes, or with your own layers; `click` with the features; re-added after a style change) and `MMapControl` (your own control in a corner, as an M3 control group or bare). `useMap()` gives components inside the map `onReady`, `on` and `onLayer`, with listeners removed on unmount
