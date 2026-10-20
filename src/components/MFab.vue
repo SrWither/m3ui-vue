@@ -113,10 +113,11 @@ const colorMap: Record<string, string> = {
 // minimum width = height, MediumExtendedFabIconPadding/LargeExtendedFabIconPadding (12/16dp, the tokens'
 // IconLabelSpace is marked incorrect there).
 const EXTENDED = {
-  regular: { px: 56, icon: 24, gap: 12, box: 'h-14 min-w-20 rounded-2xl pl-4 pr-5', text: 'text-label-large font-medium' },
-  small: { px: 56, icon: 24, gap: 8, box: 'h-14 min-w-14 rounded-2xl px-4', text: 'text-title-medium font-medium' },
-  medium: { px: 80, icon: 28, gap: 12, box: 'h-20 min-w-20 rounded-lg-increased px-[26px]', text: 'text-title-large' },
-  large: { px: 96, icon: 32, gap: 16, box: 'h-24 min-w-24 rounded-xl px-7', text: 'text-headline-small' },
+  // lead: the box's start padding (its pl-/px- class)
+  regular: { px: 56, icon: 24, lead: 16, gap: 'pl-3', box: 'h-14 min-w-20 rounded-2xl pl-4 pr-5', text: 'text-label-large font-medium' },
+  small: { px: 56, icon: 24, lead: 16, gap: 'pl-2', box: 'h-14 min-w-14 rounded-2xl px-4', text: 'text-title-medium font-medium' },
+  medium: { px: 80, icon: 28, lead: 26, gap: 'pl-3', box: 'h-20 min-w-20 rounded-lg-increased px-[26px]', text: 'text-title-large' },
+  large: { px: 96, icon: 32, lead: 28, gap: 'pl-4', box: 'h-24 min-w-24 rounded-xl px-7', text: 'text-headline-small' },
 } as const
 const extended = computed(() => (props.label ? EXTENDED[props.size] : null))
 
@@ -152,7 +153,23 @@ const fabPx = computed(() => {
 
 // Collapsing an extended FAB: the width lerps from the square (the minimum width) to the full width on
 // FastSpatial, the label fades on FastEffects, and it leaves the layout once fully collapsed.
+// Collapsed, the icon sits centered like a plain FAB's. Compose keeps the start padding instead, which only centers it
+// where padding + icon + padding fills the square: the large size's 28 + 32 + 28 leaves it 4dp off center (a
+// deliberate departure), so the start padding lerps to the centered one with the width.
+const collapsedLead = (e: (typeof EXTENDED)[keyof typeof EXTENDED]) => (e.px - e.icon) / 2
 const fabButton = ref<HTMLElement | { $el: HTMLElement }>()
+// An extended FAB that starts collapsed renders collapsed (server-side rendering: before the springs below run).
+// Constant objects: Vue applies a binding again only when its value changes, so these never undo the springs'
+// writes on a later render
+const startCollapsed = !!extended.value && !props.expanded
+const initialButtonStyle = startCollapsed
+  ? {
+      width: `${extended.value!.px}px`,
+      minWidth: '0',
+      ...(collapsedLead(extended.value!) !== extended.value!.lead && { paddingLeft: `${collapsedLead(extended.value!)}px` }),
+    }
+  : undefined
+const initialLabelStyle = startCollapsed ? { display: 'none', opacity: '0' } : undefined
 const labelEl = ref<HTMLElement>()
 const buttonEl = () => (fabButton.value instanceof HTMLElement ? fabButton.value : fabButton.value?.$el)
 
@@ -164,11 +181,15 @@ useSpring(
     if (labelEl.value) labelEl.value.style.display = p <= 0 && !props.expanded ? 'none' : ''
     el.style.width = ''
     el.style.minWidth = ''
+    el.style.paddingLeft = ''
     if (p >= 1 && props.expanded) return
     const full = el.offsetWidth
-    const min = extended.value.px
+    const { px: min, lead } = extended.value
+    const t = Math.min(1, Math.max(0, p))
     el.style.minWidth = '0'
     el.style.width = `${min + (full - min) * Math.max(0, p)}px`
+    const centered = collapsedLead(extended.value)
+    if (centered !== lead) el.style.paddingLeft = `${centered + (lead - centered) * t}px`
   },
   FAST_SPATIAL,
 )
@@ -348,6 +369,7 @@ onUnmounted(() => {
       :class="[colorMap[color], fabSizeClasses, extended ? 'justify-start' : 'justify-center', inBottomAppBar ? '' : 'shadow-elevation-3 hover:shadow-elevation-4 active:shadow-elevation-3']"
       :disabled="disabled"
       :aria-label="label && !expanded ? label : undefined"
+      :style="initialButtonStyle"
       v-ripple="{ disabled, color: rippleColor }"
       @click="handleFabClick"
     >
@@ -362,8 +384,8 @@ onUnmounted(() => {
         v-if="extended"
         ref="labelEl"
         class="shrink-0 whitespace-nowrap"
-        :class="extended.text"
-        :style="{ paddingLeft: `${extended.gap}px` }"
+        :class="[extended.text, extended.gap]"
+        :style="initialLabelStyle"
       >{{ label }}</span>
     </component>
   </div>
