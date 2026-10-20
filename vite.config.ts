@@ -15,6 +15,7 @@ export default defineConfig({
         terminal: resolve(import.meta.dirname, 'src/terminal.ts'),
         qrcode: resolve(import.meta.dirname, 'src/qrcode.ts'),
         barcode: resolve(import.meta.dirname, 'src/barcode.ts'),
+        map: resolve(import.meta.dirname, 'src/map.ts'),
         'locales/index': resolve(import.meta.dirname, 'src/locales/index.ts'),
       },
       formats: ['es'],
@@ -31,6 +32,7 @@ export default defineConfig({
         'vue-chartjs',
         'qrcode-generator',
         'jsbarcode',
+        'maplibre-gl',
       ],
       output: {
         globals: { vue: 'Vue' },

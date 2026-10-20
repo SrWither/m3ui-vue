@@ -187,6 +187,21 @@ export interface M3Locale {
   nextPage: string
   carousel: string
   carouselItem: string
+  // MMap (maplibre controls)
+  mapTitle: string
+  mapMarker: string
+  mapZoomIn: string
+  mapZoomOut: string
+  mapResetBearing: string
+  mapFindMyLocation: string
+  mapLocationNotAvailable: string
+  mapEnterFullscreen: string
+  mapExitFullscreen: string
+  mapToggleAttribution: string
+  mapFeedback: string
+  mapCtrlScroll: string
+  mapCmdScroll: string
+  mapTwoFingers: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -359,6 +374,21 @@ export const defaultLocale: M3Locale = {
   nextPage: 'Next page',
   carousel: 'Carousel',
   carouselItem: '{index} of {count}',
+  // MMap (maplibre controls)
+  mapTitle: 'Map',
+  mapMarker: 'Map marker',
+  mapZoomIn: 'Zoom in',
+  mapZoomOut: 'Zoom out',
+  mapResetBearing: 'Reset bearing to north',
+  mapFindMyLocation: 'Find my location',
+  mapLocationNotAvailable: 'Location not available',
+  mapEnterFullscreen: 'Enter fullscreen',
+  mapExitFullscreen: 'Exit fullscreen',
+  mapToggleAttribution: 'Toggle attribution',
+  mapFeedback: 'Map feedback',
+  mapCtrlScroll: 'Use Ctrl + scroll to zoom the map',
+  mapCmdScroll: 'Use ⌘ + scroll to zoom the map',
+  mapTwoFingers: 'Use two fingers to move the map',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')

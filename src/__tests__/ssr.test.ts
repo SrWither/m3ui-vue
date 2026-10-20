@@ -73,6 +73,8 @@ describe('SSR', () => {
     ['terminal', 'MTerminal', {}],
     ['qrcode', 'MQRCode', { value: 'x' }],
     ['barcode', 'MBarcode', { value: '123456' }],
+    // The empty container: MapLibre only loads in the browser
+    ['map', 'MMap', { mapStyle: 'https://tiles.test/style.json' }],
   ] as const)('renders %s/%s', async (entry, name, componentProps) => {
     const mod = await import(`../${entry}.ts`)
     await expect(render(mod[name], componentProps)).resolves.toBeTypeOf('string')

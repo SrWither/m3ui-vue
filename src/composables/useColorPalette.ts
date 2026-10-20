@@ -2,6 +2,7 @@ import { computed, readonly, ref, watch, watchEffect, type Ref } from 'vue'
 import { generateScheme, schemeToCss, type SeedOptions } from './dynamicColor'
 import { themeTransition } from './_themeTransition'
 import { initialState, readCookie, ssrValue, writeCookie } from './_ssrState'
+import { STYLE_ID } from './_storageKeys'
 
 export interface Palette {
   id: string
@@ -145,7 +146,7 @@ function applyAttribute(id: string) {
 // One <style> element holds the generated CSS of the active palette (a seed, or a custom palette
 // without CSS of its own).
 
-export const STYLE_ID = 'm3-dynamic-palette'
+export { STYLE_ID }
 
 function injectCss(css: string) {
   if (typeof document === 'undefined') return

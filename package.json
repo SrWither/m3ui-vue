@@ -55,6 +55,10 @@
       "types": "./dist/barcode.d.ts",
       "import": "./dist/barcode.js"
     },
+    "./map": {
+      "types": "./dist/map.d.ts",
+      "import": "./dist/map.js"
+    },
     "./styles": "./dist/styles.css",
     "./theme": "./src/styles/theme.css",
     "./palettes": "./src/styles/palettes.css",
@@ -81,7 +85,8 @@
   },
   "peerDependencies": {
     "tailwindcss": "^4.0.0",
-    "vue": "^3.5.0"
+    "vue": "^3.5.0",
+    "maplibre-gl": "^5.0.0"
   },
   "peerDependenciesMeta": {
     "@tiptap/vue-3": {
@@ -185,6 +190,9 @@
     },
     "jsbarcode": {
       "optional": true
+    },
+    "maplibre-gl": {
+      "optional": true
     }
   },
   "devDependencies": {
@@ -227,6 +235,7 @@
     "happy-dom": "^20.14.5",
     "highlight.js": "^11.12.0",
     "jsbarcode": "^3.12.3",
+    "maplibre-gl": "^5.24.0",
     "markdown-it": "^15.0.2",
     "qrcode-generator": "^2.0.4",
     "typescript": "~6.0.3",
