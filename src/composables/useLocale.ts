@@ -48,6 +48,10 @@ export interface M3Locale {
   sheetExpand: string
   sheetCollapse: string
   sheetDismiss: string
+  seekBar: string
+  seekBarValue: string
+  seekBarShowRemaining: string
+  seekBarShowDuration: string
   selectRange: string
   pickStart: string
   pickEnd: string
@@ -261,6 +265,10 @@ export const defaultLocale: M3Locale = {
   sheetExpand: 'Expand bottom sheet',
   sheetCollapse: 'Collapse bottom sheet',
   sheetDismiss: 'Dismiss bottom sheet',
+  seekBar: 'Seek',
+  seekBarValue: '{position} of {duration}',
+  seekBarShowRemaining: 'Show remaining time',
+  seekBarShowDuration: 'Show total time',
   selectRange: 'Select range',
   pickStart: 'Select start',
   pickEnd: 'Select end',
