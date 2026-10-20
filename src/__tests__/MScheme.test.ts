@@ -3,6 +3,7 @@ import { mount, type VueWrapper } from '@vue/test-utils'
 import { h, nextTick } from 'vue'
 import MScheme from '../components/MScheme.vue'
 import { generateScheme, seedFromPixels } from '../composables/dynamicColor'
+import { palettes } from '../composables/useColorPalette'
 
 const pixels = (colors: [number, number, number, number][]) => colors.flatMap(([r, g, b, n]) => Array.from({ length: n }, () => [r, g, b, 255]).flat())
 
@@ -90,5 +91,17 @@ describe('MScheme', () => {
     const el = wrapper.element as HTMLElement
     expect(el.hasAttribute('data-palette')).toBe(false)
     await vi.waitFor(() => expect(el.style.getPropertyValue('--color-primary')).toBe(expected.light.primary))
+  })
+
+  it('takes custom palettes registered with createM3UI: generated from their seed when they have no CSS', async () => {
+    palettes.push({ id: 'brand', label: 'Brand', seed: '#ff5722' })
+    try {
+      const expected = await generateScheme('#ff5722')
+      wrapper = mount(MScheme, { props: { palette: 'brand' } })
+      const el = wrapper.element as HTMLElement
+      await vi.waitFor(() => expect(el.style.getPropertyValue('--color-primary')).toBe(expected.light.primary))
+    } finally {
+      palettes.splice(palettes.findIndex((p) => p.id === 'brand'), 1)
+    }
   })
 })
