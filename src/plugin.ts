@@ -8,7 +8,7 @@ import type { M3Locale } from './composables/useLocale'
 import { M3_LOCALE_KEY, __setAppLocale } from './composables/useLocale'
 import { vRipple } from './directives/vRipple'
 import { M3_HYDRATING_KEY } from './composables/_hydration'
-import { M3_INITIAL_STATE_KEY, enableCookies, trackViewport, writeCookie, type M3InitialState, type ResolvedInitialState } from './composables/_ssrState'
+import { M3_INITIAL_STATE_KEY, enableCookies, readCookie, trackViewport, writeCookie, type M3InitialState, type ResolvedInitialState } from './composables/_ssrState'
 import { THEME_KEY } from './composables/_storageKeys'
 import type { Theme } from './composables/useTheme'
 import { CONTRAST_KEY, PALETTE_KEY, SEED_PALETTE } from './composables/useColorPalette'
@@ -117,7 +117,7 @@ export function createM3UI(options: M3UIOptions = {}) {
         if (options.persistPalette === false) {
           if (options.palette) __forcePalette(options.palette, false)
           else if (options.seed) void __defaultSeed(options.seed, options.seedOptions, false)
-        } else if (!localStorage.getItem('m3-palette')) {
+        } else if (!localStorage.getItem('m3-palette') && !readCookie('m3-palette')) {
           // `palette`/`seed` are only the first-visit default — once the user picks a palette via
           // `useColorPalette().set()` (or a seed via `setSeed()`) it's persisted to localStorage, and that choice
           // must win on every later boot instead of being clobbered back to the plugin's static default.
@@ -126,12 +126,13 @@ export function createM3UI(options: M3UIOptions = {}) {
         }
         if (options.contrast) __defaultContrast(options.contrast, options.persistPalette !== false)
         if (options.themeColor) syncThemeColor(options.themeColor)
-        // Cookies for what's already stored (a user from before `cookies`, or the defaults just applied)
+        // Cookies for what's already stored (a user from before `cookies`, or the defaults just applied); a cookie
+        // without a stored value (cleared storage, or set by a server) stays
         if (options.cookies) {
           for (const key of [THEME_KEY, PALETTE_KEY, CONTRAST_KEY]) {
             let value: string | null = null
             try { value = localStorage.getItem(key) } catch { /* storage blocked */ }
-            writeCookie(key, value)
+            if (value != null) writeCookie(key, value)
           }
           trackViewport()
         }

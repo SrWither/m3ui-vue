@@ -92,6 +92,24 @@ describe('themeInitScript', () => {
     expect(html.getAttribute('data-contrast')).toBe('high')
   })
 
+  it('falls back to the cookies when storage has nothing', () => {
+    document.cookie = 'm3-theme=dark; Path=/'
+    document.cookie = 'm3-palette=blue; Path=/'
+    try {
+      matchMedia({})
+      run({ palette: 'red' })
+      expect(html.classList.contains('dark')).toBe(true)
+      expect(html.getAttribute('data-palette')).toBe('blue')
+      // Storage wins over a cookie
+      localStorage.setItem('m3-theme', 'light')
+      run()
+      expect(html.classList.contains('dark')).toBe(false)
+    } finally {
+      document.cookie = 'm3-theme=; Max-Age=0; Path=/'
+      document.cookie = 'm3-palette=; Max-Age=0; Path=/'
+    }
+  })
+
   it('survives blocked storage', () => {
     vi.stubGlobal('localStorage', { getItem: () => { throw new Error('blocked') } })
     expect(() => run({ palette: 'red' })).not.toThrow()

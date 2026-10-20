@@ -64,6 +64,14 @@ export function trackViewport() {
   })
 }
 
+/** A cookie's value: the stored choice when localStorage has none (cleared storage, or a server that set it). */
+export function readCookie(key: string): string | null {
+  if (typeof document === 'undefined') return null
+  const match = document.cookie.match(new RegExp(`(?:^|; )${key}=([^;]*)`))
+  if (!match) return null
+  try { return decodeURIComponent(match[1]!) } catch { return null }
+}
+
 export function writeCookie(key: string, value: string | null) {
   if (!cookiesEnabled || typeof document === 'undefined') return
   document.cookie = value == null

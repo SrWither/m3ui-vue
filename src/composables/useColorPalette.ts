@@ -1,7 +1,7 @@
 import { computed, readonly, ref, watch, watchEffect, type Ref } from 'vue'
 import { generateScheme, schemeToCss, type SeedOptions } from './dynamicColor'
 import { themeTransition } from './_themeTransition'
-import { initialState, ssrValue, writeCookie } from './_ssrState'
+import { initialState, readCookie, ssrValue, writeCookie } from './_ssrState'
 
 export interface Palette {
   id: string
@@ -80,7 +80,8 @@ export const CSS_KEY = 'm3-palette-css'
 
 function read<T>(key: string): T | null {
   try {
-    const v = localStorage.getItem(key)
+    // The palette and the contrast level fall back to their cookies (createM3UI({ cookies })) when storage has none
+    const v = localStorage.getItem(key) ?? (key === PALETTE_KEY || key === CONTRAST_KEY ? readCookie(key) : null)
     return v == null ? null : (key === PALETTE_KEY || key === CONTRAST_KEY ? v : JSON.parse(v)) as T
   } catch {
     return null

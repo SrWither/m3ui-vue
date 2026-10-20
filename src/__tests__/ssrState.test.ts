@@ -125,6 +125,25 @@ describe('cookies', () => {
     }
   })
 
+  it('falls back to the cookies when storage has nothing (cleared storage, or set by a server), and keeps them', async () => {
+    document.cookie = 'm3-theme=dark; Path=/'
+    document.cookie = 'm3-palette=blue; Path=/'
+    const lib = await load()
+    let state = ''
+    createSSRApp({
+      setup() {
+        const { theme } = lib.useTheme()
+        const { palette } = lib.useColorPalette()
+        state = `${theme.value} ${palette.value}`
+        return () => null
+      },
+    }).use(lib.createM3UI({ cookies: true, palette: 'red' })).mount(document.createElement('div'))
+    expect(state).toBe('dark blue')
+    expect(cookie('m3-theme')).toBe('dark')
+    expect(cookie('m3-palette')).toBe('blue')
+    expect(document.documentElement.classList.contains('dark')).toBe(true)
+  })
+
   it('writes none without the option', async () => {
     localStorage.setItem('m3-theme', 'dark')
     const lib = await load()

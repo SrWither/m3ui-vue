@@ -14,7 +14,8 @@ export interface ThemeInitOptions {
  * A script to inline in `<head>` of a server-rendered page (Nuxt, Vite SSR), so dark mode, the palette and the
  * contrast level are on `<html>` before the first paint instead of when the app's JS loads. It does what
  * `useTheme` and `useColorPalette` do when they load in the browser (the stored choice, or the given
- * `createM3UI` defaults), so pass it the same options as the plugin. A `seed` default can't be generated this
+ * `createM3UI` defaults; a choice only in a cookie, from `createM3UI({ cookies })`, counts too), so pass it the same
+ * options as the plugin. A `seed` default can't be generated this
  * early: its first visit still shows the baseline until the app loads (later visits use the cached CSS).
  *
  * ```ts
@@ -32,7 +33,8 @@ export function themeInitScript(options: ThemeInitOptions = {}): string {
   // Plain ES5, no dependencies: it runs before anything else. Storage can throw (blocked site data).
   return `(function(o){
 var d=document.documentElement;
-function get(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function cookie(k){var m=document.cookie.match(new RegExp('(?:^|; )'+k+'=([^;]*)'));try{return m?decodeURIComponent(m[1]):null}catch(e){return null}}
+function get(k){var v=null;try{v=localStorage.getItem(k)}catch(e){}return v!=null||k===o.keys.css?v:cookie(k)}
 function mq(q){return !!(window.matchMedia&&window.matchMedia(q).matches)}
 var t=get(o.keys.theme)||'system';
 d.classList.toggle('dark',t==='dark'||(t==='system'&&mq('(prefers-color-scheme: dark)')));

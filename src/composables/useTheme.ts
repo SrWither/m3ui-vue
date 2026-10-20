@@ -1,6 +1,6 @@
 import { ref, watchEffect, onMounted, onUnmounted } from 'vue'
 import { themeTransition } from './_themeTransition'
-import { initialState, ssrValue, writeCookie } from './_ssrState'
+import { initialState, readCookie, ssrValue, writeCookie } from './_ssrState'
 import { THEME_KEY } from './_storageKeys'
 
 export type Theme = 'light' | 'dark' | 'system'
@@ -10,7 +10,8 @@ export { THEME_KEY }
 // No DOM on the server (SSR): nothing is read or applied there, the client does it when the module loads.
 const inBrowser = typeof window !== 'undefined'
 
-const theme = ref<Theme>((inBrowser ? localStorage.getItem(THEME_KEY) as Theme : null) ?? 'system')
+// localStorage, else the cookie createM3UI({ cookies }) keeps (cleared storage, or a theme a server set)
+const theme = ref<Theme>((inBrowser ? (localStorage.getItem(THEME_KEY) ?? readCookie(THEME_KEY)) as Theme : null) ?? 'system')
 
 let _appliedDark: boolean | null = null
 
