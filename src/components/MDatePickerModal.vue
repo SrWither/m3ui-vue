@@ -8,9 +8,11 @@
  */
 import { computed, ref, watch } from 'vue'
 import MButton from './MButton.vue'
+import MDialog from './MDialog.vue'
 import MIconButton from './MIconButton.vue'
 import MIcon from './MIcon.vue'
 import { useLocale } from '../composables/useLocale'
+import { isoDate as fmt, useCalendarMonth } from '../composables/_useCalendarMonth'
 
 const props = withDefaults(defineProps<{
   /** Selected date in YYYY-MM-DD format (v-model) */
@@ -56,73 +58,18 @@ watch(() => props.show, (open) => {
     viewDate.value = props.modelValue ? new Date(props.modelValue + 'T00:00:00') : new Date()
     inputMode.value = 'calendar'
     dateInput.value = props.modelValue ? isoToDisplay(props.modelValue) : ''
-    document.addEventListener('keydown', onKeydown)
-    document.body.style.overflow = 'hidden'
-  } else {
-    document.removeEventListener('keydown', onKeydown)
-    document.body.style.overflow = ''
   }
 })
 
 // ── Calendar logic ─────────────────────────────────────────────────
-const WEEKDAYS = computed(() => {
-  const f = new Intl.DateTimeFormat(resolvedLocale.value, { weekday: 'narrow' })
-  return Array.from({ length: 7 }, (_, i) => f.format(new Date(2024, 0, i + 1)))
+// Weekday names, the month's title and its six-week grid, shared with the other date pickers
+const { weekdays: WEEKDAYS, monthLabel, days: calendarDays, isOutOfRange: isOOR, prevMonth, nextMonth } = useCalendarMonth(viewDate, {
+  locale: () => resolvedLocale.value,
+  min: () => props.min,
+  max: () => props.max,
 })
-
-const monthLabel = computed(() =>
-  new Intl.DateTimeFormat(resolvedLocale.value, { month: 'long', year: 'numeric' }).format(viewDate.value),
-)
-
-const calendarDays = computed(() => {
-  const y = viewDate.value.getFullYear()
-  const m = viewDate.value.getMonth()
-  const first = new Date(y, m, 1)
-  const startDay = (first.getDay() + 6) % 7
-  const daysInMonth = new Date(y, m + 1, 0).getDate()
-  const days: { date: number; current: boolean; iso: string; disabled: boolean }[] = []
-
-  const prevDays = new Date(y, m, 0).getDate()
-  for (let i = startDay - 1; i >= 0; i--) {
-    const d = prevDays - i
-    const iso = fmt(y, m - 1, d)
-    days.push({ date: d, current: false, iso, disabled: isOOR(iso) })
-  }
-  for (let d = 1; d <= daysInMonth; d++) {
-    const iso = fmt(y, m, d)
-    days.push({ date: d, current: true, iso, disabled: isOOR(iso) })
-  }
-  const remaining = 42 - days.length
-  for (let d = 1; d <= remaining; d++) {
-    const iso = fmt(y, m + 1, d)
-    days.push({ date: d, current: false, iso, disabled: isOOR(iso) })
-  }
-  return days
-})
-
-function fmt(y: number, m: number, d: number) {
-  const dt = new Date(y, m, d)
-  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
-}
-
-function isOOR(iso: string) {
-  if (props.min && iso < props.min) return true
-  if (props.max && iso > props.max) return true
-  return false
-}
 
 const todayIso = fmt(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())
-
-function prevMonth() {
-  const d = new Date(viewDate.value)
-  d.setMonth(d.getMonth() - 1)
-  viewDate.value = d
-}
-function nextMonth() {
-  const d = new Date(viewDate.value)
-  d.setMonth(d.getMonth() + 1)
-  viewDate.value = d
-}
 
 function selectDay(day: typeof calendarDays.value[0]) {
   if (day.disabled) return
@@ -137,15 +84,37 @@ const headerDate = computed(() => {
 })
 
 // ── Input mode ─────────────────────────────────────────────────────
+// The text input follows the locale's numeric date: its order and separator, from Intl (DD/MM/YYYY in Spain,
+// MM/DD/YYYY in the US, YYYY. MM. DD in Korea…). It was DD/MM/YYYY for every language.
+const dateFormat = computed(() => {
+  const parts = new Intl.DateTimeFormat(resolvedLocale.value, { day: '2-digit', month: '2-digit', year: 'numeric' })
+    .formatToParts(new Date(2026, 5, 23))
+  const order = parts.map((p) => p.type).filter((t): t is 'day' | 'month' | 'year' => t === 'day' || t === 'month' || t === 'year')
+  const sep = parts.find((p) => p.type === 'literal')?.value ?? '/'
+  return { order: order.length === 3 ? order : (['day', 'month', 'year'] as const), sep }
+})
+// The placeholder: DD/MM/YYYY in the locale's order
+const datePattern = computed(() =>
+  dateFormat.value.order.map((t) => (t === 'day' ? 'DD' : t === 'month' ? 'MM' : 'YYYY')).join(dateFormat.value.sep.trim() || '/'),
+)
+
 function isoToDisplay(iso: string) {
-  const [y, m, d] = iso.split('-')
-  return `${d}/${m}/${y}`
+  const [year, month, day] = iso.split('-')
+  const parts: Record<string, string | undefined> = { year, month, day }
+  return dateFormat.value.order.map((t) => parts[t]).join(dateFormat.value.sep)
 }
 
+// Any separator is accepted; a day or month may have one digit. Not a real date (31/02): null
 function displayToIso(display: string) {
-  const match = display.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
-  if (!match) return null
-  return `${match[3]}-${match[2]}-${match[1]}`
+  const nums = display.trim().split(/\D+/).filter(Boolean)
+  if (nums.length !== 3) return null
+  const parts: Record<string, string> = {}
+  dateFormat.value.order.forEach((t, i) => { parts[t] = nums[i]! })
+  const { year, month, day } = parts as { year: string; month: string; day: string }
+  if (year.length !== 4 || month.length > 2 || day.length > 2) return null
+  const date = new Date(Number(year), Number(month) - 1, Number(day))
+  if (date.getMonth() !== Number(month) - 1 || date.getDate() !== Number(day)) return null
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
 }
 
 function applyInput() {
@@ -168,119 +137,94 @@ function confirm() {
   }
 }
 
-function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') cancel() }
+// Escape or the scrim (MDialog) cancel, like the Cancel button
+function onDialog(open: boolean) {
+  if (!open) cancel()
+}
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition name="m3-dp-modal" appear>
-      <div
-        v-if="show"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-scrim/32 p-4"
-        @click.self="cancel"
-      >
-        <div class="dp-box w-[360px] rounded-[28px] bg-surface-container-high shadow-elevation-3">
-          <!-- Header -->
-          <div class="px-6 pt-6 pb-4">
-            <p class="mb-3 text-label-large text-on-surface-variant">
-              {{ title || locale.selectDate }}
-            </p>
-            <div class="flex items-center justify-between">
-              <span class="text-headline-large font-medium capitalize text-on-surface-variant">
-                {{ headerDate }}
-              </span>
-              <MIconButton
-                :icon="inputMode === 'calendar' ? 'edit' : 'calendar_today'"
-                :label="inputMode === 'calendar' ? 'Switch to input' : 'Switch to calendar'"
-                @click="inputMode = inputMode === 'calendar' ? 'input' : 'calendar'"
-              />
-            </div>
-          </div>
-
-          <div class="h-px bg-outline-variant" />
-
-          <!-- Calendar mode -->
-          <div v-if="inputMode === 'calendar'" class="px-4 pt-3 pb-2">
-            <!-- Month nav -->
-            <div class="mb-2 flex items-center justify-between">
-              <MIconButton icon="chevron_left" :label="locale.previousMonth" :size="36" @click="prevMonth" />
-              <span class="text-title-small font-medium capitalize text-on-surface">{{ monthLabel }}</span>
-              <MIconButton icon="chevron_right" :label="locale.nextMonth" :size="36" @click="nextMonth" />
-            </div>
-
-            <!-- Weekday headers -->
-            <div class="mb-1 grid grid-cols-7 gap-0.5 text-center">
-              <span v-for="wd in WEEKDAYS" :key="wd" class="py-1 text-body-large font-medium text-on-surface">
-                {{ wd }}
-              </span>
-            </div>
-
-            <!-- Days grid -->
-            <div class="grid grid-cols-7 gap-0.5">
-              <button
-                v-for="(day, i) in calendarDays"
-                :key="i"
-                type="button"
-                class="flex h-10 w-full items-center justify-center rounded-full text-body-medium transition-colors duration-100"
-                :class="[
-                  day.disabled
-                    ? 'cursor-not-allowed text-on-surface/25'
-                    : day.iso === selected
-                      ? 'bg-primary text-on-primary'
-                      : day.iso === todayIso
-                        ? 'border border-primary text-primary cursor-pointer hover:bg-primary/8'
-                        : day.current
-                          ? 'cursor-pointer text-on-surface hover:bg-on-surface/8'
-                          : 'cursor-pointer text-on-surface-variant/50 hover:bg-on-surface/4',
-                ]"
-                :disabled="day.disabled"
-                @click="selectDay(day)"
-              >
-                {{ day.date }}
-              </button>
-            </div>
-          </div>
-
-          <!-- Input mode -->
-          <div v-else class="px-6 py-6">
-            <label class="mb-2 block text-label-medium text-on-surface-variant">Date (DD/MM/YYYY)</label>
-            <input
-              v-model="dateInput"
-              type="text"
-              placeholder="23/06/2026"
-              maxlength="10"
-              class="h-14 w-full rounded-xs border border-outline bg-transparent px-4 text-body-large text-on-surface caret-primary outline-none transition-colors focus:border-2 focus:border-primary"
-              @keydown.enter="applyInput"
-              @blur="applyInput"
-            />
-          </div>
-
-          <!-- Footer -->
-          <div class="flex justify-end gap-2 px-6 pb-4">
-            <MButton variant="text" @click="cancel">{{ locale.cancel }}</MButton>
-            <MButton variant="text" :disabled="!selected" @click="confirm">OK</MButton>
-          </div>
-        </div>
+  <!-- MDialog's bare box: scrim, Escape, scroll lock, the open/close animation and dialog semantics -->
+  <MDialog :model-value="show" bare max-width="360px" :title="title || locale.selectDate" @update:model-value="onDialog">
+    <!-- Header -->
+    <div class="px-6 pt-6 pb-4">
+      <p class="mb-3 text-label-large text-on-surface-variant">
+        {{ title || locale.selectDate }}
+      </p>
+      <div class="flex items-center justify-between">
+        <span class="text-headline-large font-medium capitalize text-on-surface-variant">
+          {{ headerDate }}
+        </span>
+        <MIconButton
+          :icon="inputMode === 'calendar' ? 'edit' : 'calendar_today'"
+          :label="inputMode === 'calendar' ? locale.dateToggleInput : locale.dateToggleCalendar"
+          @click="inputMode = inputMode === 'calendar' ? 'input' : 'calendar'"
+        />
       </div>
-    </Transition>
-  </Teleport>
-</template>
+    </div>
 
-<style scoped>
-.m3-dp-modal-enter-active,
-.m3-dp-modal-leave-active {
-  transition: opacity 0.15s ease;
-}
-.m3-dp-modal-enter-from,
-.m3-dp-modal-leave-to {
-  opacity: 0;
-}
-.m3-dp-modal-enter-active .dp-box,
-.m3-dp-modal-leave-active .dp-box {
-  transition: transform 0.15s ease;
-}
-.m3-dp-modal-enter-from .dp-box,
-.m3-dp-modal-leave-to .dp-box {
-  transform: scale(0.95);
-}
-</style>
+    <div class="h-px bg-outline-variant" />
+
+    <!-- Calendar mode -->
+    <div v-if="inputMode === 'calendar'" class="px-4 pt-3 pb-2">
+      <!-- Month nav -->
+      <div class="mb-2 flex items-center justify-between">
+        <MIconButton icon="chevron_left" :label="locale.previousMonth" :size="36" @click="prevMonth" />
+        <span class="text-title-small font-medium capitalize text-on-surface">{{ monthLabel }}</span>
+        <MIconButton icon="chevron_right" :label="locale.nextMonth" :size="36" @click="nextMonth" />
+      </div>
+
+      <!-- Weekday headers -->
+      <div class="mb-1 grid grid-cols-7 gap-0.5 text-center">
+        <span v-for="wd in WEEKDAYS" :key="wd" class="py-1 text-body-large font-medium text-on-surface">
+          {{ wd }}
+        </span>
+      </div>
+
+      <!-- Days grid -->
+      <div class="grid grid-cols-7 gap-0.5">
+        <button
+          v-for="(day, i) in calendarDays"
+          :key="i"
+          type="button"
+          class="flex h-10 w-full items-center justify-center rounded-full text-body-medium transition-colors duration-100"
+          :class="[
+            day.disabled
+              ? 'cursor-not-allowed text-on-surface/25'
+              : day.iso === selected
+                ? 'bg-primary text-on-primary'
+                : day.iso === todayIso
+                  ? 'border border-primary text-primary cursor-pointer hover:bg-primary/8'
+                  : day.current
+                    ? 'cursor-pointer text-on-surface hover:bg-on-surface/8'
+                    : 'cursor-pointer text-on-surface-variant/50 hover:bg-on-surface/4',
+          ]"
+          :disabled="day.disabled"
+          @click="selectDay(day)"
+        >
+          {{ day.date }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Input mode -->
+    <div v-else class="px-6 py-6">
+      <label class="mb-2 block text-label-medium text-on-surface-variant">{{ locale.dateInputLabel }} ({{ datePattern }})</label>
+      <input
+        v-model="dateInput"
+        type="text"
+        :placeholder="datePattern"
+        maxlength="14"
+        class="h-14 w-full rounded-xs border border-outline bg-transparent px-4 text-body-large text-on-surface caret-primary outline-none transition-colors focus:border-2 focus:border-primary"
+        @keydown.enter="applyInput"
+        @blur="applyInput"
+      />
+    </div>
+
+    <!-- Footer -->
+    <div class="flex justify-end gap-2 px-6 pb-4">
+      <MButton variant="text" @click="cancel">{{ locale.cancel }}</MButton>
+      <MButton variant="text" :disabled="!selected" @click="confirm">{{ locale.ok }}</MButton>
+    </div>
+  </MDialog>
+</template>

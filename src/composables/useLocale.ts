@@ -38,6 +38,10 @@ export interface M3Locale {
 
   // Pickers
   selectDate: string
+  ok: string
+  dateToggleInput: string
+  dateToggleCalendar: string
+  dateInputLabel: string
   selectTime: string
   timeHourSelection: string
   timeMinuteSelection: string
@@ -255,6 +259,10 @@ export const defaultLocale: M3Locale = {
   remove: 'Remove',
 
   selectDate: 'Select date',
+  ok: 'OK',
+  dateToggleInput: 'Switch to text input',
+  dateToggleCalendar: 'Switch to calendar',
+  dateInputLabel: 'Date',
   selectTime: 'Select time',
   timeHourSelection: 'Select hour',
   timeMinuteSelection: 'Select minutes',

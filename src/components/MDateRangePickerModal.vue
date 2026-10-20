@@ -8,8 +8,10 @@
  */
 import { computed, ref, watch } from 'vue'
 import MButton from './MButton.vue'
+import MDialog from './MDialog.vue'
 import MIconButton from './MIconButton.vue'
 import { useLocale } from '../composables/useLocale'
+import { isoDate as fmt, useCalendarMonth } from '../composables/_useCalendarMonth'
 
 export interface DateRange {
   start: string | null
@@ -62,73 +64,18 @@ watch(() => props.show, (open) => {
     viewDate.value = props.modelValue?.start
       ? new Date(props.modelValue.start + 'T00:00:00')
       : new Date()
-    document.addEventListener('keydown', onKeydown)
-    document.body.style.overflow = 'hidden'
-  } else {
-    document.removeEventListener('keydown', onKeydown)
-    document.body.style.overflow = ''
   }
 })
 
 // ── Calendar logic ─────────────────────────────────────────────────
-const WEEKDAYS = computed(() => {
-  const f = new Intl.DateTimeFormat(resolvedLocale.value, { weekday: 'narrow' })
-  return Array.from({ length: 7 }, (_, i) => f.format(new Date(2024, 0, i + 1)))
+// Weekday names, the month's title and its six-week grid, shared with the other date pickers
+const { weekdays: WEEKDAYS, monthLabel, days: calendarDays, isOutOfRange: isOOR, prevMonth, nextMonth } = useCalendarMonth(viewDate, {
+  locale: () => resolvedLocale.value,
+  min: () => props.min,
+  max: () => props.max,
 })
-
-const monthLabel = computed(() =>
-  new Intl.DateTimeFormat(resolvedLocale.value, { month: 'long', year: 'numeric' }).format(viewDate.value),
-)
-
-const calendarDays = computed(() => {
-  const y = viewDate.value.getFullYear()
-  const m = viewDate.value.getMonth()
-  const first = new Date(y, m, 1)
-  const startDay = (first.getDay() + 6) % 7
-  const daysInMonth = new Date(y, m + 1, 0).getDate()
-  const days: { date: number; current: boolean; iso: string; disabled: boolean }[] = []
-
-  const prevDays = new Date(y, m, 0).getDate()
-  for (let i = startDay - 1; i >= 0; i--) {
-    const d = prevDays - i
-    const iso = fmt(y, m - 1, d)
-    days.push({ date: d, current: false, iso, disabled: isOOR(iso) })
-  }
-  for (let d = 1; d <= daysInMonth; d++) {
-    const iso = fmt(y, m, d)
-    days.push({ date: d, current: true, iso, disabled: isOOR(iso) })
-  }
-  const remaining = 42 - days.length
-  for (let d = 1; d <= remaining; d++) {
-    const iso = fmt(y, m + 1, d)
-    days.push({ date: d, current: false, iso, disabled: isOOR(iso) })
-  }
-  return days
-})
-
-function fmt(y: number, m: number, d: number) {
-  const dt = new Date(y, m, d)
-  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
-}
-
-function isOOR(iso: string) {
-  if (props.min && iso < props.min) return true
-  if (props.max && iso > props.max) return true
-  return false
-}
 
 const todayIso = fmt(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())
-
-function prevMonth() {
-  const d = new Date(viewDate.value)
-  d.setMonth(d.getMonth() - 1)
-  viewDate.value = d
-}
-function nextMonth() {
-  const d = new Date(viewDate.value)
-  d.setMonth(d.getMonth() + 1)
-  viewDate.value = d
-}
 
 function selectDay(day: typeof calendarDays.value[0]) {
   if (day.disabled) return
@@ -172,114 +119,89 @@ function confirm() {
   }
 }
 
-function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') cancel() }
+// Escape or the scrim (MDialog) cancel, like the Cancel button
+function onDialog(open: boolean) {
+  if (!open) cancel()
+}
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition name="m3-drp-modal" appear>
-      <div
-        v-if="show"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-scrim/32 p-4"
-        @click.self="cancel"
-      >
-        <div class="drp-box w-[360px] rounded-[28px] bg-surface-container-high shadow-elevation-3">
-          <!-- Header -->
-          <div class="px-6 pt-6 pb-4">
-            <p class="mb-3 text-label-large text-on-surface-variant">
-              {{ title || locale.selectRange }}
-            </p>
-            <div class="flex items-center gap-3">
-              <div
-                class="flex-1 rounded-lg px-3 py-2 text-center transition-colors"
-                :class="picking === 'start' ? 'bg-primary-container text-on-primary-container' : 'bg-surface-container-highest text-on-surface'"
-                @click="picking = 'start'"
-              >
-                <p class="text-label-small text-on-surface-variant">{{ locale.pickStart }}</p>
-                <p class="text-title-medium font-medium capitalize">{{ fmtDisplay(start) }}</p>
-              </div>
-              <span class="text-on-surface-variant">→</span>
-              <div
-                class="flex-1 rounded-lg px-3 py-2 text-center transition-colors"
-                :class="picking === 'end' ? 'bg-primary-container text-on-primary-container' : 'bg-surface-container-highest text-on-surface'"
-                @click="start && (picking = 'end')"
-              >
-                <p class="text-label-small text-on-surface-variant">{{ locale.pickEnd }}</p>
-                <p class="text-title-medium font-medium capitalize">{{ fmtDisplay(end) }}</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="h-px bg-outline-variant" />
-
-          <!-- Calendar -->
-          <div class="px-4 pt-3 pb-2">
-            <div class="mb-2 flex items-center justify-between">
-              <MIconButton icon="chevron_left" :label="locale.previousMonth" :size="36" @click="prevMonth" />
-              <span class="text-title-small font-medium capitalize text-on-surface">{{ monthLabel }}</span>
-              <MIconButton icon="chevron_right" :label="locale.nextMonth" :size="36" @click="nextMonth" />
-            </div>
-
-            <div class="mb-1 grid grid-cols-7 gap-0.5 text-center">
-              <span v-for="wd in WEEKDAYS" :key="wd" class="py-1 text-body-large font-medium text-on-surface">
-                {{ wd }}
-              </span>
-            </div>
-
-            <div class="grid grid-cols-7 gap-0.5">
-              <button
-                v-for="(day, i) in calendarDays"
-                :key="i"
-                type="button"
-                class="flex h-10 w-full items-center justify-center text-body-medium transition-colors duration-100"
-                :class="[
-                  day.disabled
-                    ? 'cursor-not-allowed text-on-surface/25 rounded-full'
-                    : day.iso === start || day.iso === end
-                      ? 'bg-primary text-on-primary rounded-full'
-                      : isInRange(day.iso)
-                        ? 'bg-primary/12 text-on-surface cursor-pointer'
-                        : day.iso === todayIso
-                          ? 'border border-primary text-primary rounded-full cursor-pointer hover:bg-primary/8'
-                          : day.current
-                            ? 'cursor-pointer text-on-surface rounded-full hover:bg-on-surface/8'
-                            : 'cursor-pointer text-on-surface-variant/50 rounded-full hover:bg-on-surface/4',
-                ]"
-                :disabled="day.disabled"
-                @mouseenter="picking === 'end' && (hovered = day.iso)"
-                @click="selectDay(day)"
-              >
-                {{ day.date }}
-              </button>
-            </div>
-          </div>
-
-          <!-- Footer -->
-          <div class="flex justify-end gap-2 px-6 py-4">
-            <MButton variant="text" @click="cancel">{{ locale.cancel }}</MButton>
-            <MButton variant="text" :disabled="!start || !end" @click="confirm">OK</MButton>
-          </div>
+  <!-- MDialog's bare box: scrim, Escape, scroll lock, the open/close animation and dialog semantics -->
+  <MDialog :model-value="show" bare max-width="360px" :title="title || locale.selectRange" @update:model-value="onDialog">
+    <!-- Header -->
+    <div class="px-6 pt-6 pb-4">
+      <p class="mb-3 text-label-large text-on-surface-variant">
+        {{ title || locale.selectRange }}
+      </p>
+      <div class="flex items-center gap-3">
+        <div
+          class="flex-1 rounded-lg px-3 py-2 text-center transition-colors"
+          :class="picking === 'start' ? 'bg-primary-container text-on-primary-container' : 'bg-surface-container-highest text-on-surface'"
+          @click="picking = 'start'"
+        >
+          <p class="text-label-small text-on-surface-variant">{{ locale.pickStart }}</p>
+          <p class="text-title-medium font-medium capitalize">{{ fmtDisplay(start) }}</p>
+        </div>
+        <span class="text-on-surface-variant">→</span>
+        <div
+          class="flex-1 rounded-lg px-3 py-2 text-center transition-colors"
+          :class="picking === 'end' ? 'bg-primary-container text-on-primary-container' : 'bg-surface-container-highest text-on-surface'"
+          @click="start && (picking = 'end')"
+        >
+          <p class="text-label-small text-on-surface-variant">{{ locale.pickEnd }}</p>
+          <p class="text-title-medium font-medium capitalize">{{ fmtDisplay(end) }}</p>
         </div>
       </div>
-    </Transition>
-  </Teleport>
-</template>
+    </div>
 
-<style scoped>
-.m3-drp-modal-enter-active,
-.m3-drp-modal-leave-active {
-  transition: opacity 0.15s ease;
-}
-.m3-drp-modal-enter-from,
-.m3-drp-modal-leave-to {
-  opacity: 0;
-}
-.m3-drp-modal-enter-active .drp-box,
-.m3-drp-modal-leave-active .drp-box {
-  transition: transform 0.15s ease;
-}
-.m3-drp-modal-enter-from .drp-box,
-.m3-drp-modal-leave-to .drp-box {
-  transform: scale(0.95);
-}
-</style>
+    <div class="h-px bg-outline-variant" />
+
+    <!-- Calendar -->
+    <div class="px-4 pt-3 pb-2">
+      <div class="mb-2 flex items-center justify-between">
+        <MIconButton icon="chevron_left" :label="locale.previousMonth" :size="36" @click="prevMonth" />
+        <span class="text-title-small font-medium capitalize text-on-surface">{{ monthLabel }}</span>
+        <MIconButton icon="chevron_right" :label="locale.nextMonth" :size="36" @click="nextMonth" />
+      </div>
+
+      <div class="mb-1 grid grid-cols-7 gap-0.5 text-center">
+        <span v-for="wd in WEEKDAYS" :key="wd" class="py-1 text-body-large font-medium text-on-surface">
+          {{ wd }}
+        </span>
+      </div>
+
+      <div class="grid grid-cols-7 gap-0.5">
+        <button
+          v-for="(day, i) in calendarDays"
+          :key="i"
+          type="button"
+          class="flex h-10 w-full items-center justify-center text-body-medium transition-colors duration-100"
+          :class="[
+            day.disabled
+              ? 'cursor-not-allowed text-on-surface/25 rounded-full'
+              : day.iso === start || day.iso === end
+                ? 'bg-primary text-on-primary rounded-full'
+                : isInRange(day.iso)
+                  ? 'bg-primary/12 text-on-surface cursor-pointer'
+                  : day.iso === todayIso
+                    ? 'border border-primary text-primary rounded-full cursor-pointer hover:bg-primary/8'
+                    : day.current
+                      ? 'cursor-pointer text-on-surface rounded-full hover:bg-on-surface/8'
+                      : 'cursor-pointer text-on-surface-variant/50 rounded-full hover:bg-on-surface/4',
+          ]"
+          :disabled="day.disabled"
+          @mouseenter="picking === 'end' && (hovered = day.iso)"
+          @click="selectDay(day)"
+        >
+          {{ day.date }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex justify-end gap-2 px-6 py-4">
+      <MButton variant="text" @click="cancel">{{ locale.cancel }}</MButton>
+      <MButton variant="text" :disabled="!start || !end" @click="confirm">{{ locale.ok }}</MButton>
+    </div>
+  </MDialog>
+</template>

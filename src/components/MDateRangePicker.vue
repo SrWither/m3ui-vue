@@ -10,6 +10,7 @@ import MIconButton from './MIconButton.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 import { useLocale } from '../composables/useLocale'
 import { POPUP_MARGIN, dropdownX, fitPopup } from '../composables/_popupPosition'
+import { isoDate as fmt, useCalendarMonth } from '../composables/_useCalendarMonth'
 
 export interface DateRange {
   start: string | null
@@ -76,50 +77,13 @@ watch(() => props.modelValue.start, (v) => {
   if (v) viewDate.value = new Date(v + 'T00:00:00')
 })
 
-const WEEKDAYS = computed(() => {
-  const f = new Intl.DateTimeFormat(resolvedLocale.value, { weekday: 'narrow' })
-  return Array.from({ length: 7 }, (_, i) => f.format(new Date(2024, 0, i + 1)))
+// Weekday names, the month's title and its six-week grid, shared with the other date pickers
+const { weekdays: WEEKDAYS, monthLabel, days: calendarDays, isOutOfRange: isOOR, prevMonth, nextMonth } = useCalendarMonth(viewDate, {
+  locale: () => resolvedLocale.value,
+  min: () => props.min,
+  max: () => props.max,
 })
 
-const monthLabel = computed(() =>
-  new Intl.DateTimeFormat(resolvedLocale.value, { month: 'long', year: 'numeric' }).format(viewDate.value)
-)
-
-const calendarDays = computed(() => {
-  const y = viewDate.value.getFullYear()
-  const m = viewDate.value.getMonth()
-  const first = new Date(y, m, 1)
-  const startDay = (first.getDay() + 6) % 7
-  const daysInMonth = new Date(y, m + 1, 0).getDate()
-  const days: { date: number; current: boolean; iso: string; disabled: boolean }[] = []
-
-  const prevMonth = new Date(y, m, 0).getDate()
-  for (let i = startDay - 1; i >= 0; i--) {
-    const d = prevMonth - i
-    const iso = fmt(y, m - 1, d)
-    days.push({ date: d, current: false, iso, disabled: isOOR(iso) })
-  }
-  for (let d = 1; d <= daysInMonth; d++) {
-    const iso = fmt(y, m, d)
-    days.push({ date: d, current: true, iso, disabled: isOOR(iso) })
-  }
-  const remaining = 42 - days.length
-  for (let d = 1; d <= remaining; d++) {
-    const iso = fmt(y, m + 1, d)
-    days.push({ date: d, current: false, iso, disabled: isOOR(iso) })
-  }
-  return days
-})
-
-function fmt(y: number, m: number, d: number) {
-  const dt = new Date(y, m, d)
-  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
-}
-function isOOR(iso: string) {
-  if (props.min && iso < props.min) return true
-  if (props.max && iso > props.max) return true
-  return false
-}
 const todayIso = fmt(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())
 
 function selectDay(day: typeof calendarDays.value[0]) {
@@ -147,9 +111,6 @@ function isInRange(iso: string) {
   const hi = start < effectiveEnd ? effectiveEnd : start
   return iso > lo && iso < hi
 }
-
-function prevMonth() { const d = new Date(viewDate.value); d.setMonth(d.getMonth() - 1); viewDate.value = d }
-function nextMonth() { const d = new Date(viewDate.value); d.setMonth(d.getMonth() + 1); viewDate.value = d }
 
 const displayValue = computed(() => {
   const f = new Intl.DateTimeFormat(resolvedLocale.value, { day: 'numeric', month: 'short' })

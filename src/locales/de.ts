@@ -37,6 +37,10 @@ export const deLocale: M3Locale = {
 
   // Pickers
   selectDate: 'Datum auswählen',
+  ok: 'OK',
+  dateToggleInput: 'Zur Texteingabe wechseln',
+  dateToggleCalendar: 'Zum Kalender wechseln',
+  dateInputLabel: 'Datum',
   selectTime: 'Uhrzeit auswählen',
   timeHourSelection: 'Stunde auswählen',
   timeMinuteSelection: 'Minuten auswählen',

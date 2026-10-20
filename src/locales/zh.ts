@@ -37,6 +37,10 @@ export const zhLocale: M3Locale = {
 
   // Pickers
   selectDate: '选择日期',
+  ok: '确定',
+  dateToggleInput: '切换到文本输入',
+  dateToggleCalendar: '切换到日历',
+  dateInputLabel: '日期',
   selectTime: '选择时间',
   timeHourSelection: '选择小时',
   timeMinuteSelection: '选择分钟',

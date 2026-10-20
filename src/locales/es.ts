@@ -37,6 +37,10 @@ export const esLocale: M3Locale = {
 
   // Pickers
   selectDate: 'Seleccionar fecha',
+  ok: 'Aceptar',
+  dateToggleInput: 'Cambiar a entrada de texto',
+  dateToggleCalendar: 'Cambiar a calendario',
+  dateInputLabel: 'Fecha',
   selectTime: 'Seleccionar hora',
   timeHourSelection: 'Seleccionar hora',
   timeMinuteSelection: 'Seleccionar minutos',

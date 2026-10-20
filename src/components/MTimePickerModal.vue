@@ -9,6 +9,7 @@
  */
 import { computed, ref, watch } from 'vue'
 import MButton from './MButton.vue'
+import MDialog from './MDialog.vue'
 import MIconButton from './MIconButton.vue'
 import MTimeScroll from './MTimeScroll.vue'
 import { useLocale } from '../composables/useLocale'
@@ -70,11 +71,6 @@ watch(() => props.show, (open) => {
     selectedMinute.value = props.mode === 'scroll' ? Math.floor(m / props.minuteStep) * props.minuteStep : m
     step.value = 'hour'
     inputMode.value = props.mode
-    document.addEventListener('keydown', onKeydown)
-    document.body.style.overflow = 'hidden'
-  } else {
-    document.removeEventListener('keydown', onKeydown)
-    document.body.style.overflow = ''
   }
 })
 
@@ -228,6 +224,20 @@ const scrollTime = computed({
 const toggleIcon = computed(() =>
   inputMode.value !== 'input' ? 'keyboard' : props.mode === 'scroll' ? 'swipe_vertical' : 'schedule',
 )
+// AM/PM in the app's language, from Intl, as MTimeScroll (the values stay 'AM'/'PM')
+const periods = computed(() => {
+  const label = (h: number) => {
+    try {
+      return new Intl.DateTimeFormat(locale.lang, { hour: 'numeric', hour12: true })
+        .formatToParts(new Date(2000, 0, 1, h))
+        .find((p) => p.type === 'dayPeriod')?.value ?? (h < 12 ? 'AM' : 'PM')
+    } catch {
+      return h < 12 ? 'AM' : 'PM'
+    }
+  }
+  return [label(9), label(21)] as const
+})
+
 const toggleLabel = computed(() =>
   inputMode.value !== 'input'
     ? locale.timeToggleKeyboard
@@ -276,235 +286,212 @@ function confirm() {
   emit('update:show', false)
 }
 
-function onKeydown(e: KeyboardEvent) { if (e.key === 'Escape') cancel() }
+// Escape or the scrim (MDialog) cancel, like the Cancel button
+function onDialog(open: boolean) {
+  if (!open) cancel()
+}
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition name="m3-tp-modal" appear>
-      <div
-        v-if="show"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-scrim/32 p-4"
-        @click.self="cancel"
-      >
-        <div class="tp-box w-[328px] rounded-[28px] bg-surface-container-high px-6 pt-6 pb-4 shadow-elevation-3">
-          <!-- Title -->
-          <p class="mb-5 text-label-medium text-on-surface-variant">
-            {{ title || locale.selectTime }}
-          </p>
+  <!-- MDialog's bare box: scrim, Escape, scroll lock, the open/close animation and dialog semantics -->
+  <MDialog :model-value="show" bare max-width="328px" :title="title || locale.selectTime" @update:model-value="onDialog">
+    <div class="px-6 pt-6 pb-4">
+      <!-- Title -->
+      <p class="mb-5 text-label-medium text-on-surface-variant">
+        {{ title || locale.selectTime }}
+      </p>
 
-          <!-- ── Dial mode ───────────────────────────────────── -->
-          <template v-if="inputMode === 'dial'">
-            <!-- Time display + AM/PM -->
-            <div class="mb-5 flex items-center justify-center gap-2">
-              <button
-                type="button"
-                class="flex h-20 min-w-[96px] items-center justify-center rounded-sm text-display-large transition-colors"
-                :class="
-                  step === 'hour'
-                    ? 'bg-primary-container text-on-primary-container'
-                    : 'bg-surface-container-highest text-on-surface cursor-pointer hover:bg-on-surface/8'
-                "
-                @click="step = 'hour'"
-              >
-                {{ pad(selectedHour) }}
-              </button>
+      <!-- ── Dial mode ───────────────────────────────────── -->
+      <template v-if="inputMode === 'dial'">
+        <!-- Time display + AM/PM -->
+        <div class="mb-5 flex items-center justify-center gap-2">
+          <button
+            type="button"
+            class="flex h-20 min-w-[96px] items-center justify-center rounded-sm text-display-large transition-colors"
+            :class="
+              step === 'hour'
+                ? 'bg-primary-container text-on-primary-container'
+                : 'bg-surface-container-highest text-on-surface cursor-pointer hover:bg-on-surface/8'
+            "
+            @click="step = 'hour'"
+          >
+            {{ pad(selectedHour) }}
+          </button>
 
-              <span class="text-display-large text-on-surface">:</span>
+          <span class="text-display-large text-on-surface">:</span>
 
-              <button
-                type="button"
-                class="flex h-20 min-w-[96px] items-center justify-center rounded-sm text-display-large transition-colors"
-                :class="
-                  step === 'minute'
-                    ? 'bg-primary-container text-on-primary-container'
-                    : 'bg-surface-container-highest text-on-surface cursor-pointer hover:bg-on-surface/8'
-                "
-                @click="step = 'minute'"
-              >
-                {{ pad(selectedMinute) }}
-              </button>
+          <button
+            type="button"
+            class="flex h-20 min-w-[96px] items-center justify-center rounded-sm text-display-large transition-colors"
+            :class="
+              step === 'minute'
+                ? 'bg-primary-container text-on-primary-container'
+                : 'bg-surface-container-highest text-on-surface cursor-pointer hover:bg-on-surface/8'
+            "
+            @click="step = 'minute'"
+          >
+            {{ pad(selectedMinute) }}
+          </button>
 
-              <!-- AM / PM toggle -->
-              <div
-                v-if="!use24h"
-                class="ml-2 flex h-20 flex-col overflow-hidden rounded-sm border border-outline"
-              >
-                <button
-                  type="button"
-                  class="flex flex-1 items-center justify-center px-3 text-title-medium transition-colors"
-                  :class="
-                    period === 'AM'
-                      ? 'bg-tertiary-container text-on-tertiary-container'
-                      : 'text-on-surface-variant hover:bg-on-surface/8'
-                  "
-                  @click="period = 'AM'"
-                >AM</button>
-                <div class="h-px bg-outline" />
-                <button
-                  type="button"
-                  class="flex flex-1 items-center justify-center px-3 text-title-medium transition-colors"
-                  :class="
-                    period === 'PM'
-                      ? 'bg-tertiary-container text-on-tertiary-container'
-                      : 'text-on-surface-variant hover:bg-on-surface/8'
-                  "
-                  @click="period = 'PM'"
-                >PM</button>
-              </div>
-            </div>
-
-            <!-- Clock dial -->
-            <div
-              ref="dialEl"
-              class="relative mx-auto h-[256px] w-[256px] select-none"
-              @mousedown="onDialDown"
-              @touchstart.prevent="onDialTouch"
-            >
-              <div class="absolute inset-0 rounded-full bg-surface-container-highest" />
-
-              <svg class="pointer-events-none absolute inset-0" viewBox="0 0 256 256">
-                <line
-                  :x1="CX" :y1="CX"
-                  :x2="handEnd.x" :y2="handEnd.y"
-                  stroke="var(--color-primary)" stroke-width="2"
-                />
-                <circle :cx="CX" :cy="CX" r="4" fill="var(--color-primary)" />
-                <circle :cx="handEnd.x" :cy="handEnd.y" :r="NUM_R" fill="var(--color-primary)" />
-              </svg>
-
-              <template v-if="step === 'hour'">
-                <button
-                  v-for="item in hourItems"
-                  :key="'h' + item.value"
-                  type="button"
-                  class="pointer-events-auto absolute flex h-10 w-10 items-center justify-center rounded-full text-body-large transition-colors"
-                  :class="
-                    item.value === selectedHour
-                      ? 'text-on-primary font-medium'
-                      : 'text-on-surface cursor-pointer'
-                  "
-                  :style="{
-                    left: `${item.x}px`,
-                    top: `${item.y}px`,
-                    transform: 'translate(-50%, -50%)',
-                  }"
-                  @click.stop="selectHour(item.value)"
-                >
-                  {{ item.label }}
-                </button>
-              </template>
-
-              <template v-else>
-                <button
-                  v-for="item in minuteItems"
-                  :key="'m' + item.value"
-                  type="button"
-                  class="pointer-events-auto absolute flex h-10 w-10 items-center justify-center rounded-full text-body-large transition-colors"
-                  :class="
-                    item.value === selectedMinute
-                      ? 'text-on-primary font-medium'
-                      : 'text-on-surface cursor-pointer'
-                  "
-                  :style="{
-                    left: `${item.x}px`,
-                    top: `${item.y}px`,
-                    transform: 'translate(-50%, -50%)',
-                  }"
-                  @click.stop="selectedMinute = item.value"
-                >
-                  {{ item.label }}
-                </button>
-              </template>
-            </div>
-          </template>
-
-          <!-- ── Scroll mode ─────────────────────────────────── -->
-          <div v-else-if="inputMode === 'scroll'" class="flex justify-center pb-4">
-            <MTimeScroll v-model="scrollTime" :use24h="use24h" :minute-step="minuteStep" />
-          </div>
-
-          <!-- ── Input mode ──────────────────────────────────── -->
-          <div v-else class="mx-auto flex items-center justify-center gap-2 py-8">
-            <input
-              ref="inputHourEl"
-              v-model="inputHour"
-              type="text"
-              maxlength="2"
-              class="h-20 w-[96px] rounded-sm border border-outline bg-surface-container-highest text-center text-display-large text-on-surface outline-none transition-colors focus:border-2 focus:border-primary"
-              @blur="clampInput"
-            />
-            <span class="text-display-large text-on-surface">:</span>
-            <input
-              ref="inputMinuteEl"
-              v-model="inputMinute"
-              type="text"
-              maxlength="2"
-              class="h-20 w-[96px] rounded-sm border border-outline bg-surface-container-highest text-center text-display-large text-on-surface outline-none transition-colors focus:border-2 focus:border-primary"
-              @blur="clampInput"
-            />
-            <!-- AM / PM toggle -->
-            <div
-              v-if="!use24h"
-              class="ml-2 flex h-20 flex-col overflow-hidden rounded-sm border border-outline"
-            >
-              <button
-                type="button"
-                class="flex flex-1 items-center justify-center px-3 text-title-medium transition-colors"
-                :class="
-                  period === 'AM'
-                    ? 'bg-tertiary-container text-on-tertiary-container'
-                    : 'text-on-surface-variant hover:bg-on-surface/8'
-                "
-                @click="period = 'AM'"
-              >AM</button>
-              <div class="h-px bg-outline" />
-              <button
-                type="button"
-                class="flex flex-1 items-center justify-center px-3 text-title-medium transition-colors"
-                :class="
-                  period === 'PM'
-                    ? 'bg-tertiary-container text-on-tertiary-container'
-                    : 'text-on-surface-variant hover:bg-on-surface/8'
-                "
-                @click="period = 'PM'"
-              >PM</button>
-            </div>
-          </div>
-
-          <!-- Footer -->
-          <div class="mt-2 flex items-center justify-between">
-            <MIconButton
-              :icon="toggleIcon"
-              :label="toggleLabel"
-              @click="inputMode = inputMode === 'input' ? mode : 'input'"
-            />
-            <div class="flex gap-2">
-              <MButton variant="text" @click="cancel">{{ locale.cancel }}</MButton>
-              <MButton variant="text" @click="confirm">OK</MButton>
-            </div>
+          <!-- AM / PM toggle -->
+          <div
+            v-if="!use24h"
+            class="ml-2 flex h-20 flex-col overflow-hidden rounded-sm border border-outline"
+          >
+            <button
+              type="button"
+              class="flex flex-1 items-center justify-center px-3 text-title-medium transition-colors"
+              :class="
+                period === 'AM'
+                  ? 'bg-tertiary-container text-on-tertiary-container'
+                  : 'text-on-surface-variant hover:bg-on-surface/8'
+              "
+              @click="period = 'AM'"
+            >{{ periods[0] }}</button>
+            <div class="h-px bg-outline" />
+            <button
+              type="button"
+              class="flex flex-1 items-center justify-center px-3 text-title-medium transition-colors"
+              :class="
+                period === 'PM'
+                  ? 'bg-tertiary-container text-on-tertiary-container'
+                  : 'text-on-surface-variant hover:bg-on-surface/8'
+              "
+              @click="period = 'PM'"
+            >{{ periods[1] }}</button>
           </div>
         </div>
-      </div>
-    </Transition>
-  </Teleport>
-</template>
 
-<style scoped>
-.m3-tp-modal-enter-active,
-.m3-tp-modal-leave-active {
-  transition: opacity 0.15s ease;
-}
-.m3-tp-modal-enter-from,
-.m3-tp-modal-leave-to {
-  opacity: 0;
-}
-.m3-tp-modal-enter-active .tp-box,
-.m3-tp-modal-leave-active .tp-box {
-  transition: transform 0.15s ease;
-}
-.m3-tp-modal-enter-from .tp-box,
-.m3-tp-modal-leave-to .tp-box {
-  transform: scale(0.95);
-}
-</style>
+        <!-- Clock dial -->
+        <div
+          ref="dialEl"
+          class="relative mx-auto h-[256px] w-[256px] select-none"
+          @mousedown="onDialDown"
+          @touchstart.prevent="onDialTouch"
+        >
+          <div class="absolute inset-0 rounded-full bg-surface-container-highest" />
+
+          <svg class="pointer-events-none absolute inset-0" viewBox="0 0 256 256">
+            <line
+              :x1="CX" :y1="CX"
+              :x2="handEnd.x" :y2="handEnd.y"
+              stroke="var(--color-primary)" stroke-width="2"
+            />
+            <circle :cx="CX" :cy="CX" r="4" fill="var(--color-primary)" />
+            <circle :cx="handEnd.x" :cy="handEnd.y" :r="NUM_R" fill="var(--color-primary)" />
+          </svg>
+
+          <template v-if="step === 'hour'">
+            <button
+              v-for="item in hourItems"
+              :key="'h' + item.value"
+              type="button"
+              class="pointer-events-auto absolute flex h-10 w-10 items-center justify-center rounded-full text-body-large transition-colors"
+              :class="
+                item.value === selectedHour
+                  ? 'text-on-primary font-medium'
+                  : 'text-on-surface cursor-pointer'
+              "
+              :style="{
+                left: `${item.x}px`,
+                top: `${item.y}px`,
+                transform: 'translate(-50%, -50%)',
+              }"
+              @click.stop="selectHour(item.value)"
+            >
+              {{ item.label }}
+            </button>
+          </template>
+
+          <template v-else>
+            <button
+              v-for="item in minuteItems"
+              :key="'m' + item.value"
+              type="button"
+              class="pointer-events-auto absolute flex h-10 w-10 items-center justify-center rounded-full text-body-large transition-colors"
+              :class="
+                item.value === selectedMinute
+                  ? 'text-on-primary font-medium'
+                  : 'text-on-surface cursor-pointer'
+              "
+              :style="{
+                left: `${item.x}px`,
+                top: `${item.y}px`,
+                transform: 'translate(-50%, -50%)',
+              }"
+              @click.stop="selectedMinute = item.value"
+            >
+              {{ item.label }}
+            </button>
+          </template>
+        </div>
+      </template>
+
+      <!-- ── Scroll mode ─────────────────────────────────── -->
+      <div v-else-if="inputMode === 'scroll'" class="flex justify-center pb-4">
+        <MTimeScroll v-model="scrollTime" :use24h="use24h" :minute-step="minuteStep" />
+      </div>
+
+      <!-- ── Input mode ──────────────────────────────────── -->
+      <div v-else class="mx-auto flex items-center justify-center gap-2 py-8">
+        <input
+          ref="inputHourEl"
+          v-model="inputHour"
+          type="text"
+          maxlength="2"
+          class="h-20 w-[96px] rounded-sm border border-outline bg-surface-container-highest text-center text-display-large text-on-surface outline-none transition-colors focus:border-2 focus:border-primary"
+          @blur="clampInput"
+        />
+        <span class="text-display-large text-on-surface">:</span>
+        <input
+          ref="inputMinuteEl"
+          v-model="inputMinute"
+          type="text"
+          maxlength="2"
+          class="h-20 w-[96px] rounded-sm border border-outline bg-surface-container-highest text-center text-display-large text-on-surface outline-none transition-colors focus:border-2 focus:border-primary"
+          @blur="clampInput"
+        />
+        <!-- AM / PM toggle -->
+        <div
+          v-if="!use24h"
+          class="ml-2 flex h-20 flex-col overflow-hidden rounded-sm border border-outline"
+        >
+          <button
+            type="button"
+            class="flex flex-1 items-center justify-center px-3 text-title-medium transition-colors"
+            :class="
+              period === 'AM'
+                ? 'bg-tertiary-container text-on-tertiary-container'
+                : 'text-on-surface-variant hover:bg-on-surface/8'
+            "
+            @click="period = 'AM'"
+          >{{ periods[0] }}</button>
+          <div class="h-px bg-outline" />
+          <button
+            type="button"
+            class="flex flex-1 items-center justify-center px-3 text-title-medium transition-colors"
+            :class="
+              period === 'PM'
+                ? 'bg-tertiary-container text-on-tertiary-container'
+                : 'text-on-surface-variant hover:bg-on-surface/8'
+            "
+            @click="period = 'PM'"
+          >{{ periods[1] }}</button>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="mt-2 flex items-center justify-between">
+        <MIconButton
+          :icon="toggleIcon"
+          :label="toggleLabel"
+          @click="inputMode = inputMode === 'input' ? mode : 'input'"
+        />
+        <div class="flex gap-2">
+          <MButton variant="text" @click="cancel">{{ locale.cancel }}</MButton>
+          <MButton variant="text" @click="confirm">{{ locale.ok }}</MButton>
+        </div>
+      </div>
+    </div>
+  </MDialog>
+</template>

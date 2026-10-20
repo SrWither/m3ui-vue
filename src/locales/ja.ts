@@ -37,6 +37,10 @@ export const jaLocale: M3Locale = {
 
   // Pickers
   selectDate: '日付を選択',
+  ok: 'OK',
+  dateToggleInput: 'テキスト入力に切り替え',
+  dateToggleCalendar: 'カレンダーに切り替え',
+  dateInputLabel: '日付',
   selectTime: '時刻を選択',
   timeHourSelection: '時間を選択',
   timeMinuteSelection: '分を選択',

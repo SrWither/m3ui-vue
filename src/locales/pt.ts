@@ -37,6 +37,10 @@ export const ptLocale: M3Locale = {
 
   // Pickers
   selectDate: 'Selecionar data',
+  ok: 'OK',
+  dateToggleInput: 'Mudar para entrada de texto',
+  dateToggleCalendar: 'Mudar para calendário',
+  dateInputLabel: 'Data',
   selectTime: 'Selecionar hora',
   timeHourSelection: 'Selecionar hora',
   timeMinuteSelection: 'Selecionar minutos',

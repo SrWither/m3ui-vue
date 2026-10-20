@@ -73,4 +73,34 @@ describe('MDialog', () => {
     expect(box.classList.contains('max-w-md')).toBe(true)
     expect(box.style.maxHeight).toBe('600px')
   })
+
+  it('bare: the content fills the box, with no title row, close button or padding', () => {
+    mount(MDialog, {
+      props: { modelValue: true, bare: true, title: 'Select date' },
+      slots: { default: '<div class="mine">Picker</div>' },
+      attachTo: document.body,
+    })
+    const box = document.body.querySelector('.dialog-box') as HTMLElement
+    expect(box.querySelector('.mine')).not.toBeNull()
+    expect(box.querySelector('h2')).toBeNull()
+    expect(box.querySelector('button')).toBeNull()
+    // The title still names it
+    expect(box.getAttribute('role')).toBe('dialog')
+    expect(box.getAttribute('aria-modal')).toBe('true')
+    expect(box.getAttribute('aria-label')).toBe('Select date')
+  })
+
+  it('is labelled by its title', () => {
+    mount(MDialog, { props: { modelValue: true, title: 'Delete file?' }, attachTo: document.body })
+    const box = document.body.querySelector('.dialog-box') as HTMLElement
+    const id = box.getAttribute('aria-labelledby')!
+    expect(document.getElementById(id)?.textContent).toContain('Delete file?')
+  })
+
+  it('a dialog mounted open closes on Escape', async () => {
+    const w = mount(MDialog, { props: { modelValue: true }, attachTo: document.body })
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    expect(w.emitted('update:modelValue')?.[0]).toEqual([false])
+    w.unmount()
+  })
 })
