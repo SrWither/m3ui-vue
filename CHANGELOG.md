@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.0.3] - Unreleased
+
+### Added
+- `createM3UI({ cookies, initialState })`, so a server renders with the user's theme choice. `cookies: true` also keeps the theme, the palette and the contrast level in cookies (`m3-theme`, `m3-palette`, `m3-contrast`; copied from `localStorage` when the plugin installs, so users from before get them on their next visit). `initialState` takes what the server read from them: `useTheme()` and `useColorPalette()` report it on the server, and on the client while hydrating (with `isHydrating`) before switching to what's stored, so UI built from them (a theme toggle's icon, the selected palette) hydrates without mismatches and needs no `<ClientOnly>`. What's missing or invalid falls back to the plugin's defaults, by the client's rules (a stored choice wins unless `persistPalette` is false). A `system` theme stays `system` and a `system` contrast resolves to `standard` on the server, which can't know the OS preferences. Exports the `M3InitialState` type
+
 ## [1.0.2] - 2026-10-19
 
 ### Added
