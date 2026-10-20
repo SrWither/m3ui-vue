@@ -14,7 +14,7 @@ const props = withDefaults(
   defineProps<{
     /** Material Symbol icon name */
     icon: string
-    /** Accessible label (aria-label and title) */
+    /** Accessible label (its aria-label; no visible tooltip: wrap it in MTooltip for one) */
     label?: string
     /** Visual style */
     variant?: 'standard' | 'filled' | 'tonal' | 'outlined'
