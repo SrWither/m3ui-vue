@@ -38,6 +38,8 @@ const props = withDefaults(
     checked?: boolean
     /** Icon shown while checked, when it differs from `icon` (e.g. 'pause' for 'play_arrow') */
     checkedIcon?: string
+    /** Draw the icon filled (Material Symbols' FILL axis) without making it a toggle, e.g. media controls */
+    iconFilled?: boolean
   }>(),
   {
     variant: 'standard',
@@ -199,6 +201,6 @@ const variantClasses = computed(() => {
     @pointercancel="onPointerUp"
     @click="onClick"
   >
-    <MIcon :name="checked && checkedIcon ? checkedIcon : icon" :size="resolved.icon" :filled="!!checked" />
+    <MIcon :name="checked && checkedIcon ? checkedIcon : icon" :size="resolved.icon" :filled="!!checked || iconFilled" />
   </component>
 </template>
