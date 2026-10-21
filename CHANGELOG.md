@@ -15,6 +15,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **An `MFab` in `MToolbar`'s `#fab` slot is sized by the toolbar (56px, 80px collapsed, whatever its `size`), takes the floating toolbar FAB's color (primary container, tertiary container on a colored toolbar; `color` still wins) and elevation (level 2, 3 on hover), and stays square with a `label`, which only names it. Before, it kept its own size (the docs used `size="small"`, 40px) and was extended with a label**
 - **`MAnimatedNumber` shows currencies written with a plain `$` with their country, in any language: `AR$ 1.234,50` in Argentina, `MX$1,234.50` in Mexico, `US$1,234.50` in the US. Before, `Intl` gave the local peso a bare `$` and some foreign currencies their code (`MXN` in Argentina).** Symbols that already name their currency stay as `Intl` writes them (`€`, `R$`, `￥`, `CA$`); setting `currencyDisplay` in `format` gives `Intl`'s own output
 
+### Fixed
+- `MSlider`: near the ends of the track, the stop dot was left floating in the gap next to the thumb once the inactive piece got shorter than the dot's inset (at 98 on a wide slider). The dot now hides as soon as it no longer fits in its piece, and a piece shorter than its own corner goes too, as Compose's `drawTrack` does; for the end of a standard or centered slider and both ends of a range one. The slider measures its track for this (ResizeObserver); the server render looks as before
+
 ## [1.1.3] - 2026-10-20
 
 ### Added
