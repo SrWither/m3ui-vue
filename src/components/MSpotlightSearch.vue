@@ -189,6 +189,7 @@ onBeforeUnmount(() => {
             />
             <MSpinner v-if="loading" :size="20" class="shrink-0 text-primary" />
             <button
+              :aria-label="locale.clearSearch"
               v-else-if="hasQuery"
               type="button"
               class="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-on-surface-variant hover:bg-on-surface/8"

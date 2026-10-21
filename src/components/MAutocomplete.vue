@@ -75,6 +75,14 @@ const modalOpen = ref(false)
 const modalSearch = ref('')
 const search = ref('')
 const highlightIndex = ref(-1)
+// ARIA combobox + listbox: the input points at the open list and the option the arrow keys are on
+const listId = `${id}-list`
+const optionId = (i: number) => `${id}-opt-${i}`
+const activeOption = computed(() => {
+  if (!open.value && !modalOpen.value) return undefined
+  const i = filteredOptions.value.findIndex((o) => !o.disabled && getEnabledIndex(o) === highlightIndex.value)
+  return i >= 0 ? optionId(i) : undefined
+})
 const fieldEl = ref<HTMLElement | null>(null)
 const inputEl = ref<HTMLInputElement | null>(null)
 const { resolvedFieldBg } = useFieldBg(fieldEl, () => props.fieldBg)
@@ -350,7 +358,12 @@ const labelClasses = computed(() => {
         :disabled="disabled"
         autocomplete="off"
         role="combobox"
-        :aria-expanded="open"
+        aria-autocomplete="list"
+        :aria-expanded="open || modalOpen"
+        :aria-controls="open || modalOpen ? listId : undefined"
+        :aria-activedescendant="activeOption"
+        :aria-required="required || undefined"
+        :aria-invalid="error || undefined"
         :aria-disabled="disabled"
         :class="[
           triggerClasses,
@@ -371,6 +384,7 @@ const labelClasses = computed(() => {
 
       <!-- Clear button -->
       <button
+        :aria-label="locale.clear"
         v-if="clearable && hasValue && !disabled"
         type="button"
         class="absolute right-9 top-1/2 -translate-y-1/2 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"
@@ -409,13 +423,20 @@ const labelClasses = computed(() => {
     >
       <div
         v-if="open && mode === 'docked'"
+        :id="listId"
         ref="dropdownEl"
+        role="listbox"
+        :aria-label="label || undefined"
         class="fixed z-500 max-h-60 overflow-auto rounded-xs bg-surface-container py-1 shadow-elevation-2"
         :style="dropPos"
       >
         <div
           v-for="(opt, i) in filteredOptions"
+          :id="optionId(i)"
           :key="i"
+          role="option"
+          :aria-selected="eq(opt.value, modelValue)"
+          :aria-disabled="opt.disabled || undefined"
           data-option
           class="flex cursor-pointer items-center gap-3 px-4 py-3 text-body-large"
           :class="[
@@ -452,9 +473,14 @@ const labelClasses = computed(() => {
         class="fixed inset-0 z-50 flex items-center justify-center bg-scrim/32 p-4"
         @click.self="closeDropdown"
       >
-        <div class="ac-modal-box flex max-h-[80vh] w-full max-w-sm flex-col overflow-hidden rounded-[28px] bg-surface-container-high shadow-elevation-3">
+        <div
+          class="ac-modal-box flex max-h-[80vh] w-full max-w-sm flex-col overflow-hidden rounded-[28px] bg-surface-container-high shadow-elevation-3"
+          role="dialog"
+          aria-modal="true"
+          :aria-labelledby="`${id}-dialog-title`"
+        >
           <div class="flex items-center justify-between px-6 pt-6 pb-4">
-            <h2 class="text-headline-small text-on-surface">{{ label || placeholder }}</h2>
+            <h2 :id="`${id}-dialog-title`" class="text-headline-small text-on-surface">{{ label || placeholder }}</h2>
             <MIconButton icon="close" :label="locale.close" @click="closeDropdown" />
           </div>
 
@@ -473,10 +499,14 @@ const labelClasses = computed(() => {
 
           <div class="h-px bg-outline-variant" />
 
-          <div class="flex-1 overflow-y-auto py-2">
+          <div :id="listId" role="listbox" :aria-labelledby="`${id}-dialog-title`" class="flex-1 overflow-y-auto py-2">
             <div
               v-for="(opt, i) in modalFilteredOptions"
+              :id="optionId(i)"
               :key="i"
+              role="option"
+              :aria-selected="eq(opt.value, modelValue)"
+              :aria-disabled="opt.disabled || undefined"
               class="flex cursor-pointer items-center gap-4 px-6 py-3.5 text-body-large transition-colors"
               :class="[
                 opt.disabled

@@ -9,7 +9,9 @@ import { computed, ref, useId } from 'vue'
 import MIcon from './MIcon.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 import { useDebounce } from '../composables/useDebounce'
+import { useLocale } from '../composables/useLocale'
 
+const locale = useLocale()
 const props = withDefaults(
   defineProps<{
     /** Array of tags (v-model) */
@@ -225,6 +227,7 @@ const labelClasses = computed(() => {
         >
           {{ tag }}
           <button
+            :aria-label="`${locale.remove} ${tag}`"
             v-if="!disabled"
             type="button"
             class="flex h-4 w-4 items-center justify-center rounded-full hover:bg-on-secondary-container/20"
@@ -261,6 +264,7 @@ const labelClasses = computed(() => {
       </label>
 
       <button
+        :aria-label="locale.clear"
         v-if="clearable && hasValue && !disabled"
         type="button"
         class="absolute right-2 top-4 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"

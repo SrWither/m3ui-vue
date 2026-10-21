@@ -9,6 +9,7 @@
  */
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import MIcon from './MIcon.vue'
+import { useLocale } from '../composables/useLocale'
 
 export interface SimpleCarouselItem {
   src: string
@@ -18,6 +19,7 @@ export interface SimpleCarouselItem {
   ratio?: number
 }
 
+const locale = useLocale()
 const props = withDefaults(
   defineProps<{
     /** Slides to render — required */
@@ -293,6 +295,7 @@ defineExpose({ next, prev, scrollToItem, scrollToPage })
 
     <template v-if="showArrows && items.length > 1">
       <button
+        :aria-label="locale.previous"
         type="button"
         class="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-surface/80 text-on-surface shadow-elevation-1 opacity-0 backdrop-blur-sm transition-all duration-200 hover:bg-surface hover:shadow-elevation-2 group-hover:opacity-100"
         @click="prev"
@@ -300,6 +303,7 @@ defineExpose({ next, prev, scrollToItem, scrollToPage })
         <MIcon name="chevron_left" :size="24" />
       </button>
       <button
+        :aria-label="locale.next"
         type="button"
         class="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-surface/80 text-on-surface shadow-elevation-1 opacity-0 backdrop-blur-sm transition-all duration-200 hover:bg-surface hover:shadow-elevation-2 group-hover:opacity-100"
         @click="next"
@@ -318,6 +322,8 @@ defineExpose({ next, prev, scrollToItem, scrollToPage })
         v-for="p in totalPages"
         :key="p"
         type="button"
+        :aria-label="locale.carouselItem.replace('{index}', String(p)).replace('{count}', String(totalPages))"
+        :aria-current="(p - 1) === activePage || undefined"
         class="h-2 cursor-pointer rounded-full transition-all duration-300"
         :class="(p - 1) === activePage ? 'w-5 bg-on-surface' : 'w-2 bg-on-surface/30 hover:bg-on-surface/50'"
         @click="isPageBased ? scrollToPage(p - 1) : scrollToItem(p - 1)"

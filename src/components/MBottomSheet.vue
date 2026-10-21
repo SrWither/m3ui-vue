@@ -248,6 +248,7 @@ const squareCorners = computed(() => props.squareCornersWhenFull && isExpanded.v
           <div v-if="title" class="flex shrink-0 items-center justify-between px-6 pb-4">
             <h2 class="text-title-large text-on-surface">{{ title }}</h2>
             <button
+              :aria-label="locale.close"
               type="button"
               class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8"
               @click="close"

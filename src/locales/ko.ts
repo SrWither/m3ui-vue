@@ -22,6 +22,8 @@ export const koLocale: M3Locale = {
   selectedCount: '선택됨',
   recordCount: '개 레코드',
   expand: '펼치기',
+  collapse: '접기',
+  clear: '지우기',
   columns: '열',
   exportCsv: 'CSV 내보내기',
   noGroup: '그룹 없음',

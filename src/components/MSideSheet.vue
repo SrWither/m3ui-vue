@@ -11,7 +11,9 @@
  */
 import MIcon from './MIcon.vue'
 import { useSheetMotion } from '../composables/_useSheetMotion'
+import { useLocale } from '../composables/useLocale'
 
+const locale = useLocale()
 withDefaults(defineProps<{
   /** Open/closed state (v-model) */
   modelValue: boolean
@@ -56,6 +58,7 @@ const motion = useSheetMotion('x', close)
               <h2 class="text-title-large text-on-surface">{{ title }}</h2>
             </slot>
             <button
+              :aria-label="locale.close"
               type="button"
               class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8"
               @click="close"

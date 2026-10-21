@@ -22,6 +22,8 @@ export const ptLocale: M3Locale = {
   selectedCount: 'selecionados',
   recordCount: 'registro',
   expand: 'Expandir',
+  collapse: 'Recolher',
+  clear: 'Limpar',
   columns: 'Colunas',
   exportCsv: 'Exportar CSV',
   noGroup: 'Sem grupo',

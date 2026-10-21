@@ -411,7 +411,7 @@ function colStyle(col: DataTableColumn) {
       <div v-if="searchable" class="flex min-w-48 flex-1 items-center gap-2 rounded-full border border-outline-variant bg-surface-container px-3 py-1.5 transition-[border-color,box-shadow] duration-150 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/30">
         <MIcon name="search" :size="16" class="shrink-0 text-on-surface-variant" />
         <input v-model="search" type="text" :placeholder="searchPlaceholder ?? locale.search" class="w-full bg-transparent text-body-medium text-on-surface outline-none placeholder:text-on-surface-variant" />
-        <button v-if="search" class="text-on-surface-variant transition-colors hover:text-on-surface" @click="search = ''">
+        <button type="button" :aria-label="locale.clearSearch" v-if="search" class="text-on-surface-variant transition-colors hover:text-on-surface" @click="search = ''">
           <MIcon name="close" :size="14" />
         </button>
       </div>

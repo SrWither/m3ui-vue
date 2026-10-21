@@ -22,6 +22,8 @@ export const frLocale: M3Locale = {
   selectedCount: 'sélectionnés',
   recordCount: 'enregistrement',
   expand: 'Développer',
+  collapse: 'Réduire',
+  clear: 'Effacer',
   columns: 'Colonnes',
   exportCsv: 'Exporter CSV',
   noGroup: 'Sans groupe',

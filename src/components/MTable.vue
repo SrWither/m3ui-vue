@@ -272,6 +272,7 @@ const hasActions = computed(() => !!slots['row-actions'])
           class="w-full bg-transparent text-body-medium text-on-surface outline-none placeholder:text-on-surface-variant"
         />
         <button
+          type="button" :aria-label="locale.clearSearch"
           v-if="search"
           class="text-on-surface-variant transition-colors hover:text-on-surface"
           @click="search = ''"

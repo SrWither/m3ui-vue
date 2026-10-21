@@ -86,6 +86,10 @@ const emit = defineEmits<{ 'update:modelValue': [unknown[]] }>()
 const id = useId()
 const open = ref(false)
 const modalOpen = ref(false)
+// Focused (from the keyboard too) looks like open: M3's focused field, 2dp primary indicator and primary label,
+// instead of the browser's own outline
+const focused = ref(false)
+const highlighted = computed(() => open.value || modalOpen.value || focused.value)
 const modalSearch = ref('')
 const search = ref('')
 const fieldEl = ref<HTMLElement | null>(null)
@@ -221,7 +225,7 @@ onUnmounted(() => {
 
 const triggerClasses = computed(() => {
   const base = [
-    'flex min-h-[56px] w-full items-center gap-1.5 flex-wrap',
+    'flex min-h-[56px] w-full items-center gap-1.5 flex-wrap outline-none',
     'transition-[border-color,border-width] duration-150',
     props.disabled ? 'cursor-not-allowed' : 'cursor-pointer',
     props.leadingIcon ? 'pl-12 pr-10' : 'pl-4 pr-10',
@@ -230,7 +234,7 @@ const triggerClasses = computed(() => {
   if (props.variant === 'outlined') {
     const border = props.disabled
       ? 'border-on-surface/12'
-      : open.value
+      : highlighted.value
         ? (props.error ? 'border-2 border-error' : 'border-2 border-primary')
         : (props.error ? 'border-error' : 'border-outline hover:border-on-surface')
     return [...base, 'rounded-xs border bg-transparent py-2', border].join(' ')
@@ -238,7 +242,7 @@ const triggerClasses = computed(() => {
 
   const border = props.disabled
     ? 'border-on-surface/38'
-    : open.value
+    : highlighted.value
       ? (props.error ? 'border-b-2 border-error' : 'border-b-2 border-primary')
       : (props.error ? 'border-error' : 'border-on-surface-variant hover:border-on-surface')
   const bg = props.disabled
@@ -247,7 +251,7 @@ const triggerClasses = computed(() => {
   return [
     ...base,
     'rounded-t-xs border-b pb-2',
-    hasValue.value || open.value ? 'pt-7' : 'pt-4',
+    hasValue.value || highlighted.value ? 'pt-7' : 'pt-4',
     bg,
     border,
   ].join(' ')
@@ -265,7 +269,7 @@ const labelClasses = computed(() => {
   const unFloated = props.variant === 'filled'
     ? 'top-[53%] -translate-y-1/2 text-body-large'
     : 'top-1/2 -translate-y-1/2 text-body-large'
-  const active = open.value || hasValue.value
+  const active = highlighted.value || hasValue.value
 
   return [
     'pointer-events-none absolute right-10 truncate transition-all duration-200',
@@ -273,7 +277,7 @@ const labelClasses = computed(() => {
     active ? floated : unFloated,
     props.disabled
       ? 'text-on-surface/38'
-      : open.value
+      : highlighted.value
         ? (props.error ? 'text-error' : 'text-primary')
         : (props.error ? 'text-error' : 'text-on-surface-variant'),
   ].join(' ')
@@ -305,12 +309,16 @@ const labelClasses = computed(() => {
         :class="triggerClasses"
         role="button"
         :tabindex="disabled ? -1 : 0"
-        :aria-expanded="open"
+        :aria-expanded="open || modalOpen"
         :aria-haspopup="true"
+        :aria-controls="open ? `${id}-list` : undefined"
+        :aria-labelledby="label ? `${id}-label` : undefined"
         @click="open ? close() : openDropdown()"
         @keydown.enter.prevent="open ? close() : openDropdown()"
         @keydown.space.prevent="open ? close() : openDropdown()"
         @keydown.escape="close()"
+        @focus="focused = true"
+        @blur="focused = false"
       >
         <template v-if="hasValue">
           <span
@@ -321,6 +329,7 @@ const labelClasses = computed(() => {
           >
             {{ chip.label }}
             <button
+              :aria-label="`${locale.remove} ${chip.label}`"
               v-if="!disabled"
               type="button"
               class="flex h-4 w-4 items-center justify-center rounded-full hover:bg-on-secondary-container/20"
@@ -350,11 +359,12 @@ const labelClasses = computed(() => {
         </span>
       </div>
 
-      <label :class="labelClasses">
+      <label :id="`${id}-label`" :class="labelClasses">
         {{ label }}<span v-if="required" class="text-error">&nbsp;*</span>
       </label>
 
       <button
+        :aria-label="locale.clear"
         v-if="clearable && hasValue && !disabled"
         type="button"
         class="absolute right-9 top-4 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"
@@ -409,7 +419,7 @@ const labelClasses = computed(() => {
           </div>
         </div>
 
-        <div class="flex flex-col py-1">
+        <div :id="`${id}-list`" role="group" :aria-label="label || undefined" class="flex flex-col py-1">
           <label
             v-for="(opt, i) in filteredOptions"
             :key="i"

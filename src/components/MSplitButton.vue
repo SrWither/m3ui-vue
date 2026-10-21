@@ -10,6 +10,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import MIcon from './MIcon.vue'
 import { vRipple } from '../directives/vRipple'
 import { POPUP_MARGIN, dropdownX, fitPopup } from '../composables/_popupPosition'
+import { useLocale } from '../composables/useLocale'
 
 export interface SplitButtonItem {
   label: string
@@ -18,6 +19,7 @@ export interface SplitButtonItem {
   onClick?: () => void
 }
 
+const locale = useLocale()
 defineOptions({ inheritAttrs: false })
 
 const props = withDefaults(defineProps<{
@@ -203,6 +205,7 @@ onUnmounted(() => {
 
     <!-- Toggle -->
     <button
+      :aria-label="locale.menu" aria-haspopup="menu" :aria-expanded="open"
       type="button"
       class="toggle-btn relative flex cursor-pointer items-center justify-center overflow-hidden"
       :class="[

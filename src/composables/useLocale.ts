@@ -23,6 +23,10 @@ export interface M3Locale {
   selectedCount: string
   recordCount: string
   expand: string
+  /** Collapses an expanded item (the opposite of `expand`) */
+  collapse: string
+  /** Clears a field's value (the × at its end) */
+  clear: string
   columns: string
   exportCsv: string
   noGroup: string
@@ -247,6 +251,8 @@ export const defaultLocale: M3Locale = {
   selectedCount: 'selected',
   recordCount: 'record',
   expand: 'Expand',
+  collapse: 'Collapse',
+  clear: 'Clear',
   columns: 'Columns',
   exportCsv: 'Export CSV',
   noGroup: 'No group',

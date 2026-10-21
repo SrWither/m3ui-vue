@@ -22,6 +22,8 @@ export const deLocale: M3Locale = {
   selectedCount: 'ausgewählt',
   recordCount: 'Datensatz',
   expand: 'Erweitern',
+  collapse: 'Einklappen',
+  clear: 'Löschen',
   columns: 'Spalten',
   exportCsv: 'CSV exportieren',
   noGroup: 'Keine Gruppe',

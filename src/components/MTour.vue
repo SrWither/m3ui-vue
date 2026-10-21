@@ -225,6 +225,7 @@ onBeforeUnmount(() => { stopListeners(); clearHighlight() })
             {{ currentStep + 1 }} / {{ steps.length }}
           </span>
           <button
+            :aria-label="locale.close"
             type="button"
             class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8"
             @click="close"

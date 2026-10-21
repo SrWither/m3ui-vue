@@ -70,8 +70,17 @@ const emit = defineEmits<{ 'update:modelValue': [unknown] }>()
 
 const locale = useLocale()
 const id = useId()
+// ARIA combobox + listbox: the trigger names itself by the label and points at the open list and its selected option
+const labelId = `${id}-label`
+const listId = `${id}-list`
+const optionId = (i: number) => `${id}-opt-${i}`
+const selectedIndex = computed(() => props.options.findIndex((o) => eq(o.value, props.modelValue)))
 const open = ref(false)
 const modalOpen = ref(false)
+// Focused (from the keyboard too) looks like open: M3's focused field, 2dp primary indicator and primary label,
+// instead of the browser's own outline
+const focused = ref(false)
+const highlighted = computed(() => open.value || modalOpen.value || focused.value)
 const fieldEl = ref<HTMLElement | null>(null)
 const { resolvedFieldBg } = useFieldBg(fieldEl, () => props.fieldBg)
 const dropdownEl = ref<HTMLElement | null>(null)
@@ -164,7 +173,7 @@ onUnmounted(() => {
 const triggerClasses = computed(() => {
   const pl = props.leadingIcon ? 'pl-12' : 'pl-4'
   const base = [
-    'flex w-full items-center pr-10 text-body-large transition-[border-color,border-width] duration-150',
+    'flex w-full items-center pr-10 text-body-large outline-none transition-[border-color,border-width] duration-150',
     props.disabled ? 'cursor-not-allowed' : 'cursor-pointer',
     pl,
   ]
@@ -172,7 +181,7 @@ const triggerClasses = computed(() => {
   if (props.variant === 'outlined') {
     const border = props.disabled
       ? 'border-on-surface/12'
-      : open.value
+      : highlighted.value
         ? (props.error ? 'border-2 border-error' : 'border-2 border-primary')
         : (props.error ? 'border-error' : 'border-outline hover:border-on-surface')
     return [...base, 'h-14 rounded-xs border bg-transparent', border].join(' ')
@@ -180,7 +189,7 @@ const triggerClasses = computed(() => {
 
   const border = props.disabled
     ? 'border-on-surface/38'
-    : open.value
+    : highlighted.value
       ? (props.error ? 'border-b-2 border-error' : 'border-b-2 border-primary')
       : (props.error ? 'border-error' : 'border-on-surface-variant hover:border-on-surface')
   const bg = props.disabled
@@ -189,7 +198,7 @@ const triggerClasses = computed(() => {
   return [...base, 'h-14 rounded-t-xs border-b pt-6 pb-2', bg, border].join(' ')
 })
 
-const isFloated = computed(() => hasValue.value || open.value)
+const isFloated = computed(() => hasValue.value || highlighted.value)
 
 const labelClasses = computed(() => {
   const left = props.leadingIcon
@@ -210,7 +219,7 @@ const labelClasses = computed(() => {
     isFloated.value ? floated : unFloated,
     props.disabled
       ? 'text-on-surface/38'
-      : open.value
+      : highlighted.value
         ? (props.error ? 'text-error' : 'text-primary')
         : (props.error ? 'text-error' : 'text-on-surface-variant'),
   ].join(' ')
@@ -242,22 +251,31 @@ const labelClasses = computed(() => {
         :id="id"
         :tabindex="disabled ? -1 : 0"
         role="combobox"
-        :aria-expanded="open"
+        aria-haspopup="listbox"
+        :aria-expanded="open || modalOpen"
+        :aria-controls="open || modalOpen ? listId : undefined"
+        :aria-activedescendant="(open || modalOpen) && selectedIndex >= 0 ? optionId(selectedIndex) : undefined"
+        :aria-labelledby="label ? labelId : undefined"
+        :aria-required="required || undefined"
+        :aria-invalid="error || undefined"
         :aria-disabled="disabled"
         :class="[triggerClasses, disabled ? 'pointer-events-none' : '']"
         @click="toggle"
         @keydown="onKeydown"
+        @focus="focused = true"
+        @blur="focused = false"
       >
         <span v-if="hasValue" :class="disabled ? 'text-on-surface/38' : 'text-on-surface'">{{ selectedLabel }}</span>
       </div>
 
       <!-- Floating label -->
-      <label :for="id" :class="labelClasses">
+      <label :id="labelId" :for="id" :class="labelClasses">
         {{ label }}<span v-if="required" class="text-error">&nbsp;*</span>
       </label>
 
       <!-- Clear button -->
       <button
+        :aria-label="locale.clear"
         v-if="clearable && hasValue && !disabled"
         type="button"
         class="absolute right-9 top-1/2 -translate-y-1/2 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"
@@ -296,13 +314,20 @@ const labelClasses = computed(() => {
     >
       <div
         v-if="open && mode === 'docked'"
+        :id="listId"
         ref="dropdownEl"
+        role="listbox"
+        :aria-labelledby="label ? labelId : undefined"
         class="fixed z-500 max-h-60 overflow-auto rounded-xs bg-surface-container py-1 shadow-elevation-2"
         :style="dropPos"
       >
         <div
           v-for="(opt, i) in options"
+          :id="optionId(i)"
           :key="i"
+          role="option"
+          :aria-selected="eq(opt.value, modelValue)"
+          :aria-disabled="opt.disabled || undefined"
           class="flex cursor-pointer items-center gap-3 px-4 py-3 text-body-large"
           :class="[
             opt.disabled
@@ -337,20 +362,29 @@ const labelClasses = computed(() => {
         class="fixed inset-0 z-50 flex items-center justify-center bg-scrim/32 p-4"
         @click.self="closeModal"
       >
-        <div class="select-modal-box flex max-h-[80vh] w-full max-w-sm flex-col overflow-hidden rounded-[28px] bg-surface-container-high shadow-elevation-3">
+        <div
+          class="select-modal-box flex max-h-[80vh] w-full max-w-sm flex-col overflow-hidden rounded-[28px] bg-surface-container-high shadow-elevation-3"
+          role="dialog"
+          aria-modal="true"
+          :aria-labelledby="`${id}-dialog-title`"
+        >
           <!-- Header -->
           <div class="flex items-center justify-between px-6 pt-6 pb-4">
-            <h2 class="text-headline-small text-on-surface">{{ label || placeholder }}</h2>
+            <h2 :id="`${id}-dialog-title`" class="text-headline-small text-on-surface">{{ label || placeholder }}</h2>
             <MIconButton icon="close" :label="locale.close" @click="closeModal" />
           </div>
 
           <div class="h-px bg-outline-variant" />
 
           <!-- Options list -->
-          <div class="flex-1 overflow-y-auto py-2">
+          <div :id="listId" role="listbox" :aria-labelledby="`${id}-dialog-title`" class="flex-1 overflow-y-auto py-2">
             <div
               v-for="(opt, i) in options"
+              :id="optionId(i)"
               :key="i"
+              role="option"
+              :aria-selected="eq(opt.value, modelValue)"
+              :aria-disabled="opt.disabled || undefined"
               class="flex cursor-pointer items-center gap-4 px-6 py-3.5 text-body-large transition-colors"
               :class="[
                 opt.disabled

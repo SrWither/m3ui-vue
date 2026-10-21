@@ -11,7 +11,9 @@ import { computed, ref, useId, useSlots } from "vue";
 import MIcon from "./MIcon.vue";
 import { useFieldBg } from "../composables/useFieldBg";
 import { useDebounce } from "../composables/useDebounce";
+import { useLocale } from '../composables/useLocale'
 
+const locale = useLocale()
 const props = withDefaults(
   defineProps<{
     /** Bound value (v-model) */
@@ -214,6 +216,7 @@ function onInput(event: Event) {
         <slot name="trailing" />
       </div>
       <button
+        :aria-label="locale.clear"
         v-else-if="showClear"
         type="button"
         class="absolute right-3 top-1/2 -translate-y-1/2 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"

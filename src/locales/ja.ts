@@ -22,6 +22,8 @@ export const jaLocale: M3Locale = {
   selectedCount: '件選択中',
   recordCount: '件',
   expand: '展開',
+  collapse: '折りたたむ',
+  clear: 'クリア',
   columns: '列',
   exportCsv: 'CSV エクスポート',
   noGroup: 'グループなし',

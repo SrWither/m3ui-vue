@@ -145,6 +145,7 @@ function alignClass(a?: string) { return a === 'center' ? 'text-center' : a === 
               <!-- First column gets indent + expand icon -->
               <div v-if="ci === 0" class="flex items-center gap-1" :style="{ paddingLeft: `${item.depth * indent}px` }">
                 <button
+                  :aria-label="isExpanded(item.row) ? locale.collapse : locale.expand" :aria-expanded="isExpanded(item.row)"
                   v-if="item.hasChildren"
                   type="button"
                   class="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-transform duration-200 hover:bg-on-surface/8"

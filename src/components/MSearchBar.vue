@@ -185,6 +185,7 @@ useScrollLock(() => expanded.value && fullscreen.value)
         @keydown="onKeydown"
       />
       <button
+        :aria-label="locale.clearSearch"
         v-if="clearable && modelValue && !disabled"
         type="button"
         class="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"
@@ -234,6 +235,7 @@ useScrollLock(() => expanded.value && fullscreen.value)
           />
           <MSpinner v-if="loading" :size="20" class="shrink-0 text-on-surface-variant" />
           <button
+            :aria-label="locale.clearSearch"
             v-else-if="clearable && modelValue"
             type="button"
             class="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"

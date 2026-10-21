@@ -9,9 +9,11 @@ import { computed, ref, useId, watch } from 'vue'
 import MIcon from './MIcon.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 import { useDebounce } from '../composables/useDebounce'
+import { useLocale } from '../composables/useLocale'
 
 export type MaskPreset = 'credit-card' | 'phone' | 'date' | 'time' | 'cpf' | 'cnpj' | 'zip'
 
+const locale = useLocale()
 const PRESETS: Record<MaskPreset, string> = {
   'credit-card': '#### #### #### ####',
   phone: '(###) ###-####',
@@ -219,6 +221,7 @@ const labelClasses = computed(() => {
       </label>
 
       <button
+        :aria-label="locale.clear"
         v-if="showClear"
         type="button"
         class="absolute right-3 top-1/2 -translate-y-1/2 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"

@@ -4,7 +4,9 @@ import MTreeNode from './_MTreeNode.vue'
 import MCheckbox from './MCheckbox.vue'
 import MIcon from './MIcon.vue'
 import type { TreeContext, TreeNode } from './MTree.vue'
+import { useLocale } from '../composables/useLocale'
 
+const locale = useLocale()
 const props = defineProps<{ node: TreeNode; depth: number }>()
 
 const tree = inject<TreeContext>('m-tree')!
@@ -93,6 +95,7 @@ function onAfterLeave(el: Element) {
       <div class="flex w-6 shrink-0 items-center justify-center">
         <!-- Chevron for branch nodes -->
         <button
+          :aria-label="isExpanded ? locale.collapse : locale.expand"
           v-if="hasChildren"
           type="button"
           class="flex h-5 w-5 items-center justify-center rounded text-on-surface-variant transition-transform duration-200"

@@ -22,6 +22,8 @@ export const zhLocale: M3Locale = {
   selectedCount: '已选择',
   recordCount: '条记录',
   expand: '展开',
+  collapse: '收起',
+  clear: '清除',
   columns: '列',
   exportCsv: '导出 CSV',
   noGroup: '无分组',

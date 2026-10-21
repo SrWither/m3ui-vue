@@ -408,6 +408,7 @@ const labelClasses = computed(() => {
           >
             {{ chip.label }}
             <button
+              :aria-label="`${locale.remove} ${chip.label}`"
               v-if="!disabled"
               type="button"
               class="flex h-4 w-4 items-center justify-center rounded-full hover:bg-on-secondary-container/20"
@@ -442,6 +443,8 @@ const labelClasses = computed(() => {
           :disabled="disabled"
           autocomplete="off"
           role="combobox"
+          aria-autocomplete="list"
+          :aria-controls="open ? `${id}-list` : undefined"
           :aria-expanded="open"
           :aria-disabled="disabled"
           :class="[
@@ -463,6 +466,7 @@ const labelClasses = computed(() => {
 
       <!-- Clear button -->
       <button
+        :aria-label="locale.clear"
         v-if="clearable && hasValue && !disabled"
         type="button"
         class="absolute right-9 top-4 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"
@@ -505,7 +509,7 @@ const labelClasses = computed(() => {
         class="fixed z-500 max-h-60 overflow-auto rounded-xs bg-surface-container shadow-elevation-2"
         :style="dropPos"
       >
-        <div class="flex flex-col py-1">
+        <div :id="`${id}-list`" role="group" :aria-label="label || undefined" class="flex flex-col py-1">
           <label
             v-for="(opt, i) in filteredOptions"
             :key="i"
