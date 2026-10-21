@@ -7,7 +7,12 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [1.1.4] - Unreleased
 
+### Added
+- `MToolbar` collapses, as Compose's floating toolbar does (`v-model:expanded`, default `true`; floating toolbars only). With a FAB, the toolbar closes into it and the FAB grows from 56 to 80px, keeping the toolbar's footprint so nothing around it moves; a FAB that toggles `expanded` hides and shows its toolbar. Without one, the new `#leading` and `#trailing` slots close toward the center (the default slot), typically a filled button that stays. Expressive FastSpatial spring; what's hidden is `inert`; reduced motion jumps
+- `MToolbar` `collapseOnScroll` (off by default): collapses a floating toolbar as the content scrolls down and expands it as it scrolls back up, 40px each way like Compose's `floatingToolbarVerticalNestedScroll`. `true` follows the window, or pass the scrolling element or a CSS selector; emits `update:expanded`
+
 ### Changed
+- **An `MFab` in `MToolbar`'s `#fab` slot is sized by the toolbar (56px, 80px collapsed, whatever its `size`), takes the floating toolbar FAB's color (primary container, tertiary container on a colored toolbar; `color` still wins) and elevation (level 2, 3 on hover), and stays square with a `label`, which only names it. Before, it kept its own size (the docs used `size="small"`, 40px) and was extended with a label**
 - **`MAnimatedNumber` shows currencies written with a plain `$` with their country, in any language: `AR$ 1.234,50` in Argentina, `MX$1,234.50` in Mexico, `US$1,234.50` in the US. Before, `Intl` gave the local peso a bare `$` and some foreign currencies their code (`MXN` in Argentina).** Symbols that already name their currency stay as `Intl` writes them (`€`, `R$`, `￥`, `CA$`); setting `currencyDisplay` in `format` gives `Intl`'s own output
 
 ## [1.1.3] - 2026-10-20
