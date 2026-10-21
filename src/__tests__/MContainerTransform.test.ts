@@ -120,6 +120,44 @@ describe('MContainerTransform', () => {
     expect(panel()).not.toBeNull()
   })
 
+  it('leaves placing the expanded view to the consumer\'s classes in custom mode', async () => {
+    wrapper = mount(MContainerTransform, {
+      props: { open: true, mode: 'custom' },
+      attrs: { class: 'bottom-4 right-4 w-80 bg-primary-container' },
+      slots: { default: () => h('button', 'Card'), expanded: () => h('p', 'Chat') },
+      attachTo: document.body,
+    })
+    await flush()
+    const cls = panel()!.className
+    expect(cls).toContain('bottom-4 right-4 w-80 bg-primary-container')
+    expect(cls).not.toContain('inset-0')
+    // Its default look is in the base layer (a class of its own), so the consumer's bg-* wins
+    expect(cls).toContain('m3-ct-panel')
+    expect(cls).not.toMatch(/(^|\s)bg-surface/)
+  })
+
+  it('without a scrim, leaves the page usable and closes on a press outside, unless persistent', async () => {
+    const outside = document.createElement('button')
+    document.body.appendChild(outside)
+    wrapper = mountCard({ open: true, mode: 'custom', scrim: false, 'onUpdate:open': (v: boolean) => wrapper!.setProps({ open: v }) })
+    await flush()
+    expect(panel()!.hasAttribute('aria-modal')).toBe(false)
+    expect(document.body.style.overflow).toBe('')
+    // A press inside stays open
+    panel()!.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
+    await flush()
+    expect(panel()).not.toBeNull()
+    outside.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
+    await finishAll()
+    expect(panel()).toBeNull()
+    await wrapper.setProps({ open: true, persistent: true })
+    await flush()
+    outside.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
+    await finishAll()
+    expect(panel()).not.toBeNull()
+    outside.remove()
+  })
+
   it('opens from elements elsewhere through a controller, with their item', async () => {
     const Page = defineComponent({
       setup() {

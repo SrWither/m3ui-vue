@@ -2,10 +2,10 @@
 /**
  * Material's container transform: an element (a card, a list item, an image, a FAB…) grows into an expanded view
  * and shrinks back into it, morphing its bounds and shape while its content fades into the new one. The expanded
- * view opens over the page, full screen or as a centered panel, with a scrim, Escape and scroll lock; focus goes
- * to it and back to the element on close. A port of Android's MaterialContainerTransform, played on the
- * compositor. For elements that live apart from the expanded view (a grid of cards, one detail), pass a
- * `useContainerTransform()` controller instead of the default slot.
+ * view opens over the page, full screen, as a centered panel, or wherever your classes put it (`custom`), with a
+ * scrim (optional), Escape and scroll lock; focus goes to it and back to the element on close. A port of Android's
+ * MaterialContainerTransform, played on the compositor. For elements that live apart from the expanded view (a grid
+ * of cards, one detail), pass a `useContainerTransform()` controller instead of the default slot.
  *
  * @slot default The element that opens it, with `{ open, isOpen }`: call `open()` from its click
  * @slot expanded The expanded view, with `{ close, item }` (`item` is what the controller's `open` was given)
@@ -25,15 +25,24 @@ defineOptions({ inheritAttrs: false })
 const props = withDefaults(defineProps<{
   /** A `useContainerTransform()` controller, to open it from elements elsewhere (`controller.open($event, item)`) */
   controller?: ContainerTransformController<T>
-  /** Where the expanded view opens: over the whole screen, or as a centered panel (wider screens) */
-  mode?: 'fullscreen' | 'dialog'
+  /**
+   * Where the expanded view opens: over the whole screen, as a centered panel (wider screens), or `custom`: the
+   * classes you give the component place and size it (`bottom-4 right-4 w-80 h-96`, `inset-y-0 right-0 w-96`…),
+   * anywhere over the page
+   */
+  mode?: 'fullscreen' | 'dialog' | 'custom'
   /** The centered panel's maximum width (`dialog` mode) */
   maxWidth?: string
   /** Accessible name of the expanded view */
   label?: string
-  /** `dialog` mode: a scrim click doesn't close it */
+  /**
+   * Dims the page behind it, which makes it modal (scroll lock, `aria-modal`). Without one the page stays usable:
+   * a click outside closes it instead (unless `persistent`)
+   */
+  scrim?: boolean
+  /** A click on the scrim, or outside without one, doesn't close it */
   persistent?: boolean
-}>(), { mode: 'fullscreen', maxWidth: '560px', persistent: false })
+}>(), { mode: 'fullscreen', maxWidth: '560px', scrim: true, persistent: false })
 
 /** Whether the expanded view is open; opening it from here grows it from the default slot's element */
 const openModel = defineModel<boolean>('open', { default: false })
@@ -42,7 +51,7 @@ const own = useContainerTransform<T>()
 const ctl = computed(() => props.controller ?? own)
 
 const anchor = ref<HTMLElement>()
-const scrim = ref<HTMLElement>()
+const scrimEl = ref<HTMLElement>()
 const clip = ref<HTMLElement>()
 const panel = ref<HTMLElement>()
 const mounted = ref(false)
@@ -114,7 +123,7 @@ function play(entering: boolean, start: Box, end: Box, startRadius: number, endR
   // The views' resting boxes: the clone sits on the element's, the panel on its own
   anims = playContainerFrames(
     frames,
-    { clip: clip.value!, start: entering ? ghost : panel.value!, end: entering ? panel.value! : ghost!, scrim: scrim.value },
+    { clip: clip.value!, start: entering ? ghost : panel.value!, end: entering ? panel.value! : ghost!, scrim: scrimEl.value },
     window.innerWidth,
     window.innerHeight,
     entering ? undefined : 'forwards',
@@ -177,12 +186,25 @@ watch(openModel, (open) => {
   else ctl.value.close()
 }, { immediate: true })
 
-useScrollLock(() => mounted.value)
+useScrollLock(() => mounted.value && props.scrim)
 useEscapeStack(() => mounted.value && ctl.value.isOpen.value, () => ctl.value.close())
+
+// Without a scrim the page stays usable: a press outside the expanded view (and the element it came from) closes it
+function onOutside(e: PointerEvent) {
+  const target = e.target as Node | null
+  if (!target || panel.value?.contains(target) || hidden?.contains(target)) return
+  ctl.value.close()
+}
+watch(() => mounted.value && ctl.value.isOpen.value && !props.scrim && !props.persistent, (on) => {
+  if (typeof document === 'undefined') return
+  if (on) document.addEventListener('pointerdown', onOutside, true)
+  else document.removeEventListener('pointerdown', onOutside, true)
+})
 
 onBeforeUnmount(() => {
   clearRun()
   hideSource(null)
+  if (typeof document !== 'undefined') document.removeEventListener('pointerdown', onOutside, true)
 })
 
 const close = () => ctl.value.close()
@@ -194,12 +216,13 @@ const panelStyle = computed(() => (props.mode === 'dialog' ? { width: `min(${pro
     <slot :open="openFromSlot" :is-open="ctl.isOpen.value" />
   </span>
   <Teleport to="body">
-    <div v-if="mounted" class="fixed inset-0 z-50">
+    <div v-if="mounted" class="fixed inset-0 z-50" :class="!scrim && 'pointer-events-none'">
       <div
-        ref="scrim"
+        v-if="scrim"
+        ref="scrimEl"
         class="absolute inset-0 bg-black"
         :style="{ opacity: SCRIM_OPACITY }"
-        @click="mode === 'dialog' && !persistent && close()"
+        @click="mode !== 'fullscreen' && !persistent && close()"
       />
       <!-- The container: its clip morphs between the two boxes during a transition; the views move inside it -->
       <div ref="clip" class="pointer-events-none absolute inset-0">
@@ -207,13 +230,11 @@ const panelStyle = computed(() => (props.mode === 'dialog' ? { width: `min(${pro
           ref="panel"
           v-bind="$attrs"
           role="dialog"
-          aria-modal="true"
+          :aria-modal="scrim ? 'true' : undefined"
           :aria-label="label"
           tabindex="-1"
-          class="pointer-events-auto absolute overflow-y-auto text-on-surface outline-none"
-          :class="mode === 'dialog'
-            ? 'inset-0 m-auto h-fit max-h-[calc(100%-48px)] rounded-[28px] bg-surface-container-high shadow-elevation-3'
-            : 'inset-0 bg-surface'"
+          class="m3-ct-panel pointer-events-auto absolute overflow-y-auto outline-none"
+          :class="mode === 'dialog' ? 'm3-ct-dialog inset-0 m-auto h-fit max-h-[calc(100%-48px)]' : mode === 'fullscreen' ? 'inset-0' : ''"
           :style="panelStyle"
           style="transform-origin: 0 0"
         >
@@ -223,3 +244,18 @@ const panelStyle = computed(() => (props.mode === 'dialog' ? { width: `min(${pro
     </div>
   </Teleport>
 </template>
+
+<style>
+/* The expanded surface's look, in the base layer so the consumer's classes on the component win (see MShape) */
+@layer base {
+  .m3-ct-panel {
+    background-color: var(--color-surface);
+    color: var(--color-on-surface);
+  }
+  .m3-ct-dialog {
+    background-color: var(--color-surface-container-high);
+    border-radius: 28px;
+    box-shadow: var(--shadow-elevation-3);
+  }
+}
+</style>
