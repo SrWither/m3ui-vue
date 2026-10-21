@@ -6,7 +6,7 @@
  * @event update:modelValue Emitted while dragging and on key presses, with the new value (a `[low, high]` pair
  *   for the range variant).
  */
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import MIcon from './MIcon.vue'
 
 const props = withDefaults(
@@ -92,15 +92,55 @@ const centerPct = computed(() => toPct(0))
 // Standard never gets a start indicator at all (matches the official M3
 // slider: only the far/unreached end is ever marked).
 const startDotHidden = computed(() => {
+  if (startLen.value < s.value.dotInset + s.value.dot / 2) return true
   if (props.variant === 'centered') return Math.min(pctLo.value, centerPct.value) <= 0
   if (props.variant === 'range') return pctLo.value <= 0
   return true
 })
 const endDotHidden = computed(() => {
+  if (endLen.value < s.value.dotInset + s.value.dot / 2) return true
   if (props.variant === 'centered') return Math.max(pctLo.value, centerPct.value) >= 100
   if (props.variant === 'range') return pctHi.value >= 100
   return pctLo.value >= 100
 })
+
+// Near the ends, the inactive piece between a thumb and the track's end gets shorter than its own corner: like
+// Compose's Slider (drawTrack only draws an inactive piece longer than its corner radius, with its stop indicator),
+// it goes, and the dot goes as soon as it no longer fits inside it (it was left floating in the thumb's gap).
+// Needs the track's length in px, measured; before that (server render) both behave as before.
+const trackLen = ref(0)
+let resizeObserver: ResizeObserver | undefined
+const measureTrack = () => {
+  const el = trackEl.value
+  if (el) trackLen.value = isVertical.value ? el.offsetHeight : el.offsetWidth
+}
+onMounted(() => {
+  measureTrack()
+  if (typeof ResizeObserver === 'undefined' || !trackEl.value) return
+  resizeObserver = new ResizeObserver(measureTrack)
+  resizeObserver.observe(trackEl.value)
+})
+onBeforeUnmount(() => resizeObserver?.disconnect())
+/** A thumb's clamped position (clampedPos) in px from the start */
+const posPx = (pct: number) => {
+  const inset = s.value.thumbInset
+  return Math.min(Math.max((pct / 100) * trackLen.value, inset), trackLen.value - inset)
+}
+// Length of the inactive piece at each end that a thumb bounds (Infinity where no thumb does, or before measuring)
+const startLen = computed(() => {
+  if (!trackLen.value) return Infinity
+  if (props.variant === 'range') return posPx(pctLo.value) - gap.value
+  if (props.variant === 'centered' && pctLo.value <= centerPct.value) return posPx(pctLo.value) - gap.value
+  return Infinity
+})
+const endLen = computed(() => {
+  if (!trackLen.value) return Infinity
+  if (props.variant === 'range') return trackLen.value - posPx(pctHi.value) - gap.value
+  if (props.variant === 'centered' && pctLo.value < centerPct.value) return Infinity
+  return trackLen.value - posPx(pctLo.value) - gap.value
+})
+const startPieceHidden = computed(() => startLen.value <= fullR.value)
+const endPieceHidden = computed(() => endLen.value <= fullR.value)
 
 const sizeMap = {
   // thumbH 44 matches SliderTokens.HandleHeight exactly — hitArea bumped from
@@ -266,6 +306,7 @@ function fillActiveSize(pct: number) {
   return `calc(${clampedPos(pct)} - ${gap.value}px)`
 }
 function fillInactiveSize(pct: number) {
+  if (endPieceHidden.value) return '0px'
   return `calc(100% - ${clampedPos(pct)} - ${gap.value}px)`
 }
 
@@ -276,6 +317,7 @@ function fillInactiveSize(pct: number) {
 
 // Range: both pctLo and pctHi are thumbs.
 function rangeInactiveBeforeSize() {
+  if (startPieceHidden.value) return '0px'
   return `calc(${clampedPos(pctLo.value)} - ${gap.value}px)`
 }
 function rangeActiveStart() {
@@ -285,6 +327,7 @@ function rangeActiveSize() {
   return `calc(${clampedPos(pctHi.value)} - ${clampedPos(pctLo.value)} - ${gap.value * 2}px)`
 }
 function rangeInactiveAfterSize() {
+  if (endPieceHidden.value) return '0px'
   return `calc(100% - ${clampedPos(pctHi.value)} - ${gap.value}px)`
 }
 
@@ -300,11 +343,13 @@ function centeredActiveSize() {
     : `calc(${centerPct.value}% - ${clampedPos(pctLo.value)} - ${gap.value}px)`
 }
 function centeredFarInactiveSize() {
+  if (endPieceHidden.value) return '0px'
   return pctLo.value >= centerPct.value
     ? `calc(100% - ${clampedPos(pctLo.value)} - ${gap.value}px)`
     : `calc(100% - ${centerPct.value}% - ${gap.value}px)`
 }
 function centeredNearInactiveSize() {
+  if (startPieceHidden.value) return '0px'
   return pctLo.value <= centerPct.value
     ? `calc(${clampedPos(pctLo.value)} - ${gap.value}px)`
     : `calc(${centerPct.value}% - ${gap.value}px)`
