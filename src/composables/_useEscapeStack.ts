@@ -11,6 +11,8 @@ const stack: (() => void)[] = []
 
 function onKeydown(e: KeyboardEvent) {
   if (e.key !== 'Escape' || !stack.length) return
+  // Handled: the browser then doesn't also run a close watcher with it (MContainerTransform's, under a dialog)
+  e.preventDefault()
   stack[stack.length - 1]!()
 }
 

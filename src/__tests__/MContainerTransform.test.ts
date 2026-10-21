@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, vi } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, nextTick } from 'vue'
 import MContainerTransform from '../components/MContainerTransform.vue'
@@ -98,6 +98,56 @@ describe('MContainerTransform', () => {
     expect(wrapper.emitted('update:open')).toEqual([[true], [false]])
   })
 
+  it('survives rapid opening and closing, ending in the last state asked', async () => {
+    wrapper = mountCard({ 'onUpdate:open': (v: boolean) => wrapper!.setProps({ open: v }) })
+    const source = wrapper.find('.card').element as HTMLElement
+    HTMLElement.prototype.getBoundingClientRect = function (this: HTMLElement) {
+      const b = this === source ? card : page
+      return { ...b, right: b.left + b.width, bottom: b.top + b.height, x: b.left, y: b.top, toJSON() {} } as DOMRect
+    }
+    // Open and close over and over without letting a transition finish
+    for (let i = 0; i < 4; i++) {
+      await wrapper.setProps({ open: true })
+      await flush()
+      await wrapper.setProps({ open: false })
+      await flush()
+    }
+    await wrapper.setProps({ open: true })
+    await flush()
+    await finishAll()
+    expect(panel()).not.toBeNull()
+    expect(running()).toHaveLength(0)
+    // And it still closes
+    await wrapper.setProps({ open: false })
+    await flush()
+    await finishAll()
+    expect(panel()).toBeNull()
+    expect(source.style.visibility).toBe('')
+  })
+
+  it('closes when closed mid-opening, instead of jumping open and staying there', async () => {
+    wrapper = mountCard({ 'onUpdate:open': (v: boolean) => wrapper!.setProps({ open: v }) })
+    const source = wrapper.find('.card').element as HTMLElement
+    HTMLElement.prototype.getBoundingClientRect = function (this: HTMLElement) {
+      const b = this === source ? card : page
+      return { ...b, right: b.left + b.width, bottom: b.top + b.height, x: b.left, y: b.top, toJSON() {} } as DOMRect
+    }
+    await wrapper.find('.card').trigger('click')
+    await flush()
+    expect(running().length).toBeGreaterThan(0)
+    // The back button inside, before the opening ends: the run turns around
+    ;(document.body.querySelector('.back') as HTMLElement).click()
+    await flush()
+    await finishAll()
+    expect(panel()).toBeNull()
+    expect(source.style.visibility).toBe('')
+    // And it opens again normally
+    await wrapper.find('.card').trigger('click')
+    await flush()
+    await finishAll()
+    expect(panel()).not.toBeNull()
+  })
+
   it('closes on Escape', async () => {
     wrapper = mountCard({ open: true })
     await flush()
@@ -110,12 +160,12 @@ describe('MContainerTransform', () => {
   it('closes on a scrim click in dialog mode, unless persistent', async () => {
     wrapper = mountCard({ open: true, mode: 'dialog', 'onUpdate:open': (v: boolean) => wrapper!.setProps({ open: v }) })
     await flush()
-    ;(panel()!.parentElement!.previousElementSibling as HTMLElement).click()
+    ;(document.body.querySelector('.bg-black') as HTMLElement).click()
     await finishAll()
     expect(panel()).toBeNull()
     await wrapper.setProps({ open: true, persistent: true })
     await flush()
-    ;(panel()!.parentElement!.previousElementSibling as HTMLElement).click()
+    ;(document.body.querySelector('.bg-black') as HTMLElement).click()
     await finishAll()
     expect(panel()).not.toBeNull()
   })
@@ -156,6 +206,57 @@ describe('MContainerTransform', () => {
     await finishAll()
     expect(panel()).not.toBeNull()
     outside.remove()
+  })
+
+  describe('Android\'s back', () => {
+    // The platform's close requests (CloseWatcher, Chrome/Edge): a fake one we can fire
+    class FakeWatcher {
+      static all: FakeWatcher[] = []
+      onclose: (() => void) | null = null
+      destroyed = false
+      constructor() { FakeWatcher.all.push(this) }
+      destroy() { this.destroyed = true }
+      requestClose() { if (!this.destroyed) this.onclose?.() }
+    }
+    afterEach(() => {
+      FakeWatcher.all = []
+      delete (window as { CloseWatcher?: unknown }).CloseWatcher
+    })
+
+    it('closes it through a CloseWatcher, without touching the history', async () => {
+      ;(window as { CloseWatcher?: unknown }).CloseWatcher = FakeWatcher
+      const push = vi.spyOn(history, 'pushState')
+      const back = vi.spyOn(history, 'back')
+      wrapper = mountCard({ 'onUpdate:open': (v: boolean) => wrapper!.setProps({ open: v }) })
+      await wrapper.find('.card').trigger('click')
+      await flush()
+      expect(FakeWatcher.all).toHaveLength(1)
+      FakeWatcher.all[0]!.requestClose()
+      await finishAll()
+      expect(panel()).toBeNull()
+      expect(push).not.toHaveBeenCalled()
+      expect(back).not.toHaveBeenCalled()
+      push.mockRestore()
+      back.mockRestore()
+    })
+
+    it('lets go of its watcher when closed some other way', async () => {
+      ;(window as { CloseWatcher?: unknown }).CloseWatcher = FakeWatcher
+      wrapper = mountCard({ 'onUpdate:open': (v: boolean) => wrapper!.setProps({ open: v }) })
+      await wrapper.find('.card').trigger('click')
+      await flush()
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+      await finishAll()
+      expect(FakeWatcher.all[0]!.destroyed).toBe(true)
+    })
+
+    it('makes no watcher with closeOnBack off', async () => {
+      ;(window as { CloseWatcher?: unknown }).CloseWatcher = FakeWatcher
+      wrapper = mountCard({ closeOnBack: false })
+      await wrapper.find('.card').trigger('click')
+      await flush()
+      expect(FakeWatcher.all).toHaveLength(0)
+    })
   })
 
   it('opens from elements elsewhere through a controller, with their item', async () => {
