@@ -51,7 +51,8 @@ const props = withDefaults(
     /**
      * Just the dialog's box (surface, shape, elevation), scrim, Escape, scroll lock and animation, with the default
      * slot filling it: no title row, padding, close button or actions. For dialogs that draw everything themselves
-     * (the date and time pickers). `title` then only names it for assistive technology
+     * (the date and time pickers). With `fullscreen`, the slot fills the screen and draws its own top bar. `title`
+     * then only names it for assistive technology
      */
     bare?: boolean
   }>(),
@@ -65,6 +66,9 @@ const props = withDefaults(
     bare: false,
   },
 )
+
+// The root is a Teleport, which can't take the consumer's class/style/attrs: they go on the dialog's surface
+defineOptions({ inheritAttrs: false })
 
 const locale = useLocale()
 
@@ -145,7 +149,8 @@ onUnmounted(() => {
         @click.self="close"
       >
         <div
-          class="dialog-box flex min-w-[280px] w-full flex-col rounded-xl bg-surface-container-high shadow-elevation-3"
+          v-bind="$attrs"
+          class="dialog-box m3-dialog-surface flex min-w-[280px] w-full flex-col"
           :class="sizeClasses"
           :style="sizeStyle"
           role="dialog"
@@ -226,12 +231,18 @@ onUnmounted(() => {
     <Transition v-else name="m3-dialog-fs" appear>
       <div
         v-if="modelValue"
-        class="dialog-fs fixed inset-0 z-50 flex flex-col bg-surface"
+        v-bind="$attrs"
+        class="dialog-fs m3-dialog-fs-surface fixed inset-0 z-50 flex flex-col"
         role="dialog"
         aria-modal="true"
-        :aria-labelledby="$slots.title || title ? titleId : undefined"
+        :aria-labelledby="!bare && ($slots.title || title) ? titleId : undefined"
+        :aria-label="bare ? title : undefined"
       >
-        <div class="flex h-14 shrink-0 items-center gap-2 px-2">
+        <!-- Bare: the content is the whole screen, top bar included, in whatever colors it draws -->
+        <div v-if="bare" class="min-h-0 flex-1 overflow-y-auto">
+          <slot />
+        </div>
+        <div v-else class="flex h-14 shrink-0 items-center gap-2 px-2">
           <MIconButton v-if="!persistent" icon="close" :label="closeLabel ?? locale.close" @click="close" />
           <h2 :id="titleId" class="flex-1 text-title-large font-medium text-on-surface">
             <slot name="title">{{ title }}</slot>
@@ -240,7 +251,7 @@ onUnmounted(() => {
             <slot name="actions" />
           </div>
         </div>
-        <div class="flex-1 overflow-y-auto px-6 py-4 text-body-medium text-on-surface-variant">
+        <div v-if="!bare" class="flex-1 overflow-y-auto px-6 py-4 text-body-medium text-on-surface-variant">
           <slot />
         </div>
       </div>
@@ -277,5 +288,19 @@ onUnmounted(() => {
 .m3-dialog-fs-leave-to {
   transform: translateY(100%);
   opacity: 0;
+}
+</style>
+
+<style>
+/* The surfaces' look, in the base layer so the consumer's classes on MDialog win (see MShape) */
+@layer base {
+  .m3-dialog-surface {
+    background-color: var(--color-surface-container-high);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-elevation-3);
+  }
+  .m3-dialog-fs-surface {
+    background-color: var(--color-surface);
+  }
 }
 </style>

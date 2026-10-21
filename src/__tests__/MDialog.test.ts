@@ -103,4 +103,31 @@ describe('MDialog', () => {
     expect(w.emitted('update:modelValue')?.[0]).toEqual([false])
     w.unmount()
   })
+
+  it('bare with fullscreen: the content fills the screen and draws its own top bar', () => {
+    const w = mount(MDialog, {
+      props: { modelValue: true, bare: true, fullscreen: true, title: 'Edit event' },
+      slots: { default: '<header class="mine">My bar</header>' },
+      attachTo: document.body,
+    })
+    const screen = document.body.querySelector('.dialog-fs') as HTMLElement
+    expect(screen.querySelector('.mine')).not.toBeNull()
+    expect(screen.querySelector('h2')).toBeNull()
+    expect(screen.querySelector('button')).toBeNull()
+    expect(screen.getAttribute('aria-label')).toBe('Edit event')
+    w.unmount()
+  })
+
+  it('puts the consumer\'s classes on its surface, over the default background', () => {
+    const w = mount(MDialog, {
+      props: { modelValue: true, title: 'T', fullscreen: true },
+      attrs: { class: 'bg-tertiary-container' },
+      attachTo: document.body,
+    })
+    const screen = document.body.querySelector('.dialog-fs') as HTMLElement
+    expect(screen.classList.contains('bg-tertiary-container')).toBe(true)
+    // The default is a base-layer class, not a competing bg-* utility
+    expect([...screen.classList].filter((c) => c.startsWith('bg-'))).toEqual(['bg-tertiary-container'])
+    w.unmount()
+  })
 })
