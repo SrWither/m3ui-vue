@@ -36,6 +36,7 @@ export type { RippleOptions, RippleValue } from './directives/vRipple'
 // Components
 export { default as MAbsolute } from './components/MAbsolute.vue'
 export { default as MAlert } from './components/MAlert.vue'
+export { default as MAnimatedNumber } from './components/MAnimatedNumber.vue'
 export { default as MAutocomplete } from './components/MAutocomplete.vue'
 export { default as MAppBar } from './components/MAppBar.vue'
 export { default as MAppBarWithSearch } from './components/MAppBarWithSearch.vue'
