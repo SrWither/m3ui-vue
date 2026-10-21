@@ -30,6 +30,8 @@ const props = withDefaults(
     loading?: boolean
     /** Material Symbol icon name shown next to the label */
     icon?: string
+    /** Draw the icon filled (Material Symbols' FILL axis), e.g. a starred star or a play icon */
+    iconFilled?: boolean
     /** Which side of the label the icon renders on */
     // Which side of the label `icon` renders on. Real M3 buttons support both via
     // `ButtonDefaults.contentPaddingFor(hasStartIcon/hasEndIcon)` — padding ends up identical
@@ -182,12 +184,12 @@ const variantClasses = computed(() => {
   >
     <template v-if="iconPos === 'leading'">
       <MSpinner v-if="loading" :size="spinnerSize" />
-      <MIcon v-else-if="icon" :name="icon" :size="iconSize" />
+      <MIcon v-else-if="icon" :name="icon" :size="iconSize" :filled="iconFilled" />
     </template>
     <slot />
     <template v-if="iconPos === 'trailing'">
       <MSpinner v-if="loading" :size="spinnerSize" />
-      <MIcon v-else-if="icon" :name="icon" :size="iconSize" />
+      <MIcon v-else-if="icon" :name="icon" :size="iconSize" :filled="iconFilled" />
     </template>
   </component>
 </template>
