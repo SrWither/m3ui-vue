@@ -1,6 +1,8 @@
 // Writes dist/THIRD_PARTY_LICENSES.md: the license of every package whose code is bundled into dist/ (imported
 // from src/ and not in vite.config.ts's `external`), as their licenses (MIT, BSD, Apache-2.0) require when
-// redistributing. Fails the build if a bundled package has no license file, so a new one can't slip in unnoticed.
+// redistributing. Fails the build if a bundled package has no license file, or a license that isn't on the
+// permissive allowlist below, so a new one can't slip in unnoticed: the library is MIT, free to use with nothing
+// owed back, and a copyleft (GPL, AGPL, LGPL, MPL…) or unknown license bundled into dist/ would quietly change that.
 import { readFileSync, readdirSync, statSync, writeFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -20,7 +22,8 @@ function walk(dir, out = []) {
 const imported = new Set()
 for (const file of walk(join(root, 'src'))) {
   const text = readFileSync(file, 'utf8')
-  for (const [, spec] of text.matchAll(/(?:from\s+|import\(\s*)'([^'./][^']*)'/g)) {
+  // `from 'x'`, `import('x')` and side-effect `import 'x'`
+  for (const [, spec] of text.matchAll(/(?:from\s+|import\(\s*|import\s+)'([^'./][^']*)'/g)) {
     const pkg = spec.startsWith('@') ? spec.split('/').slice(0, 2).join('/') : spec.split('/')[0]
     if (pkg !== own) imported.add(pkg)
   }
@@ -34,14 +37,32 @@ const isExternal = (pkg) => pkg === 'vue' || externals.some((e) => (e instanceof
 
 const bundled = [...imported].filter((pkg) => !isExternal(pkg)).sort()
 
+// SPDX ids allowed in dist/. An expression passes when every AND term, and at least one OR alternative, is allowed
+const ALLOWED = new Set(['MIT', 'MIT-0', 'ISC', 'BSD-2-Clause', 'BSD-3-Clause', '0BSD', 'Apache-2.0', 'Unicode-3.0', 'Unicode-DFS-2016', 'CC0-1.0', 'Unlicense', 'Zlib'])
+function permissive(expression) {
+  if (typeof expression !== 'string' || !expression.trim()) return false
+  const text = expression.replace(/[()]/g, ' ').trim()
+  return text.split(/\s+OR\s+/).some((alt) => alt.split(/\s+AND\s+/).every((id) => ALLOWED.has(id.trim())))
+}
+function licenseOf(meta) {
+  if (meta.license) return typeof meta.license === 'string' ? meta.license : meta.license.type
+  // The old `licenses: [{ type }]` field: every one of them applies
+  if (Array.isArray(meta.licenses)) return meta.licenses.map((l) => l.type ?? l).join(' AND ')
+  return undefined
+}
+
 const sections = bundled.map((pkg) => {
   const dir = join(root, 'node_modules', pkg)
   const meta = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'))
   const licenseFile = readdirSync(dir).find((f) => /^(licen[cs]e|copying)(\.(md|txt))?$/i.test(f))
   if (!licenseFile) throw new Error(`third-party-licenses: ${pkg} is bundled but has no LICENSE file`)
+  const license = licenseOf(meta)
+  if (!permissive(license)) {
+    throw new Error(`third-party-licenses: ${pkg} is bundled into dist/ but its license (${license ?? 'none declared'}) isn't on the permissive allowlist. Make it external (an optional peer dependency) or replace it`)
+  }
   const text = readFileSync(join(dir, licenseFile), 'utf8').trim()
   const repo = typeof meta.repository === 'string' ? meta.repository : meta.repository?.url
-  return `## ${meta.name} ${meta.version}\n\nLicense: ${meta.license ?? 'see below'}${repo ? `  \nSource: ${repo.replace(/^git\+/, '')}` : ''}\n\n\`\`\`\n${text}\n\`\`\``
+  return `## ${meta.name} ${meta.version}\n\nLicense: ${license}${repo ? `  \nSource: ${repo.replace(/^git\+/, '')}` : ''}\n\n\`\`\`\n${text}\n\`\`\``
 })
 
 // Not packages, but also redistributed: generated data and ported source (texts in scripts/licenses/)
