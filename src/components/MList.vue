@@ -7,7 +7,7 @@
  * @slot default MListItem / MListSubheader / MListGroup children
  * @event update:selected Fires when a selectable item is clicked (via v-model:selected)
  */
-import { computed, provide, ref } from 'vue'
+import { computed, nextTick, onMounted, onUpdated, provide, ref } from 'vue'
 import { useSegmentRuns } from '../composables/_useSegmentRuns'
 
 const props = withDefaults(
@@ -51,6 +51,30 @@ provide('m-list', {
   select: (value: string | number) => emit('update:selected', value),
 })
 
+// A selectable list is a listbox: its items are options, one Tab stop (the selected one, else the first), the
+// arrows, Home and End move between them, Enter/Space select (MListItem)
+const options = () => [...(listEl.value?.querySelectorAll<HTMLElement>('[role="option"]') ?? [])]
+  .filter((o) => o.getAttribute('aria-disabled') !== 'true')
+function onKeydown(e: KeyboardEvent) {
+  if (!props.selectable) return
+  const all = options()
+  const i = all.indexOf(document.activeElement as HTMLElement)
+  if (i < 0) return
+  const next = e.key === 'ArrowDown' ? all[i + 1] : e.key === 'ArrowUp' ? all[i - 1] : e.key === 'Home' ? all[0] : e.key === 'End' ? all[all.length - 1] : undefined
+  if (!next) return
+  e.preventDefault()
+  next.focus()
+}
+// With nothing selected (or a selection not in the list), the first option takes the Tab stop. Bound tabindexes
+// only patch when they change, so this one stays until the selection moves it.
+function keepTabStop() {
+  if (!props.selectable) return
+  const all = options()
+  if (all.length && !all.some((o) => o.tabIndex === 0)) all[0]!.tabIndex = 0
+}
+onMounted(keepTabStop)
+onUpdated(() => nextTick(keepTabStop))
+
 const classes = computed(() => [
   'flex flex-col',
   // ListTokens.SegmentedGap = 2dp
@@ -60,7 +84,7 @@ const classes = computed(() => [
 </script>
 
 <template>
-  <ul ref="listEl" role="list" :class="classes">
+  <ul ref="listEl" :role="selectable ? 'listbox' : 'list'" :class="classes" @keydown="onKeydown">
     <slot />
   </ul>
 </template>

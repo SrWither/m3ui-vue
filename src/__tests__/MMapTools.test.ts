@@ -207,7 +207,8 @@ describe('MMapSearch', () => {
     input.form!.dispatchEvent(new Event('submit', { cancelable: true }))
     await flushPromises()
     expect(provider).toHaveBeenCalledWith('plaza', expect.any(AbortSignal))
-    const item = [...document.querySelectorAll<HTMLElement>('li, [role="listitem"], [role="button"]')].find((e) => e.textContent?.includes('Plaza San Martín'))!
+    // The innermost match: a clickable row is a button inside its <li>
+    const item = [...document.querySelectorAll<HTMLElement>('li, [role="listitem"], [role="button"]')].filter((e) => e.textContent?.includes('Plaza San Martín')).at(-1)!
     expect(item).toBeTruthy()
     item.click()
     await nextTick()

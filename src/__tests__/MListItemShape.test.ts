@@ -20,7 +20,8 @@ const radius = (el: Element) => (el as HTMLElement).style.borderRadius
 describe('MListItem shape morph', () => {
   it('rests at 4px and grows on hover and press when clickable', async () => {
     wrapper = mount(MListItem, { props: { title: 'A', clickable: true }, attachTo: document.body })
-    const row = wrapper.element
+    // A clickable row is a button inside its <li>
+    const row = wrapper.find('[role="button"]').element
     await settle()
     expect(radius(row)).toBe('4px')
     row.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }))
@@ -33,12 +34,13 @@ describe('MListItem shape morph', () => {
 
   it('ignores hover when not interactive, but morphs when selected', async () => {
     wrapper = mount(MListItem, { props: { title: 'A' }, attachTo: document.body })
-    wrapper.element.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }))
+    const row = wrapper.find('.mli-row').element
+    row.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }))
     await settle()
-    expect(radius(wrapper.element)).toBe('4px')
+    expect(radius(row)).toBe('4px')
     await wrapper.setProps({ active: true })
     await settle()
-    expect(radius(wrapper.element)).toBe('16px')
+    expect(radius(row)).toBe('16px')
   })
 
   it('rounds the outer corners of each segmented run', async () => {
@@ -92,7 +94,8 @@ describe('MListItem shape morph', () => {
     const group = wrapper.find('ul ul')
     const title = wrapper.find(`#${group.attributes('aria-labelledby')}`)
     expect(title.text()).toBe('Privacy')
-    const rows = wrapper.findAll('[role="listitem"]')
+    // A selectable list is a listbox of options
+    const rows = wrapper.findAll('[role="option"]')
     expect(rows[1]!.classes()).toContain('bg-secondary-container')
     await rows[0]!.trigger('click')
     expect(wrapper.emitted('update:selected')?.[0]).toEqual(['a'])
@@ -105,6 +108,6 @@ describe('MListItem shape morph', () => {
       attachTo: document.body,
     })
     await settle()
-    expect(radius(wrapper.find('[role="listitem"]').element)).toBe('')
+    expect(radius(wrapper.find('.mli-row').element)).toBe('')
   })
 })

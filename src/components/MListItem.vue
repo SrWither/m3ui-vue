@@ -12,7 +12,7 @@
  * @event update:trailingValue Fires when a trailing switch/checkbox is toggled (trailing='switch' | 'checkbox')
  * @event update:expanded Fires when an expandable item is toggled open/closed
  */
-import { computed, inject, ref, useAttrs, useId, watch } from 'vue'
+import { computed, getCurrentInstance, h, inject, ref, useId, watch, type FunctionalComponent } from 'vue'
 import type { ComponentPublicInstance } from 'vue'
 import type { ComputedRef } from 'vue'
 import MIcon from './MIcon.vue'
@@ -82,7 +82,11 @@ const emit = defineEmits<{
   'update:expanded': [value: boolean]
 }>()
 
-const attrs = useAttrs()
+// Root attrs go on the row (the element that looks like the item), which is wrapped in an <li> for links and buttons
+defineOptions({ inheritAttrs: false })
+// `click` is a declared emit, so a listener for it never shows up in attrs: read it off the vnode
+const instance = getCurrentInstance()
+const hasClickListener = () => !!instance?.vnode.props?.onClick
 
 const internalExpanded = ref(props.expanded ?? false)
 watch(() => props.expanded, (v) => { if (v !== undefined) internalExpanded.value = v })
@@ -109,8 +113,28 @@ const resolvedLines = computed(() => {
 })
 
 const isClickable = computed(() =>
-  props.clickable || props.href || props.to || !!attrs.onClick || list?.selectable.value || props.expandable,
+  props.clickable || props.href || props.to || hasClickListener() || list?.selectable.value || props.expandable,
 )
+
+// What the row is for assistive technology and the keyboard. In a selectable list, an option of its listbox
+// (MList moves focus between them with the arrows); a link stays a link and a clickable row is a button, each
+// inside an <li> since a list can only hold list items; anything else is a plain list item.
+const isOption = computed(() => !!list?.selectable.value && props.value != null && !props.href && !props.to && !props.expandable)
+const isLink = computed(() => !!(props.href || props.to))
+const isButton = computed(() => !isOption.value && !isLink.value && !props.expandable && (props.clickable || hasClickListener()))
+const wrapped = computed(() => isLink.value || isButton.value)
+const rowRole = computed(() => (isOption.value ? 'option' : isButton.value ? 'button' : isLink.value ? undefined : 'listitem'))
+const rowTabindex = computed(() => {
+  if (isOption.value) return isActive.value && !props.disabled ? 0 : -1
+  if (isButton.value) return props.disabled ? -1 : 0
+  return undefined
+})
+function onRowKeyDown(e: KeyboardEvent) {
+  if (!isOption.value && !isButton.value) return
+  if ((e.key !== 'Enter' && e.key !== ' ') || e.target !== e.currentTarget) return
+  e.preventDefault()
+  handleClick(e as unknown as MouseEvent)
+}
 
 const isActive = computed(() => {
   if (props.active) return true
@@ -182,6 +206,12 @@ const containerClasses = computed(() => [
 // item of a run; the interaction shapes stay the same. Animated with MotionSchemeKeyTokens.FastSpatial.
 // Nav lists keep their pill (that's NavigationDrawerItem's shape, which doesn't morph).
 const rootEl = ref<Element | ComponentPublicInstance | null>(null)
+// The <li> around a link or button row (the list's child, for segment runs); other rows are the <li> themselves
+const wrapperEl = ref<Element | null>(null)
+const RowWrapper: FunctionalComponent = (_, { slots }) =>
+  wrapped.value
+    ? h('li', { role: 'listitem', ref: (e) => { wrapperEl.value = e as Element | null } }, slots.default?.())
+    : slots.default?.()
 const shapeEl = ref<HTMLElement | null>(null)
 const el = (r: Element | ComponentPublicInstance | null) => (r && '$el' in r ? (r.$el as Element) : r)
 const hovered = ref(false)
@@ -192,7 +222,7 @@ const REST = 4
 const HOVERED = 8
 const LARGE = 16
 
-const segmentPosition = computed(() => (isSegmented.value ? list?.segmentPosition(el(rootEl.value)) : undefined))
+const segmentPosition = computed(() => (isSegmented.value ? list?.segmentPosition(wrapped.value ? wrapperEl.value : el(rootEl.value)) : undefined))
 
 const expressiveRadii = computed<number[]>(() => {
   if (isNav.value) return []
@@ -227,7 +257,7 @@ function onBlur() { focused.value = false }
 const tag = computed(() => {
   if (props.href) return 'a'
   if (props.to) return 'router-link'
-  if (props.expandable) return 'div'
+  if (isButton.value) return 'div'
   return 'li'
 })
 
@@ -272,7 +302,7 @@ function handleTrailingToggle() {
 </script>
 
 <template>
-  <li v-if="expandable" ref="rootEl" role="listitem">
+  <li v-if="expandable" ref="rootEl" v-bind="$attrs" role="listitem">
     <div
       ref="shapeEl"
       role="button"
@@ -329,85 +359,90 @@ function handleTrailingToggle() {
     </Transition>
   </li>
 
-  <component
-    v-else
-    :is="tag"
-    :class="containerClasses"
-    ref="rootEl"
-    v-bind="linkProps"
-    role="listitem"
-    @click="handleClick"
-    @pointerenter="onPointerEnter"
-    @pointerleave="onPointerLeave"
-    @pointerdown="onPointerDown"
-    @pointerup="onPointerUp"
-    @pointercancel="onPointerUp"
-    @focus="onFocus"
-    @blur="onBlur"
-  >
-    <!-- Divider -->
-    <div
-      v-if="hasDivider"
-      class="absolute top-0 right-0 h-px bg-outline-variant"
-      :class="hasDivider === 'inset' ? 'left-16' : 'left-0'"
-    />
+  <RowWrapper v-else>
+    <component
+      :is="tag"
+      :class="containerClasses"
+      ref="rootEl"
+      v-bind="{ ...linkProps, ...$attrs }"
+      :role="rowRole"
+      :tabindex="rowTabindex"
+      :aria-selected="isOption ? isActive : undefined"
+      :aria-disabled="(isOption || isButton) && disabled ? 'true' : undefined"
+      @click="handleClick"
+      @keydown="onRowKeyDown"
+      @pointerenter="onPointerEnter"
+      @pointerleave="onPointerLeave"
+      @pointerdown="onPointerDown"
+      @pointerup="onPointerUp"
+      @pointercancel="onPointerUp"
+      @focus="onFocus"
+      @blur="onBlur"
+    >
+      <!-- Divider -->
+      <div
+        v-if="hasDivider"
+        class="absolute top-0 right-0 h-px bg-outline-variant"
+        :class="hasDivider === 'inset' ? 'left-16' : 'left-0'"
+      />
 
-    <!-- Leading -->
-    <slot name="leading">
-      <template v-if="resolvedLeading === 'icon'">
-        <MIcon :name="icon!" :size="24" class="shrink-0" :class="activeIconClass" />
-      </template>
-      <template v-else-if="resolvedLeading === 'icon-container'">
-        <div
-          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-          :class="iconContainerClasses[iconContainerColor || 'primary']"
-        >
-          <MIcon :name="icon!" :size="24" />
-        </div>
-      </template>
-      <template v-else-if="resolvedLeading === 'avatar'">
-        <MAvatar :name="avatarName!" :size="40" class="shrink-0" />
-      </template>
-      <template v-else-if="resolvedLeading === 'image'">
-        <img :src="image" alt="" class="h-14 w-14 shrink-0 rounded-md object-cover">
-      </template>
-      <template v-else-if="resolvedLeading === 'checkbox'">
-        <MCheckbox :model-value="isActive" class="shrink-0" />
-      </template>
-    </slot>
-
-    <!-- Content -->
-    <div class="min-w-0 flex-1">
-      <slot name="overline">
-        <p v-if="overline" class="truncate text-label-small" :class="activeIconClass">{{ overline }}</p>
+      <!-- Leading -->
+      <slot name="leading">
+        <template v-if="resolvedLeading === 'icon'">
+          <MIcon :name="icon!" :size="24" class="shrink-0" :class="activeIconClass" />
+        </template>
+        <template v-else-if="resolvedLeading === 'icon-container'">
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+            :class="iconContainerClasses[iconContainerColor || 'primary']"
+          >
+            <MIcon :name="icon!" :size="24" />
+          </div>
+        </template>
+        <template v-else-if="resolvedLeading === 'avatar'">
+          <MAvatar :name="avatarName!" :size="40" class="shrink-0" />
+        </template>
+        <template v-else-if="resolvedLeading === 'image'">
+          <img :src="image" alt="" class="h-14 w-14 shrink-0 rounded-md object-cover">
+        </template>
+        <template v-else-if="resolvedLeading === 'checkbox'">
+          <MCheckbox :model-value="isActive" class="shrink-0" />
+        </template>
       </slot>
-      <slot>
-        <p class="truncate text-body-large" :class="activeTextClass">{{ title }}</p>
-        <p v-if="subtitle && resolvedLines >= 2" class="text-body-medium" :class="[activeIconClass, resolvedLines === 2 && 'truncate']">
-          {{ subtitle }}
-        </p>
-        <p v-if="description && resolvedLines >= 3" class="line-clamp-2 text-body-small" :class="activeIconClass">
-          {{ description }}
-        </p>
-      </slot>
-    </div>
 
-    <!-- Trailing -->
-    <slot name="trailing">
-      <template v-if="resolvedTrailing === 'icon'">
-        <MIcon :name="trailingIcon!" :size="24" class="shrink-0" :class="activeIconClass" />
-      </template>
-      <template v-else-if="resolvedTrailing === 'text'">
-        <span class="shrink-0 text-label-small" :class="activeIconClass">{{ trailingText }}</span>
-      </template>
-      <template v-else-if="resolvedTrailing === 'switch'">
-        <MSwitch :model-value="!!trailingValue" @update:model-value="handleTrailingToggle" />
-      </template>
-      <template v-else-if="resolvedTrailing === 'checkbox'">
-        <MCheckbox :model-value="!!trailingValue" @update:model-value="handleTrailingToggle" />
-      </template>
-    </slot>
-  </component>
+      <!-- Content -->
+      <div class="min-w-0 flex-1">
+        <slot name="overline">
+          <p v-if="overline" class="truncate text-label-small" :class="activeIconClass">{{ overline }}</p>
+        </slot>
+        <slot>
+          <p class="truncate text-body-large" :class="activeTextClass">{{ title }}</p>
+          <p v-if="subtitle && resolvedLines >= 2" class="text-body-medium" :class="[activeIconClass, resolvedLines === 2 && 'truncate']">
+            {{ subtitle }}
+          </p>
+          <p v-if="description && resolvedLines >= 3" class="line-clamp-2 text-body-small" :class="activeIconClass">
+            {{ description }}
+          </p>
+        </slot>
+      </div>
+
+      <!-- Trailing -->
+      <slot name="trailing">
+        <template v-if="resolvedTrailing === 'icon'">
+          <MIcon :name="trailingIcon!" :size="24" class="shrink-0" :class="activeIconClass" />
+        </template>
+        <template v-else-if="resolvedTrailing === 'text'">
+          <span class="shrink-0 text-label-small" :class="activeIconClass">{{ trailingText }}</span>
+        </template>
+        <template v-else-if="resolvedTrailing === 'switch'">
+          <MSwitch :model-value="!!trailingValue" @update:model-value="handleTrailingToggle" />
+        </template>
+        <template v-else-if="resolvedTrailing === 'checkbox'">
+          <MCheckbox :model-value="!!trailingValue" @update:model-value="handleTrailingToggle" />
+        </template>
+      </slot>
+    </component>
+  </RowWrapper>
 </template>
 
 <style>
