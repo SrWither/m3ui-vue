@@ -193,6 +193,7 @@ export const koLocale: M3Locale = {
   nextPage: '다음 페이지',
   carousel: '캐러셀',
   carouselItem: '{count}개 중 {index}번째',  // MMap (maplibre controls)
+  sparklineSummary: '{first}에서 {last}, 최소 {min}, 최대 {max}',
   mapTitle: '지도',
   mapMarker: '지도 마커',
   mapZoomIn: '확대',

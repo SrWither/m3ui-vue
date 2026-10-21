@@ -193,6 +193,7 @@ export const zhLocale: M3Locale = {
   nextPage: '下一页',
   carousel: '轮播',
   carouselItem: '第 {index} 项，共 {count} 项',  // MMap (maplibre controls)
+  sparklineSummary: '从 {first} 到 {last}，最低 {min}，最高 {max}',
   mapTitle: '地图',
   mapMarker: '地图标记',
   mapZoomIn: '放大',

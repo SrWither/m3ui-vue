@@ -29,6 +29,7 @@ const props: Record<string, Record<string, unknown>> = {
   MRelativeTime: { value: new Date(0) },
   MResult: { status: 'success', title: 't' },
   MShape: { shape: 'Circle' },
+  MSparkline: { data: [3, 1, 4, 1, 5] },
   MTour: { steps: [{ target: '#x', title: 't' }] },
 }
 

@@ -193,6 +193,7 @@ export const esLocale: M3Locale = {
   nextPage: 'Página siguiente',
   carousel: 'Carrusel',
   carouselItem: '{index} de {count}',  // MMap (maplibre controls)
+  sparklineSummary: 'De {first} a {last}, mínimo {min}, máximo {max}',
   mapTitle: 'Mapa',
   mapMarker: 'Marcador del mapa',
   mapZoomIn: 'Acercar',

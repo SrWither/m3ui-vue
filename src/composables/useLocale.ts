@@ -199,6 +199,8 @@ export interface M3Locale {
   nextPage: string
   carousel: string
   carouselItem: string
+  /** MSparkline's summary for screen readers: {first}, {last}, {min}, {max} */
+  sparklineSummary: string
   // MMap (maplibre controls)
   mapTitle: string
   mapMarker: string
@@ -412,6 +414,7 @@ export const defaultLocale: M3Locale = {
   nextPage: 'Next page',
   carousel: 'Carousel',
   carouselItem: '{index} of {count}',
+  sparklineSummary: 'From {first} to {last}, low {min}, high {max}',
   // MMap (maplibre controls)
   mapTitle: 'Map',
   mapMarker: 'Map marker',
