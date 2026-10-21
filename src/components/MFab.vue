@@ -99,7 +99,10 @@ const isExpandable = computed(() => hasItems.value || hasContent.value)
 
 // Inside an MBottomAppBar: secondary and flat (bottomAppBarFabColor, bottomAppBarFabElevation)
 const inBottomAppBar = inject('m-bottom-app-bar', false)
-const color = computed(() => props.color ?? (inBottomAppBar ? 'secondary' : 'primary'))
+// In MToolbar's #fab slot: the toolbar sizes it (56 → 80px as it collapses), with the floating toolbar FAB's color
+// and elevation (FloatingToolbarDefaults.StandardFloatingActionButton / VibrantFloatingActionButton)
+const inToolbar = inject<{ color: 'primary' | 'tertiary' } | null>('m-toolbar-fab', null)
+const color = computed(() => props.color ?? inToolbar?.color ?? (inBottomAppBar ? 'secondary' : 'primary'))
 
 const colorMap: Record<string, string> = {
   primary: 'bg-primary-container text-on-primary-container',
@@ -119,10 +122,12 @@ const EXTENDED = {
   medium: { px: 80, icon: 28, lead: 26, gap: 'pl-3', box: 'h-20 min-w-20 rounded-lg-increased px-[26px]', text: 'text-title-large' },
   large: { px: 96, icon: 32, lead: 28, gap: 'pl-4', box: 'h-24 min-w-24 rounded-xl px-7', text: 'text-headline-small' },
 } as const
-const extended = computed(() => (props.label ? EXTENDED[props.size] : null))
+// In a toolbar the FAB is always the square one: its label only names it
+const extended = computed(() => (props.label && !inToolbar ? EXTENDED[props.size] : null))
 
 const fabSizeClasses = computed(() => {
   if (extended.value) return extended.value.box
+  if (inToolbar) return 'h-full w-full rounded-2xl'
   switch (props.size) {
     case 'small': return 'h-10 w-10 rounded-md'
     case 'medium': return 'h-20 w-20 rounded-lg-increased'
@@ -359,16 +364,16 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="fabEl" v-bind="$attrs" class="relative inline-flex items-center justify-center">
+  <div ref="fabEl" v-bind="$attrs" class="relative inline-flex items-center justify-center" :class="inToolbar && !extended && 'h-full w-full'">
     <component
       :is="fabTag"
       ref="fabButton"
       :to="to || undefined"
       :type="to ? undefined : 'button'"
       class="relative inline-flex cursor-pointer items-center overflow-hidden transition-shadow duration-150 disabled:cursor-not-allowed disabled:opacity-[0.38] before:content-[''] before:pointer-events-none before:absolute before:inset-0 before:bg-current before:opacity-0 before:transition-opacity before:duration-150 hover:before:opacity-[0.08] active:before:opacity-[0.12]"
-      :class="[colorMap[color], fabSizeClasses, extended ? 'justify-start' : 'justify-center', inBottomAppBar ? '' : 'shadow-elevation-3 hover:shadow-elevation-4 active:shadow-elevation-3']"
+      :class="[colorMap[color], fabSizeClasses, extended ? 'justify-start' : 'justify-center', inBottomAppBar ? '' : inToolbar ? 'shadow-elevation-2 hover:shadow-elevation-3 active:shadow-elevation-2' : 'shadow-elevation-3 hover:shadow-elevation-4 active:shadow-elevation-3']"
       :disabled="disabled"
-      :aria-label="label && !expanded ? label : undefined"
+      :aria-label="label && (!extended || !expanded) ? label : undefined"
       :style="initialButtonStyle"
       v-ripple="{ disabled, color: rippleColor }"
       @click="handleFabClick"
