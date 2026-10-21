@@ -117,3 +117,28 @@ describe('hydrating server-rendered adaptive layouts', () => {
     expect(first).toBe(1024)
   })
 })
+
+describe('hydrating MContainerTransform', () => {
+  it('renders the element on the server and the expanded view only in the browser, open from the start', async () => {
+    vi.resetModules()
+    const MContainerTransform = (await import('../components/MContainerTransform.vue')).default
+    const slots = { default: () => h('button', { class: 'card' }, 'Card'), expanded: () => h('p', 'Detail') }
+    const render = () => h(MContainerTransform, { open: true }, slots)
+    const ctx: { teleports?: Record<string, string> } = {}
+    const html = await renderToString(createSSRApp({ render }), ctx)
+    expect(html).toContain('Card')
+    expect(html + JSON.stringify(ctx.teleports)).not.toContain('Detail')
+
+    // As Nuxt does: the page, then what was teleported to <body> at its end
+    const container = document.createElement('div')
+    container.innerHTML = html
+    document.body.appendChild(container)
+    document.body.insertAdjacentHTML('beforeend', ctx.teleports?.body ?? '')
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    createSSRApp({ render }).mount(container)
+    await nextTick()
+    await nextTick()
+    expect(warn.mock.calls.map((c) => String(c[0])).filter((m) => m.includes('Hydration'))).toEqual([])
+    expect(document.body.querySelector('[role=dialog]')?.textContent).toBe('Detail')
+  })
+})

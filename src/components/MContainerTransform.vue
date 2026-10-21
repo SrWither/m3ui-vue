@@ -1,0 +1,225 @@
+<script setup lang="ts" generic="T = unknown">
+/**
+ * Material's container transform: an element (a card, a list item, an image, a FAB…) grows into an expanded view
+ * and shrinks back into it, morphing its bounds and shape while its content fades into the new one. The expanded
+ * view opens over the page, full screen or as a centered panel, with a scrim, Escape and scroll lock; focus goes
+ * to it and back to the element on close. A port of Android's MaterialContainerTransform, played on the
+ * compositor. For elements that live apart from the expanded view (a grid of cards, one detail), pass a
+ * `useContainerTransform()` controller instead of the default slot.
+ *
+ * @slot default The element that opens it, with `{ open, isOpen }`: call `open()` from its click
+ * @slot expanded The expanded view, with `{ close, item }` (`item` is what the controller's `open` was given)
+ * @event update:open The expanded view opened or closed (v-model:open)
+ */
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { useContainerTransform, type ContainerTransformController } from '../composables/useContainerTransform'
+import {
+  CLOSE_MS, OPEN_MS, SCRIM_OPACITY, boxOf, containerFrames, playContainerFrames, radiusOf, type Box,
+} from '../composables/_containerTransform'
+import { prefersReducedMotion } from '../composables/_springAnimation'
+import { useScrollLock } from '../composables/_useScrollLock'
+import { useEscapeStack } from '../composables/_useEscapeStack'
+
+defineOptions({ inheritAttrs: false })
+
+const props = withDefaults(defineProps<{
+  /** A `useContainerTransform()` controller, to open it from elements elsewhere (`controller.open($event, item)`) */
+  controller?: ContainerTransformController<T>
+  /** Where the expanded view opens: over the whole screen, or as a centered panel (wider screens) */
+  mode?: 'fullscreen' | 'dialog'
+  /** The centered panel's maximum width (`dialog` mode) */
+  maxWidth?: string
+  /** Accessible name of the expanded view */
+  label?: string
+  /** `dialog` mode: a scrim click doesn't close it */
+  persistent?: boolean
+}>(), { mode: 'fullscreen', maxWidth: '560px', persistent: false })
+
+/** Whether the expanded view is open; opening it from here grows it from the default slot's element */
+const openModel = defineModel<boolean>('open', { default: false })
+
+const own = useContainerTransform<T>()
+const ctl = computed(() => props.controller ?? own)
+
+const anchor = ref<HTMLElement>()
+const scrim = ref<HTMLElement>()
+const clip = ref<HTMLElement>()
+const panel = ref<HTMLElement>()
+const mounted = ref(false)
+
+const anchorElement = () => (anchor.value?.firstElementChild as HTMLElement | null) ?? null
+const openFromSlot = () => ctl.value.open(anchorElement())
+
+let anims: Animation[] = []
+let ghost: HTMLElement | null = null
+let hidden: HTMLElement | null = null
+let returnFocus = false
+
+// The element it opens from, cloned into the transition (it stays hidden in the page meanwhile). The clone keeps
+// what it inherited there: text styles and the custom properties (an MScheme's colors, for one)
+function makeGhost(src: HTMLElement, box: Box) {
+  const g = src.cloneNode(true) as HTMLElement
+  g.removeAttribute('id')
+  g.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'))
+  g.setAttribute('aria-hidden', 'true')
+  g.inert = true
+  const cs = getComputedStyle(src)
+  for (let i = 0; i < cs.length; i++) {
+    const name = cs[i]!
+    if (name.startsWith('--')) g.style.setProperty(name, cs.getPropertyValue(name))
+  }
+  for (const p of ['color', 'font-family', 'font-size', 'font-weight', 'line-height', 'letter-spacing', 'direction', 'text-align']) {
+    g.style.setProperty(p, cs.getPropertyValue(p))
+  }
+  Object.assign(g.style, {
+    position: 'absolute', left: `${box.left}px`, top: `${box.top}px`, width: `${box.width}px`, height: `${box.height}px`,
+    margin: '0', boxSizing: 'border-box', transformOrigin: '0 0', pointerEvents: 'none', visibility: 'visible',
+  })
+  clip.value!.insertBefore(g, panel.value!)
+  return g
+}
+
+function clearRun() {
+  for (const a of anims) a.cancel()
+  anims = []
+  ghost?.remove()
+  ghost = null
+}
+
+function hideSource(src: HTMLElement | null) {
+  if (hidden && hidden !== src) hidden.style.visibility = ''
+  hidden = src
+  if (src) src.style.visibility = 'hidden'
+}
+
+function opened() {
+  clearRun()
+}
+
+function closed() {
+  clearRun()
+  mounted.value = false
+  const src = hidden
+  hideSource(null)
+  if (returnFocus) src?.focus?.({ preventScroll: true })
+  returnFocus = false
+}
+
+// A box with no size (an element that isn't rendered) can't be scaled from: open or close without the transform
+const sized = (b: Box) => b.width > 0 && b.height > 0
+
+// Plays a run and calls `done` when it ends, unless it was reversed or replaced meanwhile
+function play(entering: boolean, start: Box, end: Box, startRadius: number, endRadius: number, done: () => void) {
+  const frames = containerFrames(start, end, startRadius, endRadius, entering, entering ? OPEN_MS : CLOSE_MS)
+  // The views' resting boxes: the clone sits on the element's, the panel on its own
+  anims = playContainerFrames(
+    frames,
+    { clip: clip.value!, start: entering ? ghost : panel.value!, end: entering ? panel.value! : ghost!, scrim: scrim.value },
+    window.innerWidth,
+    window.innerHeight,
+    entering ? undefined : 'forwards',
+  )
+  if (!anims.length) return done()
+  const run = anims
+  Promise.all(run.map((a) => a.finished)).then(() => { if (anims === run) done() }, () => {})
+}
+
+async function show() {
+  // Closing: turn around and grow back
+  if (anims.length && mounted.value) {
+    for (const a of anims) a.reverse()
+    const run = anims
+    Promise.all(run.map((a) => a.finished)).then(() => { if (anims === run && ctl.value.isOpen.value) opened() }, () => {})
+    return
+  }
+  const src = ctl.value.source.value
+  mounted.value = true
+  await nextTick()
+  if (!panel.value || !ctl.value.isOpen.value) return
+  returnFocus = true
+  panel.value.focus({ preventScroll: true })
+  if (!src || !src.isConnected || prefersReducedMotion()) return hideSource(src)
+  const start = boxOf(src)
+  const end = boxOf(panel.value)
+  if (!sized(start) || !sized(end)) return hideSource(src)
+  ghost = makeGhost(src, start)
+  hideSource(src)
+  play(true, start, end, radiusOf(src), radiusOf(panel.value), opened)
+}
+
+function hide() {
+  if (!mounted.value) return
+  // Opening: turn around and shrink back
+  if (anims.length) {
+    for (const a of anims) a.reverse()
+    const run = anims
+    Promise.all(run.map((a) => a.finished)).then(() => { if (anims === run && !ctl.value.isOpen.value) closed() }, () => {})
+    return
+  }
+  const src = hidden
+  if (!panel.value || !src || !src.isConnected || prefersReducedMotion()) return closed()
+  returnFocus = !!panel.value.contains(document.activeElement) || document.activeElement === document.body
+  const start = boxOf(panel.value)
+  const end = boxOf(src)
+  if (!sized(start) || !sized(end)) return closed()
+  ghost = makeGhost(src, end)
+  play(false, start, end, radiusOf(panel.value), radiusOf(src), closed)
+}
+
+watch(() => ctl.value.isOpen.value, (open) => {
+  if (openModel.value !== open) openModel.value = open
+  if (open) show()
+  else hide()
+})
+watch(openModel, (open) => {
+  if (open === ctl.value.isOpen.value) return
+  if (open) ctl.value.open(ctl.value.source.value ?? anchorElement())
+  else ctl.value.close()
+}, { immediate: true })
+
+useScrollLock(() => mounted.value)
+useEscapeStack(() => mounted.value && ctl.value.isOpen.value, () => ctl.value.close())
+
+onBeforeUnmount(() => {
+  clearRun()
+  hideSource(null)
+})
+
+const close = () => ctl.value.close()
+const panelStyle = computed(() => (props.mode === 'dialog' ? { width: `min(${props.maxWidth}, calc(100% - 48px))` } : undefined))
+</script>
+
+<template>
+  <span v-if="$slots.default" ref="anchor" class="contents">
+    <slot :open="openFromSlot" :is-open="ctl.isOpen.value" />
+  </span>
+  <Teleport to="body">
+    <div v-if="mounted" class="fixed inset-0 z-50">
+      <div
+        ref="scrim"
+        class="absolute inset-0 bg-black"
+        :style="{ opacity: SCRIM_OPACITY }"
+        @click="mode === 'dialog' && !persistent && close()"
+      />
+      <!-- The container: its clip morphs between the two boxes during a transition; the views move inside it -->
+      <div ref="clip" class="pointer-events-none absolute inset-0">
+        <div
+          ref="panel"
+          v-bind="$attrs"
+          role="dialog"
+          aria-modal="true"
+          :aria-label="label"
+          tabindex="-1"
+          class="pointer-events-auto absolute overflow-y-auto text-on-surface outline-none"
+          :class="mode === 'dialog'
+            ? 'inset-0 m-auto h-fit max-h-[calc(100%-48px)] rounded-[28px] bg-surface-container-high shadow-elevation-3'
+            : 'inset-0 bg-surface'"
+          :style="panelStyle"
+          style="transform-origin: 0 0"
+        >
+          <slot name="expanded" :close="close" :item="ctl.item.value" />
+        </div>
+      </div>
+    </div>
+  </Teleport>
+</template>
