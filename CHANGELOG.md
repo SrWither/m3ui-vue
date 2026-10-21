@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.1.4] - Unreleased
+
+### Changed
+- **`MAnimatedNumber` shows currencies written with a plain `$` with their country, in any language: `AR$ 1.234,50` in Argentina, `MX$1,234.50` in Mexico, `US$1,234.50` in the US. Before, `Intl` gave the local peso a bare `$` and some foreign currencies their code (`MXN` in Argentina).** Symbols that already name their currency stay as `Intl` writes them (`€`, `R$`, `￥`, `CA$`); setting `currencyDisplay` in `format` gives `Intl`'s own output
+
 ## [1.1.3] - 2026-10-20
 
 ### Added
