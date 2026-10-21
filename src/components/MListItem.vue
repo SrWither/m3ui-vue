@@ -12,7 +12,7 @@
  * @event update:trailingValue Fires when a trailing switch/checkbox is toggled (trailing='switch' | 'checkbox')
  * @event update:expanded Fires when an expandable item is toggled open/closed
  */
-import { computed, inject, ref, useAttrs, watch } from 'vue'
+import { computed, inject, ref, useAttrs, useId, watch } from 'vue'
 import type { ComponentPublicInstance } from 'vue'
 import type { ComputedRef } from 'vue'
 import MIcon from './MIcon.vue'
@@ -237,6 +237,16 @@ const linkProps = computed(() => {
   return {}
 })
 
+// An expandable item's header is a button (the row stays the list item): reachable and operable from the
+// keyboard, telling assistive technology whether its children are shown
+const childrenId = useId()
+function onHeaderKeyDown(e: KeyboardEvent) {
+  if (e.key !== 'Enter' && e.key !== ' ') return
+  if (e.target !== e.currentTarget) return
+  e.preventDefault()
+  handleClick(e as unknown as MouseEvent)
+}
+
 function toggleExpand(e: MouseEvent) {
   if (props.disabled) return
   internalExpanded.value = !internalExpanded.value
@@ -265,8 +275,17 @@ function handleTrailingToggle() {
   <li v-if="expandable" ref="rootEl" role="listitem">
     <div
       ref="shapeEl"
+      role="button"
+      :tabindex="disabled ? -1 : 0"
+      :aria-expanded="isExpanded"
+      :aria-controls="childrenId"
+      :aria-disabled="disabled || undefined"
+      class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-secondary"
       :class="containerClasses"
       @click="handleClick"
+      @keydown="onHeaderKeyDown"
+      @focus="onFocus"
+      @blur="onBlur"
       @pointerenter="onPointerEnter"
       @pointerleave="onPointerLeave"
       @pointerdown="onPointerDown"
@@ -302,7 +321,7 @@ function handleTrailingToggle() {
 
     <!-- Children with collapse animation -->
     <Transition name="mli-expand">
-      <div v-if="isExpanded" class="mli-expand-grid">
+      <div v-if="isExpanded" :id="childrenId" class="mli-expand-grid">
         <div class="mli-expand-body">
           <slot name="children" />
         </div>
