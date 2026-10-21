@@ -22,7 +22,9 @@ const props = withDefaults(
     /**
      * Intl options for the type: `{ style: 'currency', currency: 'EUR' }`, `{ style: 'percent' }`,
      * `{ style: 'unit', unit: 'kilometer-per-hour' }`, `{ notation: 'compact' }` for numbers; `{ timeStyle: 'medium' }`
-     * (the default), `{ hour: '2-digit', minute: '2-digit' }`, `{ dateStyle: 'short' }` for times. Unused for durations
+     * (the default), `{ hour: '2-digit', minute: '2-digit' }`, `{ dateStyle: 'short' }` for times. Unused for durations.
+     * Dollar-sign currencies show their country (`AR$`, `MX$`, `US$`) in any language; set `currencyDisplay` for
+     * Intl's own output (`'symbol'` gives the local peso as a plain `$`)
      */
     format?: Intl.NumberFormatOptions | Intl.DateTimeFormatOptions
     /** BCP-47 language for the format (`es-AR` for Argentine pesos and separators); defaults to the app's locale */
@@ -64,7 +66,18 @@ const parts = computed<Part[]>(() => {
     const options = (props.format as Intl.DateTimeFormatOptions | undefined) ?? { timeStyle: 'medium' }
     return new Intl.DateTimeFormat(lang.value, options).formatToParts(numeric.value)
   }
-  return new Intl.NumberFormat(lang.value, props.format as Intl.NumberFormatOptions | undefined).formatToParts(numeric.value)
+  const format = props.format as Intl.NumberFormatOptions | undefined
+  const out = new Intl.NumberFormat(lang.value, format).formatToParts(numeric.value)
+  if (format?.style !== 'currency' || format.currencyDisplay || !format.currency) return out
+  // Intl writes a plain "$" (the local peso, US dollars in the US) or a code (MXN in Argentina) for many currencies:
+  // give the dollar-sign ones their country instead (AR$, MX$, US$), with the language's spacing for a symbol.
+  // Symbols that already say which currency they are (US$, MX$, €, R$, ￥) stay as Intl writes them.
+  const code = format.currency.toUpperCase()
+  const symbol = out.find((p) => p.type === 'currency')?.value
+  if (symbol !== '$' && symbol !== code) return out
+  const narrow = new Intl.NumberFormat(lang.value, { ...format, currencyDisplay: 'narrowSymbol' }).formatToParts(numeric.value)
+  for (const p of narrow) if (p.type === 'currency' && p.value === '$') p.value = code === 'TWD' ? 'NT$' : `${code.slice(0, 2)}$`
+  return narrow
 })
 const text = computed(() => parts.value.map((p) => p.value).join(''))
 

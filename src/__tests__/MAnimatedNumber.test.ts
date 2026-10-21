@@ -67,8 +67,8 @@ describe('MAnimatedNumber', () => {
 
   it('formats any currency, percent or unit with Intl', () => {
     const cases: [number, string, Intl.NumberFormatOptions][] = [
-      [1234.5, 'es-AR', { style: 'currency', currency: 'ARS' }],
-      [1234.5, 'en-US', { style: 'currency', currency: 'USD' }],
+      [1234.5, 'es-AR', { style: 'currency', currency: 'ARS', currencyDisplay: 'symbol' }],
+      [1234.5, 'en-US', { style: 'currency', currency: 'USD', currencyDisplay: 'code' }],
       [1234.5, 'ja-JP', { style: 'currency', currency: 'JPY' }],
       [0.256, 'en', { style: 'percent', maximumFractionDigits: 1 }],
       [88, 'en', { style: 'unit', unit: 'kilometer-per-hour' }],
@@ -76,6 +76,28 @@ describe('MAnimatedNumber', () => {
     for (const [value, locale, format] of cases) {
       const w = mount(MAnimatedNumber, { props: { value, locale, format } })
       expect(w.find('.m3-anum-sr').text()).toBe(new Intl.NumberFormat(locale, format).format(value))
+      w.unmount()
+    }
+  })
+
+  it('gives dollar-sign currencies their country in any language', () => {
+    const cases: [string, string, string][] = [
+      ['es-AR', 'ARS', 'AR$\u00a01.234,50'],
+      ['es-MX', 'MXN', 'MX$1,234.50'],
+      ['es-MX', 'ARS', 'AR$1,234.50'],
+      ['es-AR', 'USD', 'US$\u00a01.234,50'],
+      ['en-US', 'USD', 'US$1,234.50'],
+      ['en-US', 'CLP', 'CL$1,235'],
+      ['en-US', 'TWD', 'NT$1,234.50'],
+      ['es', 'ARS', '1234,50\u00a0AR$'],
+      // Symbols that already name their currency stay as Intl writes them
+      ['en-US', 'MXN', 'MX$1,234.50'],
+      ['es-AR', 'EUR', '€\u00a01.234,50'],
+      ['ja-JP', 'JPY', '￥1,235'],
+    ]
+    for (const [locale, currency, text] of cases) {
+      const w = mount(MAnimatedNumber, { props: { value: 1234.5, locale, format: { style: 'currency', currency } } })
+      expect(w.find('.m3-anum-sr').text(), `${locale} ${currency}`).toBe(text)
       w.unmount()
     }
   })
