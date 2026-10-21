@@ -90,4 +90,37 @@ describe('MNavigationRail', () => {
     panel.dispatchEvent(new PointerEvent('pointerup', { ...opts, clientX: 40, clientY: 200 }))
     expect(wrapper!.emitted('update:expanded')).toBeUndefined()
   })
+
+  describe('expanded width', () => {
+    // happy-dom has no layout: give each label a natural width
+    const labelWidths = (w: VueWrapper, widths: number[]) =>
+      w.findAll('[data-rail-label]').forEach((l, i) => Object.defineProperty(l.element, 'scrollWidth', { configurable: true, get: () => widths[i] ?? 0 }))
+    const mountInline = (labels: string[]) =>
+      mount(MNavigationRail, { props: { modelValue: 'a', items: labels.map((label, i) => ({ value: String.fromCharCode(97 + i), label, icon: 'home' })) }, attachTo: document.body })
+
+    it('fits the longest label between 220 and 360px, like Compose\'s WideNavigationRail', async () => {
+      wrapper = mountInline(['Home', 'Notifications and alerts'])
+      labelWidths(wrapper, [38, 180])
+      // Labels change: remeasured
+      await wrapper.setProps({ items: [{ value: 'a', label: 'Home', icon: 'home' }, { value: 'b', label: 'Notifications and alerts!', icon: 'notifications' }] })
+      labelWidths(wrapper, [38, 180])
+      await wrapper.setProps({ items: [{ value: 'a', label: 'Home', icon: 'home' }, { value: 'b', label: 'Notifications and alerts', icon: 'notifications' }] })
+      await new Promise((r) => setTimeout(r))
+      await wrapper.setProps({ expanded: true })
+      expect((wrapper.find('nav').element as HTMLElement).style.width).toBe(`${180 + 88}px`)
+    })
+
+    it('never goes under 220px nor over 360px', async () => {
+      wrapper = mountInline(['Home'])
+      labelWidths(wrapper, [38])
+      await wrapper.setProps({ items: [{ value: 'a', label: 'Home!', icon: 'home' }] })
+      await new Promise((r) => setTimeout(r))
+      await wrapper.setProps({ expanded: true })
+      expect((wrapper.find('nav').element as HTMLElement).style.width).toBe('220px')
+      labelWidths(wrapper, [900])
+      await wrapper.setProps({ items: [{ value: 'a', label: 'A very long label', icon: 'home' }] })
+      await new Promise((r) => setTimeout(r))
+      expect((wrapper.find('nav').element as HTMLElement).style.width).toBe('360px')
+    })
+  })
 })

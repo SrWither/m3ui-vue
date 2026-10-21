@@ -8,7 +8,7 @@
  * @event update:expanded Emitted when the modal panel closes (modal mode only) — pair with :expanded for
  *   v-model:expanded. With `hideOnCollapse`, swiping the panel away closes it too
  */
-import { computed, ref, watch, onUnmounted } from 'vue'
+import { computed, nextTick, onMounted, ref, watch, onUnmounted } from 'vue'
 import MIcon from './MIcon.vue'
 import MBadge from './MBadge.vue'
 import { useItemLink, type ItemLink } from '../composables/_useItemLink'
@@ -36,7 +36,7 @@ const props = withDefaults(defineProps<{
   /** Vertical alignment of items within the rail */
   alignment?: 'top' | 'center' | 'bottom'
   /**
-   * Widens the rail (220px) and shows each item's icon beside its label in a full-width pill, instead of the icon
+   * Widens the rail (to fit the longest label, 220 to 360px) and shows each item's icon beside its label in a full-width pill, instead of the icon
    * over the label. Toggle it from your own menu button.
    */
   // M3 `WideNavigationRail`'s expanded state: items become icon+label side by side in a full-width pill instead of icon-over-label in a narrow centered one.
@@ -105,7 +105,28 @@ function onKeydown(e: KeyboardEvent) {
  * out at full (expanded) size and is simply clipped by the panel's own `overflow-hidden`
  * width, rather than each item's pill separately animating like the non-modal rail's does.
  */
-const PANEL_WIDTH = 220
+// The expanded rail fits its longest label, between WideNavigationRail's ExpandedRailMinWidth and MaxWidth
+// (220 and 360dp). Around a label: the items' 12px inset, the pill's 16px paddings, the 24px icon and its 8px gap.
+// Labels still too long end in an ellipsis.
+const RAIL_MIN = 220
+const RAIL_MAX = 360
+const ITEM_CHROME = 12 + 16 + 24 + 8 + 16 + 12
+const LABEL_MAX = RAIL_MAX - ITEM_CHROME
+const longestLabel = ref(0)
+const expandedWidth = computed(() => Math.min(RAIL_MAX, Math.max(RAIL_MIN, longestLabel.value + ITEM_CHROME)))
+// A label's natural width (scrollWidth: its overflow box clips it while collapsed), measured in the rail or panel
+function measureLabels(root: Element | null | undefined) {
+  if (!root) return
+  const widths = [...root.querySelectorAll<HTMLElement>('[data-rail-label]')].map((el) => el.scrollWidth)
+  if (widths.length) longestLabel.value = Math.max(...widths)
+}
+const railEl = ref<HTMLElement>()
+onMounted(() => {
+  measureLabels(railEl.value)
+  // Web fonts change the labels' widths once they load
+  document.fonts?.ready.then(() => measureLabels(railEl.value)).catch(() => {})
+})
+watch(() => props.items.map((i) => i.label).join('\n'), () => nextTick(() => measureLabels(railEl.value)))
 const SPRING_DAMPING = 0.9
 const SPRING_STIFFNESS = 1400
 // The dismissible (hideOnCollapse) panel slides instead: ModalWideNavigationRailState's DefaultSpatial
@@ -251,7 +272,7 @@ function onPanelPointerMove(e: PointerEvent) {
     // Stop a running slide; the finger owns the panel from where it is
     stopSlide()
     drag.startX = panelX
-    drag.width = (e.currentTarget as HTMLElement).offsetWidth || PANEL_WIDTH
+    drag.width = (e.currentTarget as HTMLElement).offsetWidth || expandedWidth.value
   }
   const panel = e.currentTarget as HTMLElement
   const scrim = panel.parentElement?.querySelector<HTMLElement>('.wnr-scrim') ?? null
@@ -292,6 +313,8 @@ function onPanelClickCapture(e: MouseEvent) {
 }
 
 function onPanelEnter(el: Element, done: () => void) {
+  // The panel's own labels (the inline rail isn't there with hideOnCollapse)
+  measureLabels(el)
   if (props.hideOnCollapse) {
     // Standalone modal: the items are expanded from the start, the panel slides in from off-screen
     panelExpanded.value = true
@@ -318,7 +341,7 @@ function onPanelEnter(el: Element, done: () => void) {
   } else {
     panelExpanded.value = true
   }
-  if (panel) springWidth(panel, 0, PANEL_WIDTH, done)
+  if (panel) springWidth(panel, 0, expandedWidth.value, done)
   else done()
 }
 function onPanelLeave(el: Element, done: () => void) {
@@ -330,7 +353,7 @@ function onPanelLeave(el: Element, done: () => void) {
   const scrim = (el as HTMLElement).querySelector<HTMLElement>('.wnr-scrim')
   panelExpanded.value = false
   if (scrim) scrim.style.opacity = '0'
-  if (panel) springWidth(panel, PANEL_WIDTH, 0, done)
+  if (panel) springWidth(panel, expandedWidth.value, 0, done)
   else done()
 }
 
@@ -363,9 +386,11 @@ useScrollLock(() => props.modal && props.expanded)
   -->
   <nav
     v-if="!(modal && hideOnCollapse)"
+    ref="railEl"
     v-bind="$attrs"
     class="flex h-full flex-col border-r border-outline-variant bg-surface transition-[width] duration-200"
-    :class="railExpanded ? 'w-[220px]' : 'w-20'"
+    :class="railExpanded ? '' : 'w-20'"
+    :style="railExpanded ? { width: `${expandedWidth}px` } : undefined"
   >
     <!--
       Header slot: menu-toggle button and/or FAB. Left-anchored (not `items-center`) inside
@@ -470,7 +495,9 @@ useScrollLock(() => props.modal && props.expanded)
             :class="railExpanded ? 'ml-2 grid-cols-[1fr] opacity-100' : 'ml-0 grid-cols-[0fr] opacity-0'"
           >
             <span
-              class="min-w-0 overflow-hidden whitespace-nowrap text-left text-label-large font-medium"
+              data-rail-label
+              class="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-left text-label-large font-medium"
+              :style="{ maxWidth: `${LABEL_MAX}px` }"
               :class="item.value === modelValue ? 'text-secondary' : 'text-on-surface-variant'"
             >
               {{ item.label }}
@@ -511,7 +538,8 @@ useScrollLock(() => props.modal && props.expanded)
 
         <nav
           class="wnr-panel fixed inset-y-0 left-0 z-10 flex flex-col overflow-hidden rounded-r-lg bg-surface-container shadow-elevation-2"
-          :class="hideOnCollapse ? 'w-[220px] touch-pan-y' : ''"
+          :class="hideOnCollapse ? 'touch-pan-y' : ''"
+          :style="hideOnCollapse ? { width: `${expandedWidth}px` } : undefined"
           @pointerdown="onPanelPointerDown"
           @pointermove="onPanelPointerMove"
           @pointerup="onPanelPointerUp"
@@ -574,7 +602,9 @@ useScrollLock(() => props.modal && props.expanded)
                   :class="panelExpanded ? 'ml-2 grid-cols-[1fr] opacity-100' : 'ml-0 grid-cols-[0fr] opacity-0'"
                 >
                   <span
-                    class="min-w-0 overflow-hidden whitespace-nowrap text-left text-label-large font-medium"
+                    data-rail-label
+              class="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-left text-label-large font-medium"
+              :style="{ maxWidth: `${LABEL_MAX}px` }"
                     :class="item.value === modelValue ? 'text-secondary' : 'text-on-surface-variant'"
                   >
                     {{ item.label }}
