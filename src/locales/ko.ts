@@ -194,6 +194,8 @@ export const koLocale: M3Locale = {
   carousel: '캐러셀',
   carouselItem: '{count}개 중 {index}번째',  // MMap (maplibre controls)
   sparklineSummary: '{first}에서 {last}, 최소 {min}, 최대 {max}',
+  sliderRangeStart: '범위 시작',
+  sliderRangeEnd: '범위 끝',
   mapTitle: '지도',
   mapMarker: '지도 마커',
   mapZoomIn: '확대',

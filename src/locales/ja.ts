@@ -194,6 +194,8 @@ export const jaLocale: M3Locale = {
   carousel: 'カルーセル',
   carouselItem: '{count} 件中 {index} 件目',  // MMap (maplibre controls)
   sparklineSummary: '{first} から {last}、最小 {min}、最大 {max}',
+  sliderRangeStart: '範囲の開始',
+  sliderRangeEnd: '範囲の終了',
   mapTitle: '地図',
   mapMarker: '地図のマーカー',
   mapZoomIn: 'ズームイン',

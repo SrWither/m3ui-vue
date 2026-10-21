@@ -201,6 +201,9 @@ export interface M3Locale {
   carouselItem: string
   /** MSparkline's summary for screen readers: {first}, {last}, {min}, {max} */
   sparklineSummary: string
+  /** MSlider range: its two thumbs */
+  sliderRangeStart: string
+  sliderRangeEnd: string
   // MMap (maplibre controls)
   mapTitle: string
   mapMarker: string
@@ -415,6 +418,8 @@ export const defaultLocale: M3Locale = {
   carousel: 'Carousel',
   carouselItem: '{index} of {count}',
   sparklineSummary: 'From {first} to {last}, low {min}, high {max}',
+  sliderRangeStart: 'Range start',
+  sliderRangeEnd: 'Range end',
   // MMap (maplibre controls)
   mapTitle: 'Map',
   mapMarker: 'Map marker',

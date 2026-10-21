@@ -8,6 +8,7 @@
  */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import MIcon from './MIcon.vue'
+import { useLocale } from '../composables/useLocale'
 
 const props = withDefaults(
   defineProps<{
@@ -63,9 +64,30 @@ const props = withDefaults(
 
 const emit = defineEmits<{ 'update:modelValue': [number | [number, number]] }>()
 
+const t = useLocale()
 const trackEl = ref<HTMLElement>()
+const thumbEls = ref<HTMLElement[]>([])
+// Range: 0 = the start (low) thumb, 1 = the end (high) one
 const dragging = ref<false | 'single' | 0 | 1>(false)
 const focused = ref(false)
+const focusedThumb = ref<0 | 1 | null>(null)
+// Range: a press focuses the thumb it moves (so the arrows move that one next), from script, which browsers take as
+// :focus-visible. The ring is ours instead: only for focus from the keyboard, or once the keys are used after a press
+const keyboardThumb = ref<0 | 1 | null>(null)
+let focusingFromPointer = false
+function focusThumb(idx: 0 | 1) {
+  focusingFromPointer = true
+  thumbEls.value[idx]?.focus({ preventScroll: true })
+  focusingFromPointer = false
+}
+function onThumbFocus(idx: 0 | 1) {
+  focusedThumb.value = idx
+  keyboardThumb.value = focusingFromPointer ? null : idx
+}
+function onThumbBlur() {
+  focusedThumb.value = null
+  keyboardThumb.value = null
+}
 const isVertical = computed(() => props.orientation === 'vertical')
 const isRange = computed(() => props.variant === 'range')
 const isCentered = computed(() => props.variant === 'centered')
@@ -217,19 +239,33 @@ function valueFromEvent(e: PointerEvent) {
   return clamp(props.min + ratioFromEvent(e) * (props.max - props.min))
 }
 
+// Range: like Compose's RangeSlider, a thumb never passes the other (start ∈ [min, end], end ∈ [start, max]), so
+// the emitted pair is always [low, high]. A press takes the thumb on its side; on two overlapping thumbs, the
+// first move's direction picks one (Compose's fix for taps and drags when thumbs overlap).
+let overlapPress = false
+function rangeValue(idx: 0 | 1, v: number): [number, number] {
+  const { lo, hi } = val.value
+  return idx === 0 ? [Math.min(v, hi), hi] : [lo, Math.max(v, lo)]
+}
+
 function onPointerDown(e: PointerEvent) {
   if (props.disabled) return
   e.preventDefault()
   const v = valueFromEvent(e)
   if (isRange.value) {
-    const cur = props.modelValue as [number, number]
-    const dist0 = Math.abs(v - cur[0])
-    const dist1 = Math.abs(v - cur[1])
-    const idx: 0 | 1 = dist0 <= dist1 ? 0 : 1
+    const { lo, hi } = val.value
+    overlapPress = false
+    let idx: 0 | 1
+    if (v <= lo && v < hi) idx = 0
+    else if (v >= hi && v > lo) idx = 1
+    else if (lo === hi) {
+      // Right on two overlapping thumbs: wait for the drag's direction
+      idx = 0
+      overlapPress = true
+    } else idx = Math.abs(v - lo) <= Math.abs(v - hi) ? 0 : 1
     dragging.value = idx
-    const next: [number, number] = [cur[0], cur[1]]
-    next[idx] = v
-    emit('update:modelValue', next)
+    focusThumb(idx)
+    if (!overlapPress) emit('update:modelValue', rangeValue(idx, v))
   } else {
     dragging.value = 'single'
     emit('update:modelValue', v)
@@ -243,10 +279,13 @@ function onPointerMove(e: PointerEvent) {
   if (dragging.value === false) return
   const v = valueFromEvent(e)
   if (isRange.value) {
-    const cur = props.modelValue as [number, number]
-    const next: [number, number] = [cur[0], cur[1]]
-    next[dragging.value as 0 | 1] = v
-    emit('update:modelValue', next)
+    if (overlapPress) {
+      if (v === val.value.lo) return
+      overlapPress = false
+      dragging.value = v > val.value.lo ? 1 : 0
+      focusThumb(dragging.value)
+    }
+    emit('update:modelValue', rangeValue(dragging.value as 0 | 1, v))
   } else {
     emit('update:modelValue', v)
   }
@@ -254,26 +293,39 @@ function onPointerMove(e: PointerEvent) {
 
 function onPointerUp() {
   dragging.value = false
+  overlapPress = false
   window.removeEventListener('pointermove', onPointerMove)
   window.removeEventListener('pointerup', onPointerUp)
   window.removeEventListener('pointercancel', onPointerUp)
 }
 
+const KEY_DELTA: Record<string, number> = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }
+
 function onKeyDown(e: KeyboardEvent) {
   if (props.disabled) return
-  const d: Record<string, number> = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }
-  const delta = d[e.key]
+  const delta = KEY_DELTA[e.key]
   if (delta !== undefined) {
     e.preventDefault()
-    if (isRange.value) {
-      const cur = props.modelValue as [number, number]
-      emit('update:modelValue', [clamp(cur[0] + delta * props.step), cur[1]])
-    } else {
-      emit('update:modelValue', clamp((props.modelValue as number) + delta * props.step))
-    }
+    emit('update:modelValue', clamp((props.modelValue as number) + delta * props.step))
   }
-  if (e.key === 'Home') { e.preventDefault(); emit('update:modelValue', isRange.value ? [props.min, (props.modelValue as [number, number])[1]] : props.min) }
-  if (e.key === 'End') { e.preventDefault(); emit('update:modelValue', isRange.value ? [(props.modelValue as [number, number])[0], props.max] : props.max) }
+  if (e.key === 'Home') { e.preventDefault(); emit('update:modelValue', props.min) }
+  if (e.key === 'End') { e.preventDefault(); emit('update:modelValue', props.max) }
+}
+
+// Range: each thumb is a slider of its own, moved by its keys within the other thumb
+function onThumbKeyDown(idx: 0 | 1, e: KeyboardEvent) {
+  if (props.disabled) return
+  const { lo, hi } = val.value
+  const cur = idx === 0 ? lo : hi
+  const delta = KEY_DELTA[e.key]
+  let next: number | undefined
+  if (delta !== undefined) next = clamp(cur + delta * props.step)
+  else if (e.key === 'Home') next = idx === 0 ? props.min : lo
+  else if (e.key === 'End') next = idx === 0 ? hi : props.max
+  if (next === undefined) return
+  e.preventDefault()
+  keyboardThumb.value = idx
+  emit('update:modelValue', rangeValue(idx, next))
 }
 
 onBeforeUnmount(() => {
@@ -395,7 +447,7 @@ function clampedPos(pct: number) {
   return `clamp(${inset}px, ${pct}%, calc(100% - ${inset}px))`
 }
 
-function thumbPos(pct: number) {
+function thumbPos(pct: number, idx: 0 | 1 = 0) {
   const tw = isVertical.value ? s.value.thumbH : s.value.thumbW
   const th = isVertical.value ? s.value.thumbW : s.value.thumbH
   const br = Math.min(tw, th) / 2
@@ -406,6 +458,8 @@ function thumbPos(pct: number) {
     height: `${th}px`,
     borderRadius: `${br}px`,
     backgroundColor: thumbCt.value.active,
+    // The keyboard focus ring takes the thumb's color (color, thumbColor), not a fixed primary
+    '--tw-ring-color': thumbCt.value.active,
     zIndex: '2',
     transition: nd.value ? 'left 75ms ease, bottom 75ms ease, transform 80ms ease' : 'transform 80ms ease',
   }
@@ -414,8 +468,8 @@ function thumbPos(pct: number) {
   // ratio matches SliderTokens.PressedHandleWidth/FocusHandleWidth = 2dp,
   // i.e. half of the base 4dp width — applies on keyboard focus too, not
   // just an active pointer drag (Compose's isFocused covers both).
-  const isNarrowed = isDragging || focused.value
-  const grow = isDragging ? 1.08 : 1
+  const isNarrowed = isRange.value ? dragging.value === idx || focusedThumb.value === idx : isDragging || focused.value
+  const grow = (isRange.value ? dragging.value === idx : isDragging) ? 1.08 : 1
   const narrow = isNarrowed ? 0.5 : 1
   if (isVertical.value) {
     base.left = '50%'
@@ -437,6 +491,7 @@ function thumbIconPos(pct: number) {
   const base: Record<string, string> = {
     position: 'absolute',
     color: thumbCt.value.active,
+    '--tw-ring-color': thumbCt.value.active,
     zIndex: '2',
     transition: nd.value ? 'left 75ms ease, bottom 75ms ease, transform 80ms ease' : 'transform 80ms ease',
   }
@@ -468,13 +523,13 @@ const displayValue = computed(() => {
 
 const tooltipValue = computed(() => {
   if (isRange.value && typeof dragging.value === 'number')
-    return (props.modelValue as [number, number])[dragging.value]
+    return dragging.value === 0 ? val.value.lo : val.value.hi
   return props.modelValue
 })
 
 const tooltipPct = computed(() => {
   if (isRange.value && typeof dragging.value === 'number')
-    return toPct((props.modelValue as [number, number])[dragging.value])
+    return dragging.value === 0 ? pctLo.value : pctHi.value
   return pctLo.value
 })
 </script>
@@ -490,13 +545,14 @@ const tooltipPct = computed(() => {
       <!-- Track area -->
       <div
         ref="trackEl"
-        role="slider"
-        tabindex="0"
+        :role="isRange ? 'group' : 'slider'"
+        :tabindex="isRange ? undefined : 0"
+        :aria-label="isRange ? label : undefined"
         :aria-valuenow="isRange ? undefined : (modelValue as number)"
-        :aria-valuemin="min"
-        :aria-valuemax="max"
+        :aria-valuemin="isRange ? undefined : min"
+        :aria-valuemax="isRange ? undefined : max"
         :aria-disabled="disabled || undefined"
-        :aria-orientation="orientation"
+        :aria-orientation="isRange ? undefined : orientation"
         class="group relative touch-none cursor-pointer outline-none"
         :class="disabled && 'cursor-not-allowed'"
         :style="isVertical
@@ -504,8 +560,8 @@ const tooltipPct = computed(() => {
           : { height: `${s.hitArea}px`, width: '100%' }
         "
         @pointerdown="onPointerDown"
-        @keydown="onKeyDown"
-        @focus="focused = true"
+        @keydown="!isRange && onKeyDown($event)"
+        @focus="focused = !isRange"
         @blur="focused = false"
       >
         <!-- Track container -->
@@ -651,16 +707,34 @@ const tooltipPct = computed(() => {
           </template>
         </div>
 
-        <!-- Thumb(s) — only the pctLo thumb takes keyboard input (arrow keys only
-             move index 0 in range mode, see onKeyDown), so it's the only one that
-             gets the focus-visible ring. -->
-        <template v-if="thumbIcon">
-          <MIcon :name="thumbIcon" :size="s.thumbIconSize" class="pointer-events-none rounded-full group-focus-visible:ring-2 group-focus-visible:ring-primary group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-surface" :style="thumbIconPos(pctLo)" />
-          <MIcon v-if="isRange" :name="thumbIcon" :size="s.thumbIconSize" class="pointer-events-none" :style="thumbIconPos(pctHi)" />
+        <!-- Thumb(s). Standard/centered: the track is the slider and its focus rings the thumb. Range: each thumb
+             is a slider of its own (Compose's two semantics nodes), focusable, with its own keys and ring. -->
+        <template v-if="!isRange">
+          <MIcon v-if="thumbIcon" :name="thumbIcon" :size="s.thumbIconSize" class="pointer-events-none rounded-full group-focus-visible:ring-2 group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-surface" :style="thumbIconPos(pctLo)" />
+          <div v-else class="pointer-events-none group-focus-visible:ring-2 group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-surface" :style="thumbPos(pctLo)" />
         </template>
         <template v-else>
-          <div class="pointer-events-none group-focus-visible:ring-2 group-focus-visible:ring-primary group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-surface" :style="thumbPos(pctLo)" />
-          <div v-if="isRange" class="pointer-events-none" :style="thumbPos(pctHi)" />
+          <div
+            v-for="idx in ([0, 1] as const)"
+            :key="idx"
+            :ref="(el) => { if (el) thumbEls[idx] = el as HTMLElement }"
+            role="slider"
+            :tabindex="disabled ? -1 : 0"
+            :aria-label="idx === 0 ? t.sliderRangeStart : t.sliderRangeEnd"
+            :aria-valuenow="idx === 0 ? val.lo : val.hi"
+            :aria-valuemin="idx === 0 ? min : val.lo"
+            :aria-valuemax="idx === 0 ? val.hi : max"
+            :aria-disabled="disabled || undefined"
+            :aria-orientation="orientation"
+            class="pointer-events-none flex items-center justify-center rounded-full outline-none"
+            :class="keyboardThumb === idx && 'ring-2 ring-offset-2 ring-offset-surface'"
+            :style="thumbIcon ? thumbIconPos(idx === 0 ? pctLo : pctHi) : thumbPos(idx === 0 ? pctLo : pctHi, idx)"
+            @keydown="onThumbKeyDown(idx, $event)"
+            @focus="onThumbFocus(idx)"
+            @blur="onThumbBlur"
+          >
+            <MIcon v-if="thumbIcon" :name="thumbIcon" :size="s.thumbIconSize" />
+          </div>
         </template>
 
         <!-- Tooltip -->

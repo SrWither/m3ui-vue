@@ -194,6 +194,8 @@ export const deLocale: M3Locale = {
   carousel: 'Karussell',
   carouselItem: '{index} von {count}',  // MMap (maplibre controls)
   sparklineSummary: 'Von {first} bis {last}, Minimum {min}, Maximum {max}',
+  sliderRangeStart: 'Bereichsanfang',
+  sliderRangeEnd: 'Bereichsende',
   mapTitle: 'Karte',
   mapMarker: 'Kartenmarkierung',
   mapZoomIn: 'Vergrößern',

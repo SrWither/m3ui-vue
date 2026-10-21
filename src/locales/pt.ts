@@ -194,6 +194,8 @@ export const ptLocale: M3Locale = {
   carousel: 'Carrossel',
   carouselItem: '{index} de {count}',  // MMap (maplibre controls)
   sparklineSummary: 'De {first} a {last}, mínimo {min}, máximo {max}',
+  sliderRangeStart: 'Início do intervalo',
+  sliderRangeEnd: 'Fim do intervalo',
   mapTitle: 'Mapa',
   mapMarker: 'Marcador do mapa',
   mapZoomIn: 'Aproximar',
