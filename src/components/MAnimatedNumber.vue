@@ -130,7 +130,7 @@ const cells = computed<Cell[]>(() => {
 })
 
 // ── Rolling: one spring per digit column, stepped in a rAF loop and written to its strip's transform ─────────
-interface Column { pos: number; vel: number; target: number; base: number; el?: HTMLElement }
+interface Column { pos: number; vel: number; target: number; base: number; el?: HTMLElement; rolling?: boolean }
 const columns = new Map<string, Column>()
 let mounted = false
 let raf = 0
@@ -142,8 +142,13 @@ const mod = (n: number, base: number) => ((n % base) + base) % base
 const write = (c: Column) => {
   if (!c.el) return
   c.el.style.transform = `translateY(${-mod(c.pos, c.base)}lh)`
-  // Unmasked a little before landing, so the mask eases out with the last of the roll
-  c.el.parentElement?.toggleAttribute('data-rolling', Math.abs(c.pos - c.target) > 0.15)
+  // Unmasked a little before landing, so the mask eases out with the last of the roll. Only touched when it changes:
+  // an attribute write every frame restyles the column every frame
+  const rolling = Math.abs(c.pos - c.target) > 0.15
+  if (rolling !== c.rolling) {
+    c.rolling = rolling
+    c.el.parentElement?.toggleAttribute('data-rolling', rolling)
+  }
 }
 
 // The strip's starting transform, set once per column, so the server renders the right digits. Vue may write it
@@ -162,7 +167,11 @@ function initialStyle(cell: Cell) {
 }
 const setStrip = (key: string) => (el: unknown) => {
   const c = columns.get(key)
-  if (c) c.el = (el as HTMLElement | null) ?? undefined
+  if (!c) return
+  const next = (el as HTMLElement | null) ?? undefined
+  // A new element doesn't carry the old one's data-rolling
+  if (next !== c.el) c.rolling = undefined
+  c.el = next
 }
 // Two runs of the column's digits, so a digit rolling past the last shows the first coming in below it seamlessly
 const strip = (base: number) => Array.from({ length: base * 2 }, (_, i) => i % base)
@@ -287,6 +296,10 @@ onUnmounted(() => cancelAnimationFrame(raf))
 .m3-anum-digit[data-rolling] {
   mask-size: 100% 100%;
   transition-duration: 120ms;
+}
+/* Its own layer while it rolls, so moving it doesn't repaint the column */
+.m3-anum-digit[data-rolling] > .m3-anum-strip {
+  will-change: transform;
 }
 .m3-anum-strip {
   display: flex;
