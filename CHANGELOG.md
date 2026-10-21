@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.1.4] - Unreleased
+## [1.1.4] - 2026-10-21
 
 ### Added
 - `MToolbar` collapses, as Compose's floating toolbar does (`v-model:expanded`, default `true`; floating toolbars only). With a FAB, the toolbar closes into it and the FAB grows from 56 to 80px, keeping the toolbar's footprint so nothing around it moves; a FAB that toggles `expanded` hides and shows its toolbar. Without one, the new `#leading` and `#trailing` slots close toward the center (the default slot), typically a filled button that stays. Expressive FastSpatial spring; what's hidden is `inert`; reduced motion jumps
