@@ -20,7 +20,7 @@
 
 ---
 
-135+ tree-shakeable components following [Material Design 3](https://m3.material.io/) guidelines. Ships with 40 color palettes, dark mode, i18n support, and full TypeScript coverage.
+170+ tree-shakeable components following [Material Design 3](https://m3.material.io/) guidelines. Ships with 40 color palettes, dark mode, i18n support, and full TypeScript coverage.
 
 ## Getting Started
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-`@m3ui-vue/m3ui-vue` — a Material Design 3 component library for Vue 3 + Tailwind CSS v4, published to npm. 135+ tree-shakeable, single-file components plus composables, palettes, and locales. It has no app of its own; the only way to see it running is inside a consumer project (e.g. the sibling repo `../newfadelresto-front`, which depends on it via `main.ts`: `app.use(createM3UI({ palette: 'red', locale: esLocale }))`).
+`@m3ui-vue/m3ui-vue` — a Material Design 3 component library for Vue 3 + Tailwind CSS v4, published to npm. 170+ tree-shakeable, single-file components plus composables, palettes, and locales. It has no app of its own; the only way to see it running is inside a consumer project (e.g. the sibling repo `../newfadelresto-front`, which depends on it via `main.ts`: `app.use(createM3UI({ palette: 'red', locale: esLocale }))`).
 
 There is no `docs/`, `playground/`, or `examples/` directory in this repo. The docs site is the sibling repo `../m3ui-vue-docs` (live at https://m3ui.dev, one page per component with live demos — see its own CLAUDE.md); it's also the place to see changes running, via its local `link:` dependency. When in doubt about a component's props/slots, read the `.vue` file directly.
 
@@ -17,7 +17,7 @@ Package manager is **pnpm** (see `pnpm-lock.yaml`, and the publish workflow pins
 - `pnpm test:watch` — vitest in watch mode.
 - Single test file: `pnpm exec vitest run src/__tests__/MDialog.test.ts`. Single test name: `pnpm exec vitest run -t "renders content when open"`.
 - **No standalone `lint` or `typecheck` script exists** — there is no ESLint/Prettier config in the repo at all. The closest thing to a typecheck is `pnpm build:types` (`vue-tsc -p tsconfig.build.json`), which type-checks the whole `src/` tree and emits declarations without a JS build. Run that after any nontrivial change instead of assuming a lint step exists.
-- Tests run under `happy-dom` (`vitest.config.ts`) with a small `localStorage` polyfill in `src/__tests__/setup.ts` for environments where it's missing. Test coverage is partial — `ls src/__tests__` for the current list (~28 files: a few dozen components plus `plugin`, `useColorPalette`, `useDebounce`, `useLocale`, `useTheme`, `usePageProgress`, `localePresets`). Most of the 135+ components have none; don't assume a component is tested just because it exists. When fixing a behavior bug, add a test that reproduces it and confirm it fails against the old code (`git stash`/`git checkout <file>`, run, restore) — `MRating.test.ts` and `MPullToRefresh.test.ts` are recent examples that mock `getBoundingClientRect` and dispatch synthetic touch events respectively.
+- Tests run under `happy-dom` (`vitest.config.ts`) with a small `localStorage` polyfill in `src/__tests__/setup.ts` for environments where it's missing. Test coverage is partial — `ls src/__tests__` for the current list (~95 files: most of them components, plus `plugin`, `useColorPalette`, `useDebounce`, `useLocale`, `useTheme`, `usePageProgress`, `localePresets`). Most of the 170+ components have none; don't assume a component is tested just because it exists. When fixing a behavior bug, add a test that reproduces it and confirm it fails against the old code (`git stash`/`git checkout <file>`, run, restore) — `MRating.test.ts` and `MPullToRefresh.test.ts` are recent examples that mock `getBoundingClientRect` and dispatch synthetic touch events respectively.
 
 ### How changes are landed
 
