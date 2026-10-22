@@ -226,4 +226,6 @@ export const jaLocale: M3Locale = {
   mapDeleteMeasurement: '測定を削除',
   mapTotal: '合計',
   mapSearchPlaces: '場所を検索',
+  timelineShowMore: 'さらに {count} 件を表示',
+  timelineShowLess: '表示を減らす',
 }

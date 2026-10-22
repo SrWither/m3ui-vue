@@ -226,4 +226,6 @@ export const zhLocale: M3Locale = {
   mapDeleteMeasurement: '删除测量',
   mapTotal: '总计',
   mapSearchPlaces: '搜索地点',
+  timelineShowMore: '再显示 {count} 项',
+  timelineShowLess: '收起',
 }

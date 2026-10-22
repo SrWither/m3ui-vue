@@ -41,6 +41,8 @@ export type TimelineStatus = NonNullable<TimelineItem["status"]>;
  */
 import { computed, onBeforeUpdate, onMounted, onUpdated, ref, useSlots } from "vue";
 import MIcon from "./MIcon.vue";
+import MButton from "./MButton.vue";
+import { useLocale } from "../composables/useLocale";
 import { motionSprings } from "../composables/motion";
 import { playSamples, prefersReducedMotion, sampleSpring } from "../composables/_springAnimation";
 
@@ -71,9 +73,18 @@ const props = withDefaults(
      * with reduced motion). Give items a `key`, or an insertion looks like a change to every entry after it
      */
     animate?: boolean;
+    /** Shows only the first entries (a count; groups' headers don't count), with a button for the rest */
+    limit?: number;
+    /** Whether the entries past `limit` show (v-model:expanded); the timeline keeps its own state otherwise */
+    expanded?: boolean;
   }>(),
-  { dense: false, alternating: false, orientation: "vertical", bare: false, current: undefined, responsive: true, animate: true },
+  {
+    dense: false, alternating: false, orientation: "vertical", bare: false, current: undefined, responsive: true,
+    animate: true, limit: undefined, expanded: undefined,
+  },
 );
+
+const emit = defineEmits<{ "update:expanded": [expanded: boolean] }>();
 
 defineSlots<{
   item?: (props: { item: T; index: number }) => unknown;
@@ -102,6 +113,23 @@ const lineBg: Record<string, string> = {
   error: "bg-error/30",
   success: "bg-success/30",
 };
+
+const t = useLocale();
+
+// `limit`: the first entries, then a button for the rest (all of them while expanded)
+const ownExpanded = ref(false);
+const isExpanded = computed(() => props.expanded ?? ownExpanded.value);
+const limited = computed(() => props.limit !== undefined && props.items.length > props.limit);
+const shown = computed(() => (limited.value && !isExpanded.value ? props.items.slice(0, props.limit) : props.items));
+const hiddenCount = computed(() => props.items.length - shown.value.length);
+const toggleLabel = computed(() =>
+  isExpanded.value ? t.timelineShowLess : t.timelineShowMore.replace("{count}", String(hiddenCount.value)),
+);
+function toggleExpanded() {
+  const next = !isExpanded.value;
+  ownExpanded.value = next;
+  emit("update:expanded", next);
+}
 
 const keyOf = (item: T, i: number) => item.key ?? i;
 // Null when the timeline isn't about progress (no `current`, no `status`): the plain look
@@ -149,8 +177,9 @@ const groupRun = (i: number) => {
   return run;
 };
 const hasGroups = computed(() => props.items.some((item) => item.group != null));
+// The line ends with the last entry shown, and with each group's run
 const isLast = (i: number) =>
-  i === props.items.length - 1 || (hasGroups.value && props.items[i + 1]!.group !== props.items[i]!.group);
+  i === shown.value.length - 1 || (hasGroups.value && props.items[i + 1]!.group !== props.items[i]!.group);
 
 // ── Enter / move animation ────────────────────────────────────────────────────────────────────────────────────────
 // FLIP, as MDragDropList does: every row's place before an update; after it, new rows slide in and the others spring
@@ -198,7 +227,7 @@ onUpdated(() => {
     <!-- Horizontal: entries side by side, the line running between their dots -->
     <li
       :data-timeline-row="rowKey(item, i)"
-      v-for="(item, i) in items"
+      v-for="(item, i) in shown"
       :key="keyOf(item, i)"
       :aria-current="statusOf(item, i) === 'current' ? 'step' : undefined"
       class="flex min-w-40 flex-1 flex-col"
@@ -236,11 +265,20 @@ onUpdated(() => {
         </div>
       </div>
     </li>
+    <!-- Past `limit`: the button, level with the dots -->
+    <li v-if="limited" data-timeline-row="more" class="flex shrink-0 flex-col pr-2">
+      <div v-if="hasGroups" class="mb-2 min-h-5" aria-hidden="true" />
+      <div class="flex items-center" :class="wide ? 'h-9' : 'h-3'">
+        <MButton variant="text" size="sm" :icon="isExpanded ? 'expand_less' : 'expand_more'" :aria-expanded="isExpanded" @click="toggleExpanded">
+          {{ toggleLabel }}
+        </MButton>
+      </div>
+    </li>
   </ol>
 
   <ol v-else-if="!alternating" ref="root" class="flex list-none flex-col p-0" role="list">
     <!-- Vertical, single column (with an optional #opposite column before the line) -->
-    <template v-for="(item, i) in items" :key="keyOf(item, i)">
+    <template v-for="(item, i) in shown" :key="keyOf(item, i)">
     <li v-if="startsGroup(i)" :data-timeline-row="`group:${item.group}`" class="pb-3" :class="{ 'pt-2': i > 0 }">
       <slot name="group" :group="item.group!" :items="groupRun(i)">
         <p class="text-title-small text-on-surface-variant">{{ item.group }}</p>
@@ -285,10 +323,20 @@ onUpdated(() => {
       </div>
     </li>
     </template>
+    <!-- Past `limit`: the button, its label lined up with the entries' text -->
+    <li v-if="limited" data-timeline-row="more" class="flex gap-4">
+      <div v-if="$slots.opposite" class="w-24 shrink-0" />
+      <div class="shrink-0" :class="wide ? 'w-9' : 'w-3'" />
+      <div class="-ml-3">
+        <MButton variant="text" size="sm" :icon="isExpanded ? 'expand_less' : 'expand_more'" :aria-expanded="isExpanded" @click="toggleExpanded">
+          {{ toggleLabel }}
+        </MButton>
+      </div>
+    </li>
   </ol>
 
   <ol v-else ref="root" class="relative list-none p-0" :class="{ '@container': responsive }" role="list">
-    <template v-for="(item, i) in items" :key="keyOf(item, i)">
+    <template v-for="(item, i) in shown" :key="keyOf(item, i)">
     <!-- A group's header: centered over the line, or at the start once folded -->
     <li v-if="startsGroup(i)" :data-timeline-row="`group:${item.group}`" class="pb-3" :class="[{ 'pt-2': i > 0 }, responsive ? 'text-left @lg:text-center' : 'text-center']">
       <slot name="group" :group="item.group!" :items="groupRun(i)">
@@ -355,5 +403,11 @@ onUpdated(() => {
       </div>
     </li>
     </template>
+    <!-- Past `limit`: the button, centered under the line (folded: lined up with the entries' text) -->
+    <li v-if="limited" data-timeline-row="more" class="flex" :class="responsive ? 'justify-start pl-9 @lg:justify-center @lg:pl-0' : 'justify-center'">
+      <MButton variant="text" size="sm" :icon="isExpanded ? 'expand_less' : 'expand_more'" :aria-expanded="isExpanded" @click="toggleExpanded">
+          {{ toggleLabel }}
+        </MButton>
+    </li>
   </ol>
 </template>

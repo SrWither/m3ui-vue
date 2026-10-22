@@ -235,6 +235,9 @@ export interface M3Locale {
   mapDeleteMeasurement: string
   mapTotal: string
   mapSearchPlaces: string
+  /** MTimeline's button past `limit`; `{count}` is how many entries are hidden */
+  timelineShowMore: string
+  timelineShowLess: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -451,6 +454,8 @@ export const defaultLocale: M3Locale = {
   mapDeleteMeasurement: 'Delete measurement',
   mapTotal: 'Total',
   mapSearchPlaces: 'Search places',
+  timelineShowMore: 'Show {count} more',
+  timelineShowLess: 'Show less',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')

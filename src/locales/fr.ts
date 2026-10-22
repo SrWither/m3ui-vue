@@ -226,4 +226,6 @@ export const frLocale: M3Locale = {
   mapDeleteMeasurement: 'Supprimer la mesure',
   mapTotal: 'Total',
   mapSearchPlaces: 'Rechercher un lieu',
+  timelineShowMore: 'Afficher {count} de plus',
+  timelineShowLess: 'Afficher moins',
 }

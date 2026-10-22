@@ -205,3 +205,34 @@ describe('MTimeline animate', () => {
     w.unmount()
   })
 })
+
+describe('MTimeline limit', () => {
+  const many = Array.from({ length: 7 }, (_, i) => ({ key: i, title: `Entry ${i}` }))
+
+  it('shows the first entries and a button for the rest, toggling both ways', async () => {
+    const w = mount(MTimeline, { props: { items: many, limit: 3, animate: false } })
+    const entries = () => w.findAll('li').filter((li) => li.text().startsWith('Entry'))
+    expect(entries()).toHaveLength(3)
+    const button = () => w.find('button[aria-expanded]')
+    expect(button().text()).toContain('Show 4 more')
+    expect(button().attributes('aria-expanded')).toBe('false')
+    await button().trigger('click')
+    expect(entries()).toHaveLength(7)
+    expect(button().text()).toContain('Show less')
+    expect(w.emitted('update:expanded')).toEqual([[true]])
+    await button().trigger('click')
+    expect(entries()).toHaveLength(3)
+    expect(w.emitted('update:expanded')).toEqual([[true], [false]])
+  })
+
+  it('ends the line at the last entry shown, follows v-model:expanded, and has no button when everything fits', async () => {
+    const w = mount(MTimeline, { props: { items: many, limit: 3, expanded: true, animate: false } })
+    expect(w.findAll('li').filter((li) => li.text().startsWith('Entry'))).toHaveLength(7)
+    await w.setProps({ expanded: false })
+    const third = w.findAll('li')[2]!
+    expect(third.findAll('span').filter((s) => s.classes().includes('flex-1'))).toHaveLength(0)
+
+    const fits = mount(MTimeline, { props: { items: many.slice(0, 3), limit: 3 } })
+    expect(fits.find('button').exists()).toBe(false)
+  })
+})

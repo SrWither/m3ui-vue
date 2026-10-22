@@ -226,4 +226,6 @@ export const koLocale: M3Locale = {
   mapDeleteMeasurement: '측정 삭제',
   mapTotal: '합계',
   mapSearchPlaces: '장소 검색',
+  timelineShowMore: '{count}개 더 보기',
+  timelineShowLess: '간략히 보기',
 }
