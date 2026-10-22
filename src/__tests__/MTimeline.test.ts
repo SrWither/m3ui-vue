@@ -77,4 +77,53 @@ describe('MTimeline', () => {
     await w.setProps({ items: [{ key: 'z', title: 'Z' }, { key: 'a', title: 'A' }, { key: 'b', title: 'B' }] })
     expect(w.findAll('li')[2]!.element).toBe(second)
   })
+
+  describe('progress', () => {
+    const steps = [
+      { title: 'Ordered', icon: 'receipt' },
+      { title: 'Preparing', icon: 'skillet' },
+      { title: 'On the way', icon: 'two_wheeler' },
+      { title: 'Delivered', icon: 'home' },
+    ]
+    const parts = (layout: Record<string, unknown> = {}) => {
+      const w = mount(MTimeline, { props: { items: steps, current: 1, ...layout } })
+      const lis = w.findAll('li')
+      return {
+        lis,
+        dot: (i: number) => lis[i]!.find('.rounded-full'),
+        line: (i: number) => lis[i]!.findAll('span').filter((s) => s.classes().includes('flex-1')).at(-1)!,
+      }
+    }
+
+    it('fills done steps with a solid line, pulses the current one, outlines the rest', () => {
+      const { lis, dot, line } = parts()
+      expect(dot(0).classes()).toContain('bg-primary')
+      expect(line(0).classes()).toContain('bg-primary')
+      expect(line(0).classes()).not.toContain('bg-primary/30')
+      expect(lis[1]!.attributes('aria-current')).toBe('step')
+      expect(lis[1]!.find('.motion-safe\\:animate-ping').exists()).toBe(true)
+      expect(line(1).classes()).toContain('border-dashed')
+      expect(dot(2).classes()).toContain('border-outline-variant')
+      expect(dot(2).classes()).not.toContain('bg-primary')
+      expect(lis[2]!.find('p').classes()).toContain('text-on-surface-variant')
+      expect(lis[0]!.attributes('aria-current')).toBeUndefined()
+    })
+
+    it('lets an item\'s status win, and works in every layout', () => {
+      const w = mount(MTimeline, { props: { items: [steps[0]!, { ...steps[1]!, status: 'pending' as const }], current: 2 } })
+      expect(w.findAll('li')[1]!.find('.rounded-full').classes()).toContain('border-outline-variant')
+      for (const layout of [{ alternating: true }, { orientation: 'horizontal' }]) {
+        const { lis, line } = parts(layout)
+        expect(lis[1]!.attributes('aria-current')).toBe('step')
+        expect(line(1).classes()).toContain('border-dashed')
+      }
+    })
+
+    it('keeps the plain look without current or status', () => {
+      const html = mount(MTimeline, { props: { items: steps } }).html()
+      expect(html).not.toContain('border-dashed')
+      expect(html).not.toContain('aria-current')
+      expect(html).toContain('bg-primary/30')
+    })
+  })
 })
