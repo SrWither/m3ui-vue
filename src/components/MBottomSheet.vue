@@ -7,7 +7,7 @@
  *
  * @slot default Sheet body content (scrollable)
  * @slot actions Footer action buttons, shown in a bordered strip below the content
- * @event update:modelValue Emitted when the sheet closes (scrim click, drag-to-dismiss, or the close button) —
+ * @event update:modelValue Emitted when the sheet closes (scrim click, drag-to-dismiss, Escape, or the close button) —
  *   powers v-model
  * @event update:expanded Emitted when the sheet moves between partially and fully expanded (or closes) —
  *   powers v-model:expanded
@@ -16,6 +16,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import MIcon from './MIcon.vue'
 import { useLocale } from '../composables/useLocale'
 import { useSheetMotion } from '../composables/_useSheetMotion'
+import { useEscapeStack } from '../composables/_useEscapeStack'
 
 const props = withDefaults(defineProps<{
   /** Open/closed state (v-model) */
@@ -42,6 +43,8 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{ 'update:modelValue': [boolean]; 'update:expanded': [boolean] }>()
 const close = () => emit('update:modelValue', false)
+// Modal: Escape closes it, through the library's stack (a dialog or menu over it takes it first)
+useEscapeStack(() => props.modelValue, close)
 const locale = useLocale()
 
 // Only the safe area is kept clear at the top, like the status bar inset in Compose

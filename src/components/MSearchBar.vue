@@ -20,6 +20,7 @@ import MSpinner from './MSpinner.vue'
 import { useLocale } from '../composables/useLocale'
 import { searchAppBarKey } from '../composables/_searchAppBar'
 import { useScrollLock } from '../composables/_useScrollLock'
+import { useEscapeStack } from '../composables/_useEscapeStack'
 
 // Root is a fragment (bar div + a sibling Teleport for the expanded overlay panel), so Vue
 // can't auto-apply a consumer's class/attrs to either one — forward them onto the bar div below.
@@ -121,6 +122,8 @@ function onClear() {
 
 function onKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') {
+    // Collapsing uses the key: keep it from also closing a dialog around the bar
+    if (expanded.value) e.stopPropagation()
     close()
     inputEl.value?.blur()
   } else if (e.key === 'Enter') {
@@ -151,6 +154,8 @@ onUnmounted(() => {
 })
 
 useScrollLock(() => expanded.value && fullscreen.value)
+// Expanded, it's a popup (or a modal view): Escape collapses it first, wherever the focus is
+useEscapeStack(() => expanded.value, () => close())
 </script>
 
 <template>

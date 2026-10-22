@@ -14,6 +14,7 @@ import MBadge from './MBadge.vue'
 import { useItemLink, type ItemLink } from '../composables/_useItemLink'
 import { sampleSpring, sampleAt, playSamples, prefersReducedMotion } from '../composables/_springAnimation'
 import { useScrollLock } from '../composables/_useScrollLock'
+import { useEscapeStack } from '../composables/_useEscapeStack'
 
 export interface NavRailItem {
   value: string | number
@@ -88,9 +89,6 @@ function selectModal(item: NavRailItem) {
   if (item.disabled) return
   emit('update:modelValue', item.value)
   close()
-}
-function onKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') close()
 }
 
 /*
@@ -357,21 +355,12 @@ function onPanelLeave(el: Element, done: () => void) {
   else done()
 }
 
-watch(
-  () => props.modal && props.expanded,
-  (open) => {
-    if (open) {
-      document.addEventListener('keydown', onKeydown)
-    } else {
-      document.removeEventListener('keydown', onKeydown)
-    }
-  },
-)
+// The modal panel closes on Escape through the library's stack (a dialog or menu opened over it takes it first)
+useEscapeStack(() => !!(props.modal && props.expanded), close)
 
 onUnmounted(() => {
   slideAnim?.cancel()
   slideScrimAnim?.cancel()
-  document.removeEventListener('keydown', onKeydown)
 })
 useScrollLock(() => props.modal && props.expanded)
 </script>
@@ -533,7 +522,7 @@ useScrollLock(() => props.modal && props.expanded)
   -->
   <Teleport v-if="modal" to="body">
     <Transition :css="false" @enter="onPanelEnter" @leave="onPanelLeave">
-      <div v-if="expanded" class="fixed inset-0 z-100" @keydown.escape="close">
+      <div v-if="expanded" class="fixed inset-0 z-100">
         <div class="wnr-scrim absolute inset-0 bg-scrim/32" @click="close" />
 
         <nav

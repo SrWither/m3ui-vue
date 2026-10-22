@@ -32,6 +32,7 @@ import MIconButton from './MIconButton.vue'
 import MSpinner from './MSpinner.vue'
 import { useLocale } from '../composables/useLocale'
 import { useScrollLock } from '../composables/_useScrollLock'
+import { useEscapeStack } from '../composables/_useEscapeStack'
 
 export interface LightboxItem {
   src: string
@@ -288,6 +289,9 @@ function originTransform(): Origin | null {
 
 // The page doesn't scroll from when it opens until its close animation ends
 const scrollLock = useScrollLock()
+// Escape closes it through the library's stack (a dialog opened over it takes it first); arrows and zoom keys stay ours
+const escapeOn = ref(false)
+useEscapeStack(escapeOn, () => close())
 
 async function show() {
   restoreFocus = document.activeElement as HTMLElement | null
@@ -300,6 +304,7 @@ async function show() {
   setNow(backdrop, 0)
   backdrop.k = 300
   document.addEventListener('keydown', onKeydown)
+  escapeOn.value = true
   scrollLock.set(true)
   await nextTick()
   measure()
@@ -319,6 +324,7 @@ async function show() {
 
 function hide() {
   document.removeEventListener('keydown', onKeydown)
+  escapeOn.value = false
   // The bars and the backdrop go with the image, not after it.
   chrome.value = false
   backdrop.k = 700
@@ -674,8 +680,7 @@ function onTap(e: PointerEvent) {
 // ── Keyboard and focus ────────────────────────────────────────────────────────────────────────
 
 function onKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') close()
-  else if (e.key === 'ArrowRight') next()
+  if (e.key === 'ArrowRight') next()
   else if (e.key === 'ArrowLeft') prev()
   else if (props.zoom && (e.key === '+' || e.key === '=')) zoomTo(scale.target * 1.5, 0, 0)
   else if (props.zoom && e.key === '-') zoomTo(scale.target / 1.5, 0, 0)

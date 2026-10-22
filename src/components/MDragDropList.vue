@@ -397,7 +397,9 @@ function onKeydown(e: KeyboardEvent, index: number) {
     commit(index, to)
     say(t.reorderMoved, to)
   } else if (grabbed && e.key === 'Escape') {
+    // Cancelling the move uses the key: a dialog around the list stays open
     e.preventDefault()
+    e.stopPropagation()
     cancelKeyboard(index)
   }
 }

@@ -10,6 +10,7 @@ import MIconButton from './MIconButton.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 import { useLocale } from '../composables/useLocale'
 import { useScrollLock } from '../composables/_useScrollLock'
+import { useEscapeStack } from '../composables/_useEscapeStack'
 
 export interface SelectOption {
   label: string
@@ -140,7 +141,13 @@ function onScroll(e: Event) {
 }
 
 function onKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') { open.value = false; modalOpen.value = false; return }
+  if (e.key === 'Escape') {
+    // Used to close the list: keep it from also closing a dialog around the select (the escape stack)
+    if (open.value || modalOpen.value) e.stopPropagation()
+    open.value = false
+    modalOpen.value = false
+    return
+  }
   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); return }
   if (!open.value && !modalOpen.value) return
   const opts = props.options.filter((o) => !o.disabled)
@@ -158,6 +165,8 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 useScrollLock(modalOpen)
+// The modal list is a modal surface: Escape closes it first, before a dialog it was opened from
+useEscapeStack(modalOpen, () => (modalOpen.value = false))
 
 function closeModal() { modalOpen.value = false }
 

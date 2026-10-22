@@ -6,15 +6,16 @@
  * @slot header Replaces the default title text entirely — the close button stays
  * @slot default Sheet body content (scrollable)
  * @slot actions Footer action buttons, shown in a bordered strip below the content
- * @event update:modelValue Emitted when the sheet closes (scrim click, drag-to-dismiss from the left edge, or
+ * @event update:modelValue Emitted when the sheet closes (scrim click, drag-to-dismiss from the left edge, Escape, or
  *   the close button) — powers v-model
  */
 import MIcon from './MIcon.vue'
 import { useSheetMotion } from '../composables/_useSheetMotion'
+import { useEscapeStack } from '../composables/_useEscapeStack'
 import { useLocale } from '../composables/useLocale'
 
 const locale = useLocale()
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   /** Open/closed state (v-model) */
   modelValue: boolean
   /** Sheet header title, ignored if the header slot is used */
@@ -25,6 +26,8 @@ withDefaults(defineProps<{
 
 const emit = defineEmits<{ 'update:modelValue': [boolean] }>()
 const close = () => emit('update:modelValue', false)
+// Modal: Escape closes it, through the library's stack (a dialog or menu over it takes it first)
+useEscapeStack(() => props.modelValue, close)
 
 // Slide in/out and drag-to-dismiss, as springs (see _useSheetMotion).
 const motion = useSheetMotion('x', close)

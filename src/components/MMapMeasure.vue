@@ -18,6 +18,7 @@ import MMapMarker from './MMapMarker.vue'
 import { useLocale } from '../composables/useLocale'
 import { useMap } from '../composables/useMap'
 import { useThemeTokens } from '../composables/useThemeTokens'
+import { useEscapeStack } from '../composables/_useEscapeStack'
 import { centroid, closeRing, distance, midpoint, pathLength, ringArea, type LngLat } from '../composables/_mapGeometry'
 import type { MapControlPosition } from './MMap.vue'
 
@@ -216,9 +217,11 @@ function onDblClick(e: Maplibre.MapMouseEvent) {
   finish()
 }
 
+// Enter finishes; Escape goes through the library's stack, so measuring on a map in a dialog doesn't close it too
 function onKey(e: KeyboardEvent) {
-  if (e.key === 'Escape' || e.key === 'Enter') finish(e.key === 'Escape')
+  if (e.key === 'Enter') finish()
 }
+useEscapeStack(() => !!mode.value, () => finish(true))
 
 // In fullscreen the browser keeps Escape to leave it, and the page never sees it. Keyboard Lock (Chromium) lets the
 // page have it while measuring, so Escape finishes the measurement (holding Escape still leaves fullscreen)

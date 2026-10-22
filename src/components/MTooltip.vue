@@ -151,6 +151,8 @@ function onFocusIn(e: FocusEvent) {
 }
 function onKeyDown(e: KeyboardEvent) {
   if (e.key === 'Escape' && visible.value) {
+    // Hiding the tooltip uses the key: a dialog around it stays open
+    e.stopPropagation()
     cancelTimers()
     visible.value = false
   }

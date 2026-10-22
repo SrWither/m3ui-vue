@@ -11,6 +11,7 @@ import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import MIcon from './MIcon.vue'
 import { useLocale } from '../composables/useLocale'
 import { useScrollLock } from '../composables/_useScrollLock'
+import { useEscapeStack } from '../composables/_useEscapeStack'
 
 const locale = useLocale()
 
@@ -103,8 +104,6 @@ function onKeydown(e: KeyboardEvent) {
   } else if (e.key === 'Enter' && filtered.value.length) {
     e.preventDefault()
     selectItem(filtered.value[activeIndex.value]!)
-  } else if (e.key === 'Escape') {
-    close()
   }
 }
 
@@ -135,6 +134,8 @@ watch(
 )
 
 useScrollLock(() => props.modelValue)
+// Escape through the library's stack: opened over a dialog, it closes alone
+useEscapeStack(() => props.modelValue, close)
 
 watch(query, () => { activeIndex.value = 0 })
 

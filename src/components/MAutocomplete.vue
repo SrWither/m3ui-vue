@@ -13,6 +13,7 @@ import { useLocale } from '../composables/useLocale'
 import { useDebounce } from '../composables/useDebounce'
 import type { SelectOption } from './MSelect.vue'
 import { useScrollLock } from '../composables/_useScrollLock'
+import { useEscapeStack } from '../composables/_useEscapeStack'
 
 // Root is a fragment (field div + a sibling Teleport for the dropdown panel), so Vue can't
 // auto-apply a consumer's class/attrs to either one — forward them onto the field div below.
@@ -174,6 +175,7 @@ function select(opt: SelectOption) {
 }
 
 useScrollLock(modalOpen)
+useEscapeStack(modalOpen, closeDropdown)
 
 function onInputFocus() {
   search.value = ''
@@ -208,6 +210,9 @@ function onScroll(e: Event) {
 
 function onKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') {
+    // Closing the list uses the key: keep it from also closing a dialog around the field. With nothing open it
+    // only leaves the field and passes on
+    if (open.value || modalOpen.value) e.stopPropagation()
     closeDropdown()
     inputEl.value?.blur()
     return

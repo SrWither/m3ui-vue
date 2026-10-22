@@ -621,7 +621,9 @@ function onCardKeydown(e: KeyboardEvent, card: KanbanCard, column: KanbanColumn)
     toCol = next
     toIndex = Math.min(here.index, next.cards.length)
   } else if (e.key === 'Escape') {
+    // Cancelling the move uses the key: a dialog around the board stays open
     e.preventDefault()
+    e.stopPropagation()
     cancelKeyboard(card.id, here.column.id, here.index)
     return
   } else if (e.key === 'Enter') {
