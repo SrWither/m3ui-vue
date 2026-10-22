@@ -52,15 +52,20 @@ const props = withDefaults(
     placeholder?: string
     /** Disables editing */
     disabled?: boolean
-    /** Minimum editor height */
+    /** Minimum height of the text area (not used with `fill`) */
     minHeight?: string
+    /**
+     * Fills the height you give the editor (`class="h-full"`, `flex-1`…): the toolbar stays put and the text
+     * scrolls inside, instead of the editor growing with its content
+     */
+    fill?: boolean
     /**
      * Object with all toolbar/dialog label overrides for i18n (see `RichTextEditorLabels`) — defaults come from
      * useLocale()
      */
     labels?: RichTextEditorLabels
   }>(),
-  { disabled: false, minHeight: '200px' },
+  { disabled: false, minHeight: '200px', fill: false },
 )
 
 const l = computed<Required<RichTextEditorLabels>>(() => ({
@@ -231,10 +236,13 @@ function confirmImage() {
 <template>
   <div
     class="overflow-hidden rounded-lg border transition-colors duration-150"
-    :class="disabled ? 'border-outline-variant/50 opacity-60' : 'border-outline-variant focus-within:border-primary'"
+    :class="[
+      disabled ? 'border-outline-variant/50 opacity-60' : 'border-outline-variant focus-within:border-primary',
+      { 'flex flex-col': fill },
+    ]"
   >
     <!-- Toolbar -->
-    <div v-if="ready" class="flex flex-wrap items-center gap-0.5 border-b border-outline-variant bg-surface-container px-2 py-1.5">
+    <div v-if="ready" class="flex shrink-0 flex-wrap items-center gap-0.5 border-b border-outline-variant bg-surface-container px-2 py-1.5">
       <!-- Heading menu -->
       <MMenu align="left">
         <template #trigger>
@@ -293,7 +301,8 @@ function confirmImage() {
     <div
       ref="editorContainer"
       class="rte-content bg-surface px-4 py-3 text-body-large text-on-surface"
-      :style="{ minHeight: minHeight }"
+      :class="{ 'rte-fill flex min-h-0 flex-1 flex-col overflow-y-auto': fill }"
+      :style="fill ? undefined : { minHeight }"
     />
 
     <!-- Link dialog -->
@@ -320,6 +329,11 @@ function confirmImage() {
 .rte-content :deep(.tiptap) {
   outline: none;
   min-height: inherit;
+}
+
+/* Filling: the document takes the whole area, so a click anywhere below the text lands in it. */
+.rte-fill :deep(.tiptap) {
+  flex: 1;
 }
 
 .rte-content :deep(.tiptap p.is-editor-empty:first-child::before) {
