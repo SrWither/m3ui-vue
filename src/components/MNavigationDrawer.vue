@@ -16,6 +16,7 @@
  */
 import { ref, reactive, watch, provide, computed, nextTick, onBeforeUnmount } from "vue";
 import MIcon from "./MIcon.vue";
+import MBadge from "./MBadge.vue";
 import MDrawerItemList from "./_MDrawerItemList.vue";
 import { motionSprings, type SpringSpec } from "../composables/motion";
 import { sampleSpring, sampleAt, playSamples, prefersReducedMotion } from "../composables/_springAnimation";
@@ -58,6 +59,11 @@ const props = withDefaults(
     modal?: boolean;
     /** Compact mode (72px) showing only icons — inline variant only */
     collapsed?: boolean;
+    /**
+     * In `collapsed` mode, shows each item's label under its icon, with the selection on a 56×32 pill around
+     * the icon, like MNavigationRail's collapsed items — nested items included
+     */
+    collapsedLabels?: boolean;
     /** Custom drawer width (e.g. "320px", "25rem"). Defaults to 22.5rem (360px) */
     width?: string;
     /**
@@ -181,6 +187,16 @@ provide("nd-open-items", openItems);
 provide("nd-toggle-item", onChildToggle);
 provide("nd-select-item", onChildSelect);
 provide("nd-collapsed", collapsedRef);
+// Collapsed with labels under the icons (rail look); only the inline variant collapses
+const rail = computed(() => !props.modal && collapsedRef.value && !!props.collapsedLabels)
+provide("nd-rail", rail);
+provide("nd-collapsed-labels", computed(() => !props.modal && !!props.collapsedLabels));
+
+// A collapsed item's badge sits on its icon: a number as a count, anything else ("New") as a dot
+function badgeProps(badge: string | number) {
+  const n = typeof badge === 'number' ? badge : badge.trim() === '' ? NaN : Number(badge)
+  return Number.isFinite(n) ? { count: n } : { dot: true }
+}
 
 defineExpose({ openItems })
 
@@ -618,6 +634,7 @@ function onPanelClickCapture(e: MouseEvent) {
       v-bind="$attrs"
       class="nd-inline flex h-full shrink-0 flex-col bg-surface"
       :class="[
+        rail ? 'nd-rail' : '',
         inlineSide === 'right' ? 'border-l border-outline-variant rounded-l-lg' : 'border-r border-outline-variant rounded-r-lg',
         !modelValue
           ? inlineSide === 'right' ? 'nd-hidden w-0 border-l-0' : 'nd-hidden w-0 border-r-0'
@@ -646,7 +663,8 @@ function onPanelClickCapture(e: MouseEvent) {
       </div>
 
       <div
-        class="scrollbar-none flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden px-3 py-2"
+        class="scrollbar-none flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden py-2"
+        :class="rail ? 'px-2' : 'px-3'"
       >
         <template v-for="(section, si) in sections" :key="si">
           <div v-if="si > 0" class="my-1 border-t border-outline-variant" />
@@ -655,7 +673,8 @@ function onPanelClickCapture(e: MouseEvent) {
           <button
             v-if="section.title && section.collapsible"
             type="button"
-            class="mt-1 flex w-full shrink-0 cursor-pointer items-center gap-3 overflow-hidden whitespace-nowrap rounded-xl px-3 py-2.5 text-on-surface-variant hover:bg-on-surface/8"
+            class="mt-1 flex w-full shrink-0 cursor-pointer items-center gap-3 overflow-hidden whitespace-nowrap rounded-xl py-2.5 text-on-surface-variant hover:bg-on-surface/8"
+            :class="rail ? 'px-4' : 'px-3'"
             :title="collapsed ? section.title : undefined"
             @click="toggleSection(section, si)"
           >
@@ -697,23 +716,38 @@ function onPanelClickCapture(e: MouseEvent) {
                     :to="item.to && !item.disabled ? item.to : undefined"
                     :type="item.to ? undefined : 'button'"
                     :title="collapsed ? item.label : undefined"
-                    class="flex w-full shrink-0 items-center gap-3 overflow-hidden whitespace-nowrap rounded-full py-4 text-left focus-visible:outline-none"
+                    class="relative flex w-full shrink-0 items-center gap-3 overflow-hidden whitespace-nowrap text-left focus-visible:outline-none"
                     :class="[
-                      section.collapsible && !collapsed ? 'pl-8 pr-3' : 'px-3',
+                      // Rail look: 56px tall, the icon in a 56×32 pill at the top and the label under it, the
+                      // icon at the same x as expanded (8 + 16 = 12 + 12) so collapsing never moves it sideways
+                      rail ? 'px-4 pt-2 pb-6' : ['rounded-full py-4', section.collapsible && !collapsed ? 'pl-8 pr-3' : 'px-3'],
                       item.disabled
                         ? 'cursor-not-allowed opacity-[0.38]'
                         : item.value === selected
-                          ? 'bg-secondary-container text-on-secondary-container'
-                          : 'cursor-pointer text-on-surface-variant hover:bg-on-surface/8',
+                          ? rail ? 'text-on-secondary-container' : 'bg-secondary-container text-on-secondary-container'
+                          : rail ? 'group cursor-pointer text-on-surface-variant' : 'cursor-pointer text-on-surface-variant hover:bg-on-surface/8',
                     ]"
                     :disabled="item.disabled && !item.to"
                     @click="select(item)"
                   >
+                    <span
+                      v-if="rail"
+                      aria-hidden="true"
+                      class="pointer-events-none absolute left-0 top-1 h-8 w-14 rounded-full transition-colors"
+                      :class="item.value === selected && !item.disabled ? 'bg-secondary-container' : 'group-hover:bg-on-surface/8'"
+                    />
+                    <MBadge
+                      v-if="collapsed && item.icon && item.badge != null"
+                      v-bind="badgeProps(item.badge)"
+                      class="shrink-0"
+                    >
+                      <MIcon :name="item.icon" :size="item.iconSize ?? 24" />
+                    </MBadge>
                     <MIcon
-                      v-if="item.icon"
+                      v-else-if="item.icon"
                       :name="item.icon"
                       :size="item.iconSize ?? 24"
-                      class="shrink-0"
+                      class="relative shrink-0"
                     />
                     <span
                       class="nd-label min-w-0 flex-1 font-medium"
@@ -732,6 +766,11 @@ function onPanelClickCapture(e: MouseEvent) {
                     >
                       {{ item.badge }}
                     </span>
+                    <span
+                      v-if="collapsedLabels"
+                      class="nd-rail-label pointer-events-none absolute left-0 top-10 w-14 truncate text-center text-label-medium font-medium"
+                      :class="item.value === selected ? 'text-secondary' : 'text-on-surface-variant'"
+                    >{{ item.label }}</span>
                   </component>
                   <div v-if="item.children?.length && isItemOpen(item)" class="nd-children-divider" />
                   <Transition
@@ -834,6 +873,18 @@ function onPanelClickCapture(e: MouseEvent) {
 .nd-inline.nd-collapsed :deep(.nd-label) {
   opacity: 0;
   transition: opacity 100ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Labels under the icons (collapsedLabels): fade in once the width has mostly shrunk, out at once */
+.nd-rail-label,
+:deep(.nd-rail-label) {
+  opacity: 0;
+  transition: opacity 100ms cubic-bezier(0.2, 0, 0, 1);
+}
+.nd-inline.nd-rail .nd-rail-label,
+.nd-inline.nd-rail :deep(.nd-rail-label) {
+  opacity: 1;
+  transition: opacity 200ms 150ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 /* Elements that should collapse to 0 height when sidebar is collapsed */

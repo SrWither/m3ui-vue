@@ -228,3 +228,38 @@ describe('MNavigationDrawer open groups', () => {
     expect(openItems().files).toBeFalsy()
   })
 })
+
+describe('MNavigationDrawer collapsedLabels', () => {
+  const tree = [{
+    items: [
+      { value: 'inbox', label: 'Inbox', icon: 'inbox', badge: 4 },
+      { value: 'labels', label: 'Labels', icon: 'label', badge: 'New', children: [{ value: 'work', label: 'Work', icon: 'work' }] },
+    ],
+  }]
+  const mountInline = (props: Record<string, unknown> = {}) =>
+    (wrapper = mount(MNavigationDrawer, { props: { modelValue: true, modal: false, sections: tree, selected: 'work', ...props } }))
+
+  it('shows each label under its icon, nested items included, with the selection on the pill', () => {
+    const w = mountInline({ collapsed: true, collapsedLabels: true })
+    expect(w.find('nav').classes()).toContain('nd-rail')
+    expect(w.findAll('.nd-rail-label').map((l) => l.text())).toEqual(['Inbox', 'Labels', 'Work'])
+    const work = w.findAll('button').find((b) => b.text().includes('Work'))!
+    expect(work.classes()).not.toContain('bg-secondary-container')
+    expect(work.find('span[aria-hidden="true"]').classes()).toContain('bg-secondary-container')
+  })
+
+  it('puts badges on the icon when collapsed: a number as a count, text as a dot', () => {
+    const w = mountInline({ collapsed: true })
+    const badges = w.findAll('.bg-error')
+    expect(badges.map((b) => b.text())).toEqual(['4', ''])
+  })
+
+  it('keeps the row look when expanded or without the prop', () => {
+    const expanded = mountInline({ collapsed: false, collapsedLabels: true })
+    expect(expanded.find('nav').classes()).not.toContain('nd-rail')
+    expect(expanded.findAll('button').find((b) => b.text().includes('Work'))!.classes()).toContain('bg-secondary-container')
+    expanded.unmount()
+    const plain = mountInline({ collapsed: true })
+    expect(plain.findAll('.nd-rail-label')).toHaveLength(0)
+  })
+})

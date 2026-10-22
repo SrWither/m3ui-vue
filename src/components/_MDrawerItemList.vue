@@ -16,7 +16,9 @@ export default defineComponent({
     const toggleItem = inject<(item: DrawerItem) => void>('nd-toggle-item')!
     const selectItem = inject<(item: DrawerItem) => void>('nd-select-item')!
     const collapsed = inject<Ref<boolean>>('nd-collapsed')!
-    return { openItems, toggleItem, selectItem, collapsed }
+    const rail = inject<Ref<boolean>>('nd-rail')!
+    const collapsedLabels = inject<Ref<boolean>>('nd-collapsed-labels')!
+    return { openItems, toggleItem, selectItem, collapsed, rail, collapsedLabels }
   },
   methods: {
     itemTag(item: DrawerItem) {
@@ -28,6 +30,12 @@ export default defineComponent({
     },
     itemStyle(item: DrawerItem): Record<string, string> {
       const transition = 'padding 300ms cubic-bezier(0.2, 0, 0, 1)'
+      if (this.rail) {
+        // Same 56px rail item as the top level: icon centered in the 56×32 pill, label below at 40px
+        const side = `${(56 - this.iSize(item)) / 2}px`
+        const top = (32 - this.iSize(item)) / 2 + 4
+        return { paddingLeft: side, paddingRight: side, paddingTop: `${top}px`, paddingBottom: `${56 - top - this.iSize(item)}px`, transition }
+      }
       if (this.collapsed) {
         const pad = `${(48 - this.iSize(item)) / 2}px`
         return { paddingLeft: pad, paddingRight: pad, transition }
@@ -69,20 +77,26 @@ export default defineComponent({
       :to="item.to && !item.disabled ? item.to : undefined"
       :type="item.to ? undefined : 'button'"
       :title="collapsed ? item.label : undefined"
-      class="flex w-full shrink-0 items-center gap-2.5 overflow-hidden whitespace-nowrap rounded-full text-left transition-colors focus-visible:outline-none"
+      class="relative flex w-full shrink-0 items-center gap-2.5 overflow-hidden whitespace-nowrap text-left transition-colors focus-visible:outline-none"
       :class="[
-        item.py ?? 'py-1.5',
+        rail ? '' : ['rounded-full', item.py ?? 'py-1.5'],
         item.disabled
           ? 'cursor-not-allowed opacity-[0.38]'
           : item.value === selected
-            ? 'bg-secondary-container text-on-secondary-container'
-            : 'cursor-pointer text-on-surface-variant hover:bg-on-surface/8',
+            ? rail ? 'text-on-secondary-container' : 'bg-secondary-container text-on-secondary-container'
+            : rail ? 'group cursor-pointer text-on-surface-variant' : 'cursor-pointer text-on-surface-variant hover:bg-on-surface/8',
       ]"
       :style="itemStyle(item)"
       :disabled="item.disabled && !item.to"
       @click="onClick(item)"
     >
-      <MIcon v-if="item.icon" :name="item.icon" :size="iSize(item)" class="shrink-0" />
+      <span
+        v-if="rail"
+        aria-hidden="true"
+        class="pointer-events-none absolute left-0 top-1 h-8 w-14 rounded-full transition-colors"
+        :class="item.value === selected && !item.disabled ? 'bg-secondary-container' : 'group-hover:bg-on-surface/8'"
+      />
+      <MIcon v-if="item.icon" :name="item.icon" :size="iSize(item)" class="relative shrink-0" />
       <span class="nd-label min-w-0 flex-1" :class="lClass(item)">{{ item.label }}</span>
       <MIcon
         v-if="item.children?.length"
@@ -90,6 +104,11 @@ export default defineComponent({
         :size="16"
         class="nd-label shrink-0 text-on-surface-variant"
       />
+      <span
+        v-if="collapsedLabels"
+        class="nd-rail-label pointer-events-none absolute left-0 top-10 w-14 truncate text-center text-label-medium font-medium"
+        :class="item.value === selected ? 'text-secondary' : 'text-on-surface-variant'"
+      >{{ item.label }}</span>
     </component>
 
     <Transition :css="false" @enter="onEnter" @leave="onLeave">
