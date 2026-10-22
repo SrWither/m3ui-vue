@@ -13,6 +13,7 @@ import { vTooltip } from './directives/vTooltip'
 import { vFocusRing } from './directives/vFocusRing'
 import { vScrollElevation } from './directives/vScrollElevation'
 import { vLongPress } from './directives/vLongPress'
+import { vSwipe } from './directives/vSwipe'
 import { M3_HYDRATING_KEY } from './composables/_hydration'
 import { M3_INITIAL_STATE_KEY, enableCookies, readCookie, trackViewport, writeCookie, type M3InitialState, type ResolvedInitialState } from './composables/_ssrState'
 import { THEME_KEY } from './composables/_storageKeys'
@@ -115,6 +116,7 @@ export function createM3UI(options: M3UIOptions = {}) {
       app.directive('focus-ring', vFocusRing)
       app.directive('scroll-elevation', vScrollElevation)
       app.directive('long-press', vLongPress)
+      app.directive('swipe', vSwipe)
       if (options.isHydrating) app.provide(M3_HYDRATING_KEY, options.isHydrating)
       if (options.initialState) app.provide(M3_INITIAL_STATE_KEY, resolveInitialState(options))
       if (options.cookies && typeof window !== 'undefined') enableCookies()

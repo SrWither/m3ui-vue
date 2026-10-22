@@ -54,6 +54,8 @@ export { vScrollElevation } from './directives/vScrollElevation'
 export type { ScrollElevationOptions, ScrollElevationValue } from './directives/vScrollElevation'
 export { vLongPress } from './directives/vLongPress'
 export type { LongPressOptions, LongPressValue } from './directives/vLongPress'
+export { vSwipe } from './directives/vSwipe'
+export type { SwipeDirection, SwipeInfo, SwipeOptions, SwipeValue } from './directives/vSwipe'
 
 // Components
 export { default as MAbsolute } from './components/MAbsolute.vue'
