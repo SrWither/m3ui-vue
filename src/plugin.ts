@@ -162,3 +162,19 @@ export function createM3UI(options: M3UIOptions = {}) {
     },
   }
 }
+
+// The directives createM3UI() registers, typed for templates (vue-tsc / Volar check `v-tooltip="…"` against them)
+declare module 'vue' {
+  interface GlobalDirectives {
+    vRipple: typeof vRipple
+    vReveal: typeof vReveal
+    vStateLayer: typeof vStateLayer
+    vTooltip: typeof vTooltip
+    vFocusRing: typeof vFocusRing
+    vScrollElevation: typeof vScrollElevation
+    vLongPress: typeof vLongPress
+    vSwipe: typeof vSwipe
+    vClickOutside: typeof vClickOutside
+    vSkeleton: typeof vSkeleton
+  }
+}

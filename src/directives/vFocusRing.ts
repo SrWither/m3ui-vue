@@ -40,6 +40,12 @@ function apply(el: HTMLElement, options: FocusRingOptions) {
  * it without the plugin.
  */
 export const vFocusRing: Directive<HTMLElement, FocusRingValue> = {
+  // The marker only: an inline style here would make a hydration mismatch on an element with its own :style (the
+  // color and offset join on the client)
+  getSSRProps(binding) {
+    const o = normalize(binding.value)
+    return { 'data-m3-focus-ring': o.disabled ? 'off' : o.within ? 'within' : '' }
+  },
   mounted(el, binding) {
     apply(el, normalize(binding.value))
   },

@@ -42,6 +42,11 @@ function apply(el: HTMLElement, layer: HTMLElement, options: StateLayerOptions) 
  * without the plugin.
  */
 export const vStateLayer: Directive<HTMLElement, StateLayerValue> = {
+  // The marker only (the layer itself is added on the client)
+  getSSRProps(binding) {
+    const o = normalize(binding.value)
+    return { 'data-m3-state-layer': o.disabled ? 'off' : o.dragged ? 'dragged' : '' }
+  },
   mounted(el, binding) {
     const layer = document.createElement('span')
     layer.className = 'm3-state-layer'

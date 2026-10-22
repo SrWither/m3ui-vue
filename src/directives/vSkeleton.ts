@@ -65,6 +65,11 @@ function clear(el: HTMLElement, state: SkeletonState) {
  * without the plugin.
  */
 export const vSkeleton: Directive<HTMLElement, SkeletonValue> = {
+  // Server-rendered as a placeholder already (the wave's shimmer layer joins on the client)
+  getSSRProps(binding) {
+    const { loading, animation } = normalize(binding.value)
+    return loading ? { 'data-m3-skeleton': animation, 'aria-busy': 'true' } : {}
+  },
   mounted(el, binding) {
     const state: SkeletonState = { shimmer: null, madeRelative: false }
     states.set(el, state)

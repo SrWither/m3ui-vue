@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { beforeAll, describe, expect, it, vi } from 'vitest'
-import { createSSRApp, h, type Component } from 'vue'
+import { createSSRApp, h, resolveDirective, withDirectives, type Component, type Directive } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 
 // What Nuxt's server sees: no window, no document, no localStorage. The import itself has to work, since
@@ -13,7 +13,9 @@ beforeAll(async () => {
   expect(typeof window).toBe('undefined')
   expect(typeof document).toBe('undefined')
   lib = await import('../index')
-})
+  // Importing the whole library cold (every component through the transform) can pass the default 10s on a busy
+  // machine
+}, 60_000)
 
 const items = [{ src: 'a.jpg', alt: 'a' }, { src: 'b.jpg', alt: 'b' }]
 
@@ -169,4 +171,21 @@ describe('SSR', () => {
       await expect(renderToString(app)).resolves.toBe('<div></div>')
     },
   )
+
+  it('renders every directive, with the markers the CSS needs already in the HTML', async () => {
+    const d = (name: string) => resolveDirective(name) as Directive
+    const app = createSSRApp({
+      render: () => h('div', [
+        withDirectives(h('p', { id: 'skeleton' }, 'Ada'), [[d('skeleton'), true]]),
+        withDirectives(h('p', { id: 'ring' }), [[d('focus-ring'), { within: true }]]),
+        withDirectives(h('p', { id: 'layer' }), [[d('state-layer'), { dragged: true }]]),
+        withDirectives(h('p'), [[d('ripple')], [d('reveal')], [d('tooltip'), 'Hi'], [d('scroll-elevation')], [d('long-press'), () => {}], [d('swipe'), () => {}], [d('click-outside'), () => {}]]),
+      ]),
+    })
+    app.use(lib.createM3UI())
+    const html = await renderToString(app)
+    expect(html).toContain('<p id="skeleton" data-m3-skeleton="pulse" aria-busy="true">Ada</p>')
+    expect(html).toContain('data-m3-focus-ring="within"')
+    expect(html).toContain('data-m3-state-layer="dragged"')
+  })
 })
