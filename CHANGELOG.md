@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 - `MPullToRefresh` exposes `scrollEl` (the element that scrolls its content) and `scrollTo(options)` through a template ref
+- `MProgressBar` and `MCircleProgressBar`: `color` also takes any CSS color, and the new `trackColor` sets the track (an M3 role or a CSS color). A CSS color without `trackColor` gets a track of itself at 24%
 
 ### Fixed
 - `MPullToRefresh` keeps its scroll position inside a `<KeepAlive>`: the browser dropped it while the view was detached, so it came back at the top
