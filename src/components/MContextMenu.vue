@@ -11,9 +11,8 @@ import { computed, Fragment, inject, nextTick, onMounted, onUnmounted, provide, 
 import MIcon from './MIcon.vue'
 import MMenuDivider from './MMenuDivider.vue'
 import { useEscapeStack } from '../composables/_useEscapeStack'
+import { useMenuNav } from '../composables/_useMenuNav'
 import { POPUP_MARGIN, fitPopup } from '../composables/_popupPosition'
-import { motionSprings } from '../composables/motion'
-import { playSamples, prefersReducedMotion, sampleSpring } from '../composables/_springAnimation'
 
 defineOptions({ inheritAttrs: false })
 
@@ -104,62 +103,7 @@ onUnmounted(() => {
 const siblingGroup = inject<{ current: (() => void) | null } | null>('m-menu-sibling-group', null)
 provide('m-menu-sibling-group', { current: null })
 
-type NavEntry = { icon?: string, header?: () => any, content?: () => any }
-const navStack = ref<NavEntry[]>([])
-const currentNav = computed(() => navStack.value[navStack.value.length - 1])
-const navDirection = ref<'forward' | 'backward'>('forward')
-
-// See MMenu.vue: driven by the Web Animations API rather than Vue's
-// CSS-class transition hooks, which never reliably completed here with
-// dynamic (direction-dependent) enter/leave classes on a mode-less Transition.
-// Same shared axis X as MMenu: a 30dp slide with a crossfade between levels
-const SHARED_AXIS_OFFSET = 30
-function navSlideEnter(el: Element, done: () => void) {
-  const dir = navDirection.value === 'forward' ? 1 : -1
-  const anim = (el as HTMLElement).animate(
-    [
-      { transform: `translateX(${dir * SHARED_AXIS_OFFSET}px)`, opacity: 0 },
-      { transform: 'translateX(0)', opacity: 1 },
-    ],
-    { duration: 300, delay: 60, easing: 'cubic-bezier(0.05,0.7,0.1,1)', fill: 'backwards' },
-  )
-  anim.onfinish = done
-}
-function navSlideLeave(el: Element, done: () => void) {
-  const dir = navDirection.value === 'forward' ? -1 : 1
-  const htmlEl = el as HTMLElement
-  htmlEl.style.position = 'absolute'
-  htmlEl.style.insetInline = '0'
-  htmlEl.style.top = '0'
-  const anim = htmlEl.animate(
-    [
-      { transform: 'translateX(0)', opacity: 1 },
-      { transform: `translateX(${dir * SHARED_AXIS_OFFSET}px)`, opacity: 0 },
-    ],
-    { duration: 90, easing: 'cubic-bezier(0.3,0,0.8,0.15)', fill: 'forwards' },
-  )
-  anim.onfinish = done
-}
-
-// See MMenu.vue: the panel's height follows the new level's on a spring (Standard DefaultSpatial)
-const navBox = ref<HTMLElement>()
-function resizeAround(change: () => void) {
-  const el = navBox.value
-  const from = el?.offsetHeight ?? 0
-  // No scrollbar while the levels cross and the height moves; the wrapper's own inline overflowY comes back after
-  const prevOverflow = el?.style.overflowY ?? ''
-  if (el) el.style.overflowY = 'hidden'
-  const restore = () => { if (el) el.style.overflowY = prevOverflow }
-  change()
-  if (!el || prefersReducedMotion()) return restore()
-  nextTick(() => {
-    const to = el.offsetHeight
-    const anim = Math.abs(to - from) < 1 ? null
-      : playSamples(el, sampleSpring(from, to, 0, motionSprings.standard.defaultSpatial, 0.5), (h) => ({ height: `${h}px` }))
-    const slide = new Promise((r) => setTimeout(r, 380))
-    Promise.all([slide, anim?.finished.catch(() => {})]).then(restore)
-  })
-}
+const { navStack, currentNav, navBox, navSlideEnter, navSlideLeave, pushNav, popNav, onNavPointerDown } = useMenuNav(() => focusableItems()[0]?.focus())
 
 // See MMenu.vue: the real Menu.kt animates the panel's scale/alpha with
 // actual springs (StandardMotionTokens: scale dampingRatio 0.9/stiffness
@@ -266,18 +210,6 @@ function panelEnter(el: Element, done: () => void) {
 }
 function panelLeave(el: Element, done: () => void) {
   playTrajectory(el, done, false)
-}
-
-function pushNav(entry: NavEntry) {
-  navDirection.value = 'forward'
-  resizeAround(() => navStack.value.push(entry))
-  nextTick(() => focusableItems()[0]?.focus())
-}
-
-function popNav() {
-  navDirection.value = 'backward'
-  resizeAround(() => navStack.value.pop())
-  nextTick(() => focusableItems()[0]?.focus())
 }
 
 async function showAt(x: number, y: number) {
@@ -403,32 +335,35 @@ onUnmounted(() => {
         :style="{ left: `${adjustedPos.x}px`, top: `${adjustedPos.y}px`, transformOrigin: origin, maxWidth: `calc(100vw - ${2 * POPUP_MARGIN}px)` }"
         @contextmenu.prevent
       >
-        <!-- overflow-hidden (for the rounded-corner clip and to clip the push
+        <!-- The overflow clip (for the rounded corners and to clip the push
              submenu's slide) lives on this inner wrapper, never together with
              shadow-elevation-2 on the same box — overflow-hidden clips an
              element's own box-shadow too, so the two have to be on separate
              elements or the shadow gets cut off -->
-        <!-- Scrolls when taller than the window -->
+        <!-- Scrolls when taller than the window. overflow-y is a class, not :style: a :style object sets every key again
+             on each patch, which undid the push transition's inline overflow-y: hidden (the scrollbar flashed) -->
         <div
           ref="navBox"
-          class="relative overflow-hidden py-1"
-          :style="{ maxHeight: `calc(100vh - ${2 * POPUP_MARGIN}px)`, overflowY: 'auto' }"
+          class="relative overflow-x-hidden overflow-y-auto overscroll-contain py-1"
+          :style="{ maxHeight: `calc(100vh - ${2 * POPUP_MARGIN}px)`, touchAction: currentNav ? 'pan-y' : undefined }"
+          @pointerdown="onNavPointerDown"
           :class="[
             variant === 'expressive' ? 'rounded-lg' : 'rounded-xs',
             isGrouped ? '' : 'bg-surface-container',
           ]"
         >
           <Transition :css="false" @enter="navSlideEnter" @leave="navSlideLeave">
-            <div v-if="currentNav" :key="navStack.length">
+            <div v-if="currentNav" :key="navStack.length" :data-menu-level="navStack.length">
+              <!-- Back: a header row in the menu's own item metrics, labelled like an M3 menu group, then a divider -->
               <button
                 type="button"
-                class="flex w-full items-center gap-3 border-b border-outline-variant px-4 py-2.5 text-left text-body-large text-on-surface outline-none transition-colors hover:bg-on-surface/8 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-secondary"
+                class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-label-large text-on-surface-variant outline-none transition-colors hover:bg-on-surface/8 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-secondary"
                 @click="popNav"
               >
-                <MIcon name="chevron_left" :size="20" class="shrink-0 text-on-surface-variant" />
-                <MIcon v-if="currentNav.icon" :name="currentNav.icon" :size="20" class="shrink-0 text-on-surface-variant" />
+                <MIcon name="arrow_back" :size="20" class="shrink-0" />
                 <span class="flex-1 truncate"><component :is="() => currentNav?.header?.()" /></span>
               </button>
+              <hr class="my-1 border-outline-variant" />
               <component :is="() => currentNav?.content?.()" />
             </div>
             <div v-else key="root">

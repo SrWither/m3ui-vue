@@ -1,8 +1,9 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { defineComponent, h, nextTick, ref } from 'vue'
 import { mount } from '@vue/test-utils'
 import MMenu from '../components/MMenu.vue'
 import MContextMenu from '../components/MContextMenu.vue'
+import MMenuItem from '../components/MMenuItem.vue'
 
 const frame = () => new Promise<void>((r) => requestAnimationFrame(() => r()))
 // Long enough for the open spring to finish, so the close has real distance to cover
@@ -43,6 +44,75 @@ describe('MMenu', () => {
     await nextTick()
 
     expect(document.querySelector('.item')).toBeNull()
+  })
+
+  describe('push submenus: swipe back', () => {
+    let wrapper: ReturnType<typeof mount> | null = null
+    afterEach(() => { wrapper?.unmount(); wrapper = null })
+    const finishAnimations = () => document.querySelectorAll('*').forEach((el) => el.getAnimations().forEach((a) => a.finish()))
+
+    async function openSubmenu() {
+      wrapper = mount(
+        defineComponent({
+          setup: () => () =>
+            h(MMenu, { submenuMode: 'push' }, {
+              trigger: () => h('button', { class: 'trigger' }, 'open'),
+              default: () => h(MMenuItem, null, {
+                default: () => 'Share',
+                children: () => h('span', { class: 'leaf' }, 'Email'),
+              }),
+            }),
+        }),
+        { attachTo: document.body, global: { stubs: { transition: false } } },
+      )
+      document.querySelector<HTMLElement>('.trigger')!.click()
+      await nextTick()
+      await settle()
+      document.querySelector<HTMLElement>('[aria-haspopup="menu"]')!.click()
+      await nextTick()
+      const level = document.querySelector<HTMLElement>('[data-menu-level="1"]')!
+      const box = level.parentElement!
+      Object.defineProperty(box, 'clientWidth', { value: 300, configurable: true })
+      return { box }
+    }
+
+    function swipe(box: HTMLElement, to: number, steps = 6) {
+      const at = (type: string, x: number, target: EventTarget) =>
+        target.dispatchEvent(new PointerEvent(type, { pointerId: 1, pointerType: 'touch', clientX: x, clientY: 100, bubbles: true }))
+      at('pointerdown', 20, box)
+      for (let i = 1; i <= steps; i++) at('pointermove', 20 + (to - 20) * i / steps, window)
+      at('pointerup', to, window)
+    }
+
+    it('goes back to the parent level when swiped past a third of the panel', async () => {
+      const { box } = await openSubmenu()
+      expect(document.querySelector('.leaf')).not.toBeNull()
+      expect(box.style.touchAction).toBe('pan-y')
+      swipe(box, 160)
+      await nextTick()
+      finishAnimations()
+      await nextTick()
+      expect(document.querySelector('[data-menu-level]')).toBeNull()
+      expect(document.querySelector('[aria-haspopup="menu"]')).not.toBeNull()
+    })
+
+    it('stays on the submenu after a short, slow swipe, and ignores a mouse drag', async () => {
+      const { box } = await openSubmenu()
+      const at = (type: string, x: number, target: EventTarget, t: number) =>
+        target.dispatchEvent(new PointerEvent(type, { pointerId: 1, pointerType: 'touch', clientX: x, clientY: 100, bubbles: true, timeStamp: t } as PointerEventInit))
+      at('pointerdown', 20, box, 0)
+      at('pointermove', 40, window, 500)
+      at('pointermove', 50, window, 1000)
+      at('pointerup', 50, window, 1500)
+      await nextTick()
+      expect(document.querySelector('[data-menu-level="1"]')).not.toBeNull()
+
+      box.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 2, pointerType: 'mouse', clientX: 20, clientY: 100, bubbles: true }))
+      window.dispatchEvent(new PointerEvent('pointermove', { pointerId: 2, pointerType: 'mouse', clientX: 250, clientY: 100 }))
+      window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 2, pointerType: 'mouse', clientX: 250, clientY: 100 }))
+      await nextTick()
+      expect(document.querySelector('[data-menu-level="1"]')).not.toBeNull()
+    })
   })
 })
 
