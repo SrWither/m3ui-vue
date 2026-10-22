@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.1.5] - Unreleased
+## [1.2.0] - Unreleased
 
 ### Added
 - `MPullToRefresh` exposes `scrollEl` (the element that scrolls its content) and `scrollTo(options)` through a template ref
