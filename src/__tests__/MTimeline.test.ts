@@ -126,4 +126,19 @@ describe('MTimeline', () => {
       expect(html).toContain('bg-primary/30')
     })
   })
+
+  it('folds the alternating layout into a column on a narrow container, unless responsive is off', () => {
+    const w = mount(MTimeline, { props: { items, alternating: true } })
+    expect(w.classes()).toContain('@container')
+    const li = w.findAll('li')[1]!
+    // Narrow: a grid, line first; from @lg on, the row alternates as before
+    expect(li.classes()).toEqual(expect.arrayContaining(['grid', '@lg:flex', '@lg:flex-row-reverse']))
+    const [content, , opposite] = li.element.children
+    expect(content!.className).toContain('col-start-2 row-start-1')
+    expect(opposite!.className).toContain('row-start-2')
+
+    const fixed = mount(MTimeline, { props: { items, alternating: true, responsive: false } })
+    expect(fixed.classes()).not.toContain('@container')
+    expect(fixed.findAll('li')[1]!.classes()).toEqual(expect.arrayContaining(['flex', 'flex-row-reverse']))
+  })
 })

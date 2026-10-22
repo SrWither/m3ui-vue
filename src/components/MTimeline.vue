@@ -53,8 +53,13 @@ const props = withDefaults(
      * before are done, the ones after pending; an item's own `status` wins. `items.length` marks them all done
      */
     current?: number;
+    /**
+     * Lets the alternating layout fold into a single column (the line on the left, `#opposite` under the content)
+     * while the timeline is narrower than 32rem: its own width, so it works in a side column too
+     */
+    responsive?: boolean;
   }>(),
-  { dense: false, alternating: false, orientation: "vertical", bare: false, current: undefined },
+  { dense: false, alternating: false, orientation: "vertical", bare: false, current: undefined, responsive: true },
 );
 
 defineSlots<{
@@ -201,17 +206,24 @@ const isLast = (i: number) => i === props.items.length - 1;
     </li>
   </ol>
 
-  <ol v-else class="relative list-none p-0" role="list">
-    <!-- Alternating: entries left and right of a central line -->
+  <ol v-else class="relative list-none p-0" :class="{ '@container': responsive }" role="list">
+    <!-- Alternating: entries left and right of a central line. With `responsive`, below 32rem (the list's own width)
+         each entry is a grid instead: the line in the first column, the content and then #opposite in the second -->
     <li
       v-for="(item, i) in items"
       :key="keyOf(item, i)"
       :aria-current="statusOf(item, i) === 'current' ? 'step' : undefined"
-      class="flex items-stretch"
-      :class="i % 2 === 0 ? 'flex-row' : 'flex-row-reverse'"
+      :class="responsive
+        ? ['grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 @lg:flex @lg:items-stretch @lg:gap-x-0', i % 2 === 0 ? '@lg:flex-row' : '@lg:flex-row-reverse']
+        : ['flex items-stretch', i % 2 === 0 ? 'flex-row' : 'flex-row-reverse']"
     >
       <!-- Content side -->
-      <div class="min-w-0 flex-1" :class="[i % 2 === 0 ? 'text-right' : 'text-left', dense ? 'pb-4' : 'pb-8']">
+      <div
+        class="min-w-0"
+        :class="responsive
+          ? ['col-start-2 row-start-1 text-left @lg:flex-1', i % 2 === 0 ? '@lg:text-right' : '', dense ? '@lg:pb-4' : '@lg:pb-8']
+          : ['flex-1', i % 2 === 0 ? 'text-right' : 'text-left', dense ? 'pb-4' : 'pb-8']"
+      >
         <template v-if="!bare">
           <slot name="title" :item="item" :index="i">
             <p class="text-body-large font-medium" :class="pending(item, i) ? 'text-on-surface-variant' : 'text-on-surface'">{{ item.title }}</p>
@@ -225,7 +237,10 @@ const isLast = (i: number) => i === props.items.length - 1;
       </div>
 
       <!-- Center column: dot + continuous line -->
-      <div class="flex w-14 shrink-0 flex-col items-center">
+      <div
+        class="flex shrink-0 flex-col items-center"
+        :class="responsive ? 'col-start-1 row-span-2 row-start-1 w-9 @lg:w-14' : 'w-14'"
+      >
         <slot name="dot" :item="item" :index="i">
           <span
             class="z-1 flex shrink-0 items-center justify-center rounded-full"
@@ -239,8 +254,16 @@ const isLast = (i: number) => i === props.items.length - 1;
         <span v-if="!isLast(i)" class="flex-1" :class="[dashed(i) ? 'w-0' : 'w-[2px]', lineClass(item, i, true)]" :style="lineStyle(item, i)" />
       </div>
 
-      <!-- Opposite side -->
-      <div class="min-w-0 flex-1" :class="[i % 2 === 0 ? 'text-left' : 'text-right', dense ? 'pb-4' : 'pb-8']">
+      <!-- Opposite side (folded: under the content, carrying the gap to the next entry) -->
+      <div
+        class="min-w-0"
+        :class="[
+          responsive
+            ? ['col-start-2 row-start-2 text-left @lg:flex-1', i % 2 === 0 ? '' : '@lg:text-right']
+            : ['flex-1', i % 2 === 0 ? 'text-left' : 'text-right'],
+          dense ? 'pb-4' : 'pb-8',
+        ]"
+      >
         <slot name="opposite" :item="item" :index="i" />
       </div>
     </li>
