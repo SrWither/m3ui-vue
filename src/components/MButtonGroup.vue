@@ -1,4 +1,13 @@
-<script setup lang="ts">
+<script lang="ts">
+export interface ButtonGroupOption<T = unknown> {
+  value: T
+  label?: string
+  icon?: string
+  disabled?: boolean
+}
+</script>
+
+<script setup lang="ts" generic="T, M extends T | T[] | null = T | null">
 /**
  * A set of buttons that share selection state — standard (separated) or connected (joined into one pill),
  * single or multi select, any value type.
@@ -10,18 +19,14 @@ import MIcon from './MIcon.vue'
 import { FAST_SPATIAL, useSpring } from '../composables/_useSpring'
 import { vRipple } from '../directives/vRipple'
 
-export interface ButtonGroupOption {
-  value: unknown
-  label?: string
-  icon?: string
-  disabled?: boolean
-}
-
 const props = withDefaults(defineProps<{
-  /** Selected value(s) — any type (v-model) */
-  modelValue: unknown
+  /**
+   * Selected value (null when none), or values with `multiSelect` (v-model) — any type, typed after the options'
+   * values
+   */
+  modelValue: M
   /** The options to choose from; see `ButtonGroupOption`. */
-  options: ButtonGroupOption[]
+  options: ButtonGroupOption<T>[]
   /** Standard (separated) or connected (joined) */
   variant?: 'standard' | 'connected'
   /** Button size */
@@ -42,7 +47,7 @@ const props = withDefaults(defineProps<{
   color: 'primary',
 })
 
-const emit = defineEmits<{ 'update:modelValue': [unknown] }>()
+const emit = defineEmits<{ 'update:modelValue': [M] }>()
 
 function eq(a: unknown, b: unknown): boolean {
   if (a === b) return true
@@ -56,10 +61,10 @@ function isSelected(value: unknown) {
   return eq(props.modelValue, value)
 }
 
-function toggle(opt: ButtonGroupOption) {
+function toggle(opt: ButtonGroupOption<T>) {
   if (opt.disabled) return
   if (props.multiSelect) {
-    const arr = Array.isArray(props.modelValue) ? [...props.modelValue] : props.modelValue != null ? [props.modelValue] : []
+    const arr: T[] = Array.isArray(props.modelValue) ? [...props.modelValue] : props.modelValue != null ? [props.modelValue as T] : []
     const idx = arr.findIndex(v => eq(v, opt.value))
     if (idx >= 0) {
       if (props.selectionRequired && arr.length <= 1) return
@@ -67,12 +72,12 @@ function toggle(opt: ButtonGroupOption) {
     } else {
       arr.push(opt.value)
     }
-    emit('update:modelValue', arr)
+    emit('update:modelValue', arr as M)
   } else {
     if (isSelected(opt.value) && !props.selectionRequired) {
-      emit('update:modelValue', null)
+      emit('update:modelValue', null as M)
     } else {
-      emit('update:modelValue', opt.value)
+      emit('update:modelValue', opt.value as M)
     }
   }
 }

@@ -1,4 +1,13 @@
-<script setup lang="ts">
+<script lang="ts">
+export interface SegmentedOption<V extends string | number = string | number> {
+  value: V
+  label: string
+  icon?: string
+  disabled?: boolean
+}
+</script>
+
+<script setup lang="ts" generic="V extends string | number, M extends V | V[] = V">
 /**
  * A row of joined segments for choosing between a small set of related options — single or multi select.
  *
@@ -6,18 +15,11 @@
  */
 import MIcon from './MIcon.vue'
 
-export interface SegmentedOption {
-  value: string | number
-  label: string
-  icon?: string
-  disabled?: boolean
-}
-
 withDefaults(defineProps<{
-  /** Selected value(s) */
-  modelValue: string | number | (string | number)[]
+  /** Selected value, or values with `multiSelect` (v-model); typed after the options' values */
+  modelValue: M
   /** The options to choose from; see `SegmentedOption`. */
-  options: SegmentedOption[]
+  options: SegmentedOption<V>[]
   /** Allow multiple selections */
   multiSelect?: boolean
   /** Button density */
@@ -26,22 +28,22 @@ withDefaults(defineProps<{
   color?: 'primary' | 'secondary' | 'tertiary'
 }>(), { multiSelect: false, density: 'default', color: 'primary' })
 
-const emit = defineEmits<{ 'update:modelValue': [string | number | (string | number)[]] }>()
+const emit = defineEmits<{ 'update:modelValue': [M] }>()
 
-function isSelected(value: string | number, modelValue: string | number | (string | number)[]) {
+function isSelected(value: V, modelValue: M) {
   return Array.isArray(modelValue) ? modelValue.includes(value) : modelValue === value
 }
 
-function toggle(opt: SegmentedOption, modelValue: string | number | (string | number)[], multi: boolean) {
+function toggle(opt: SegmentedOption<V>, modelValue: M, multi: boolean) {
   if (opt.disabled) return
   if (multi) {
-    const arr = Array.isArray(modelValue) ? [...modelValue] : [modelValue]
+    const arr: V[] = Array.isArray(modelValue) ? [...modelValue] : [modelValue as V]
     const idx = arr.indexOf(opt.value)
     if (idx >= 0) arr.splice(idx, 1)
     else arr.push(opt.value)
-    emit('update:modelValue', arr)
+    emit('update:modelValue', arr as M)
   } else {
-    emit('update:modelValue', opt.value)
+    emit('update:modelValue', opt.value as M)
   }
 }
 </script>
