@@ -13,8 +13,10 @@ const props = withDefaults(
     value?: number;
     /** Spinning arc — no value needed. Identical for both variants. */
     indeterminate?: boolean;
-    /** Ring color */
-    color?: "primary" | "secondary" | "tertiary" | "error";
+    /** Ring color: an M3 role or any CSS color */
+    color?: "primary" | "secondary" | "tertiary" | "error" | (string & {});
+    /** Track color: an M3 role or any CSS color. Default the role's container, or the ring color at 24% for a CSS color */
+    trackColor?: string;
     /** wavy: animated bumpy ring that fades to circle near 0% and 100%; circle: smooth arc */
     variant?: "circle" | "wavy";
     /** Label text below the circle */
@@ -37,13 +39,16 @@ const clampedValue = computed(() => Math.min(100, Math.max(0, props.value ?? 0))
 // variant's default is intentionally larger to fit the wave amplitude without clipping.
 const effectiveSize = computed(() => props.size ?? (props.variant === "wavy" ? 48 : 40));
 
-const svgColorMap: Record<"primary" | "secondary" | "tertiary" | "error", { fill: string; track: string }> = {
-  primary:   { fill: "var(--color-primary)",   track: "var(--color-primary-container)"   },
-  secondary: { fill: "var(--color-secondary)",  track: "var(--color-secondary-container)"  },
-  tertiary:  { fill: "var(--color-tertiary)",   track: "var(--color-tertiary-container)"   },
-  error:     { fill: "var(--color-error)",      track: "var(--color-error-container)"      },
-};
-const svgColor = computed(() => svgColorMap[props.color]);
+const ROLES = ["primary", "secondary", "tertiary", "error"];
+const roleOr = (c: string) => (ROLES.includes(c) || c.endsWith("-container") ? `var(--color-${c})` : c);
+const svgColor = computed(() => ({
+  fill: roleOr(props.color),
+  track: props.trackColor
+    ? roleOr(props.trackColor)
+    : ROLES.includes(props.color)
+      ? `var(--color-${props.color}-container)`
+      : `color-mix(in srgb, ${props.color} 24%, transparent)`,
+}));
 
 // ── Geometry ─────────────────────────────────────────────────────────────
 const R        = 40;

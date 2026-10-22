@@ -10,8 +10,10 @@ const props = withDefaults(
     value?: number;
     /** Indeterminate animation — also implied by omitting value */
     indeterminate?: boolean;
-    /** Bar color */
-    color?: "primary" | "secondary" | "tertiary" | "error";
+    /** Bar color: an M3 role or any CSS color (`#fff` over a photo, say) */
+    color?: "primary" | "secondary" | "tertiary" | "error" | (string & {});
+    /** Track color: an M3 role or any CSS color. Default the role's container, or the bar color at 24% for a CSS color */
+    trackColor?: string;
     /** Bar style */
     variant?: "linear" | "wavy";
     /** Label text above the bar */
@@ -25,15 +27,18 @@ const props = withDefaults(
 const isIndeterminate = computed(() => props.indeterminate || props.value === undefined);
 const clampedValue    = computed(() => Math.min(100, Math.max(0, props.value ?? 0)));
 
-const colorMap: Record<
-  "primary" | "secondary" | "tertiary" | "error",
-  { bar: string; track: string; text: string }
-> = {
-  primary:   { bar: "bg-primary",   track: "bg-primary-container",   text: "text-primary"   },
-  secondary: { bar: "bg-secondary", track: "bg-secondary-container", text: "text-secondary" },
-  tertiary:  { bar: "bg-tertiary",  track: "bg-tertiary-container",  text: "text-tertiary"  },
-  error:     { bar: "bg-error",     track: "bg-error-container",     text: "text-error"     },
-};
+const ROLES = ["primary", "secondary", "tertiary", "error"];
+const roleOr = (c: string) => (ROLES.includes(c) || c.endsWith("-container") ? `var(--color-${c})` : c);
+// Both colors go through custom properties on the root, read by the bar/track/wave below.
+const colorVars = computed(() => {
+  const bar = roleOr(props.color);
+  const track = props.trackColor
+    ? roleOr(props.trackColor)
+    : ROLES.includes(props.color)
+      ? `var(--color-${props.color}-container)`
+      : `color-mix(in srgb, ${props.color} 24%, transparent)`;
+  return { "--m3-progress-bar": bar, "--m3-progress-track": track };
+});
 
 // ── Wave geometry ─────────────────────────────────────────────────────────
 const PERIOD     = 20;
@@ -199,14 +204,14 @@ watch(isIndeterminate, async (v) => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-1">
+  <div class="flex flex-col gap-1" :style="colorVars">
     <span v-if="label" class="text-label-small text-on-surface-variant">{{ label }}</span>
 
     <!-- ── Linear variant ────────────────────────────────────────────────── -->
     <div
       v-if="variant === 'linear'"
       class="relative w-full overflow-hidden rounded-full"
-      :class="isIndeterminate ? colorMap[color].track : ''"
+      :class="isIndeterminate ? 'bg-(--m3-progress-track)' : ''"
       :style="{ height: `${effectiveThickness}px` }"
       role="progressbar"
       :aria-valuenow="isIndeterminate ? undefined : clampedValue"
@@ -217,20 +222,17 @@ watch(isIndeterminate, async (v) => {
            a fixed gap after the active bar, not flush against it. -->
       <template v-if="!isIndeterminate">
         <div
-          class="absolute inset-y-0 left-0 rounded-full transition-[width] duration-300 ease-in-out"
-          :class="colorMap[color].bar"
+          class="absolute inset-y-0 left-0 rounded-full transition-[width] duration-300 ease-in-out bg-(--m3-progress-bar)"
           :style="{ width: `${clampedValue}%` }"
         />
         <div
-          class="absolute inset-y-0 right-0 rounded-full transition-[left] duration-300 ease-in-out"
-          :class="colorMap[color].track"
+          class="absolute inset-y-0 right-0 rounded-full transition-[left] duration-300 ease-in-out bg-(--m3-progress-track)"
           :style="{ left: `calc(${clampedValue}% + 4px)` }"
         />
       </template>
       <div
         v-else
-        class="absolute inset-y-0 w-2/5 rounded-full animate-[m3-progress-indeterminate_1.6s_ease-in-out_infinite]"
-        :class="colorMap[color].bar"
+        class="absolute inset-y-0 w-2/5 rounded-full animate-[m3-progress-indeterminate_1.6s_ease-in-out_infinite] bg-(--m3-progress-bar)"
       />
     </div>
 
@@ -253,8 +255,7 @@ watch(isIndeterminate, async (v) => {
           style="clip-path: inset(0 100% 0 0)"
         >
           <svg
-            class="absolute top-0 left-0 h-full"
-            :class="colorMap[color].text"
+            class="absolute top-0 left-0 h-full text-(--m3-progress-bar)"
             :width="waveWidth"
             :height="waveViewH"
             :viewBox="`0 0 ${waveWidth} ${waveViewH}`"
@@ -272,15 +273,13 @@ watch(isIndeterminate, async (v) => {
         <!-- Inactive track — rAF owns left and height; no Vue-managed left -->
         <div
           ref="trackEl"
-          class="absolute right-0"
-          :class="colorMap[color].track"
+          class="absolute right-0 bg-(--m3-progress-track)"
           style="border-radius: 9999px; top: 50%; transform: translateY(-50%);"
         />
 
         <!-- Stop dot at far right -->
         <div
-          class="absolute rounded-full"
-          :class="colorMap[color].bar"
+          class="absolute rounded-full bg-(--m3-progress-bar)"
           :style="{
             right: '0',
             top: '50%',
@@ -294,8 +293,7 @@ watch(isIndeterminate, async (v) => {
       <!-- INDETERMINATE — keeps original CSS-animated wide strip -->
       <div v-else class="absolute inset-0 overflow-hidden rounded-full">
         <div
-          class="absolute top-0 left-0 h-full animate-[m3-wave-flow_0.9s_linear_infinite]"
-          :class="colorMap[color].text"
+          class="absolute top-0 left-0 h-full animate-[m3-wave-flow_0.9s_linear_infinite] text-(--m3-progress-bar)"
           :style="{ width: `${waveWidth}px` }"
         >
           <svg
