@@ -141,4 +141,34 @@ describe('MTimeline', () => {
     expect(fixed.classes()).not.toContain('@container')
     expect(fixed.findAll('li')[1]!.classes()).toEqual(expect.arrayContaining(['flex', 'flex-row-reverse']))
   })
+
+  describe('groups', () => {
+    const days = [
+      { title: 'Coffee', group: 'Today' },
+      { title: 'Gym', group: 'Today' },
+      { title: 'Dinner', group: 'Yesterday' },
+      { title: 'Cinema', group: 'Yesterday' },
+    ]
+    const lineOf = (li: ReturnType<ReturnType<typeof mount>['find']>) =>
+      li.findAll('span').filter((s) => s.classes().includes('flex-1') && !s.classes().includes('min-w-0'))
+
+    it('puts a header before each run, and ends the line with it', () => {
+      const w = mount(MTimeline, { props: { items: days } })
+      const lis = w.findAll('li')
+      expect(lis.map((l) => l.text())).toEqual(['Today', 'Coffee', 'Gym', 'Yesterday', 'Dinner', 'Cinema'])
+      expect(lineOf(lis[1]!)).toHaveLength(1) // Coffee → Gym
+      expect(lineOf(lis[2]!)).toHaveLength(0) // Gym ends Today
+      expect(lineOf(lis[4]!)).toHaveLength(1)
+    })
+
+    it('takes a #group slot with the run, in the alternating and horizontal layouts too', () => {
+      for (const layout of [{}, { alternating: true }, { orientation: 'horizontal' }]) {
+        const w = mount(MTimeline, {
+          props: { items: days, ...layout },
+          slots: { group: ({ group, items }: { group: string, items: unknown[] }) => h('b', `${group} (${items.length})`) },
+        })
+        expect(w.findAll('b').map((b) => b.text())).toEqual(['Today (2)', 'Yesterday (2)'])
+      }
+    })
+  })
 })

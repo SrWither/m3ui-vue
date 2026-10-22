@@ -14,6 +14,11 @@ export interface TimelineItem {
    * `pending` (outlined, a dashed line). Over what the timeline's `current` gives it
    */
   status?: "done" | "current" | "pending";
+  /**
+   * A group to show it under ("Today", "Yesterday"): a header goes before each run of consecutive entries with the
+   * same group, and the line stops at the end of the run
+   */
+  group?: string;
 }
 
 export type TimelineStatus = NonNullable<TimelineItem["status"]>;
@@ -30,6 +35,7 @@ export type TimelineStatus = NonNullable<TimelineItem["status"]>;
  *   content. `item-{index}` slots still work for a single entry and win over this one
  * @slot title Replaces an entry's title row (title and date)
  * @slot dot Replaces an entry's dot (an avatar, an image, a custom shape); the line still runs from it
+ * @slot group Replaces a group's header (scope: `{ group, items }`, the run of entries under it)
  * @slot opposite Content across the line: on the empty side in the alternating layout, or in a column before the
  *   line in the single-column one (dates, times, amounts)
  */
@@ -67,6 +73,7 @@ defineSlots<{
   title?: (props: { item: T; index: number }) => unknown;
   dot?: (props: { item: T; index: number }) => unknown;
   opposite?: (props: { item: T; index: number }) => unknown;
+  group?: (props: { group: string; items: T[] }) => unknown;
   [name: `item-${number}`]: ((props: { item: T; index: number }) => unknown) | undefined;
 }>();
 
@@ -124,7 +131,19 @@ const lineStyle = (item: T, i: number) => {
 };
 // `item-{index}` (the original per-entry slot) wins over the generic `#item`
 const itemSlot = (i: number) => (slots[`item-${i}`] ? `item-${i}` : slots.item ? "item" : null) as "item" | null;
-const isLast = (i: number) => i === props.items.length - 1;
+// Groups: a header before each run of entries sharing `group`; the line ends with the run
+const startsGroup = (i: number) => {
+  const group = props.items[i]?.group;
+  return group != null && (i === 0 || props.items[i - 1]!.group !== group);
+};
+const groupRun = (i: number) => {
+  const run: T[] = [];
+  for (let j = i; j < props.items.length && props.items[j]!.group === props.items[i]!.group; j++) run.push(props.items[j]!);
+  return run;
+};
+const hasGroups = computed(() => props.items.some((item) => item.group != null));
+const isLast = (i: number) =>
+  i === props.items.length - 1 || (hasGroups.value && props.items[i + 1]!.group !== props.items[i]!.group);
 </script>
 
 <template>
@@ -136,6 +155,14 @@ const isLast = (i: number) => i === props.items.length - 1;
       :aria-current="statusOf(item, i) === 'current' ? 'step' : undefined"
       class="flex min-w-40 flex-1 flex-col"
     >
+      <!-- A group's header above its first dot; the others keep the same height so the dots line up -->
+      <div v-if="hasGroups" class="mb-2 min-h-5 pr-3" :aria-hidden="!startsGroup(i) || undefined">
+        <template v-if="startsGroup(i)">
+          <slot name="group" :group="item.group!" :items="groupRun(i)">
+            <p class="text-title-small text-on-surface-variant">{{ item.group }}</p>
+          </slot>
+        </template>
+      </div>
       <div class="flex items-center" :class="wide ? 'h-9' : 'h-3'">
         <span class="flex shrink-0 justify-center" :class="wide ? 'w-9' : ''">
         <slot name="dot" :item="item" :index="i">
@@ -165,9 +192,13 @@ const isLast = (i: number) => i === props.items.length - 1;
 
   <ol v-else-if="!alternating" class="flex list-none flex-col p-0" role="list">
     <!-- Vertical, single column (with an optional #opposite column before the line) -->
+    <template v-for="(item, i) in items" :key="keyOf(item, i)">
+    <li v-if="startsGroup(i)" class="pb-3" :class="{ 'pt-2': i > 0 }">
+      <slot name="group" :group="item.group!" :items="groupRun(i)">
+        <p class="text-title-small text-on-surface-variant">{{ item.group }}</p>
+      </slot>
+    </li>
     <li
-      v-for="(item, i) in items"
-      :key="keyOf(item, i)"
       :aria-current="statusOf(item, i) === 'current' ? 'step' : undefined"
       class="relative flex gap-4"
     >
@@ -204,14 +235,20 @@ const isLast = (i: number) => i === props.items.length - 1;
         </div>
       </div>
     </li>
+    </template>
   </ol>
 
   <ol v-else class="relative list-none p-0" :class="{ '@container': responsive }" role="list">
+    <template v-for="(item, i) in items" :key="keyOf(item, i)">
+    <!-- A group's header: centered over the line, or at the start once folded -->
+    <li v-if="startsGroup(i)" class="pb-3" :class="[{ 'pt-2': i > 0 }, responsive ? 'text-left @lg:text-center' : 'text-center']">
+      <slot name="group" :group="item.group!" :items="groupRun(i)">
+        <p class="text-title-small text-on-surface-variant">{{ item.group }}</p>
+      </slot>
+    </li>
     <!-- Alternating: entries left and right of a central line. With `responsive`, below 32rem (the list's own width)
          each entry is a grid instead: the line in the first column, the content and then #opposite in the second -->
     <li
-      v-for="(item, i) in items"
-      :key="keyOf(item, i)"
       :aria-current="statusOf(item, i) === 'current' ? 'step' : undefined"
       :class="responsive
         ? ['grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 @lg:flex @lg:items-stretch @lg:gap-x-0', i % 2 === 0 ? '@lg:flex-row' : '@lg:flex-row-reverse']
@@ -267,5 +304,6 @@ const isLast = (i: number) => i === props.items.length - 1;
         <slot name="opposite" :item="item" :index="i" />
       </div>
     </li>
+    </template>
   </ol>
 </template>
