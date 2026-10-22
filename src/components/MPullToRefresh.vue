@@ -8,7 +8,7 @@
  * @event refresh Emitted when the user drags past threshold and releases. Set refreshing to true in the
  *   handler, then back to false once the fetch resolves.
  */
-import { ref, watch, onMounted, onBeforeUnmount } from "vue";
+import { ref, watch, onMounted, onBeforeUnmount, onActivated } from "vue";
 import MLoadingIndicator from "./MLoadingIndicator.vue";
 
 const props = withDefaults(
@@ -254,9 +254,27 @@ onMounted(() => {
   el.addEventListener("touchmove", onTouchMove, { passive: false });
   el.addEventListener("touchend", onTouchEnd);
   el.addEventListener("scroll", updateTouchAction, { passive: true });
+  el.addEventListener("scroll", rememberScroll, { passive: true });
   updateTouchAction();
   el.addEventListener("touchcancel", onTouchEnd);
 });
+// Inside a <KeepAlive>, the browser forgets a detached element's scroll position (and reads 0 once it's detached),
+// so remember the last one from the scroll events and put it back when the view comes back.
+let lastScrollTop = 0;
+function rememberScroll() {
+  lastScrollTop = scrollEl.value?.scrollTop ?? 0;
+}
+onActivated(() => {
+  if (lastScrollTop && scrollEl.value) scrollEl.value.scrollTop = lastScrollTop;
+});
+
+defineExpose({
+  /** The element that scrolls the slot's content */
+  scrollEl,
+  /** Scrolls the content, like `Element.scrollTo()` (e.g. `{ top: 0, behavior: 'smooth' }`) */
+  scrollTo: (options: ScrollToOptions) => scrollEl.value?.scrollTo(options),
+});
+
 onBeforeUnmount(() => {
   pulling = false;
   const el = scrollEl.value;
@@ -265,6 +283,7 @@ onBeforeUnmount(() => {
   el.removeEventListener("touchmove", onTouchMove);
   el.removeEventListener("touchend", onTouchEnd);
   el.removeEventListener("scroll", updateTouchAction);
+  el.removeEventListener("scroll", rememberScroll);
   el.removeEventListener("touchcancel", onTouchEnd);
 });
 </script>

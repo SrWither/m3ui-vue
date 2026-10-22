@@ -121,3 +121,36 @@ describe('MPullToRefresh (mouse)', () => {
     vi.unstubAllGlobals()
   })
 })
+
+describe('MPullToRefresh (scroll)', () => {
+  it('exposes its scrolling element and scrollTo', () => {
+    const { wrapper, scrollEl } = mountPtr()
+    const vm = wrapper.vm as unknown as { scrollEl: HTMLElement; scrollTo: (o: ScrollToOptions) => void }
+    expect(vm.scrollEl).toBe(scrollEl)
+    const spy = vi.fn()
+    ;(scrollEl as HTMLElement).scrollTo = spy
+    vm.scrollTo({ top: 0, behavior: 'smooth' })
+    expect(spy).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' })
+    wrapper.unmount()
+  })
+
+  it('restores its scroll position when a <KeepAlive> brings it back', async () => {
+    const { defineComponent, h, KeepAlive, ref, nextTick } = await import('vue')
+    const show = ref(true)
+    const Other = defineComponent({ render: () => h('p', 'other') })
+    const Host = defineComponent({
+      setup: () => () => h(KeepAlive, null, [show.value ? h(MPullToRefresh, null, () => h('div', 'list')) : h(Other)]),
+    })
+    const wrapper = mount(Host, { attachTo: document.body })
+    const el = wrapper.find('.overflow-y-auto').element as HTMLElement
+    el.scrollTop = 300
+    el.dispatchEvent(new Event('scroll'))
+    show.value = false
+    await nextTick()
+    el.scrollTop = 0 // what a detached element reports
+    show.value = true
+    await nextTick()
+    expect(el.scrollTop).toBe(300)
+    wrapper.unmount()
+  })
+})
