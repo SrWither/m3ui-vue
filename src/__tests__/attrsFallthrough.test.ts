@@ -17,6 +17,7 @@ import MTabs from '../components/MTabs.vue'
 import MTransferList from '../components/MTransferList.vue'
 import MContainerTransform from '../components/MContainerTransform.vue'
 import MDialog from '../components/MDialog.vue'
+import MOverlay from '../components/MOverlay.vue'
 
 // These components render more than one root node (an element plus a Teleport, a v-if/v-show
 // pair, a comment before the root...), which makes Vue drop a consumer's class/attrs silently.
@@ -47,6 +48,8 @@ const cases: [name: string, component: Component, props: Record<string, unknown>
   // A Teleport root: the attrs go on the dialog's surface
   ['MDialog', MDialog, { modelValue: true, title: 'T' }, 'DIV'],
   ['MDialog (fullscreen)', MDialog, { modelValue: true, title: 'T', fullscreen: true }, 'DIV'],
+  // A Teleport root: the attrs go on the content layer, over the scrim
+  ['MOverlay', MOverlay, { modelValue: true }, 'DIV'],
 ]
 
 describe('consumer attrs reach multi-root components', () => {
