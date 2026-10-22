@@ -56,6 +56,8 @@ export { vLongPress } from './directives/vLongPress'
 export type { LongPressOptions, LongPressValue } from './directives/vLongPress'
 export { vSwipe } from './directives/vSwipe'
 export type { SwipeDirection, SwipeInfo, SwipeOptions, SwipeValue } from './directives/vSwipe'
+export { vClickOutside } from './directives/vClickOutside'
+export type { ClickOutsideOptions, ClickOutsideValue } from './directives/vClickOutside'
 
 // Components
 export { default as MAbsolute } from './components/MAbsolute.vue'
