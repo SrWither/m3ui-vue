@@ -19,10 +19,12 @@ beforeEach(() => {
 afterEach(() => { document.body.innerHTML = '' })
 
 /** Mounts an MMap, waits for MapLibre to "load" and the slot to render. */
-async function mountMap(props: Record<string, unknown> = {}, slot?: () => unknown) {
+async function mountMap(props: Record<string, unknown> = {}, slot?: () => unknown, style?: FakeMap['style']) {
   const wrapper = mount(MMap, { props: { mapStyle: 'https://tiles.test/style.json', ...props }, slots: slot ? { default: slot } : {}, attachTo: document.body })
   await flushPromises()
   const map = created.maps.at(-1)!
+  // What getStyle() returns once the first style loads
+  if (style) map.style = style
   map.load()
   await nextTick()
   await nextTick()
@@ -418,5 +420,55 @@ describe('useMap', () => {
 
   it('throws outside an MMap', () => {
     expect(() => mount(defineComponent({ setup() { useMap(); return () => null } }))).toThrow(/inside <MMap>/)
+  })
+})
+
+describe('keepLayers', () => {
+  type Style = import('maplibre-gl').StyleSpecification
+  const base = (name: string): Style => ({
+    version: 8,
+    sources: { [`${name}-tiles`]: { type: 'vector', url: `https://tiles.test/${name}` } },
+    layers: [{ id: `${name}-bg`, type: 'background' }],
+  })
+  // The light style as it is after runtime additions: its own plus a zones source/layer and a measure layer
+  const runtime = (): Style => {
+    const s = base('light')
+    return {
+      ...s,
+      sources: { ...s.sources, zones: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } } },
+      layers: [...s.layers, { id: 'zones-fill', type: 'fill', source: 'zones' }, { id: 'measure-line', type: 'line', source: 'zones' }],
+    }
+  }
+
+  async function switchStyle(props: Record<string, unknown> = {}) {
+    const { wrapper, map } = await mountMap({ mapStyle: 'light', ...props }, undefined, base('light') as never)
+    await wrapper.setProps({ mapStyle: 'dark' })
+    const transform = map.styleOptions.at(-1)!.transformStyle!
+    return { wrapper, map, result: transform(runtime(), base('dark')) as Style, transform }
+  }
+
+  it('carries runtime sources and layers into the new style, on top', async () => {
+    const { result } = await switchStyle()
+    expect(result.layers.map((l) => l.id)).toEqual(['dark-bg', 'zones-fill', 'measure-line'])
+    expect(Object.keys(result.sources)).toEqual(['dark-tiles', 'zones'])
+  })
+
+  it('picks layers with a function, drops them with false, and runs transformStyle after', async () => {
+    const picked = await switchStyle({ keepLayers: (l: { id: string }) => l.id.startsWith('zones') })
+    expect(picked.result.layers.map((l) => l.id)).toEqual(['dark-bg', 'zones-fill'])
+
+    const dropped = await switchStyle({ keepLayers: false })
+    expect(dropped.result.layers.map((l) => l.id)).toEqual(['dark-bg'])
+
+    const custom = await switchStyle({ transformStyle: (_p: unknown, next: Style) => ({ ...next, name: 'tweaked' }) })
+    expect(custom.result.name).toBe('tweaked')
+    expect(custom.result.layers.map((l) => l.id)).toContain('zones-fill')
+  })
+
+  it('counts a carried layer as runtime again on the next switch', async () => {
+    const { wrapper, map, result } = await switchStyle()
+    await wrapper.setProps({ mapStyle: 'light' })
+    const back = map.styleOptions.at(-1)!.transformStyle!(result, base('light')) as Style
+    expect(back.layers.map((l) => l.id)).toEqual(['light-bg', 'zones-fill', 'measure-line'])
   })
 })

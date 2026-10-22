@@ -56,8 +56,10 @@ export class FakeMap extends Evented {
   }
   removeControl(control: unknown) { this.controls = this.controls.filter((c) => c.control !== control); return this }
   hasControl(control: unknown) { return this.controls.some((c) => c.control === control) }
-  setStyle(style: unknown) {
+  styleOptions: { transformStyle?: (previous: unknown, next: unknown) => unknown }[] = []
+  setStyle(style: unknown, options: FakeMap['styleOptions'][number] = {}) {
     this.styles.push(style)
+    this.styleOptions.push(options)
     this.sources.clear()
     this.layers = []
   }

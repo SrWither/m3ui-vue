@@ -24,13 +24,28 @@ import { useLocale } from '../composables/useLocale'
 import { MAP_KEY, type MaplibreModule } from '../composables/useMap'
 import { createLayerState, readLayerState } from '../composables/useMapLayers'
 import type { MapAdapter, MapLayerModel } from '../composables/mapAdapters'
+import { carryRuntimeLayers, styleIds, type StyleIds } from '../composables/_mapStyle'
 
 export type MapControlPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
 
 const props = withDefaults(
   defineProps<{
-    /** The map's style: a style JSON URL or a style object (MapLibre's `StyleSpecification`). Changing it reloads the style */
+    /**
+     * The map's style: a style JSON URL or a style object (MapLibre's `StyleSpecification`). Changing it reloads the
+     * style, keeping what was added at runtime (see `keepLayers`)
+     */
     mapStyle: string | Maplibre.StyleSpecification
+    /**
+     * What happens to the sources and layers added at runtime (with `useMap()`, or by `MMapGeoJson`, `MMapMeasure`…)
+     * when `mapStyle` changes: `true` carries them into the new style, on top of its layers; `false` drops them, as
+     * MapLibre does; a function picks the layers to carry (their sources come along)
+     */
+    keepLayers?: boolean | ((layer: Maplibre.LayerSpecification) => boolean)
+    /**
+     * MapLibre's `transformStyle` for a `mapStyle` change, run after `keepLayers`: edit the next style before it
+     * loads (copy a layer's paint over, add a sprite…)
+     */
+    transformStyle?: Maplibre.TransformStyleFunction
     /** `[lng, lat]` (v-model). When left out, the style's (or the remembered view's) */
     center?: [number, number]
     /** Zoom level (v-model) */
@@ -64,6 +79,7 @@ const props = withDefaults(
   }>(),
   {
     persist: false,
+    keepLayers: true,
     navigation: true,
     geolocate: false,
     fullscreen: false,
@@ -86,6 +102,8 @@ const container = ref<HTMLElement>()
 const map = shallowRef<Maplibre.Map>()
 const maplibre = shallowRef<MaplibreModule>()
 const styleVersion = ref(0)
+// The sources and layers the current style came with (the rest were added at runtime: keepLayers)
+let ownIds: StyleIds | undefined
 const model = shallowRef<MapLayerModel>()
 const layerState = createLayerState()
 const activeTool = ref<string | null>(null)
@@ -276,6 +294,8 @@ onMounted(async () => {
   maplibre.value = ml
 
   m.on('style.load', () => {
+    // The first style's own ids; a later style's are taken in transformStyle, before runtime layers join it
+    if (!ownIds) ownIds = styleIds(m.getStyle())
     readModel(m)
     styleVersion.value++
   })
@@ -327,8 +347,18 @@ watch(() => props.pitch, (pitch) => {
   if (map.value && pitch !== undefined && !near(map.value.getPitch(), pitch)) map.value.jumpTo({ pitch })
 })
 watch(() => props.adapter, () => { if (map.value) readModel(map.value) })
-// A full reload (no diff): style.load fires, and components re-add their sources and layers
-watch(() => props.mapStyle, (style) => map.value?.setStyle(style, { diff: false }))
+// A full reload (no diff): style.load fires, and components re-add whatever didn't come along
+watch(() => props.mapStyle, (style) => map.value?.setStyle(style, {
+  diff: false,
+  transformStyle: (previous, next) => {
+    const own = ownIds ?? styleIds(undefined)
+    ownIds = styleIds(next)
+    const keep = props.keepLayers
+    let result = keep === false ? next : carryRuntimeLayers(previous, next, own, typeof keep === 'function' ? keep : undefined)
+    if (props.transformStyle) result = props.transformStyle(previous, result)
+    return result
+  },
+}))
 
 defineExpose({
   /** The MapLibre map, once loaded */
