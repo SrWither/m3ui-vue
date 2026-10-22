@@ -24,6 +24,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MChart` colors datasets that don't set their own from the theme: primary, tertiary, secondary, success, error, outline in turn (one per slice in a pie or doughnut, separated by the surface color), or the new `colors` prop's list of roles or CSS colors. A dataset's own colors always win
 - `MBottomSheet` and `MSideSheet` close on Escape (through the library's Escape stack, so a dialog or menu opened over them takes it first)
 - `MTimeline`: `#item`, `#title`, `#dot` and `#opposite` slots (`{ item, index }`, in every layout; `#item-{i}` still works and wins for its entry), `bare` (only dots and line; `#item` draws each entry), `orientation="horizontal"`, generic items (your type reaches the slots) and a `key` field; it renders an `<ol>`
+- `useScrollReveal(target, options)` and the `v-reveal` directive (registered by `createM3UI()`, exported as `vReveal`): elements fade, slide or grow in as they scroll into view, on M3 springs played by the compositor, cascading when several enter together. `effect` (`fade-up`, `fade`, `scale`, `slide-left`, `slide-right`), `distance`, `delay`, `stagger`, `once`, `threshold`, `rootMargin`, `scheme`, `speed`; nothing hides with reduced motion or on the server
 
 ### Changed
 - **`MTimeline`'s alternating layout draws its line in each entry's color**, like the single-column one, instead of `outline-variant`
