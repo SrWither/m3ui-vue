@@ -67,8 +67,12 @@ const props = withDefaults(
     side?: 'left' | 'right' | 'top' | 'bottom';
     /** Lets the modal drawer be swiped closed toward its edge; with false it only closes through v-model or the scrim */
     swipeEnabled?: boolean;
+    /** Opens the groups that hold the selected item (and the selected item, if it's a group) whenever `selected` changes */
+    expandSelected?: boolean;
+    /** Keeps one group open per level: opening a group, by hand or through `expandSelected`, closes its siblings */
+    accordion?: boolean;
   }>(),
-  { modal: true, side: 'left', swipeEnabled: true },
+  { modal: true, side: 'left', swipeEnabled: true, expandSelected: true, accordion: false },
 );
 
 const emit = defineEmits<{
@@ -94,9 +98,39 @@ function isItemOpen(item: DrawerItem) {
   return openItems[item.value] === true;
 }
 
+// The item's ancestors, outermost first, ending with the item itself (null when it isn't in the drawer)
+function pathTo(value: string | number, items: DrawerItem[]): DrawerItem[] | null {
+  for (const item of items) {
+    if (item.value === value) return [item];
+    const rest = item.children?.length ? pathTo(value, item.children) : null;
+    if (rest) return [item, ...rest];
+  }
+  return null;
+}
+
+function setOpen(item: DrawerItem, open: boolean) {
+  if (open && props.accordion) {
+    const path = pathTo(item.value, props.sections.flatMap((s) => s.items));
+    const siblings = path && path.length > 1 ? path[path.length - 2]!.children! : props.sections.flatMap((s) => s.items);
+    for (const s of siblings) if (s !== item && s.children?.length) openItems[s.value] = false;
+  }
+  openItems[item.value] = open;
+}
+
+watch(
+  () => props.selected,
+  (value) => {
+    if (!props.expandSelected || value === undefined) return;
+    for (const item of pathTo(value, props.sections.flatMap((s) => s.items)) ?? []) {
+      if (item.children?.length && !openItems[item.value]) setOpen(item, true);
+    }
+  },
+  { immediate: true },
+);
+
 function toggleItem(item: DrawerItem) {
   refreshListTouchAction();
-  openItems[item.value] = !openItems[item.value];
+  setOpen(item, !openItems[item.value]);
 }
 
 function close() {
@@ -119,7 +153,7 @@ function onChildSelect(item: DrawerItem) {
 
 function onChildToggle(item: DrawerItem) {
   refreshListTouchAction();
-  openItems[item.value] = !openItems[item.value];
+  setOpen(item, !openItems[item.value]);
 }
 
 function subEnter(el: Element, done: () => void) {

@@ -183,3 +183,48 @@ describe('MNavigationDrawer swipe to close', () => {
     vi.unstubAllGlobals()
   })
 })
+
+describe('MNavigationDrawer open groups', () => {
+  const groups = [{
+    items: [
+      { value: 'mail', label: 'Mail', children: [{ value: 'inbox', label: 'Inbox' }, { value: 'sent', label: 'Sent' }] },
+      { value: 'files', label: 'Files', children: [
+        { value: 'docs', label: 'Docs', children: [{ value: 'report', label: 'Report' }] },
+      ] },
+    ],
+  }]
+  const openItems = () => (wrapper!.vm as unknown as { openItems: Record<string, boolean> }).openItems
+
+  function inline(props: Record<string, unknown> = {}) {
+    wrapper = mount(MNavigationDrawer, { props: { modelValue: true, modal: false, sections: groups, ...props } })
+  }
+
+  it('opens every group that holds the selected item', () => {
+    inline({ selected: 'report' })
+    expect(openItems()).toMatchObject({ files: true, docs: true })
+    expect(openItems().mail).toBeFalsy()
+  })
+
+  it('follows selected, leaving other groups open unless accordion', async () => {
+    inline({ selected: 'inbox' })
+    await wrapper!.setProps({ selected: 'report' })
+    expect(openItems()).toMatchObject({ mail: true, files: true, docs: true })
+
+    wrapper!.unmount()
+    inline({ selected: 'inbox', accordion: true })
+    await wrapper!.setProps({ selected: 'report' })
+    expect(openItems()).toMatchObject({ mail: false, files: true, docs: true })
+  })
+
+  it('accordion closes the siblings of a group opened by hand', async () => {
+    inline({ accordion: true, selected: 'inbox' })
+    const files = wrapper!.findAll('button').find((b) => b.text().includes('Files'))!
+    await files.trigger('click')
+    expect(openItems()).toMatchObject({ mail: false, files: true })
+  })
+
+  it('leaves groups alone with expandSelected false', () => {
+    inline({ selected: 'report', expandSelected: false })
+    expect(openItems().files).toBeFalsy()
+  })
+})
