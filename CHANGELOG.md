@@ -14,6 +14,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MCarousel` and `MSimpleCarousel` expose `focus()`, so the arrow keys work right away when one opens in a full-screen viewer
 - `MMenuItem` `#icon` slot (`{ on }`): replaces the leading icon with anything that fits its 20px box (a rotated `MIcon`, a color swatch, an avatar), in the icon's color
 - `MNavigationDrawer` `accordion`: keeps one group open per level, so opening a group (by hand or by selecting) closes its siblings
+- `MIconButton` `color`: an M3 role or any CSS color. Standard and outlined buttons use it for the icon, filled ones for the container (white on a CSS color, the role's on-color on a role), tonal ones for a 20% container with the color on it; disabled buttons and toggles keep their own colors
 
 ### Changed
 - **`MNavigationDrawer` opens the groups that hold the selected item whenever `selected` changes** (`expandSelected`, default `true`), so a page reached through a route or a link shows its place in the tree; `:expand-selected="false"` keeps the old behavior
