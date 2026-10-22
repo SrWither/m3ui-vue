@@ -9,6 +9,7 @@
  */
 import { computed, ref, useId, useSlots } from "vue";
 import MIcon from "./MIcon.vue";
+import { useAutoGrow } from "../composables/useAutoGrow";
 import { useFieldBg } from "../composables/useFieldBg";
 import { useDebounce } from "../composables/useDebounce";
 import { useLocale } from '../composables/useLocale'
@@ -36,8 +37,12 @@ const props = withDefaults(
     required?: boolean;
     /** Renders a textarea instead of an input */
     multiline?: boolean;
-    /** Textarea rows (when multiline) */
+    /** Textarea rows (when multiline); with autoGrow, the fewest it shrinks to */
     rows?: number;
+    /** Multiline only: grows with the text from `rows` up to `maxRows`, instead of a fixed height with a drag handle */
+    autoGrow?: boolean;
+    /** With autoGrow, the most rows it grows to before scrolling. Unset grows without limit */
+    maxRows?: number;
     /** Passed through to the native autocomplete attribute */
     autocomplete?: string;
     /** Material Symbol shown before the input */
@@ -70,13 +75,20 @@ const { resolvedFieldBg } = useFieldBg(fieldBgEl, () => props.fieldBg);
 
 const { debounced: emitDebounced, cancel: cancelDebounce } = useDebounce((v: string) => emit("debounced", v), props.debounce)
 
+const textareaEl = ref<HTMLTextAreaElement | null>(null);
+useAutoGrow(() => (props.multiline && props.autoGrow ? textareaEl.value : null), {
+  minRows: () => props.rows,
+  maxRows: () => props.maxRows,
+  value: () => props.modelValue,
+});
+
 const showClear = computed(() => props.clearable && String(props.modelValue).length > 0 && !props.disabled)
 
 const inputClasses = computed(() => {
   const hasTrailing = !!slots.trailing || props.clearable;
   const pl = props.leadingIcon ? "pl-12" : "pl-4";
   const pr = hasTrailing ? "pr-12" : "pr-4";
-  const size = props.multiline ? "resize-y min-h-[56px]" : "h-14";
+  const size = props.multiline ? (props.autoGrow ? "resize-none min-h-[56px]" : "resize-y min-h-[56px]") : "h-14";
   const base = [
     "peer block w-full text-body-large text-on-surface outline-none placeholder:text-transparent",
     "transition-[border-color,border-width] duration-150",
@@ -186,6 +198,7 @@ function onInput(event: Event) {
 
       <textarea
         v-if="multiline"
+        ref="textareaEl"
         :id="id"
         :value="String(modelValue)"
         :rows="rows"
