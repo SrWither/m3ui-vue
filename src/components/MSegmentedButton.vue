@@ -57,7 +57,7 @@ function toggle(opt: SegmentedOption<V>, modelValue: M, multi: boolean) {
       v-for="(opt, i) in options"
       :key="opt.value"
       type="button"
-      class="relative inline-flex items-center justify-center gap-2 text-label-large font-medium transition-[background-color,color] duration-150 outline-none before:pointer-events-none before:absolute before:inset-0 before:bg-current before:opacity-0 before:transition-opacity before:duration-150 enabled:hover:before:opacity-[0.08] enabled:active:before:opacity-[0.12]"
+      class="relative inline-flex grow items-center justify-center gap-2 text-label-large font-medium transition-[background-color,color] duration-150 outline-none before:pointer-events-none before:absolute before:inset-0 before:bg-current before:opacity-0 before:transition-opacity before:duration-150 enabled:hover:before:opacity-[0.08] enabled:active:before:opacity-[0.12]"
       :class="[
         density === 'compact' ? 'h-8 px-3' : density === 'comfortable' ? 'h-10 px-4' : 'h-10 px-6',
         i > 0 ? (opt.disabled ? 'border-l border-outline/12' : 'border-l border-outline') : '',
