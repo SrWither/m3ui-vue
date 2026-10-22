@@ -172,3 +172,36 @@ describe('MTimeline', () => {
     })
   })
 })
+
+describe('MTimeline animate', () => {
+  const at = (top: number) => ({ top, left: 0, width: 100, height: 40, right: 100, bottom: top + 40, x: 0, y: top, toJSON() {} }) as DOMRect
+  // happy-dom has no layout: each row reports its place from its position among its siblings when asked
+  function layout(el: Element) {
+    el.querySelectorAll<HTMLElement>('[data-timeline-row]').forEach((row) => {
+      row.getBoundingClientRect = () => at(Array.from(row.parentElement!.children).indexOf(row) * 40)
+    })
+  }
+  const running = (el: Element) => el.getAnimations().filter((a) => a.playState === 'running').length
+
+  it('slides new entries in and springs the others to their new places', async () => {
+    const items = [{ key: 'b', title: 'B' }, { key: 'c', title: 'C' }]
+    const w = mount(MTimeline, { props: { items }, attachTo: document.body })
+    layout(w.element)
+    await w.setProps({ items: [{ key: 'a', title: 'A' }, ...items] })
+    const rows = () => w.findAll('[data-timeline-row]').map((r) => r.element as HTMLElement)
+    expect(rows().map((r) => r.dataset.timelineRow)).toEqual(['a', 'b', 'c'])
+    expect(running(rows()[0]!)).toBe(1) // entered
+    expect(running(rows()[1]!)).toBe(1) // moved down a row
+    expect(running(rows()[2]!)).toBe(1)
+    w.unmount()
+  })
+
+  it('does nothing with animate off, nor on the first render', async () => {
+    const items = [{ key: 'b', title: 'B' }]
+    const w = mount(MTimeline, { props: { items, animate: false }, attachTo: document.body })
+    expect(w.element.getAnimations?.().length ?? 0).toBe(0)
+    await w.setProps({ items: [{ key: 'a', title: 'A' }, ...items] })
+    expect(running(w.find('[data-timeline-row="a"]').element)).toBe(0)
+    w.unmount()
+  })
+})

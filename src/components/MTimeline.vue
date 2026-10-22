@@ -39,8 +39,10 @@ export type TimelineStatus = NonNullable<TimelineItem["status"]>;
  * @slot opposite Content across the line: on the empty side in the alternating layout, or in a column before the
  *   line in the single-column one (dates, times, amounts)
  */
-import { computed, useSlots } from "vue";
+import { computed, onBeforeUpdate, onMounted, onUpdated, ref, useSlots } from "vue";
 import MIcon from "./MIcon.vue";
+import { motionSprings } from "../composables/motion";
+import { playSamples, prefersReducedMotion, sampleSpring } from "../composables/_springAnimation";
 
 const props = withDefaults(
   defineProps<{
@@ -64,8 +66,13 @@ const props = withDefaults(
      * while the timeline is narrower than 32rem: its own width, so it works in a side column too
      */
     responsive?: boolean;
+    /**
+     * Entries added after it mounts fade and slide in, and the rest move to their new places, on M3 springs (none
+     * with reduced motion). Give items a `key`, or an insertion looks like a change to every entry after it
+     */
+    animate?: boolean;
   }>(),
-  { dense: false, alternating: false, orientation: "vertical", bare: false, current: undefined, responsive: true },
+  { dense: false, alternating: false, orientation: "vertical", bare: false, current: undefined, responsive: true, animate: true },
 );
 
 defineSlots<{
@@ -144,12 +151,53 @@ const groupRun = (i: number) => {
 const hasGroups = computed(() => props.items.some((item) => item.group != null));
 const isLast = (i: number) =>
   i === props.items.length - 1 || (hasGroups.value && props.items[i + 1]!.group !== props.items[i]!.group);
+
+// ── Enter / move animation ────────────────────────────────────────────────────────────────────────────────────────
+// FLIP, as MDragDropList does: every row's place before an update; after it, new rows slide in and the others spring
+// from where they were. Rows are found by `data-timeline-row` (an entry's key, or `group:<name>` for a header,
+// so a header stays put when an entry joins its group at the top)
+const root = ref<HTMLElement>();
+let mounted = false;
+let before = new Map<string, DOMRect>();
+const rows = () => Array.from(root.value?.querySelectorAll<HTMLElement>(":scope > [data-timeline-row]") ?? []);
+const rowKey = (item: T, i: number) => String(keyOf(item, i));
+
+onMounted(() => { mounted = true; });
+onBeforeUpdate(() => {
+  before = new Map();
+  if (!props.animate || !mounted) return;
+  for (const row of rows()) before.set(row.dataset.timelineRow!, row.getBoundingClientRect());
+});
+onUpdated(() => {
+  if (!props.animate || !before.size || prefersReducedMotion()) return;
+  const along = props.orientation === "horizontal" ? "X" : "Y";
+  for (const row of rows()) {
+    const was = before.get(row.dataset.timelineRow!);
+    const now = row.getBoundingClientRect();
+    if (!was) {
+      // New: in from a short way back along the timeline, fading in
+      playSamples(row, sampleSpring(0, 1, 0, motionSprings.standard.defaultSpatial, 0.001), (p) => ({
+        transform: `translate${along}(${(1 - p) * -12}px)`,
+        opacity: String(Math.min(1, p * 1.4)),
+      }));
+      continue;
+    }
+    const dx = was.left - now.left;
+    const dy = was.top - now.top;
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) continue;
+    playSamples(row, sampleSpring(1, 0, 0, motionSprings.standard.defaultSpatial, 0.001), (p) => ({
+      transform: `translate(${dx * p}px, ${dy * p}px)`,
+    }));
+  }
+  before = new Map();
+});
 </script>
 
 <template>
-  <ol v-if="orientation === 'horizontal'" class="flex list-none overflow-x-auto p-0" role="list">
+  <ol v-if="orientation === 'horizontal'" ref="root" class="flex list-none overflow-x-auto p-0" role="list">
     <!-- Horizontal: entries side by side, the line running between their dots -->
     <li
+      :data-timeline-row="rowKey(item, i)"
       v-for="(item, i) in items"
       :key="keyOf(item, i)"
       :aria-current="statusOf(item, i) === 'current' ? 'step' : undefined"
@@ -190,15 +238,16 @@ const isLast = (i: number) =>
     </li>
   </ol>
 
-  <ol v-else-if="!alternating" class="flex list-none flex-col p-0" role="list">
+  <ol v-else-if="!alternating" ref="root" class="flex list-none flex-col p-0" role="list">
     <!-- Vertical, single column (with an optional #opposite column before the line) -->
     <template v-for="(item, i) in items" :key="keyOf(item, i)">
-    <li v-if="startsGroup(i)" class="pb-3" :class="{ 'pt-2': i > 0 }">
+    <li v-if="startsGroup(i)" :data-timeline-row="`group:${item.group}`" class="pb-3" :class="{ 'pt-2': i > 0 }">
       <slot name="group" :group="item.group!" :items="groupRun(i)">
         <p class="text-title-small text-on-surface-variant">{{ item.group }}</p>
       </slot>
     </li>
     <li
+      :data-timeline-row="rowKey(item, i)"
       :aria-current="statusOf(item, i) === 'current' ? 'step' : undefined"
       class="relative flex gap-4"
     >
@@ -238,10 +287,10 @@ const isLast = (i: number) =>
     </template>
   </ol>
 
-  <ol v-else class="relative list-none p-0" :class="{ '@container': responsive }" role="list">
+  <ol v-else ref="root" class="relative list-none p-0" :class="{ '@container': responsive }" role="list">
     <template v-for="(item, i) in items" :key="keyOf(item, i)">
     <!-- A group's header: centered over the line, or at the start once folded -->
-    <li v-if="startsGroup(i)" class="pb-3" :class="[{ 'pt-2': i > 0 }, responsive ? 'text-left @lg:text-center' : 'text-center']">
+    <li v-if="startsGroup(i)" :data-timeline-row="`group:${item.group}`" class="pb-3" :class="[{ 'pt-2': i > 0 }, responsive ? 'text-left @lg:text-center' : 'text-center']">
       <slot name="group" :group="item.group!" :items="groupRun(i)">
         <p class="text-title-small text-on-surface-variant">{{ item.group }}</p>
       </slot>
@@ -249,6 +298,7 @@ const isLast = (i: number) =>
     <!-- Alternating: entries left and right of a central line. With `responsive`, below 32rem (the list's own width)
          each entry is a grid instead: the line in the first column, the content and then #opposite in the second -->
     <li
+      :data-timeline-row="rowKey(item, i)"
       :aria-current="statusOf(item, i) === 'current' ? 'step' : undefined"
       :class="responsive
         ? ['grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 @lg:flex @lg:items-stretch @lg:gap-x-0', i % 2 === 0 ? '@lg:flex-row' : '@lg:flex-row-reverse']
