@@ -12,6 +12,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MProgressBar` and `MCircleProgressBar`: `color` also takes any CSS color, and the new `trackColor` sets the track (an M3 role or a CSS color). A CSS color without `trackColor` gets a track of itself at 24%
 - `MRichTextEditor` `fill`: the editor takes the height you give it (`flex-1`, `h-full`…), keeping the toolbar in place and scrolling the text inside instead of growing with it; a click anywhere in the empty area lands in the text
 - `MCarousel` and `MSimpleCarousel` expose `focus()`, so the arrow keys work right away when one opens in a full-screen viewer
+- `MMenuItem` `#icon` slot (`{ on }`): replaces the leading icon with anything that fits its 20px box (a rotated `MIcon`, a color swatch, an avatar), in the icon's color
 
 ### Fixed
 - `MPullToRefresh` keeps its scroll position inside a `<KeepAlive>`: the browser dropped it while the view was detached, so it came back at the top
