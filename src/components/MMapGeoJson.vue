@@ -10,7 +10,7 @@
 import { computed, onBeforeUnmount, useId, watch } from 'vue'
 import type * as Maplibre from 'maplibre-gl'
 import { useMap } from '../composables/useMap'
-import { useThemeTokens } from '../composables/_useThemeTokens'
+import { useThemeTokens } from '../composables/useThemeTokens'
 
 // Omit over each member of the union (a plain Omit keeps only what all layer types share, losing paint and layout)
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never

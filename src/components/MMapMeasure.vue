@@ -17,7 +17,7 @@ import MMapControl from './MMapControl.vue'
 import MMapMarker from './MMapMarker.vue'
 import { useLocale } from '../composables/useLocale'
 import { useMap } from '../composables/useMap'
-import { useThemeTokens } from '../composables/_useThemeTokens'
+import { useThemeTokens } from '../composables/useThemeTokens'
 import { centroid, closeRing, distance, midpoint, pathLength, ringArea, type LngLat } from '../composables/_mapGeometry'
 import type { MapControlPosition } from './MMap.vue'
 

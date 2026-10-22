@@ -3,8 +3,14 @@ import { STYLE_ID } from './_storageKeys'
 
 /**
  * The current values of some color tokens (`['primary', 'surface']` → `--color-primary`…), kept up to date across
- * theme, palette and contrast changes: for what can't use CSS variables (a MapLibre layer's paint, a canvas). Empty
- * strings on the server.
+ * light/dark, palette, contrast and generated (seed) palette changes: for what can't use CSS variables, like a
+ * Chart.js dataset, a canvas or a MapLibre layer's paint. Values settle after the theme switch's color transition.
+ * Empty strings on the server.
+ *
+ * ```ts
+ * const colors = useThemeTokens(['primary', 'tertiary', 'outline-variant'] as const)
+ * const data = computed(() => ({ datasets: [{ data: sales, borderColor: colors.value.primary }] }))
+ * ```
  */
 export function useThemeTokens<T extends string>(names: readonly T[]): Ref<Record<T, string>> {
   const read = () => {
