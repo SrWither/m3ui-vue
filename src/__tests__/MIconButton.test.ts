@@ -79,6 +79,12 @@ describe('MIconButton', () => {
       expect(style({ color: '#e8590c', variant: 'tonal' }).color).toBe('#e8590c')
     })
 
+    it('contentColor recolors the icon over color', () => {
+      const s = style({ color: '#fff', variant: 'filled', contentColor: '#000' })
+      expect(s.color).toBe('#000')
+      expect(style({ contentColor: 'on-surface' }).color).toBe('var(--color-on-surface)')
+    })
+
     it('leaves disabled buttons and toggles to their own colors', () => {
       expect(style({ color: 'primary', disabled: true }).color).toBe('')
       expect(style({ color: 'primary', checked: false }).color).toBe('')

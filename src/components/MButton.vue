@@ -51,6 +51,12 @@ const props = withDefaults(
     to?: string | Record<string, any>
     /** Any CSS color for the press ripple; defaults to the button's content color */
     rippleColor?: string
+    /**
+     * Label and icon color, over what the variant and `color` give: an M3 role (`on-surface` for a neutral text
+     * button, `on-primary-container`…) or any CSS color (`#000` on a white filled button). Disabled buttons keep
+     * their own
+     */
+    contentColor?: string
   }>(),
   {
     variant: 'filled',
@@ -81,6 +87,14 @@ const customStyle = computed(() => {
 })
 
 const isError = computed(() => props.color === 'error')
+
+// Color-role names (`on-surface`, `secondary-container`…) read the theme's token; anything else is a CSS color
+const ROLE = /^(on-)?(primary|secondary|tertiary|error|surface|surface-variant|inverse-surface|inverse-primary)(-container|-variant)?$/
+const style = computed(() => {
+  const c = props.contentColor
+  if (!c || props.disabled || props.loading) return customStyle.value
+  return { ...customStyle.value, color: ROLE.test(c) ? `var(--color-${c})` : c }
+})
 
 const base =
   'relative inline-flex items-center justify-center font-medium ' +
@@ -179,7 +193,7 @@ const variantClasses = computed(() => {
     :type="to ? undefined : type"
     :disabled="disabled || loading"
     :class="[base, shapeClass, sizeClasses, px, variantClasses, disabledContainerClasses]"
-    :style="customStyle"
+    :style="style"
     v-ripple="{ disabled: disabled || loading, color: rippleColor }"
   >
     <template v-if="iconPos === 'leading'">

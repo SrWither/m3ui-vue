@@ -26,6 +26,11 @@ const props = withDefaults(
      */
     color?: 'primary' | 'secondary' | 'tertiary' | 'error' | (string & {})
     /**
+     * Icon color over what the variant and `color` give: an M3 role (`on-surface`…) or any CSS color (`#000` on a
+     * white filled button). Disabled buttons and toggles keep their own
+     */
+    contentColor?: string
+    /**
      * Button shape — rounded (pill, always) or squared (corner radius scales with size: 12px xs/sm, 16px md,
      * 28px lg/xl)
      */
@@ -62,8 +67,16 @@ const emit = defineEmits<{ 'update:checked': [boolean] }>()
 const isToggle = computed(() => props.checked !== undefined)
 
 const ROLES = ['primary', 'secondary', 'tertiary', 'error']
-// `color` as inline styles over the variant's classes, so the default look stays class-only
+// Color-role names (`on-surface`…) read the theme's token; anything else is a CSS color
+const ROLE = /^(on-)?(primary|secondary|tertiary|error|surface|surface-variant|inverse-surface|inverse-primary)(-container|-variant)?$/
 const colorStyle = computed(() => {
+  const base = paintStyle()
+  const cc = props.contentColor
+  if (!cc || props.disabled || isToggle.value) return base
+  return { ...base, color: ROLE.test(cc) ? `var(--color-${cc})` : cc }
+})
+// `color` as inline styles over the variant's classes, so the default look stays class-only
+function paintStyle() {
   const c = props.color
   if (!c || props.disabled || isToggle.value) return undefined
   const role = ROLES.includes(c)
@@ -78,7 +91,7 @@ const colorStyle = computed(() => {
     default:
       return { color: main }
   }
-})
+}
 const tag = computed(() => props.to && !isToggle.value ? 'RouterLink' : 'button')
 
 // Container height/width (icon buttons are always square by default — real
