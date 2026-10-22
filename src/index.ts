@@ -52,6 +52,8 @@ export { vFocusRing } from './directives/vFocusRing'
 export type { FocusRingOptions, FocusRingValue } from './directives/vFocusRing'
 export { vScrollElevation } from './directives/vScrollElevation'
 export type { ScrollElevationOptions, ScrollElevationValue } from './directives/vScrollElevation'
+export { vLongPress } from './directives/vLongPress'
+export type { LongPressOptions, LongPressValue } from './directives/vLongPress'
 
 // Components
 export { default as MAbsolute } from './components/MAbsolute.vue'
