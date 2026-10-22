@@ -370,6 +370,25 @@ html.theme-transitioning *::after {
   animation: m3-ripple 450ms cubic-bezier(0.2, 0, 0.8, 1) forwards;
 }
 
+/* v-state-layer: M3 state layer opacities (StateTokens: hover 8%, focus 10%, pressed 10%, dragged 16%). Hover
+   only where there's a real hover, so a tap on a phone doesn't leave the layer on */
+.m3-state-layer {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms linear;
+}
+@media (hover: hover) {
+  [data-m3-state-layer='']:hover > .m3-state-layer { opacity: 0.08; }
+}
+[data-m3-state-layer='']:focus-visible > .m3-state-layer,
+[data-m3-state-layer='']:active > .m3-state-layer { opacity: 0.1; }
+[data-m3-state-layer='dragged'] > .m3-state-layer { opacity: 0.16; }
+[data-m3-state-layer]:is(:disabled, [aria-disabled='true']) > .m3-state-layer { opacity: 0; }
+
 @keyframes m3-ctx-in {
   from { transform: translateY(-6px) scale(0.94); }
   to   { transform: translateY(0)    scale(1); }

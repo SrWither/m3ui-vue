@@ -44,6 +44,8 @@ export { vRipple } from './directives/vRipple'
 export type { RippleOptions, RippleValue } from './directives/vRipple'
 export { vReveal } from './directives/vReveal'
 export type { RevealValue } from './directives/vReveal'
+export { vStateLayer } from './directives/vStateLayer'
+export type { StateLayerOptions, StateLayerValue } from './directives/vStateLayer'
 
 // Components
 export { default as MAbsolute } from './components/MAbsolute.vue'
