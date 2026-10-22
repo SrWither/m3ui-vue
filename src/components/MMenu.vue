@@ -9,6 +9,7 @@
 import { computed, Fragment, inject, nextTick, onMounted, onUnmounted, provide, ref, useSlots, watch, type VNode } from 'vue'
 import MIcon from './MIcon.vue'
 import MMenuDivider from './MMenuDivider.vue'
+import { useEscapeStack } from '../composables/_useEscapeStack'
 import { POPUP_MARGIN, dropdownX } from '../composables/_popupPosition'
 
 defineOptions({ inheritAttrs: false })
@@ -388,12 +389,11 @@ function onScroll(e: Event) {
   close()
 }
 
+// Escape goes through the library's stack, so a menu open in a dialog or an overlay closes alone (a pushed
+// submenu steps back first)
+useEscapeStack(() => open.value, () => (navStack.value.length ? popNav() : close()))
+
 function onKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') {
-    if (navStack.value.length) popNav()
-    else close()
-    return
-  }
   if (!open.value) return
   if (e.key === 'ArrowDown') { e.preventDefault(); moveFocus(1) }
   else if (e.key === 'ArrowUp') { e.preventDefault(); moveFocus(-1) }

@@ -82,3 +82,36 @@ describe('MContextMenu', () => {
     expect(document.querySelector('.item')).toBeNull()
   })
 })
+
+describe('menus on the Escape stack', () => {
+  beforeEach(() => {
+    document.body.innerHTML = ''
+  })
+  const escape = () => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }))
+
+  it('a menu open in a dialog takes Escape alone; the next one closes the dialog', async () => {
+    const { default: MDialog } = await import('../components/MDialog.vue')
+    const dialog = mount(MDialog, {
+      props: { modelValue: true, title: 'T' },
+      slots: {
+        default: () =>
+          h(MMenu, null, {
+            trigger: () => h('button', { class: 'trigger' }, 'open'),
+            default: () => h('span', { class: 'item' }, 'Copy'),
+          }),
+      },
+      attachTo: document.body,
+    })
+    await nextTick()
+    document.querySelector<HTMLElement>('.trigger')!.click()
+    await nextTick()
+
+    escape()
+    await nextTick()
+    expect(dialog.emitted('update:modelValue')).toBeUndefined()
+
+    escape()
+    expect(dialog.emitted('update:modelValue')).toEqual([[false]])
+    dialog.unmount()
+  })
+})
