@@ -193,3 +193,12 @@ describe('MCarousel', () => {
     expect(wrapper.find('img').exists()).toBe(false)
   })
 })
+
+describe('MCarousel focus()', () => {
+  it('focuses the carousel through its template ref', () => {
+    const w = mount(MCarousel, { props: { items: [1, 2, 3] }, attachTo: document.body })
+    ;(w.vm as unknown as { focus(): void }).focus()
+    expect(document.activeElement).toBe(w.element)
+    w.unmount()
+  })
+})

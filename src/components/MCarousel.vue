@@ -567,7 +567,13 @@ onBeforeUnmount(() => {
   rootEl.value?.removeEventListener('wheel', onWheel)
 })
 
-defineExpose({ scrollToItem, next, prev })
+defineExpose({
+  scrollToItem,
+  next,
+  prev,
+  /** Moves keyboard focus to the carousel, so the arrow keys scroll it */
+  focus: (options?: FocusOptions) => rootEl.value?.focus(options),
+})
 </script>
 
 <template>

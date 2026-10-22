@@ -58,6 +58,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{ change: [index: number] }>()
 
+const rootEl = ref<HTMLElement>()
 const trackEl = ref<HTMLElement>()
 const itemEls = ref<HTMLElement[]>([])
 const activeIndex = ref(0)
@@ -251,11 +252,19 @@ onBeforeUnmount(() => {
   if (rafId) cancelAnimationFrame(rafId)
 })
 
-defineExpose({ next, prev, scrollToItem, scrollToPage })
+defineExpose({
+  next,
+  prev,
+  scrollToItem,
+  scrollToPage,
+  /** Moves keyboard focus to the carousel, so the arrow keys move it */
+  focus: (options?: FocusOptions) => rootEl.value?.focus(options),
+})
 </script>
 
 <template>
   <div
+    ref="rootEl"
     class="group relative overflow-hidden"
     tabindex="0"
     @keydown="onKeydown"
