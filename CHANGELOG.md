@@ -41,6 +41,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MTimeline` progress: `current` (the current step's index) or items' `status` (`done`/`current`/`pending`) make it a progress timeline, in every layout: done steps filled with a solid line, the current one with a pulsing halo (still with reduced motion) and `aria-current="step"`, pending ones outlined with a dashed line. New `TimelineStatus` type
 
 ### Changed
+- **`MTimeline`'s alternating layout folds into a single column while the timeline is narrower than 32rem** (its own width, a container query): the line on the left, `#opposite` under the content. `:responsive="false"` keeps it alternating
 - **`MMap` keeps the sources and layers added at runtime when `mapStyle` changes** (`keepLayers`, default `true`): yours through `useMap()` and those of `MMapGeoJson`, `MMapMeasure`… are carried into the new style, on top of its layers, instead of vanishing as with MapLibre alone. `:keep-layers="false"` drops them as before; a function picks the layers to carry
 - **`MMenu` and `MContextMenu` push submenus have a new back header**: an `arrow_back` and the submenu's title in `label-large` `on-surface-variant`, like an M3 menu group label, followed by a menu divider, instead of a chevron, the parent's icon and the title in body text over a border
 - **`MTimeline`'s alternating layout draws its line in each entry's color**, like the single-column one, instead of `outline-variant`
