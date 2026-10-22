@@ -43,6 +43,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MTimeline` animates changes (`animate`, default `true`; not with reduced motion): entries added after it mounts fade and slide in wherever they land, and the others move to their new places on M3 springs instead of jumping. Needs items' `key`
 - `MTimeline` `limit`: shows the first entries with a "Show N more" / "Show less" button for the rest (`v-model:expanded` optional; the revealed entries slide in). New locale keys `timelineShowMore` (`{count}`) and `timelineShowLess`
 - The directives `createM3UI()` registers are typed for templates (`GlobalDirectives`), so vue-tsc / Volar check `v-tooltip`, `v-skeleton`, `v-swipe`… values. `v-skeleton`, `v-focus-ring` and `v-state-layer` render their markers on the server too, so an SSR page (Nuxt) shows the placeholder before it hydrates
+- `viewportFromHeaders(headers)` and `VIEWPORT_HINTS`, for server rendering: the window size to render the adaptive layouts at, from a request's `m3-viewport` cookie, Chromium's viewport client hints, or on a first visit a size standing for the kind of device (`Sec-CH-UA-Mobile`, then the user agent: phone, tablet or desktop). `@m3ui-vue/nuxt` 0.3.0 uses it
 
 ### Changed
 - **`MTimeline`'s alternating layout folds into a single column while the timeline is narrower than 32rem** (its own width, a container query): the line on the left, `#opposite` under the content. `:responsive="false"` keeps it alternating
