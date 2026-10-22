@@ -23,12 +23,15 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `useThemeTokens(names)` is now public: the theme's colors as strings (`{ primary: '#6750a4', … }`) kept current across light/dark, palette, contrast and generated-palette changes and read again once the theme switch's transition settles, for what can't use CSS variables (a canvas, a map layer, chart colors computed in code)
 - `MChart` colors datasets that don't set their own from the theme: primary, tertiary, secondary, success, error, outline in turn (one per slice in a pie or doughnut, separated by the surface color), or the new `colors` prop's list of roles or CSS colors. A dataset's own colors always win
 - `MBottomSheet` and `MSideSheet` close on Escape (through the library's Escape stack, so a dialog or menu opened over them takes it first)
+- `MTimeline`: `#item`, `#title`, `#dot` and `#opposite` slots (`{ item, index }`, in every layout; `#item-{i}` still works and wins for its entry), `bare` (only dots and line; `#item` draws each entry), `orientation="horizontal"`, generic items (your type reaches the slots) and a `key` field; it renders an `<ol>`
 
 ### Changed
+- **`MTimeline`'s alternating layout draws its line in each entry's color**, like the single-column one, instead of `outline-variant`
 - **`MSegmentedButton` and `MButtonGroup` are generic over their options' value type**, so `v-model` is typed after it (`SegmentedOption<V>`, `ButtonGroupOption<T>`; a single value, or an array with `multiSelect`; `MButtonGroup` also `null`). Types only, nothing changes at runtime; a ref typed wider than its options (say `string | number | (string | number)[]` with string options) now fails type checking: type the ref or the options
 - **`MNavigationDrawer` opens the groups that hold the selected item whenever `selected` changes** (`expandSelected`, default `true`), so a page reached through a route or a link shows its place in the tree; `:expand-selected="false"` keeps the old behavior
 
 ### Fixed
+- `MTimeline`'s line was invisible for `secondary`, `tertiary`, `error` and `success` entries (a class built at runtime Tailwind never generated), stopped short of the next dot, and wandered when entries with and without icons were mixed
 - Escape inside a dialog (or over one) closed the dialog along with whatever handled it: an open `MSelect`/`MAutocomplete`/`MMultiAutocomplete` list, an expanded `MSearchBar`, a visible `MTooltip`, a keyboard move in `MDragDropList`/`MKanban`, `MLightbox`, `MCommandPalette`, `MSpotlightSearch`, a modal `MNavigationRail`, an `MMapMeasure` measurement. They now stop the key once they use it, or go through the library's Escape stack, so one Escape closes the topmost thing only
 - `MChart`'s axes, legend and tooltips missed contrast and generated (seed) palette changes and could keep mid-transition colors after a theme switch; they now go through `useThemeTokens`. Its grid color also works with non-hex tokens
 - `MOverlay` dropped the consumer's `class`, `role`, `aria-*` and listeners (a Teleport root): they now go on the content layer, over the scrim
