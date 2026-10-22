@@ -389,6 +389,14 @@ html.theme-transitioning *::after {
 [data-m3-state-layer='dragged'] > .m3-state-layer { opacity: 0.16; }
 [data-m3-state-layer]:is(:disabled, [aria-disabled='true']) > .m3-state-layer { opacity: 0; }
 
+/* v-focus-ring: M3's focus indicator (3dp, secondary, 2dp outside), on keyboard focus only. Unlayered on purpose:
+   it beats an `outline-none` utility on the same element */
+[data-m3-focus-ring='']:focus-visible,
+[data-m3-focus-ring='within']:is(:focus-visible, :has(:focus-visible)) {
+  outline: 3px solid var(--m3-focus-ring-color, var(--color-secondary));
+  outline-offset: var(--m3-focus-ring-offset, 2px);
+}
+
 @keyframes m3-ctx-in {
   from { transform: translateY(-6px) scale(0.94); }
   to   { transform: translateY(0)    scale(1); }

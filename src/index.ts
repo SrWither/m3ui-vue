@@ -48,6 +48,8 @@ export { vStateLayer } from './directives/vStateLayer'
 export type { StateLayerOptions, StateLayerValue } from './directives/vStateLayer'
 export { vTooltip } from './directives/vTooltip'
 export type { TooltipOptions, TooltipValue } from './directives/vTooltip'
+export { vFocusRing } from './directives/vFocusRing'
+export type { FocusRingOptions, FocusRingValue } from './directives/vFocusRing'
 
 // Components
 export { default as MAbsolute } from './components/MAbsolute.vue'
