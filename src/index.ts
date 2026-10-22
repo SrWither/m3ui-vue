@@ -46,6 +46,8 @@ export { vReveal } from './directives/vReveal'
 export type { RevealValue } from './directives/vReveal'
 export { vStateLayer } from './directives/vStateLayer'
 export type { StateLayerOptions, StateLayerValue } from './directives/vStateLayer'
+export { vTooltip } from './directives/vTooltip'
+export type { TooltipOptions, TooltipValue } from './directives/vTooltip'
 
 // Components
 export { default as MAbsolute } from './components/MAbsolute.vue'

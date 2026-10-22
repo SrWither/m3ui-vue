@@ -8,6 +8,7 @@
  * @slot actions Rich-tooltip action buttons row (only used when rich is true)
  */
 import { nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { createTooltipTrigger, placeTooltip } from '../composables/_tooltipTrigger'
 
 defineOptions({ inheritAttrs: false })
 
@@ -29,168 +30,41 @@ const visible = ref(false)
 const tipEl = ref<HTMLElement>()
 const triggerEl = ref<HTMLElement>()
 const tipStyle = ref<Record<string, string>>({})
-let showTimer: ReturnType<typeof setTimeout> | null = null
-let hideTimer: ReturnType<typeof setTimeout> | null = null
 
-function cancelTimers() {
-  if (showTimer) { clearTimeout(showTimer); showTimer = null }
-  if (hideTimer) { clearTimeout(hideTimer); hideTimer = null }
-}
+// Hover, long press, keyboard focus, Escape and scroll: see _tooltipTrigger.ts (shared with v-tooltip)
+let trigger: ReturnType<typeof createTooltipTrigger> | undefined
 
-async function show() {
-  cancelTimers()
-  showTimer = setTimeout(async () => {
-    visible.value = true
-    await nextTick()
-    reposition()
-  }, props.delay)
-}
-
-function hide() {
-  cancelTimers()
-  if (props.rich) {
-    hideTimer = setTimeout(() => { visible.value = false }, 120)
-  } else {
-    visible.value = false
-  }
+async function open() {
+  visible.value = true
+  await nextTick()
+  reposition()
 }
 
 function onTipEnter() {
-  if (!props.rich) return
-  cancelTimers()
+  if (props.rich) trigger?.cancel()
 }
 
 function onTipLeave() {
-  if (!props.rich) return
-  cancelTimers()
-  visible.value = false
-}
-
-// Input as Compose's BasicTooltip: a mouse shows it on hover; touch and pen on a long press, which also swallows
-// the click it would end in (a long-pressed button doesn't fire) and hides it TOUCH_DURATION after the finger
-// lifts (BasicTooltipDefaults.TooltipDuration); focus only from the keyboard. Before, the mouse events a browser
-// emulates for a tap (and the focus a tap gives a button) showed it on every tap, and it stuck around.
-const LONG_PRESS = 500
-const TOUCH_DURATION = 1500
-let press: { id: number; x: number; y: number; timer: ReturnType<typeof setTimeout> } | null = null
-let longPressed = false
-
-function onPointerEnter(e: PointerEvent) {
-  if (e.pointerType === 'mouse') show()
-}
-function onPointerLeave(e: PointerEvent) {
-  if (e.pointerType === 'mouse') hide()
-}
-
-function endPress() {
-  if (press) clearTimeout(press.timer)
-  press = null
-  window.removeEventListener('pointermove', onPressMove)
-  window.removeEventListener('pointerup', onPressUp)
-  window.removeEventListener('pointercancel', onPressCancel)
-}
-function onPointerDown(e: PointerEvent) {
-  if (e.pointerType === 'mouse') return
-  endPress()
-  longPressed = false
-  press = {
-    id: e.pointerId,
-    x: e.clientX,
-    y: e.clientY,
-    timer: setTimeout(async () => {
-      longPressed = true
-      cancelTimers()
-      visible.value = true
-      await nextTick()
-      reposition()
-    }, LONG_PRESS),
-  }
-  window.addEventListener('pointermove', onPressMove)
-  window.addEventListener('pointerup', onPressUp)
-  window.addEventListener('pointercancel', onPressCancel)
-}
-function onPressMove(e: PointerEvent) {
-  if (press && e.pointerId === press.id && Math.hypot(e.clientX - press.x, e.clientY - press.y) > 10) endPress()
-}
-function onPressUp(e: PointerEvent) {
-  if (!press || e.pointerId !== press.id) return
-  endPress()
-  if (!longPressed) return
-  cancelTimers()
-  // A rich tooltip may hold actions to tap: it stays until a touch outside it (Compose's persistent tooltips)
-  if (props.rich) document.addEventListener('pointerdown', onOutsideTouch, true)
-  else hideTimer = setTimeout(() => { visible.value = false }, TOUCH_DURATION)
-}
-function onOutsideTouch(e: PointerEvent) {
-  const t = e.target as Node
-  if (tipEl.value?.contains(t) || triggerEl.value?.contains(t)) return
-  document.removeEventListener('pointerdown', onOutsideTouch, true)
-  visible.value = false
-}
-// The browser took the touch (a scroll)
-function onPressCancel(e: PointerEvent) {
-  if (!press || e.pointerId !== press.id) return
-  endPress()
-  if (longPressed) hide()
-}
-// The click a long press ends in, and the context menu it may open, belong to the tooltip
-function onClickCapture(e: MouseEvent) {
-  if (!longPressed) return
-  longPressed = false
-  e.preventDefault()
-  e.stopPropagation()
-}
-function onContextMenu(e: Event) {
-  if (press || longPressed) e.preventDefault()
-}
-
-function onFocusIn(e: FocusEvent) {
-  let keyboard = true
-  try { keyboard = (e.target as Element).matches(':focus-visible') } catch { /* no :focus-visible: show */ }
-  if (keyboard) show()
-}
-function onKeyDown(e: KeyboardEvent) {
-  if (e.key === 'Escape' && visible.value) {
-    // Hiding the tooltip uses the key: a dialog around it stays open
-    e.stopPropagation()
-    cancelTimers()
-    visible.value = false
-  }
-}
-
-function onScroll() {
-  if (visible.value) {
-    cancelTimers()
-    visible.value = false
-  }
+  if (props.rich) trigger?.closeNow()
 }
 
 function reposition() {
   if (!triggerEl.value || !tipEl.value) return
-  const tr = triggerEl.value.getBoundingClientRect()
-  const tt = tipEl.value.getBoundingClientRect()
-  const GAP = 4
-
-  let top = 0, left = 0
-  switch (props.placement) {
-    case 'top':    top = tr.top - tt.height - GAP;   left = tr.left + (tr.width - tt.width) / 2; break
-    case 'bottom': top = tr.bottom + GAP;             left = tr.left + (tr.width - tt.width) / 2; break
-    case 'left':   top = tr.top + (tr.height - tt.height) / 2; left = tr.left - tt.width - GAP; break
-    case 'right':  top = tr.top + (tr.height - tt.height) / 2; left = tr.right + GAP; break
-  }
-
-  top  = Math.max(6, Math.min(top,  window.innerHeight - tt.height - 6))
-  left = Math.max(6, Math.min(left, window.innerWidth  - tt.width  - 6))
+  const { top, left } = placeTooltip(triggerEl.value, tipEl.value, props.placement)
   tipStyle.value = { top: `${top}px`, left: `${left}px` }
 }
 
-onMounted(() => window.addEventListener('scroll', onScroll, true))
-onUnmounted(() => {
-  window.removeEventListener('scroll', onScroll, true)
-  cancelTimers()
-  endPress()
-  document.removeEventListener('pointerdown', onOutsideTouch, true)
+onMounted(() => {
+  trigger = createTooltipTrigger(triggerEl.value!, {
+    delay: () => props.delay,
+    rich: () => props.rich,
+    visible: () => visible.value,
+    open,
+    close: () => { visible.value = false },
+    tip: () => tipEl.value,
+  })
 })
+onUnmounted(() => trigger?.destroy())
 </script>
 
 <template>
@@ -198,14 +72,6 @@ onUnmounted(() => {
     ref="triggerEl"
     v-bind="$attrs"
     class="inline-flex"
-    @pointerenter="onPointerEnter"
-    @pointerleave="onPointerLeave"
-    @pointerdown="onPointerDown"
-    @click.capture="onClickCapture"
-    @contextmenu="onContextMenu"
-    @focusin="onFocusIn"
-    @focusout="hide"
-    @keydown="onKeyDown"
   >
     <slot />
   </span>

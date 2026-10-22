@@ -9,6 +9,7 @@ import { M3_LOCALE_KEY, __setAppLocale } from './composables/useLocale'
 import { vRipple } from './directives/vRipple'
 import { vReveal } from './directives/vReveal'
 import { vStateLayer } from './directives/vStateLayer'
+import { vTooltip } from './directives/vTooltip'
 import { M3_HYDRATING_KEY } from './composables/_hydration'
 import { M3_INITIAL_STATE_KEY, enableCookies, readCookie, trackViewport, writeCookie, type M3InitialState, type ResolvedInitialState } from './composables/_ssrState'
 import { THEME_KEY } from './composables/_storageKeys'
@@ -107,6 +108,7 @@ export function createM3UI(options: M3UIOptions = {}) {
       app.directive('ripple', vRipple)
       app.directive('reveal', vReveal)
       app.directive('state-layer', vStateLayer)
+      app.directive('tooltip', vTooltip)
       if (options.isHydrating) app.provide(M3_HYDRATING_KEY, options.isHydrating)
       if (options.initialState) app.provide(M3_INITIAL_STATE_KEY, resolveInitialState(options))
       if (options.cookies && typeof window !== 'undefined') enableCookies()
