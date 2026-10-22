@@ -2,13 +2,15 @@
 /**
  * The base layer switcher of an `MMap` with an `adapter`: a round thumbnail per base layer (the adapter's `image`,
  * after `imageBase`), one shown at a time, plus "no base layer". Only the thumbnails: put them in an `MMapControl`
- * (`:group="false"`), an `MFab`'s `#content` or a panel. Available from the `/map` entry point.
+ * (`:group="false"`), an `MFab`'s `#content` or a panel, inside the `MMap` or anywhere else with `map`. Available
+ * from the `/map` entry point.
  */
 import MIcon from './MIcon.vue'
 import { useLocale } from '../composables/useLocale'
 import { useMapLayers } from '../composables/useMapLayers'
+import type { MapSource } from '../composables/useMap'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     /** Prefix for the thumbnails' paths (e.g. `/images/`); full URLs are used as they are */
     imageBase?: string
@@ -16,12 +18,14 @@ withDefaults(
     none?: boolean
     /** Lay them out in a column */
     vertical?: boolean
+    /** The map, when this is outside it (a side panel): the `MMap`'s template ref */
+    map?: MapSource
   }>(),
   { imageBase: '', none: true, vertical: false },
 )
 
 const t = useLocale()
-const { baseLayers, baseLayer, setBaseLayer } = useMapLayers()
+const { baseLayers, baseLayer, setBaseLayer } = useMapLayers(() => props.map)
 
 const src = (image: string, base: string) => (/^(https?:|data:|\/\/)/.test(image) ? image : `${base}${image}`)
 </script>

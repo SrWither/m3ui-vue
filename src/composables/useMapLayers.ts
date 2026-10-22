@@ -1,6 +1,6 @@
-import { computed, inject, reactive } from 'vue'
+import { computed, reactive, type MaybeRefOrGetter } from 'vue'
 import type * as Maplibre from 'maplibre-gl'
-import { MAP_KEY } from './useMap'
+import { resolveMapContext, type MapSource } from './useMap'
 import type { MapLayerInfo, MapLayerModel } from './mapAdapters'
 
 /** The paint properties that make each layer type transparent. */
@@ -43,11 +43,12 @@ export function readLayerState(state: MapLayerState, map: Maplibre.Map, model: M
 /**
  * The layers of the enclosing `MMap`'s style as its `adapter` describes them, with their visibility and opacity, for a
  * layer panel or a base layer switcher of your own (`MMapLayers` and `MMapBaseLayers` are built on it). Changes go to
- * the map and to every component using it; a layer's `children` follow it.
+ * the map and to every component using it; a layer's `children` follow it. Outside an `MMap`, pass it one (its
+ * template ref), as with `useMap`.
  */
-export function useMapLayers() {
-  const ctx = inject(MAP_KEY, null)
-  if (!ctx) throw new Error('useMapLayers() must be called in a component inside <MMap>')
+export function useMapLayers(source?: MaybeRefOrGetter<MapSource>) {
+  const ctx = resolveMapContext(source)
+  if (!ctx) throw new Error('useMapLayers() must be called in a component inside <MMap>, or be given one')
   const { map, model, layerState: state } = ctx
 
   const layers = computed(() => model.value?.layers ?? [])

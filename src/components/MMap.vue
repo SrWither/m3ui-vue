@@ -21,7 +21,7 @@ import { markRaw, onBeforeUnmount, onMounted, onUnmounted, provide, ref, shallow
 import type * as Maplibre from 'maplibre-gl'
 import MMapAttribution from './_MMapAttribution.vue'
 import { useLocale } from '../composables/useLocale'
-import { MAP_KEY, type MaplibreModule } from '../composables/useMap'
+import { MAP_KEY, type MapContext, type MaplibreModule } from '../composables/useMap'
 import { createLayerState, readLayerState } from '../composables/useMapLayers'
 import type { MapAdapter, MapLayerModel } from '../composables/mapAdapters'
 import { carryRuntimeLayers, styleIds, type StyleIds } from '../composables/_mapStyle'
@@ -107,7 +107,8 @@ let ownIds: StyleIds | undefined
 const model = shallowRef<MapLayerModel>()
 const layerState = createLayerState()
 const activeTool = ref<string | null>(null)
-provide(MAP_KEY, { map, maplibre, styleVersion, model, layerState, activeTool })
+const context: MapContext = { map, maplibre, styleVersion, model, layerState, activeTool }
+provide(MAP_KEY, context)
 
 /** The adapter's model of the current style, and the layers' visibility and opacity in it. */
 function readModel(m: Maplibre.Map) {
@@ -363,6 +364,8 @@ watch(() => props.mapStyle, (style) => map.value?.setStyle(style, {
 defineExpose({
   /** The MapLibre map, once loaded */
   map,
+  /** What the components inside it share: pass the `MMap` (or this) as `map` to `MMapLayers`, `useMap()`… outside it */
+  context,
 })
 </script>
 

@@ -3,11 +3,12 @@
  * A simple filter for one layer of an `MMap`: chips for the values of one of its properties; the layer shows only the
  * features with the selected ones (all of them with none selected). The values are `values`, or else the distinct
  * ones among the layer's features loaded in the map. The style's own filter on the layer stays. For anything more
- * involved, build your own on `useMapFilter()`. Available from the `/map` entry point.
+ * involved, build your own on `useMapFilter()`. Inside the `MMap`, or anywhere else with `map`. Available from the `/map`
+ * entry point.
  */
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import MChip from './MChip.vue'
-import { useMap } from '../composables/useMap'
+import { useMap, type MapSource } from '../composables/useMap'
 import { useMapFilter } from '../composables/useMapFilter'
 
 const props = defineProps<{
@@ -21,12 +22,14 @@ const props = defineProps<{
   labels?: Record<string, string>
   /** The selected values (v-model) */
   modelValue?: (string | number)[]
+  /** The map, when this is outside it (a side panel): the `MMap`'s template ref */
+  map?: MapSource
 }>()
 
 const emit = defineEmits<{ 'update:modelValue': [values: (string | number)[]] }>()
 
-const { onReady, styleVersion } = useMap()
-const { setFilter, valuesOf } = useMapFilter()
+const { onReady, styleVersion } = useMap(() => props.map)
+const { setFilter, valuesOf } = useMapFilter(() => props.map)
 
 const found = ref<(string | number)[]>([])
 const options = computed(() => props.values ?? found.value)

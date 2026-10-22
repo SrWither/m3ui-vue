@@ -1,6 +1,6 @@
-import { inject } from 'vue'
+import type { MaybeRefOrGetter } from 'vue'
 import type * as Maplibre from 'maplibre-gl'
-import { MAP_KEY } from './useMap'
+import { resolveMapContext, type MapSource } from './useMap'
 
 // The style's own filter of each layer we filter (undefined: none), per map
 const originals = new WeakMap<Maplibre.Map, Map<string, Maplibre.FilterSpecification | undefined>>()
@@ -9,10 +9,11 @@ const originals = new WeakMap<Maplibre.Map, Map<string, Maplibre.FilterSpecifica
  * Filters for the layers of the enclosing `MMap`, on top of the filters their style already has (a layer that only
  * draws parks keeps doing so): `setFilter(layer, expression)` combines both, `setFilter(layer, null)` brings the
  * style's back. `MMapFilter` is built on it; use it for filters of your own (a range slider, a date, a search…).
+ * Outside an `MMap`, pass it one (its template ref), as with `useMap`.
  */
-export function useMapFilter() {
-  const ctx = inject(MAP_KEY, null)
-  if (!ctx) throw new Error('useMapFilter() must be called in a component inside <MMap>')
+export function useMapFilter(source?: MaybeRefOrGetter<MapSource>) {
+  const ctx = resolveMapContext(source)
+  if (!ctx) throw new Error('useMapFilter() must be called in a component inside <MMap>, or be given one')
 
   function setFilter(layerId: string, filter: Maplibre.FilterSpecification | null) {
     const map = ctx!.map.value

@@ -3,7 +3,8 @@
  * The layer list of an `MMap` with an `adapter`: a search field, the style's groups (collapsible, with a visibility
  * toggle for the whole group and a count) and its layers, each with a visibility toggle and, expanded, its
  * description, an opacity slider, its legend and a download link. Only the content: put it in an `MWindow`, an
- * `MSideSheet`, an `MBottomSheet` or an `MMapControl`. Available from the `/map` entry point.
+ * `MSideSheet`, an `MBottomSheet` or an `MMapControl`, inside the `MMap` or anywhere else with `map`. Available from the
+ * `/map` entry point.
  *
  * @slot actions Extra actions in an expanded layer (scope: `{ layer, visible }`)
  */
@@ -13,6 +14,7 @@ import MTextField from './MTextField.vue'
 import MMapLayerItem from './_MMapLayerItem.vue'
 import { useLocale } from '../composables/useLocale'
 import { useMapLayers } from '../composables/useMapLayers'
+import type { MapSource } from '../composables/useMap'
 import type { MapLayerInfo } from '../composables/mapAdapters'
 
 const props = withDefaults(
@@ -21,12 +23,14 @@ const props = withDefaults(
     search?: boolean
     /** Groups start collapsed */
     collapsed?: boolean
+    /** The map, when this is outside it (a side panel): the `MMap`'s template ref */
+    map?: MapSource
   }>(),
   { search: true, collapsed: false },
 )
 
 const t = useLocale()
-const { model, layersOf, isVisible, groupState, setGroupVisible } = useMapLayers()
+const { model, layersOf, isVisible, groupState, setGroupVisible } = useMapLayers(() => props.map)
 
 const query = ref('')
 const matches = (layer: MapLayerInfo) => !query.value || layer.title.toLowerCase().includes(query.value.toLowerCase())

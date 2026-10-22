@@ -1,4 +1,4 @@
-import { computed, getCurrentInstance, inject, onBeforeUnmount, onMounted, watch, type ComputedRef, type InjectionKey, type Ref, type ShallowRef } from 'vue'
+import { computed, getCurrentInstance, inject, onBeforeUnmount, onMounted, provide, toValue, watch, type ComputedRef, type InjectionKey, type MaybeRefOrGetter, type Ref, type ShallowRef } from 'vue'
 import type * as Maplibre from 'maplibre-gl'
 import type { MapLayerModel } from './mapAdapters'
 import type { MapLayerState } from './useMapLayers'
@@ -28,21 +28,59 @@ export interface MapContext {
 // Internal: provided by MMap
 export const MAP_KEY: InjectionKey<MapContext> = Symbol('m3-map')
 
+/**
+ * A map to use from outside `<MMap>`: the `MMap` itself (a template ref: `<MMap ref="map">` → `:map="map"`) or its
+ * `context`. Null or undefined until it mounts.
+ */
+export type MapSource = { context: MapContext } | MapContext | null | undefined
+
+/**
+ * Internal: the enclosing MMap's context or, outside one, a context that follows `source` (empty until it's
+ * there), provided to the caller's children too. Null when there's neither.
+ */
+export function resolveMapContext(source?: MaybeRefOrGetter<MapSource>): MapContext | null {
+  const injected = inject(MAP_KEY, null)
+  if (injected || source === undefined) return injected
+  const ctx = computed(() => {
+    const s = toValue(source)
+    return !s ? undefined : 'context' in s ? s.context : s
+  })
+  const empty = { visible: {} as Record<string, boolean>, opacity: {} as Record<string, number> }
+  const forwarded = {
+    map: computed(() => ctx.value?.map.value),
+    maplibre: computed(() => ctx.value?.maplibre.value),
+    styleVersion: computed(() => ctx.value?.styleVersion.value ?? 0),
+    model: computed(() => ctx.value?.model.value),
+    // Reads and writes reach the map's own state once it's there
+    layerState: new Proxy(empty, { get: (target, key) => Reflect.get(ctx.value?.layerState ?? target, key) }),
+    activeTool: computed({
+      get: () => ctx.value?.activeTool.value ?? null,
+      set: (v) => { if (ctx.value) ctx.value.activeTool.value = v },
+    }),
+  } as unknown as MapContext
+  provide(MAP_KEY, forwarded)
+  return forwarded
+}
+
 type MapEventType = keyof Maplibre.MapEventType
 type LayerEventType = keyof Maplibre.MapLayerEventType
 
 /**
  * The map of the enclosing `MMap`, for your own controls, layers and handlers (call it in a component inside
- * `MMap`). Listeners added through it are removed when the component unmounts.
+ * `MMap`). Listeners added through it are removed when the component unmounts. Outside an `MMap` (a side panel),
+ * pass it one: the `MMap`'s template ref, or a getter for it; until it mounts, `map` is undefined and `onReady` waits.
  *
  * ```ts
  * const { map, onLayer } = useMap()
  * onLayer('click', 'parcels-fill', (e) => console.log(e.features?.[0]?.properties))
+ *
+ * // In a panel next to the map: <MMap ref="mapRef"> … <MyPanel :map="mapRef" />
+ * const { map } = useMap(() => props.map)
  * ```
  */
-export function useMap() {
-  const ctx = inject(MAP_KEY, null)
-  if (!ctx) throw new Error('useMap() must be called in a component inside <MMap>')
+export function useMap(source?: MaybeRefOrGetter<MapSource>) {
+  const ctx = resolveMapContext(source)
+  if (!ctx) throw new Error('useMap() must be called in a component inside <MMap>, or be given one')
   const cleanups: (() => void)[] = []
   if (getCurrentInstance()) onBeforeUnmount(() => cleanups.splice(0).forEach((fn) => fn()))
 

@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
-import { defineComponent, h, nextTick } from 'vue'
+import { defineComponent, h, nextTick, ref } from 'vue'
 import type { StyleSpecification } from 'maplibre-gl'
 import { created, type FakeMap } from './_fakeMaplibre'
 
 vi.mock('maplibre-gl', async () => (await import('./_fakeMaplibre')).fakeModule)
 
-const { MMap, MMapLayers, MMapBaseLayers, MMapIdentify, MMapHover, useMapLayers, orvianAdapter, genericAdapter, formatFieldValue, identifyFeatures } = await import('../map')
+const { MMap, MMapLayers, MMapBaseLayers, MMapIdentify, MMapHover, MMapFilter, useMap, useMapLayers, orvianAdapter, genericAdapter, formatFieldValue, identifyFeatures } = await import('../map')
 
 // A style the way the Orvian viewers write it (served by mvt-rs)
 const STYLE_URL = 'https://tiles.test/services/styles/public:city'
@@ -186,6 +186,50 @@ describe('MMapBaseLayers', () => {
     expect(map.getLayoutProperty('osm', 'visibility')).toBe('none')
     await wrapper.find('button[aria-label="No base layer"]').trigger('click')
     expect(map.getLayoutProperty('sat', 'visibility')).toBe('none')
+  })
+})
+
+describe('outside the map', () => {
+  // A side panel next to the map: the MMap's template ref reaches the panels through their `map` prop
+  async function mountBeside() {
+    const mapRef = ref()
+    let api!: ReturnType<typeof useMap>
+    const Own = defineComponent({ props: { map: Object }, setup(props) { api = useMap(() => props.map as never); return () => null } })
+    const wrapper = mount(defineComponent({
+      setup: () => () => h('div', [
+        h('aside', [
+          h(MMapLayers, { map: mapRef.value, search: false }),
+          h(MMapBaseLayers, { map: mapRef.value }),
+          h(MMapFilter, { map: mapRef.value, layer: 'poi', property: 'kind', values: ['cafe', 'park'] }),
+          h(Own, { map: mapRef.value }),
+        ]),
+        h(MMap, { ref: mapRef, mapStyle: STYLE_URL, adapter: orvianAdapter() }),
+      ]),
+    }), { attachTo: document.body })
+    await flushPromises()
+    const map = created.maps.at(-1)! as FakeMap
+    map.style = orvianStyle() as never
+    map.load()
+    await nextTick()
+    await nextTick()
+    return { wrapper, map, api: () => api }
+  }
+
+  it('MMapLayers, MMapBaseLayers and MMapFilter work from a panel beside the map', async () => {
+    const { wrapper, map } = await mountBeside()
+    const panel = wrapper.find('aside')
+    expect(panel.text()).toContain('Parcels')
+    await panel.find('button[aria-label="Hide layer"]').trigger('click')
+    expect(map.getLayoutProperty('parcels', 'visibility')).toBe('none')
+    await panel.find('button[aria-label="Satellite"]').trigger('click')
+    expect(map.getLayoutProperty('sat', 'visibility')).toBe('visible')
+    await panel.findAll('button').find((b) => b.text().includes('cafe'))!.trigger('click')
+    expect(map.getFilter('poi')).toEqual(['in', ['get', 'kind'], ['literal', ['cafe']]])
+  })
+
+  it('useMap() takes the map too, empty until it mounts', async () => {
+    const { map, api } = await mountBeside()
+    expect(api().map.value).toBe(map)
   })
 })
 
