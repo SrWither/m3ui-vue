@@ -12,6 +12,8 @@ import MIcon from './MIcon.vue'
 import MMenuDivider from './MMenuDivider.vue'
 import { useEscapeStack } from '../composables/_useEscapeStack'
 import { POPUP_MARGIN, fitPopup } from '../composables/_popupPosition'
+import { motionSprings } from '../composables/motion'
+import { playSamples, prefersReducedMotion, sampleSpring } from '../composables/_springAnimation'
 
 defineOptions({ inheritAttrs: false })
 
@@ -110,15 +112,16 @@ const navDirection = ref<'forward' | 'backward'>('forward')
 // See MMenu.vue: driven by the Web Animations API rather than Vue's
 // CSS-class transition hooks, which never reliably completed here with
 // dynamic (direction-dependent) enter/leave classes on a mode-less Transition.
-const slideDuration = 220
+// Same shared axis X as MMenu: a 30dp slide with a crossfade between levels
+const SHARED_AXIS_OFFSET = 30
 function navSlideEnter(el: Element, done: () => void) {
   const dir = navDirection.value === 'forward' ? 1 : -1
   const anim = (el as HTMLElement).animate(
     [
-      { transform: `translateX(${dir * 100}%)`, opacity: 0.4 },
-      { transform: 'translateX(0%)', opacity: 1 },
+      { transform: `translateX(${dir * SHARED_AXIS_OFFSET}px)`, opacity: 0 },
+      { transform: 'translateX(0)', opacity: 1 },
     ],
-    { duration: slideDuration, easing: 'cubic-bezier(0.05,0.7,0.1,1)' },
+    { duration: 300, delay: 60, easing: 'cubic-bezier(0.05,0.7,0.1,1)', fill: 'backwards' },
   )
   anim.onfinish = done
 }
@@ -130,12 +133,32 @@ function navSlideLeave(el: Element, done: () => void) {
   htmlEl.style.top = '0'
   const anim = htmlEl.animate(
     [
-      { transform: 'translateX(0%)', opacity: 1 },
-      { transform: `translateX(${dir * 100}%)`, opacity: 0.4 },
+      { transform: 'translateX(0)', opacity: 1 },
+      { transform: `translateX(${dir * SHARED_AXIS_OFFSET}px)`, opacity: 0 },
     ],
-    { duration: slideDuration, easing: 'cubic-bezier(0.3,0,0.8,0.15)' },
+    { duration: 90, easing: 'cubic-bezier(0.3,0,0.8,0.15)', fill: 'forwards' },
   )
   anim.onfinish = done
+}
+
+// See MMenu.vue: the panel's height follows the new level's on a spring (Standard DefaultSpatial)
+const navBox = ref<HTMLElement>()
+function resizeAround(change: () => void) {
+  const el = navBox.value
+  const from = el?.offsetHeight ?? 0
+  // No scrollbar while the levels cross and the height moves; the wrapper's own inline overflowY comes back after
+  const prevOverflow = el?.style.overflowY ?? ''
+  if (el) el.style.overflowY = 'hidden'
+  const restore = () => { if (el) el.style.overflowY = prevOverflow }
+  change()
+  if (!el || prefersReducedMotion()) return restore()
+  nextTick(() => {
+    const to = el.offsetHeight
+    const anim = Math.abs(to - from) < 1 ? null
+      : playSamples(el, sampleSpring(from, to, 0, motionSprings.standard.defaultSpatial, 0.5), (h) => ({ height: `${h}px` }))
+    const slide = new Promise((r) => setTimeout(r, 380))
+    Promise.all([slide, anim?.finished.catch(() => {})]).then(restore)
+  })
 }
 
 // See MMenu.vue: the real Menu.kt animates the panel's scale/alpha with
@@ -247,13 +270,13 @@ function panelLeave(el: Element, done: () => void) {
 
 function pushNav(entry: NavEntry) {
   navDirection.value = 'forward'
-  navStack.value.push(entry)
+  resizeAround(() => navStack.value.push(entry))
   nextTick(() => focusableItems()[0]?.focus())
 }
 
 function popNav() {
   navDirection.value = 'backward'
-  navStack.value.pop()
+  resizeAround(() => navStack.value.pop())
   nextTick(() => focusableItems()[0]?.focus())
 }
 
@@ -387,7 +410,8 @@ onUnmounted(() => {
              elements or the shadow gets cut off -->
         <!-- Scrolls when taller than the window -->
         <div
-          class="overflow-hidden py-1"
+          ref="navBox"
+          class="relative overflow-hidden py-1"
           :style="{ maxHeight: `calc(100vh - ${2 * POPUP_MARGIN}px)`, overflowY: 'auto' }"
           :class="[
             variant === 'expressive' ? 'rounded-lg' : 'rounded-xs',
