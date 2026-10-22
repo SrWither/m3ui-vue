@@ -50,6 +50,8 @@ export { vTooltip } from './directives/vTooltip'
 export type { TooltipOptions, TooltipValue } from './directives/vTooltip'
 export { vFocusRing } from './directives/vFocusRing'
 export type { FocusRingOptions, FocusRingValue } from './directives/vFocusRing'
+export { vScrollElevation } from './directives/vScrollElevation'
+export type { ScrollElevationOptions, ScrollElevationValue } from './directives/vScrollElevation'
 
 // Components
 export { default as MAbsolute } from './components/MAbsolute.vue'
