@@ -19,6 +19,8 @@ const COLOR_TOKENS = [
 ].map((t) => `--color-${t}`)
 
 const DURATION = 250
+/** How long a theme switch's color transition takes, in ms (both paths) */
+export const THEME_TRANSITION_MS = DURATION
 const STYLE_ID = 'm3-theme-transition'
 
 // Injected only while switching: a registered <color> computes to rgb(), and code reading a token with
