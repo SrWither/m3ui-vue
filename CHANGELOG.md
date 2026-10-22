@@ -16,12 +16,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MNavigationDrawer` `accordion`: keeps one group open per level, so opening a group (by hand or by selecting) closes its siblings
 - `MIconButton` `color`: an M3 role or any CSS color. Standard and outlined buttons use it for the icon, filled ones for the container (white on a CSS color, the role's on-color on a role), tonal ones for a 20% container with the color on it; disabled buttons and toggles keep their own colors
 - `MSkeleton` `radius`: an M3 shape step (`none`, `xs`…`xl`, `full`) or any CSS length
+- `MOverlay` `closeOnEscape` (through the library's Escape stack, so a dialog or menu opened over it takes Escape first), `lockScroll` (the shared scroll lock) and `transition` (your own `<Transition>` name instead of the fade; define its classes globally, the overlay is teleported)
+- `MButton` and `MIconButton` `contentColor`: label/icon color over what the variant and `color` give, an M3 role (`on-surface` for a neutral text button) or any CSS color (`#000` on a white filled button)
 
 ### Changed
 - **`MSegmentedButton` and `MButtonGroup` are generic over their options' value type**, so `v-model` is typed after it (`SegmentedOption<V>`, `ButtonGroupOption<T>`; a single value, or an array with `multiSelect`; `MButtonGroup` also `null`). Types only, nothing changes at runtime; a ref typed wider than its options (say `string | number | (string | number)[]` with string options) now fails type checking: type the ref or the options
 - **`MNavigationDrawer` opens the groups that hold the selected item whenever `selected` changes** (`expandSelected`, default `true`), so a page reached through a route or a link shows its place in the tree; `:expand-selected="false"` keeps the old behavior
 
 ### Fixed
+- `MOverlay` dropped the consumer's `class`, `role`, `aria-*` and listeners (a Teleport root): they now go on the content layer, over the scrim
+- `MMenu` and `MContextMenu` inside an `MDialog` or an `MOverlay`: Escape closed the menu and the dialog together; menus now take Escape through the library's stack, so it closes the menu alone
 - `MSkeleton`'s default size and corners no longer beat the consumer's classes: they moved from inline styles and utilities to the base layer, so `w-40`, `aspect-video` or `rounded-xl` apply without `!`
 - `MPullToRefresh` keeps its scroll position inside a `<KeepAlive>`: the browser dropped it while the view was detached, so it came back at the top
 
