@@ -6,6 +6,8 @@
  * check that slides in.
  *
  * @slot default Item label text.
+ * @slot icon Replaces the leading icon (an `MIcon` with a class, an image, an avatar…), `{ on }` while selected or
+ *   checked. It gets the icon's 20px box and color
  * @slot children Nested submenu items. In the parent MMenu's default 'flyout' mode, clicking or hovering (mouse
  *   only) the item opens a side panel — supports unlimited nesting depth. In 'push' mode, clicking the item
  *   instead swaps the whole menu panel to the submenu with a back header; hover does nothing.
@@ -50,11 +52,12 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{ click: [], 'update:checked': [boolean] }>()
 
+const slots = useSlots()
 const checkable = computed(() => props.checked !== undefined)
 const selectable = computed(() => checkable.value || props.selected !== undefined)
 const on = computed(() => !!(props.checked ?? props.selected))
 // Without an `icon`, the selected icon (a check by default) only shows while on and slides the label aside
-const slidingIcon = computed(() => selectable.value && !props.icon)
+const slidingIcon = computed(() => selectable.value && !props.icon && !slots.icon)
 const onIcon = computed(() => props.selectedIcon ?? (props.icon ? undefined : 'check'))
 
 // Where this item sits in a run of consecutive selectable/checkable siblings, MenuDefaults.itemShape(index,
@@ -108,7 +111,6 @@ useSpring(
   FAST_EFFECTS,
 )
 
-const slots = useSlots()
 const tag = computed(() => props.to ? 'RouterLink' : 'button')
 const hasChildren = computed(() => !!slots.children)
 const menuClose = inject<(() => void) | null>('m-menu-close', null)
@@ -241,6 +243,13 @@ function onSubPointerLeave(e: PointerEvent) {
       <!-- -mr-3 cancels the flex gap, so the label sits flush while the slot is closed -->
       <span v-if="slidingIcon" ref="iconSlotEl" class="-mr-3 flex shrink-0 overflow-hidden" style="width: 0; opacity: 0">
         <MIcon :name="onIcon!" :size="20" class="shrink-0" />
+      </span>
+      <span
+        v-else-if="$slots.icon"
+        class="flex size-5 shrink-0 items-center justify-center"
+        :class="selectable ? (on ? '' : 'text-on-surface-variant') : danger ? 'text-error' : 'text-on-surface-variant'"
+      >
+        <slot name="icon" :on="on" />
       </span>
       <MIcon
         v-else-if="icon"

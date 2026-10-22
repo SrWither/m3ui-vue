@@ -81,4 +81,22 @@ describe('MMenuItem', () => {
     const filled = inMenu({ selected: true, icon: 'star' }).button.find('.material-symbols-outlined')
     expect(filled.attributes('style')).toContain('FILL')
   })
+
+  it('renders the #icon slot in the icon box, with its color and the on state', () => {
+    const w = mount(MMenuItem, {
+      props: { icon: 'flip', selected: true },
+      slots: { default: 'Flip vertical', icon: (p: { on: boolean }) => h('i', { class: 'custom', 'data-on': String(p.on) }) },
+    })
+    const box = w.find('.custom').element.parentElement!
+    expect(box.className).toContain('size-5')
+    expect(w.find('.custom').attributes('data-on')).toBe('true')
+    // the slot replaces the icon prop's MIcon
+    expect(w.find('button').text()).not.toContain('flip')
+  })
+
+  it('keeps the #icon slot instead of the sliding check on a selectable item', () => {
+    const w = mount(MMenuItem, { props: { selected: false }, slots: { default: 'A', icon: '<i class="custom" />' } })
+    expect(w.find('.custom').exists()).toBe(true)
+    expect(w.text()).not.toContain('check')
+  })
 })
