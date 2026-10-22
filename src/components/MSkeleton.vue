@@ -2,7 +2,9 @@
 /**
  * A loading placeholder shape — text, circular, rectangular, or rounded — with pulse or wave animation.
  */
-withDefaults(defineProps<{
+import { computed } from 'vue'
+
+const props = withDefaults(defineProps<{
   /** Skeleton shape */
   variant?: 'text' | 'circular' | 'rectangular' | 'rounded'
   /** CSS width (defaults to 100%, or 40px for circular) */
@@ -13,10 +15,23 @@ withDefaults(defineProps<{
   lines?: number
   /** Animation style */
   animation?: 'pulse' | 'wave' | 'none'
+  /**
+   * Corner radius: an M3 shape step (`none`, `xs` 4px, `sm` 8px, `md` 12px, `lg` 16px, `xl` 28px, `full`) or any CSS
+   * length, to match the card or thumbnail it stands in for. Defaults to the variant's (a Tailwind `rounded-*` class
+   * works too)
+   */
+  radius?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'full' | (string & {})
 }>(), {
   variant: 'text',
   animation: 'pulse',
   lines: 1,
+})
+
+const STEPS: Record<string, string> = { none: '0', full: '9999px' }
+const borderRadius = computed(() => {
+  const r = props.radius
+  if (!r) return undefined
+  return STEPS[r] ?? (/^(xs|sm|md|lg|xl)$/.test(r) ? `var(--radius-${r})` : r)
 })
 </script>
 
@@ -28,24 +43,31 @@ withDefaults(defineProps<{
       :key="i"
       class="h-3.5 rounded-full bg-on-surface/10"
       :class="animation === 'pulse' ? 'animate-pulse' : animation === 'wave' ? 'skeleton-wave' : ''"
-      :style="{ width: i === lines ? '60%' : (width ?? '100%') }"
+      :style="{ width: i === lines ? '60%' : (width ?? '100%'), borderRadius }"
     />
   </div>
 
   <!-- Single element -->
   <div
     v-else
-    class="bg-on-surface/10"
+    class="m3-skeleton bg-on-surface/10"
     :class="[
-      variant === 'circular' ? 'rounded-full' : variant === 'rounded' ? 'rounded-lg' : variant === 'text' ? 'rounded-full' : 'rounded-sm',
+      `m3-skeleton-${variant}`,
       animation === 'pulse' ? 'animate-pulse' : animation === 'wave' ? 'skeleton-wave' : '',
     ]"
-    :style="{
-      width: width ?? (variant === 'circular' ? '40px' : '100%'),
-      height: height ?? (variant === 'circular' ? '40px' : variant === 'text' ? '14px' : '100px'),
-    }"
+    :style="{ width, height, borderRadius }"
   />
 </template>
+
+<style>
+/* Default size and corners in the base layer, so a consumer's w-40, aspect-video or rounded-xl wins */
+@layer base {
+  .m3-skeleton { width: 100%; height: 100px; border-radius: var(--radius-sm); }
+  .m3-skeleton-rounded { border-radius: var(--radius-lg); }
+  .m3-skeleton-text { height: 14px; border-radius: 9999px; }
+  .m3-skeleton-circular { width: 40px; height: 40px; border-radius: 9999px; }
+}
+</style>
 
 <style scoped>
 @keyframes skeleton-wave-move {
