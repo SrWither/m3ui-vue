@@ -19,6 +19,13 @@ const props = withDefaults(
     /** Visual style */
     variant?: 'standard' | 'filled' | 'tonal' | 'outlined'
     /**
+     * An M3 role or any CSS color (`#fff` over a photo, `rgb(0 0 0 / 0.3)` for a scrim-like filled button,
+     * `currentColor` to follow the surrounding text). Standard and outlined use it for the icon; filled for the
+     * container with white (or the role's on-color) on it; tonal for a 20% container with the color on it.
+     * Disabled buttons and toggles keep their own colors
+     */
+    color?: 'primary' | 'secondary' | 'tertiary' | 'error' | (string & {})
+    /**
      * Button shape — rounded (pill, always) or squared (corner radius scales with size: 12px xs/sm, 16px md,
      * 28px lg/xl)
      */
@@ -53,6 +60,25 @@ const props = withDefaults(
 const emit = defineEmits<{ 'update:checked': [boolean] }>()
 
 const isToggle = computed(() => props.checked !== undefined)
+
+const ROLES = ['primary', 'secondary', 'tertiary', 'error']
+// `color` as inline styles over the variant's classes, so the default look stays class-only
+const colorStyle = computed(() => {
+  const c = props.color
+  if (!c || props.disabled || isToggle.value) return undefined
+  const role = ROLES.includes(c)
+  const main = role ? `var(--color-${c})` : c
+  switch (props.variant) {
+    case 'filled':
+      return { backgroundColor: main, color: role ? `var(--color-on-${c})` : '#fff' }
+    case 'tonal':
+      return role
+        ? { backgroundColor: `var(--color-${c}-container)`, color: `var(--color-on-${c}-container)` }
+        : { backgroundColor: `color-mix(in srgb, ${c} 20%, transparent)`, color: c }
+    default:
+      return { color: main }
+  }
+})
 const tag = computed(() => props.to && !isToggle.value ? 'RouterLink' : 'button')
 
 // Container height/width (icon buttons are always square by default — real
@@ -193,7 +219,7 @@ const variantClasses = computed(() => {
     :aria-pressed="isToggle ? checked : undefined"
     :disabled="disabled"
     :class="[base, shapeClass, variantClasses, disabledContainerClasses]"
-    :style="{ width: `${resolved.px}px`, height: `${resolved.px}px` }"
+    :style="[{ width: `${resolved.px}px`, height: `${resolved.px}px` }, colorStyle]"
     v-ripple="{ disabled, color: rippleColor }"
     @pointerdown="onPointerDown"
     @pointerup="onPointerUp"

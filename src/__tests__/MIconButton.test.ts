@@ -57,4 +57,31 @@ describe('MIconButton', () => {
     const square = mount(MIconButton, { props: { icon: 'x', checked: true, shape: 'squared' } })
     expect((square.element as HTMLElement).style.borderRadius).toBe('20px')
   })
+
+  describe('color', () => {
+    const style = (props: Record<string, unknown>) => (mount(MIconButton, { props: { icon: 'close', ...props } }).element as HTMLElement).style
+
+    it('colors the icon of standard and outlined buttons', () => {
+      expect(style({ color: '#fff' }).color).toBe('#fff')
+      expect(style({ color: 'primary', variant: 'outlined' }).color).toBe('var(--color-primary)')
+    })
+
+    it('fills a filled button with the color, white or the on-role on it', () => {
+      const s = style({ color: 'rgb(0 0 0 / 0.3)', variant: 'filled' })
+      expect(s.backgroundColor).toBe('rgb(0 0 0 / 0.3)')
+      expect(s.color).toBe('#fff')
+      expect(style({ color: 'tertiary', variant: 'filled' }).color).toBe('var(--color-on-tertiary)')
+    })
+
+    it('gives a tonal button a container of the color', () => {
+      expect(style({ color: 'error', variant: 'tonal' }).backgroundColor).toBe('var(--color-error-container)')
+      // (happy-dom drops color-mix() backgrounds, so only the content color is checked for a CSS color)
+      expect(style({ color: '#e8590c', variant: 'tonal' }).color).toBe('#e8590c')
+    })
+
+    it('leaves disabled buttons and toggles to their own colors', () => {
+      expect(style({ color: 'primary', disabled: true }).color).toBe('')
+      expect(style({ color: 'primary', checked: false }).color).toBe('')
+    })
+  })
 })
