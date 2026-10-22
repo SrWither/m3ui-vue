@@ -18,6 +18,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MSkeleton` `radius`: an M3 shape step (`none`, `xs`…`xl`, `full`) or any CSS length
 
 ### Changed
+- **`MSegmentedButton` and `MButtonGroup` are generic over their options' value type**, so `v-model` is typed after it (`SegmentedOption<V>`, `ButtonGroupOption<T>`; a single value, or an array with `multiSelect`; `MButtonGroup` also `null`). Types only, nothing changes at runtime; a ref typed wider than its options (say `string | number | (string | number)[]` with string options) now fails type checking: type the ref or the options
 - **`MNavigationDrawer` opens the groups that hold the selected item whenever `selected` changes** (`expandSelected`, default `true`), so a page reached through a route or a link shows its place in the tree; `:expand-selected="false"` keeps the old behavior
 
 ### Fixed
