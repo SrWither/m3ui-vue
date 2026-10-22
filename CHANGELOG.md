@@ -13,6 +13,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MRichTextEditor` `fill`: the editor takes the height you give it (`flex-1`, `h-full`…), keeping the toolbar in place and scrolling the text inside instead of growing with it; a click anywhere in the empty area lands in the text
 - `MCarousel` and `MSimpleCarousel` expose `focus()`, so the arrow keys work right away when one opens in a full-screen viewer
 - `MMenuItem` `#icon` slot (`{ on }`): replaces the leading icon with anything that fits its 20px box (a rotated `MIcon`, a color swatch, an avatar), in the icon's color
+- `MNavigationDrawer` `accordion`: keeps one group open per level, so opening a group (by hand or by selecting) closes its siblings
+
+### Changed
+- **`MNavigationDrawer` opens the groups that hold the selected item whenever `selected` changes** (`expandSelected`, default `true`), so a page reached through a route or a link shows its place in the tree; `:expand-selected="false"` keeps the old behavior
 
 ### Fixed
 - `MPullToRefresh` keeps its scroll position inside a `<KeepAlive>`: the browser dropped it while the view was detached, so it came back at the top
