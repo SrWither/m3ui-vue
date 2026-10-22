@@ -58,6 +58,8 @@ export { vSwipe } from './directives/vSwipe'
 export type { SwipeDirection, SwipeInfo, SwipeOptions, SwipeValue } from './directives/vSwipe'
 export { vClickOutside } from './directives/vClickOutside'
 export type { ClickOutsideOptions, ClickOutsideValue } from './directives/vClickOutside'
+export { vSkeleton } from './directives/vSkeleton'
+export type { SkeletonOptions, SkeletonValue } from './directives/vSkeleton'
 
 // Components
 export { default as MAbsolute } from './components/MAbsolute.vue'

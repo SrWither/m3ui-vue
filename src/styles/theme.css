@@ -397,6 +397,42 @@ html.theme-transitioning *::after {
   outline-offset: var(--m3-focus-ring-offset, 2px);
 }
 
+/* v-skeleton: the element as its own placeholder (MSkeleton's tint and animations). Unlayered, so it beats the
+   element's own bg-*, text-*, border-* and shadow-* utilities while loading */
+[data-m3-skeleton] {
+  background: color-mix(in srgb, var(--color-on-surface) 10%, transparent);
+  border-color: transparent;
+  box-shadow: none;
+  color: transparent;
+  pointer-events: none;
+  user-select: none;
+}
+[data-m3-skeleton] > :not(.m3-skeleton-shimmer) { visibility: hidden; }
+[data-m3-skeleton='pulse'] { animation: m3-skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+@keyframes m3-skeleton-pulse { 50% { opacity: 0.5; } }
+.m3-skeleton-shimmer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.m3-skeleton-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, var(--color-on-surface) 50%, transparent 100%);
+  opacity: 0.06;
+  animation: m3-skeleton-wave 1.8s ease-in-out infinite;
+}
+@keyframes m3-skeleton-wave {
+  0% { transform: translateX(-100%); }
+  60%, 100% { transform: translateX(100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-m3-skeleton='pulse'], .m3-skeleton-shimmer::after { animation: none; }
+}
+
 @keyframes m3-ctx-in {
   from { transform: translateY(-6px) scale(0.94); }
   to   { transform: translateY(0)    scale(1); }
