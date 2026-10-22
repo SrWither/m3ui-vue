@@ -15,6 +15,8 @@ export type { Palette, PaletteId, ActiveSeed, ContrastLevel } from './composable
 export { SEED_PALETTE } from './composables/useColorPalette'
 export { themeInitScript } from './composables/themeInitScript'
 export type { ThemeInitOptions } from './composables/themeInitScript'
+export { viewportFromHeaders, VIEWPORT_HINTS } from './composables/viewportHints'
+export type { RequestHeaders, ViewportSize } from './composables/viewportHints'
 export { generateScheme, schemeToCss, schemeRoles, seedFromImage, seedFromPixels } from './composables/dynamicColor'
 export type { SchemeVariant, SeedOptions, GeneratedScheme } from './composables/dynamicColor'
 export { useToast } from './composables/useToast'
