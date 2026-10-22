@@ -39,6 +39,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MMap` `transformStyle`: MapLibre's hook for a `mapStyle` change, to edit the next style before it loads (runs after `keepLayers`)
 - `MMapLayers`, `MMapBaseLayers` and `MMapFilter` work outside the `MMap` (a side panel, a drawer) with a `map` prop: the `MMap`'s template ref. `useMap()`, `useMapLayers()` and `useMapFilter()` take one too (a ref or a getter), for your own panels; they're empty until the map mounts. `MMap` exposes its `context`; new `MapSource` type
 - `MTimeline` progress: `current` (the current step's index) or items' `status` (`done`/`current`/`pending`) make it a progress timeline, in every layout: done steps filled with a solid line, the current one with a pulsing halo (still with reduced motion) and `aria-current="step"`, pending ones outlined with a dashed line. New `TimelineStatus` type
+- `MTimeline` groups: an entry's `group` ("Today", "Yesterday") puts a header before each run of entries sharing it, the line ending with the run, in every layout; `#group` (`{ group, items }`) replaces the header
 
 ### Changed
 - **`MTimeline`'s alternating layout folds into a single column while the timeline is narrower than 32rem** (its own width, a container query): the line on the left, `#opposite` under the content. `:responsive="false"` keeps it alternating
