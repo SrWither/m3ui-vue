@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.1.5] - Unreleased
+
+### Added
+- `MPullToRefresh` exposes `scrollEl` (the element that scrolls its content) and `scrollTo(options)` through a template ref
+
+### Fixed
+- `MPullToRefresh` keeps its scroll position inside a `<KeepAlive>`: the browser dropped it while the view was detached, so it came back at the top
+
 ## [1.1.4] - 2026-10-21
 
 ### Added
