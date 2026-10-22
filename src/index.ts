@@ -26,6 +26,8 @@ export { useDevice } from './composables/useDevice'
 export { useAutoGrow } from './composables/useAutoGrow'
 export type { AutoGrowOptions } from './composables/useAutoGrow'
 export { useThemeTokens } from './composables/useThemeTokens'
+export { useScrollReveal } from './composables/useScrollReveal'
+export type { ScrollRevealOptions, RevealEffect } from './composables/useScrollReveal'
 export { useWindowSizeClass, widthSizeClass, heightSizeClass } from './composables/useWindowSizeClass'
 export type { WidthSizeClass, HeightSizeClass, WindowSizeClassInfo } from './composables/useWindowSizeClass'
 export { useNotification } from './composables/useNotification'
@@ -39,6 +41,8 @@ export type { SpringSpec } from './composables/motion'
 // Directives
 export { vRipple } from './directives/vRipple'
 export type { RippleOptions, RippleValue } from './directives/vRipple'
+export { vReveal } from './directives/vReveal'
+export type { RevealValue } from './directives/vReveal'
 
 // Components
 export { default as MAbsolute } from './components/MAbsolute.vue'
