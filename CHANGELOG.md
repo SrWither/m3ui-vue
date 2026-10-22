@@ -29,6 +29,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 - **`MTimeline`'s alternating layout draws its line in each entry's color**, like the single-column one, instead of `outline-variant`
 - **`MSegmentedButton` and `MButtonGroup` are generic over their options' value type**, so `v-model` is typed after it (`SegmentedOption<V>`, `ButtonGroupOption<T>`; a single value, or an array with `multiSelect`; `MButtonGroup` also `null`). Types only, nothing changes at runtime; a ref typed wider than its options (say `string | number | (string | number)[]` with string options) now fails type checking: type the ref or the options
+- `MMenu` and `MContextMenu` push submenus (`submenu-mode="push"`): the panel's height follows the new level on an M3 spring instead of snapping to it, levels change with M3's shared axis X (a 30dp slide with a crossfade) instead of a full-width slide, and no scrollbar shows while they cross
 - **`MNavigationDrawer` opens the groups that hold the selected item whenever `selected` changes** (`expandSelected`, default `true`), so a page reached through a route or a link shows its place in the tree; `:expand-selected="false"` keeps the old behavior
 
 ### Fixed
