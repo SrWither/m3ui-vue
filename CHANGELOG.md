@@ -41,6 +41,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MTimeline` progress: `current` (the current step's index) or items' `status` (`done`/`current`/`pending`) make it a progress timeline, in every layout: done steps filled with a solid line, the current one with a pulsing halo (still with reduced motion) and `aria-current="step"`, pending ones outlined with a dashed line. New `TimelineStatus` type
 - `MTimeline` groups: an entry's `group` ("Today", "Yesterday") puts a header before each run of entries sharing it, the line ending with the run, in every layout; `#group` (`{ group, items }`) replaces the header
 - `MTimeline` animates changes (`animate`, default `true`; not with reduced motion): entries added after it mounts fade and slide in wherever they land, and the others move to their new places on M3 springs instead of jumping. Needs items' `key`
+- `MTimeline` `limit`: shows the first entries with a "Show N more" / "Show less" button for the rest (`v-model:expanded` optional; the revealed entries slide in). New locale keys `timelineShowMore` (`{count}`) and `timelineShowLess`
 
 ### Changed
 - **`MTimeline`'s alternating layout folds into a single column while the timeline is narrower than 32rem** (its own width, a container query): the line on the left, `#opposite` under the content. `:responsive="false"` keeps it alternating
