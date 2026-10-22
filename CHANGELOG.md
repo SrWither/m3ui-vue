@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.2.1] - 2026-10-22
+
+### Fixed
+- `MSegmentedButton` stretched by its container (in a flex column, or with `w-full`) left its segments at their natural width, its border running on past them: the segments now share the width
+
 ## [1.2.0] - 2026-10-22
 
 ### Added
