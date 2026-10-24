@@ -16,6 +16,7 @@ import { vLongPress } from './directives/vLongPress'
 import { vSwipe } from './directives/vSwipe'
 import { vClickOutside } from './directives/vClickOutside'
 import { vSkeleton } from './directives/vSkeleton'
+import { vSparkle } from './directives/vSparkle'
 import { M3_HYDRATING_KEY } from './composables/_hydration'
 import { M3_INITIAL_STATE_KEY, enableCookies, readCookie, trackViewport, writeCookie, type M3InitialState, type ResolvedInitialState } from './composables/_ssrState'
 import { THEME_KEY, setStoragePrefix, storageKey } from './composables/_storageKeys'
@@ -133,6 +134,7 @@ export function createM3UI(options: M3UIOptions = {}) {
       app.directive('swipe', vSwipe)
       app.directive('click-outside', vClickOutside)
       app.directive('skeleton', vSkeleton)
+      app.directive('sparkle', vSparkle)
       // First: the stored choices below (and those the modules read when they loaded) are this app's own
       if (typeof window !== 'undefined') setStoragePrefix(options.storagePrefix ?? '')
       if (options.isHydrating) app.provide(M3_HYDRATING_KEY, options.isHydrating)
@@ -189,5 +191,6 @@ declare module 'vue' {
     vSwipe: typeof vSwipe
     vClickOutside: typeof vClickOutside
     vSkeleton: typeof vSkeleton
+    vSparkle: typeof vSparkle
   }
 }

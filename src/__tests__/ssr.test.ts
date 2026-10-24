@@ -179,7 +179,7 @@ describe('SSR', () => {
         withDirectives(h('p', { id: 'skeleton' }, 'Ada'), [[d('skeleton'), true]]),
         withDirectives(h('p', { id: 'ring' }), [[d('focus-ring'), { within: true }]]),
         withDirectives(h('p', { id: 'layer' }), [[d('state-layer'), { dragged: true }]]),
-        withDirectives(h('p'), [[d('ripple')], [d('reveal')], [d('tooltip'), 'Hi'], [d('scroll-elevation')], [d('long-press'), () => {}], [d('swipe'), () => {}], [d('click-outside'), () => {}]]),
+        withDirectives(h('p'), [[d('ripple')], [d('reveal')], [d('tooltip'), 'Hi'], [d('scroll-elevation')], [d('long-press'), () => {}], [d('swipe'), () => {}], [d('click-outside'), () => {}], [d('sparkle')]]),
       ]),
     })
     app.use(lib.createM3UI())

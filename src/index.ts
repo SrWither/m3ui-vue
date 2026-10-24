@@ -66,6 +66,8 @@ export { vClickOutside } from './directives/vClickOutside'
 export type { ClickOutsideOptions, ClickOutsideValue } from './directives/vClickOutside'
 export { vSkeleton } from './directives/vSkeleton'
 export type { SkeletonOptions, SkeletonValue } from './directives/vSkeleton'
+export { vSparkle } from './directives/vSparkle'
+export type { SparkleOptions, SparkleValue } from './directives/vSparkle'
 
 // Components
 export { default as MAbsolute } from './components/MAbsolute.vue'
