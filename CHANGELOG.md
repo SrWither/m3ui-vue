@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 - `createM3UI` `storagePrefix`: every key the library stores (localStorage and cookies) becomes `<prefix>-m3-…`, so apps served from the same origin under different paths (`example.com/admin`, `example.com/shop`) keep their own theme, palette, contrast, seed and recent colors/emoji instead of sharing them. `themeInitScript()` and `viewportFromHeaders()` take the same `storagePrefix`
+- `useConfetti` `duration`: a rain (`from: 'top'`) or, from a point, a fountain that keeps going that long, `count` then being pieces per second; `Infinity` runs until stopped. `fire()` returns a function that stops it early, letting the pieces already out finish falling
+- `useFireworks()` / `launchFireworks()`: rockets rise from the bottom of the screen trailing a streak and burst, the classic way (sparks thrown out from the center in every direction, trailing streaks, slowed by drag and pulled down as they flicker out) or along an expressive shape (`shapes`: a ring, a heart, a flower…, kinematic so the shape stays readable). Mostly classic by default, in the theme's colors; `count`, `colors`, `size`, and `duration` + stop function like the confetti's. Shares useConfetti's canvas; nothing under reduced motion
+- `useReactions()` / `fireReaction(origin, content, options)`: an emoji (any text) or a Material Symbol (`{ icon }`, filled, in the theme's primary where it starts) pops up and floats away swaying, like reactions over a live stream; `count`, `size`, `distance`, `duration`, `sway`. Played as Web Animations (the compositor runs them); under reduced motion it only fades in place
+- `v-sparkle`: stars twinkle over an element, to draw the eye to something new or special: always or `'hover'` (pointer over it or focus in it), your own colors, MShape's shapes instead of stars, `size`, `rate`. Pauses off screen; none under reduced motion
 
 ### Fixed
 - Filled multiline `MTextField`: text scrolled up is clipped below the label instead of running behind it (the scrollbar starts below it too)
