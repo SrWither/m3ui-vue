@@ -68,6 +68,42 @@ describe('MSlider', () => {
     expect(endDot(wrapper).style.opacity).toBe('1')
   })
 
+  describe('dragging', () => {
+    // The track is 100px long from 0. Where the thumb is, read off the active piece, which ends at it (happy-dom
+    // drops the thumb's own clamp() left)
+    const thumbLeft = (w: VueWrapper) => Number(/clamp\([^,]+, ([\d.]+)%/.exec(pieces(w)[0]!.style.width)![1])
+    const mountSingle = (props: Record<string, unknown>) => {
+      const w = mount(MSlider, {
+        props: { modelValue: 1, min: 1, max: 30, ...props, 'onUpdate:modelValue': (v: unknown) => w.setProps({ modelValue: v as number }) },
+        attachTo: document.body,
+      })
+      ;(track(w).element as HTMLElement).getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 46, right: 100, bottom: 46, x: 0, y: 0, toJSON() {} })
+      return w
+    }
+
+    it('follows the pointer smoothly while dragging, emitting stepped values, and settles on the step when released', async () => {
+      wrapper = mountSingle({})
+      track(wrapper).element.dispatchEvent(new PointerEvent('pointerdown', { clientX: 20, bubbles: true }))
+      window.dispatchEvent(new PointerEvent('pointermove', { clientX: 51 }))
+      await nextTick()
+      // 51% of 1–30 is 15.79: the value snaps to 16, the thumb stays under the pointer
+      expect(wrapper.props('modelValue')).toBe(16)
+      expect(thumbLeft(wrapper)).toBeCloseTo(51, 5)
+      window.dispatchEvent(new PointerEvent('pointerup', { clientX: 51 }))
+      await nextTick()
+      expect(thumbLeft(wrapper)).toBeCloseTo((15 / 29) * 100, 5)
+    })
+
+    it('snaps from step to step with stops, like a discrete slider', async () => {
+      wrapper = mountSingle({ stops: true })
+      track(wrapper).element.dispatchEvent(new PointerEvent('pointerdown', { clientX: 20, bubbles: true }))
+      window.dispatchEvent(new PointerEvent('pointermove', { clientX: 51 }))
+      await nextTick()
+      expect(thumbLeft(wrapper)).toBeCloseTo((15 / 29) * 100, 5)
+      window.dispatchEvent(new PointerEvent('pointerup', { clientX: 51 }))
+    })
+  })
+
   describe('range', () => {
     // The track is 100px long from 0 for the pointer
     const press = async (w: VueWrapper, at: number, moves: number[] = []) => {

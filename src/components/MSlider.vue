@@ -18,7 +18,7 @@ const props = withDefaults(
     min?: number
     /** Maximum value */
     max?: number
-    /** Step increment */
+    /** Step increment: the values emitted snap to it; while dragging (without stops) the thumb still follows the pointer smoothly and settles on its step when released */
     step?: number
     /** Disables the slider */
     disabled?: boolean
@@ -34,7 +34,7 @@ const props = withDefaults(
     size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
     /** Standard, centered (from middle), or range (two thumbs) */
     variant?: 'standard' | 'centered' | 'range'
-    /** Show stop dots at each step (max 30 visible) */
+    /** Show stop dots at each step (max 30 visible), and make a dragged thumb snap from step to step instead of following the pointer smoothly (a discrete slider) */
     stops?: boolean
     /** Material Symbol icon shown before the slider — hides once the fill reaches it */
     icon?: string
@@ -105,8 +105,21 @@ function toPct(v: number) {
   return range === 0 ? 0 : ((v - props.min) / range) * 100
 }
 
-const pctLo = computed(() => toPct(val.value.lo))
-const pctHi = computed(() => toPct(val.value.hi))
+// Where the pointer is along the track (0–1) while dragging. Without stops the dragged thumb follows it smoothly
+// instead of jumping from step to step (the value emitted still snaps to `step`) and settles on its step when
+// released; with stops it snaps as it goes, like Compose's discrete slider
+const pointerRatio = ref<number | null>(null)
+const freePct = computed(() => (!props.stops && dragging.value !== false && pointerRatio.value !== null ? pointerRatio.value * 100 : null))
+const pctLo = computed(() => {
+  const f = freePct.value
+  if (f !== null && (dragging.value === 'single' || dragging.value === 0)) return isRange.value ? Math.min(f, toPct(val.value.hi)) : f
+  return toPct(val.value.lo)
+})
+const pctHi = computed(() => {
+  const f = freePct.value
+  if (f !== null && dragging.value === 1) return Math.max(f, toPct(val.value.lo))
+  return toPct(val.value.hi)
+})
 const centerPct = computed(() => toPct(0))
 
 // Start/end anchor dots hide once the fill has actually covered their spot —
@@ -270,6 +283,8 @@ function onPointerDown(e: PointerEvent) {
     dragging.value = 'single'
     emit('update:modelValue', v)
   }
+  // Two overlapping thumbs follow the pointer only once its direction has picked one
+  pointerRatio.value = overlapPress ? null : ratioFromEvent(e)
   window.addEventListener('pointermove', onPointerMove)
   window.addEventListener('pointerup', onPointerUp)
   window.addEventListener('pointercancel', onPointerUp)
@@ -285,14 +300,17 @@ function onPointerMove(e: PointerEvent) {
       dragging.value = v > val.value.lo ? 1 : 0
       focusThumb(dragging.value)
     }
+    pointerRatio.value = ratioFromEvent(e)
     emit('update:modelValue', rangeValue(dragging.value as 0 | 1, v))
   } else {
+    pointerRatio.value = ratioFromEvent(e)
     emit('update:modelValue', v)
   }
 }
 
 function onPointerUp() {
   dragging.value = false
+  pointerRatio.value = null
   overlapPress = false
   window.removeEventListener('pointermove', onPointerMove)
   window.removeEventListener('pointerup', onPointerUp)
