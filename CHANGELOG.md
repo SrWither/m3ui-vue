@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.2.2] - Unreleased
+## [1.2.2] - 2026-10-23
 
 ### Added
 - `createM3UI` `storagePrefix`: every key the library stores (localStorage and cookies) becomes `<prefix>-m3-…`, so apps served from the same origin under different paths (`example.com/admin`, `example.com/shop`) keep their own theme, palette, contrast, seed and recent colors/emoji instead of sharing them. `themeInitScript()` and `viewportFromHeaders()` take the same `storagePrefix`
