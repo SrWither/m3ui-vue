@@ -112,11 +112,15 @@ const inputClasses = computed(() => {
 
   return [
     ...base,
-    "rounded-t-xs bg-surface-container-highest border-b pt-6 pb-2",
+    // Multiline: the label's 24px band is a transparent top border rather than padding, so text scrolled up is
+    // clipped below the label (at the padding box) instead of running behind it; the background still fills it
+    props.multiline
+      ? "rounded-t-xs bg-surface-container-highest border-b border-t-24 border-t-transparent pb-2"
+      : "rounded-t-xs bg-surface-container-highest border-b pt-6 pb-2",
     props.error
-      ? "border-error focus:border-b-2 focus:border-error"
-      : "border-on-surface-variant hover:border-on-surface focus:border-b-2 focus:border-primary",
-    "disabled:border-on-surface/38 disabled:bg-[color-mix(in_srgb,var(--color-on-surface)_4%,var(--color-surface-container-highest))]",
+      ? "border-b-error focus:border-b-2 focus:border-b-error"
+      : "border-b-on-surface-variant hover:border-b-on-surface focus:border-b-2 focus:border-b-primary",
+    "disabled:border-b-on-surface/38 disabled:bg-[color-mix(in_srgb,var(--color-on-surface)_4%,var(--color-surface-container-highest))]",
   ].join(" ");
 });
 
