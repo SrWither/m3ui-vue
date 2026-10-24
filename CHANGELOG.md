@@ -14,6 +14,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `useReactions()` / `fireReaction(origin, content, options)`: an emoji (any text) or a Material Symbol (`{ icon }`, filled, in the theme's primary where it starts) pops up and floats away swaying, like reactions over a live stream; `count`, `size`, `distance`, `duration`, `sway`. Played as Web Animations (the compositor runs them); under reduced motion it only fades in place
 - `v-sparkle`: stars twinkle over an element, to draw the eye to something new or special: always or `'hover'` (pointer over it or focus in it), your own colors, MShape's shapes instead of stars, `size`, `rate`. Pauses off screen; none under reduced motion
 
+### Changed
+- **`MSlider`: a dragged thumb (and the active track) follows the pointer smoothly instead of jumping from step to step, then settles on its step when released.** The values emitted still snap to `step`; with `stops` (a discrete slider) it snaps as it goes, like Compose's
+
 ### Fixed
 - Filled multiline `MTextField`: text scrolled up is clipped below the label instead of running behind it (the scrollbar starts below it too)
 
