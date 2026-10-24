@@ -3,8 +3,12 @@ import { __resetConfetti, fireConfetti, useConfetti } from '../composables/useCo
 
 // happy-dom has no 2D canvas: a fake one that records what's drawn
 let fills: string[] = []
+// Pieces drawn in the last full frame (each frame clears the canvas, then draws every piece)
+let onScreen = 0
+let drawing = 0
 beforeEach(() => {
   fills = []
+  onScreen = drawing = 0
   vi.stubGlobal('Path2D', class { constructor(public d: string) {} })
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function () {
     const ctx = {
@@ -12,8 +16,8 @@ beforeEach(() => {
       globalAlpha: 1,
       setTransform: () => {},
       translate: () => {},
-      clearRect: () => {},
-      fill: () => fills.push(ctx.fillStyle),
+      clearRect: () => { onScreen = drawing; drawing = 0 },
+      fill: () => { drawing++; fills.push(ctx.fillStyle) },
     }
     return ctx as unknown as CanvasRenderingContext2D
   })
@@ -77,5 +81,32 @@ describe('useConfetti', () => {
     await frames(60)
     expect(new Set(fills)).toEqual(new Set(['blue', 'green']))
     button.remove()
+  })
+
+  it('with a duration keeps adding pieces (count per second) until it ends, then lets them fall', async () => {
+    fireConfetti(undefined, { from: 'top', count: 100, duration: 500, colors: ['red'] })
+    await frames(150)
+    const early = onScreen
+    await frames(250)
+    // Still raining: more pieces than before, about count per second so far
+    expect(onScreen).toBeGreaterThan(early)
+    expect(onScreen).toBeGreaterThan(20)
+    expect(onScreen).toBeLessThan(60)
+    await frames(300)
+    // Over: no new pieces (at most the 50 a second's half gives), the canvas stays while they fall
+    expect(onScreen).toBeLessThanOrEqual(51)
+    expect(canvas()).not.toBeNull()
+  })
+
+  it('stop() ends a rain early (and Infinity runs until then)', async () => {
+    const stop = fireConfetti(undefined, { from: 'top', count: 200, duration: Infinity, colors: ['red'] })
+    await frames(200)
+    stop()
+    await frames(30)
+    const atStop = onScreen
+    expect(atStop).toBeGreaterThan(0)
+    await frames(300)
+    expect(onScreen).toBeLessThanOrEqual(atStop)
+    expect(onScreen).toBeGreaterThan(0)
   })
 })

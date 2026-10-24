@@ -1,8 +1,9 @@
 // Confetti: a burst of Material 3's expressive shapes (MShape's) in the theme's colors, for the end of a flow (an
-// order placed, a task done). One shared canvas over the page, created on the first burst and removed when the last
-// piece has fallen; it never takes pointer events and assistive technology ignores it. Simple physics (gravity, air
-// drag, spin and a flip that flattens each piece as it turns) in a rAF loop. Nothing happens under reduced motion.
+// order placed, a task done). Drawn on the effects' shared canvas (_effectCanvas), which goes away when the last
+// piece has fallen. Simple physics (gravity, air drag, spin and a flip that flattens each piece as it turns). Nothing
+// happens under reduced motion.
 import { getShape, toSvgPath, type ShapeName } from 'shape-morph'
+import { __resetEffectCanvas, originPoint, reducedMotion, runLayer, themeColors, type EffectLayer, type EffectOrigin } from './_effectCanvas'
 
 export interface ConfettiOptions {
   /** How many pieces (default 80; 160 for `from: 'top'`) */
@@ -21,10 +22,18 @@ export interface ConfettiOptions {
   velocity?: number
   /** Piece size in px (default 14) */
   size?: number
+  /**
+   * Keep it going for this long, in ms: a rain that keeps falling (`from: 'top'`) or a fountain from the point,
+   * `count` then being pieces per second. `Infinity` runs until the returned `stop()`. Unset: one burst
+   */
+  duration?: number
 }
 
+/** Stops a running confetti before its `duration` ends; the pieces already out finish falling. */
+export type StopConfetti = () => void
+
 /** Where a burst starts: the pointer of an event, an element's center, or a point in viewport pixels */
-export type ConfettiOrigin = MouseEvent | PointerEvent | Element | { x: number; y: number }
+export type ConfettiOrigin = EffectOrigin
 
 const DEFAULT_SHAPES: ShapeName[] = ['Cookie4Sided', 'Sunny', 'Clover4Leaf', 'Heart', 'Pill', 'Triangle', 'SoftBurst', 'Circle', 'Gem', 'Flower']
 const ROLES = ['primary', 'secondary', 'tertiary', 'primary-container', 'tertiary-container']
@@ -58,117 +67,73 @@ function pathFor(shape: ShapeName) {
   return path
 }
 
-let canvas: HTMLCanvasElement | null = null
-let ctx: CanvasRenderingContext2D | null = null
+// A confetti with a `duration`: it adds `rate` pieces per second (fractions carried over) until `until`
+interface Emitter {
+  until: number
+  rate: number
+  carry: number
+  spawn: () => Piece
+}
+
 let pieces: Piece[] = []
-let raf = 0
-let last = 0
+let emitters: Emitter[] = []
 
-function ensureCanvas() {
-  if (canvas) return ctx
-  canvas = document.createElement('canvas')
-  canvas.setAttribute('aria-hidden', 'true')
-  canvas.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:2147483000'
-  document.body.appendChild(canvas)
-  ctx = canvas.getContext('2d')
-  if (!ctx) {
-    teardown()
-    return null
-  }
-  resize()
-  window.addEventListener('resize', resize)
-  return ctx
+const layer: EffectLayer = {
+  step(ctx, dt, dpr, now) {
+    const height = window.innerHeight
+    emitters = emitters.filter((e) => e.until > now)
+    for (const e of emitters) {
+      e.carry += e.rate * dt
+      for (; e.carry >= 1; e.carry--) pieces.push(e.spawn())
+    }
+    pieces = pieces.filter((p) => p.age < p.life && p.y < height + 60)
+    for (const p of pieces) {
+      p.age += dt
+      p.vx -= p.vx * DRAG * dt
+      p.vy += (GRAVITY - p.vy * DRAG) * dt
+      p.x += p.vx * dt
+      p.y += p.vy * dt
+      p.rot += p.spin * dt
+      p.flip += p.flipSpeed * dt
+      const fade = Math.min(1, (p.life - p.age) / 0.6)
+      ctx.globalAlpha = Math.max(0, fade)
+      ctx.fillStyle = p.color
+      const scale = (p.size / SIZE) * dpr
+      ctx.setTransform(scale * Math.cos(p.rot), scale * Math.sin(p.rot), -scale * Math.sin(p.rot) * Math.cos(p.flip), scale * Math.cos(p.rot) * Math.cos(p.flip), p.x * dpr, p.y * dpr)
+      ctx.translate(-SIZE / 2, -SIZE / 2)
+      ctx.fill(p.path)
+    }
+    return pieces.length > 0 || emitters.length > 0
+  },
 }
 
-function resize() {
-  if (!canvas) return
-  const dpr = window.devicePixelRatio || 1
-  canvas.width = Math.round(window.innerWidth * dpr)
-  canvas.height = Math.round(window.innerHeight * dpr)
-}
 
-function teardown() {
-  cancelAnimationFrame(raf)
-  raf = 0
-  window.removeEventListener('resize', resize)
-  canvas?.remove()
-  canvas = null
-  ctx = null
-  pieces = []
-}
-
-function frame(now: number) {
-  const dt = Math.min((now - last) / 1000, 1 / 30)
-  last = now
-  const height = window.innerHeight
-  pieces = pieces.filter((p) => p.age < p.life && p.y < height + 60)
-  if (!pieces.length || !ctx || !canvas) {
-    teardown()
-    return
-  }
-  const dpr = canvas.width / window.innerWidth
-  ctx.setTransform(1, 0, 0, 1, 0, 0)
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
-  for (const p of pieces) {
-    p.age += dt
-    p.vx -= p.vx * DRAG * dt
-    p.vy += (GRAVITY - p.vy * DRAG) * dt
-    p.x += p.vx * dt
-    p.y += p.vy * dt
-    p.rot += p.spin * dt
-    p.flip += p.flipSpeed * dt
-    const fade = Math.min(1, (p.life - p.age) / 0.6)
-    ctx.globalAlpha = Math.max(0, fade)
-    ctx.fillStyle = p.color
-    const scale = (p.size / SIZE) * dpr
-    ctx.setTransform(scale * Math.cos(p.rot), scale * Math.sin(p.rot), -scale * Math.sin(p.rot) * Math.cos(p.flip), scale * Math.cos(p.rot) * Math.cos(p.flip), p.x * dpr, p.y * dpr)
-    ctx.translate(-SIZE / 2, -SIZE / 2)
-    ctx.fill(p.path)
-  }
-  raf = requestAnimationFrame(frame)
-}
-
-function originPoint(origin: ConfettiOrigin | undefined): { x: number; y: number; el: Element } {
-  if (origin && 'clientX' in origin) {
-    const el = (origin.currentTarget as Element | null) ?? (origin.target as Element | null) ?? document.documentElement
-    // A click from the keyboard (Enter, Space) has no pointer position: burst from the element instead
-    if (origin.detail === 0 && origin.clientX === 0 && origin.clientY === 0) return originPoint(el)
-    return { x: origin.clientX, y: origin.clientY, el }
-  }
-  if (origin instanceof Element) {
-    const r = origin.getBoundingClientRect()
-    return { x: r.left + r.width / 2, y: r.top + r.height / 2, el: origin }
-  }
-  if (origin) return { ...origin, el: document.documentElement }
-  return { x: window.innerWidth / 2, y: window.innerHeight * 0.6, el: document.documentElement }
-}
-
-function themeColors(el: Element) {
-  const style = getComputedStyle(el)
-  const colors = ROLES.map((role) => style.getPropertyValue(`--color-${role}`).trim()).filter(Boolean)
-  return colors.length ? colors : ['#6750a4', '#625b71', '#7d5260', '#eaddff', '#ffd8e4']
-}
-
-/** Fires a burst of confetti. Browser only; does nothing under reduced motion. */
-export function fireConfetti(origin?: ConfettiOrigin, options: ConfettiOptions = {}) {
-  if (typeof window === 'undefined') return
-  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+/**
+ * Fires confetti: one burst, or with `duration` a rain or fountain that keeps going (stop it early with the returned
+ * function). Browser only; does nothing under reduced motion.
+ */
+export function fireConfetti(origin?: ConfettiOrigin, options: ConfettiOptions = {}): StopConfetti {
+  const noop = () => {}
+  if (typeof window === 'undefined') return noop
+  if (reducedMotion()) return noop
   const top = options.from === 'top'
   const point = originPoint(origin)
-  const colors = options.colors?.length ? options.colors : themeColors(point.el)
+  const colors = options.colors?.length ? options.colors : themeColors(point.el, ROLES)
   const shapes = options.shapes?.length ? options.shapes : DEFAULT_SHAPES
   const count = options.count ?? (top ? 160 : 80)
   const spread = ((options.spread ?? 70) * Math.PI) / 180
   const angle = ((options.angle ?? 0) * Math.PI) / 180
   const speed = options.velocity ?? 950
   const size = options.size ?? 14
-  if (!ensureCanvas()) return
-  for (let i = 0; i < count; i++) {
+  // A rain with a duration starts its pieces just above the screen (they keep coming), a single one spread over a
+  // band above it (they all come at once)
+  const band = options.duration ? 0.05 : 0.4
+  const spawn = (): Piece => {
     const dir = angle + (Math.random() - 0.5) * spread
     const v = top ? 100 + Math.random() * 200 : speed * (0.55 + Math.random() * 0.6)
-    pieces.push({
+    return {
       x: top ? Math.random() * window.innerWidth : point.x,
-      y: top ? -20 - Math.random() * window.innerHeight * 0.4 : point.y,
+      y: top ? -20 - Math.random() * window.innerHeight * band : point.y,
       vx: top ? (Math.random() - 0.5) * 200 : Math.sin(dir) * v,
       vy: top ? v : -Math.cos(dir) * v,
       rot: Math.random() * Math.PI * 2,
@@ -180,25 +145,37 @@ export function fireConfetti(origin?: ConfettiOrigin, options: ConfettiOptions =
       color: colors[Math.floor(Math.random() * colors.length)]!,
       age: 0,
       life: top ? 4 + Math.random() * 1.5 : 2.4 + Math.random() * 1.2,
-    })
+    }
   }
-  if (!raf) {
-    last = performance.now()
-    raf = requestAnimationFrame(frame)
+  if (!runLayer(layer)) return noop
+  let emitter: Emitter | null = null
+  if (options.duration && options.duration > 0) {
+    emitter = { until: performance.now() + options.duration, rate: count, carry: 0, spawn }
+    emitters.push(emitter)
+  } else {
+    for (let i = 0; i < count; i++) pieces.push(spawn())
+  }
+  return () => {
+    if (emitter) emitter.until = 0
   }
 }
 
-/** Confetti for a component: `fire(event)` from the pointer, `fire(el)` from an element, `fire({ from: 'top' })`. */
+/**
+ * Confetti for a component: `fire(event)` from the pointer, `fire(el)` from an element, `fire({ from: 'top' })`,
+ * `fire({ from: 'top', duration: 5000 })` for a rain that lasts. Returns a function that stops it early.
+ */
 export function useConfetti() {
-  function fire(origin?: ConfettiOrigin | ConfettiOptions, options?: ConfettiOptions) {
+  function fire(origin?: ConfettiOrigin | ConfettiOptions, options?: ConfettiOptions): StopConfetti {
     const isOrigin = origin instanceof Event || (typeof Element !== 'undefined' && origin instanceof Element) || (origin && 'x' in origin && 'y' in origin && !('from' in origin))
-    if (isOrigin) fireConfetti(origin as ConfettiOrigin, options)
-    else fireConfetti(undefined, { ...(origin as ConfettiOptions | undefined), ...options })
+    if (isOrigin) return fireConfetti(origin as ConfettiOrigin, options)
+    return fireConfetti(undefined, { ...(origin as ConfettiOptions | undefined), ...options })
   }
   return { fire }
 }
 
 /** Stops every burst and removes the canvas. Internal, for tests; not exported from index.ts. */
 export function __resetConfetti() {
-  teardown()
+  pieces = []
+  emitters = []
+  __resetEffectCanvas()
 }
