@@ -1,6 +1,6 @@
 import { computed, hasInjectionContext, inject, onMounted, ref, type InjectionKey, type Ref } from 'vue'
 import { isHydrating } from './_hydration'
-import { VIEWPORT_KEY } from './_storageKeys'
+import { VIEWPORT_KEY, storageKey } from './_storageKeys'
 import type { Theme } from './useTheme'
 import type { ContrastLevel } from './useColorPalette'
 
@@ -55,7 +55,7 @@ let trackingViewport = false
 export function trackViewport() {
   if (!cookiesEnabled || trackingViewport || typeof window === 'undefined') return
   trackingViewport = true
-  const write = () => writeCookie(VIEWPORT_KEY, `${window.innerWidth}x${window.innerHeight}`)
+  const write = () => writeCookie(storageKey(VIEWPORT_KEY), `${window.innerWidth}x${window.innerHeight}`)
   let timer: ReturnType<typeof setTimeout> | undefined
   write()
   window.addEventListener('resize', () => {

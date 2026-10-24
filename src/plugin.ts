@@ -18,7 +18,7 @@ import { vClickOutside } from './directives/vClickOutside'
 import { vSkeleton } from './directives/vSkeleton'
 import { M3_HYDRATING_KEY } from './composables/_hydration'
 import { M3_INITIAL_STATE_KEY, enableCookies, readCookie, trackViewport, writeCookie, type M3InitialState, type ResolvedInitialState } from './composables/_ssrState'
-import { THEME_KEY } from './composables/_storageKeys'
+import { THEME_KEY, setStoragePrefix, storageKey } from './composables/_storageKeys'
 import type { Theme } from './composables/useTheme'
 import { CONTRAST_KEY, PALETTE_KEY, SEED_PALETTE } from './composables/useColorPalette'
 
@@ -78,6 +78,14 @@ export interface M3UIOptions {
    */
   cookies?: boolean
   /**
+   * A prefix for every key the library stores in localStorage and cookies (`'admin'` → `admin-m3-theme`,
+   * `admin-m3-palette`…), so apps served from the same origin under different paths (`example.com/admin`,
+   * `example.com/shop`) each keep their own theme, palette, contrast and recent colors/emoji instead of sharing them.
+   * Letters, digits, `-` and `_` (it's also part of the cookie names). Pass the same one to `themeInitScript()` and
+   * `viewportFromHeaders()` when you use them.
+   */
+  storagePrefix?: string
+  /**
    * Server-side rendering: the user's theme, palette and contrast as the server knows them (from the cookies that
    * `cookies` writes), on the server and on the client alike. `useTheme()` and `useColorPalette()` report them on
    * the server, and on the client while hydrating (with `isHydrating`), so what's rendered from them matches the
@@ -86,6 +94,10 @@ export interface M3UIOptions {
    * that window size instead of compact.
    */
   initialState?: M3InitialState
+}
+
+function readStored(key: string): string | null {
+  try { return localStorage.getItem(storageKey(key)) } catch { return null }
 }
 
 const THEMES: readonly Theme[] = ['light', 'dark', 'system']
@@ -121,6 +133,8 @@ export function createM3UI(options: M3UIOptions = {}) {
       app.directive('swipe', vSwipe)
       app.directive('click-outside', vClickOutside)
       app.directive('skeleton', vSkeleton)
+      // First: the stored choices below (and those the modules read when they loaded) are this app's own
+      if (typeof window !== 'undefined') setStoragePrefix(options.storagePrefix ?? '')
       if (options.isHydrating) app.provide(M3_HYDRATING_KEY, options.isHydrating)
       if (options.initialState) app.provide(M3_INITIAL_STATE_KEY, resolveInitialState(options))
       if (options.cookies && typeof window !== 'undefined') enableCookies()
@@ -135,7 +149,7 @@ export function createM3UI(options: M3UIOptions = {}) {
         if (options.persistPalette === false) {
           if (options.palette) __forcePalette(options.palette, false)
           else if (options.seed) void __defaultSeed(options.seed, options.seedOptions, false)
-        } else if (!localStorage.getItem('m3-palette') && !readCookie('m3-palette')) {
+        } else if (!readStored(PALETTE_KEY) && !readCookie(storageKey(PALETTE_KEY))) {
           // `palette`/`seed` are only the first-visit default — once the user picks a palette via
           // `useColorPalette().set()` (or a seed via `setSeed()`) it's persisted to localStorage, and that choice
           // must win on every later boot instead of being clobbered back to the plugin's static default.
@@ -148,9 +162,8 @@ export function createM3UI(options: M3UIOptions = {}) {
         // without a stored value (cleared storage, or set by a server) stays
         if (options.cookies) {
           for (const key of [THEME_KEY, PALETTE_KEY, CONTRAST_KEY]) {
-            let value: string | null = null
-            try { value = localStorage.getItem(key) } catch { /* storage blocked */ }
-            if (value != null) writeCookie(key, value)
+            const value = readStored(key)
+            if (value != null) writeCookie(storageKey(key), value)
           }
           trackViewport()
         }

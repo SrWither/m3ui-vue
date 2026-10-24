@@ -1,4 +1,4 @@
-import { THEME_KEY } from './useTheme'
+import { THEME_KEY, storageKey } from './_storageKeys'
 import { CONTRAST_KEY, CSS_KEY, PALETTE_KEY, STYLE_ID, type ContrastLevel, type PaletteId } from './useColorPalette'
 
 export interface ThemeInitOptions {
@@ -8,6 +8,8 @@ export interface ThemeInitOptions {
   contrast?: ContrastLevel
   /** `createM3UI`'s `persistPalette`. */
   persistPalette?: boolean
+  /** `createM3UI`'s `storagePrefix`. */
+  storagePrefix?: string
 }
 
 /**
@@ -24,7 +26,8 @@ export interface ThemeInitOptions {
  */
 export function themeInitScript(options: ThemeInitOptions = {}): string {
   const config = JSON.stringify({
-    keys: { theme: THEME_KEY, palette: PALETTE_KEY, contrast: CONTRAST_KEY, css: CSS_KEY },
+    keys: Object.fromEntries(Object.entries({ theme: THEME_KEY, palette: PALETTE_KEY, contrast: CONTRAST_KEY, css: CSS_KEY })
+      .map(([name, key]) => [name, storageKey(key, options.storagePrefix ?? '')])),
     styleId: STYLE_ID,
     palette: options.palette ?? null,
     contrast: options.contrast ?? null,

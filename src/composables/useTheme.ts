@@ -1,7 +1,7 @@
 import { ref, watchEffect, onMounted, onUnmounted } from 'vue'
 import { themeTransition } from './_themeTransition'
 import { initialState, readCookie, ssrValue, writeCookie } from './_ssrState'
-import { THEME_KEY } from './_storageKeys'
+import { THEME_KEY, onStoragePrefix, storageKey } from './_storageKeys'
 
 export type Theme = 'light' | 'dark' | 'system'
 
@@ -11,7 +11,15 @@ export { THEME_KEY }
 const inBrowser = typeof window !== 'undefined'
 
 // localStorage, else the cookie createM3UI({ cookies }) keeps (cleared storage, or a theme a server set)
-const theme = ref<Theme>((inBrowser ? (localStorage.getItem(THEME_KEY) ?? readCookie(THEME_KEY)) as Theme : null) ?? 'system')
+function readStored(): Theme {
+  if (!inBrowser) return 'system'
+  const key = storageKey(THEME_KEY)
+  let v: string | null = null
+  try { v = localStorage.getItem(key) } catch { /* storage blocked */ }
+  return ((v ?? readCookie(key)) as Theme | null) ?? 'system'
+}
+
+const theme = ref<Theme>(readStored())
 
 let _appliedDark: boolean | null = null
 
@@ -30,6 +38,14 @@ function applyTheme(t: Theme) {
 // Apply immediately on module load (before any component mounts) — no animation
 if (inBrowser) applyTheme(theme.value)
 
+// createM3UI({ storagePrefix }): this app's own stored theme, applied before anything renders — no animation
+onStoragePrefix(() => {
+  if (!inBrowser) return
+  theme.value = readStored()
+  _appliedDark = null
+  applyTheme(theme.value)
+})
+
 export function useTheme() {
   const mediaQuery = inBrowser ? window.matchMedia('(prefers-color-scheme: dark)') : null
 
@@ -39,8 +55,9 @@ export function useTheme() {
 
   watchEffect(() => {
     if (!inBrowser) return
-    localStorage.setItem(THEME_KEY, theme.value)
-    writeCookie(THEME_KEY, theme.value)
+    const key = storageKey(THEME_KEY)
+    try { localStorage.setItem(key, theme.value) } catch { /* storage blocked */ }
+    writeCookie(key, theme.value)
     applyTheme(theme.value)
   })
 

@@ -1,6 +1,7 @@
 // Internal color math shared by MColorPicker and MColorPickerModal (through _MColorPanel).
 // Not exported from index.ts.
 import { ref } from 'vue'
+import { onStoragePrefix, storageKey } from './_storageKeys'
 
 export interface Rgba { r: number; g: number; b: number; a: number }
 /** h 0–360, s/v 0–100 */
@@ -83,7 +84,7 @@ const RECENT_KEY = 'm3-color-recent'
 
 function readRecents(): string[] {
   try {
-    const v = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]')
+    const v = JSON.parse(localStorage.getItem(storageKey(RECENT_KEY)) ?? '[]')
     return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string' && !!parseHex(x)) : []
   } catch {
     return []
@@ -91,12 +92,13 @@ function readRecents(): string[] {
 }
 
 export const recentColors = ref<string[]>(readRecents())
+onStoragePrefix(() => { recentColors.value = readRecents() })
 
 export function pushRecentColor(hex: string, limit: number) {
   const c = normalizeHex(hex)
   if (!c) return
   recentColors.value = [c, ...recentColors.value.filter((x) => x !== c)].slice(0, Math.max(limit, 0))
-  try { localStorage.setItem(RECENT_KEY, JSON.stringify(recentColors.value)) } catch { /* storage blocked */ }
+  try { localStorage.setItem(storageKey(RECENT_KEY), JSON.stringify(recentColors.value)) } catch { /* storage blocked */ }
 }
 
 /** Default swatches for both pickers: the Material 2014 palette's 500 tones plus grey, black and white (3 rows of 7) */

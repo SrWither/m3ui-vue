@@ -19,6 +19,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch 
 import MIcon from './MIcon.vue'
 import { useLocale, type M3Locale } from '../composables/useLocale'
 import { emojiCategories, toneableEmojis, withSkinTone, type EmojiCategory } from '../data/emojis'
+import { storageKey } from '../composables/_storageKeys'
 
 const props = withDefaults(
   defineProps<{
@@ -92,14 +93,14 @@ const RECENT_KEY = 'm3-emoji-recent'
 const TONE_KEY = 'm3-emoji-tone'
 function read<T>(key: string, fallback: T): T {
   try {
-    const v = localStorage.getItem(key)
+    const v = localStorage.getItem(storageKey(key))
     return v === null ? fallback : (JSON.parse(v) as T)
   } catch {
     return fallback
   }
 }
 function store(key: string, value: unknown) {
-  try { localStorage.setItem(key, JSON.stringify(value)) } catch { /* storage blocked */ }
+  try { localStorage.setItem(storageKey(key), JSON.stringify(value)) } catch { /* storage blocked */ }
 }
 const recents = ref<string[]>(read<string[]>(RECENT_KEY, []))
 const tone = ref<number>(read<number>(TONE_KEY, 0))

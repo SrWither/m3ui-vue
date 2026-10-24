@@ -1,4 +1,4 @@
-import { VIEWPORT_KEY } from './_storageKeys'
+import { VIEWPORT_KEY, storageKey } from './_storageKeys'
 
 /** A request's headers as server frameworks hand them over: a `Headers`, or a plain object (Node's, h3's). */
 export type RequestHeaders = Headers | Record<string, string | string[] | undefined>
@@ -33,8 +33,8 @@ function header(headers: RequestHeaders, name: string): string | undefined {
 
 const size = (n: number) => Number.isFinite(n) && n > 0 && n < 20000
 
-function fromCookie(cookies: string | undefined): ViewportSize | undefined {
-  const raw = cookies?.match(new RegExp(`(?:^|;\\s*)${VIEWPORT_KEY}=([^;]*)`))?.[1]
+function fromCookie(cookies: string | undefined, prefix: string): ViewportSize | undefined {
+  const raw = cookies?.match(new RegExp(`(?:^|;\\s*)${storageKey(VIEWPORT_KEY, prefix)}=([^;]*)`))?.[1]
   if (!raw) return undefined
   let value = raw
   try { value = decodeURIComponent(raw) } catch { /* as it is */ }
@@ -61,14 +61,15 @@ function guess(headers: RequestHeaders): ViewportSize | undefined {
  * cookies: true })` keeps in the `m3-viewport` cookie (any visit after the first); the viewport client hints
  * (Chromium, once the server asked for them with `VIEWPORT_HINTS`); or, on a first visit, a size standing for the
  * kind of device (`Sec-CH-UA-Mobile`, then the user agent: a phone, a tablet or a desktop), unless `guess: false`.
+ * With `createM3UI({ storagePrefix })`, pass the same `storagePrefix` so the right cookie is read.
  * Undefined when nothing tells: the layouts then render compact.
  *
  * ```ts
  * createM3UI({ cookies: true, initialState: { viewport: viewportFromHeaders(request.headers) } })
  * ```
  */
-export function viewportFromHeaders(headers: RequestHeaders, options: { guess?: boolean } = {}): ViewportSize | undefined {
-  const cookie = fromCookie(header(headers, 'cookie'))
+export function viewportFromHeaders(headers: RequestHeaders, options: { guess?: boolean; storagePrefix?: string } = {}): ViewportSize | undefined {
+  const cookie = fromCookie(header(headers, 'cookie'), options.storagePrefix ?? '')
   if (cookie) return cookie
   const width = Number(header(headers, 'sec-ch-viewport-width'))
   if (size(width)) {

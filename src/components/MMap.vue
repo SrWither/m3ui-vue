@@ -23,6 +23,7 @@ import MMapAttribution from './_MMapAttribution.vue'
 import { useLocale } from '../composables/useLocale'
 import { MAP_KEY, type MapContext, type MaplibreModule } from '../composables/useMap'
 import { createLayerState, readLayerState } from '../composables/useMapLayers'
+import { storageKey } from '../composables/_storageKeys'
 import type { MapAdapter, MapLayerModel } from '../composables/mapAdapters'
 import { carryRuntimeLayers, styleIds, type StyleIds } from '../composables/_mapStyle'
 
@@ -56,7 +57,7 @@ const props = withDefaults(
     pitch?: number
     /**
      * Remember the view (center, zoom, bearing, pitch) in localStorage and start from it on the next visit: `true`
-     * under `m3-map-view`, or your own key (one per map)
+     * under `m3-map-view` (after `createM3UI`'s `storagePrefix`, if any), or your own key (one per map)
      */
     persist?: boolean | string
     /** Zoom and compass buttons: `false`, or a corner (`true` is top-right) */
@@ -123,7 +124,7 @@ const t = useLocale()
 // ── Remembered view ────────────────────────────────────────────────────────────────────────────
 
 interface View { center: [number, number]; zoom: number; bearing: number; pitch: number }
-const persistKey = () => (typeof props.persist === 'string' ? props.persist : props.persist ? 'm3-map-view' : null)
+const persistKey = () => (typeof props.persist === 'string' ? props.persist : props.persist ? storageKey('m3-map-view') : null)
 
 function readView(): Partial<View> {
   const key = persistKey()

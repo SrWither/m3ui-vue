@@ -50,6 +50,16 @@ describe('themeInitScript', () => {
     expect(html.getAttribute('data-palette')).toBe('blue')
   })
 
+  it('reads the keys under storagePrefix, not another app\'s', () => {
+    matchMedia({})
+    localStorage.setItem('m3-theme', 'dark')
+    localStorage.setItem('m3-palette', 'blue')
+    localStorage.setItem('shop-m3-palette', 'green')
+    run({ storagePrefix: 'shop' })
+    expect(html.classList.contains('dark')).toBe(false)
+    expect(html.getAttribute('data-palette')).toBe('green')
+  })
+
   it('forces the palette with persistPalette: false', () => {
     localStorage.setItem('m3-palette', 'blue')
     run({ palette: 'red', persistPalette: false })

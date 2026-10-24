@@ -2,7 +2,7 @@ import { computed, readonly, ref, watch, watchEffect, type Ref } from 'vue'
 import { generateScheme, schemeToCss, type SeedOptions } from './dynamicColor'
 import { themeTransition } from './_themeTransition'
 import { initialState, readCookie, ssrValue, writeCookie } from './_ssrState'
-import { STYLE_ID } from './_storageKeys'
+import { STYLE_ID, onStoragePrefix, storageKey } from './_storageKeys'
 
 export interface Palette {
   id: string
@@ -82,18 +82,20 @@ export const CSS_KEY = 'm3-palette-css'
 function read<T>(key: string): T | null {
   try {
     // The palette and the contrast level fall back to their cookies (createM3UI({ cookies })) when storage has none
-    const v = localStorage.getItem(key) ?? (key === PALETTE_KEY || key === CONTRAST_KEY ? readCookie(key) : null)
+    const name = storageKey(key)
+    const v = localStorage.getItem(name) ?? (key === PALETTE_KEY || key === CONTRAST_KEY ? readCookie(name) : null)
     return v == null ? null : (key === PALETTE_KEY || key === CONTRAST_KEY ? v : JSON.parse(v)) as T
   } catch {
     return null
   }
 }
 function write(key: string, value: unknown) {
+  const name = storageKey(key)
   // The palette and the contrast level also go in cookies (createM3UI({ cookies: true })) for a server to read
-  if (key === PALETTE_KEY || key === CONTRAST_KEY) writeCookie(key, value == null ? null : String(value))
+  if (key === PALETTE_KEY || key === CONTRAST_KEY) writeCookie(name, value == null ? null : String(value))
   try {
-    if (value == null) localStorage.removeItem(key)
-    else localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value))
+    if (value == null) localStorage.removeItem(name)
+    else localStorage.setItem(name, typeof value === 'string' ? value : JSON.stringify(value))
   } catch { /* storage blocked */ }
 }
 
@@ -107,8 +109,11 @@ const activeSeed = ref<ActiveSeed | null>(read<ActiveSeed>(SEED_KEY))
  */
 export type ContrastLevel = 'standard' | 'medium' | 'high' | 'system'
 const CONTRAST_LEVELS: readonly ContrastLevel[] = ['standard', 'medium', 'high', 'system']
-const storedContrast = read<string>(CONTRAST_KEY)
-const contrast = ref<ContrastLevel>(CONTRAST_LEVELS.includes(storedContrast as ContrastLevel) ? storedContrast as ContrastLevel : 'standard')
+function readContrast(): ContrastLevel {
+  const stored = read<string>(CONTRAST_KEY)
+  return CONTRAST_LEVELS.includes(stored as ContrastLevel) ? stored as ContrastLevel : 'standard'
+}
+const contrast = ref<ContrastLevel>(readContrast())
 const systemMore = ref(false)
 if (typeof window !== 'undefined' && window.matchMedia) {
   const mq = window.matchMedia('(prefers-contrast: more)')
@@ -238,7 +243,14 @@ async function selectContrast(level: ContrastLevel, persist = persistEnabled.val
 
 // Applied on every change of the effective level (a setting or the OS preference), for every palette kind. A
 // generated palette is regenerated first, then swapped in with the attribute in one transition.
+// Set while createM3UI({ storagePrefix }) loads another stored level: it's applied right away, with no transition
+let skipContrastWatch = false
+
 watch(activeContrast, async () => {
+  if (skipContrastWatch) {
+    skipContrastWatch = false
+    return
+  }
   const id = current.value
   let css: string | null | undefined
   if (id === SEED_PALETTE && activeSeed.value) css = await generateCss(SEED_PALETTE, activeSeed.value)
@@ -308,13 +320,29 @@ export function useColorPalette() {
 
 // Apply on module load so the palette is visible before any component mounts, a generated one included (not on
 // the server: the client does it when the module loads there)
-if (typeof document !== 'undefined') {
+function applyStored() {
   const saved = read<string>(PALETTE_KEY)
   const cached = read<{ id: string; css: string }>(CSS_KEY)
   if (saved && cached && cached.id === saved) injectCss(cached.css)
   if (saved && saved !== 'purple') document.documentElement.setAttribute('data-palette', saved)
   applyContrast(activeContrast.value)
 }
+
+if (typeof document !== 'undefined') applyStored()
+
+// createM3UI({ storagePrefix }): this app's own stored palette, seed and contrast, applied before anything renders
+onStoragePrefix(() => {
+  if (typeof document === 'undefined') return
+  generation++
+  current.value = read<string>(PALETTE_KEY) ?? 'purple'
+  activeSeed.value = read<ActiveSeed>(SEED_KEY)
+  const before = activeContrast.value
+  contrast.value = readContrast()
+  if (activeContrast.value !== before) skipContrastWatch = true
+  document.getElementById(STYLE_ID)?.remove()
+  applyAttribute(current.value)
+  applyStored()
+})
 
 /**
  * Internal: used by `createM3UI({ palette, persistPalette: false })` to force a palette on boot,
