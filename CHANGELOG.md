@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.2.2] - Unreleased
+
+### Added
+- `createM3UI` `storagePrefix`: every key the library stores (localStorage and cookies) becomes `<prefix>-m3-…`, so apps served from the same origin under different paths (`example.com/admin`, `example.com/shop`) keep their own theme, palette, contrast, seed and recent colors/emoji instead of sharing them. `themeInitScript()` and `viewportFromHeaders()` take the same `storagePrefix`
+
+### Fixed
+- Filled multiline `MTextField`: text scrolled up is clipped below the label instead of running behind it (the scrollbar starts below it too)
+
 ## [1.2.1] - 2026-10-22
 
 ### Fixed
