@@ -5,6 +5,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.3.0] - Unreleased
+
+### Added
+- Media family, from the new `/media` entry point (no dependencies):
+  - `MVideoPlayer`: a port of Media3's Compose Material3 `Player` (androidx/media `ui_compose_material3`). Controls in three slots (`#top`, `#center` centered on the picture, `#bottom`) that hide while playing after `hideDelay`, over a dark scrim with white content in both themes; a primary-container play button that is a circle while paused and squares off while playing. Seek bar with chapters, the time and current chapter, volume, WebVTT subtitles (`tracks`, CC button, a settings submenu), speed, picture in picture and full screen (the page's, so teleported menus still show; the video's own on iPhone). Gestures: a click plays/pauses and a double click goes full screen; on touch a tap toggles the controls, a double tap on either side skips `seekStep` (taps add up), a long press plays at 2× while held. YouTube's keys (Space/K, J/L, arrows, F, M, C, 0–9, `<`/`>`). `v-model:playing`/`current-time`/`rate`/`volume`/`muted`, `hasPrevious`/`hasNext` with `previous`/`next` events, `autoplay` (muted when the browser blocks sound), `#settings`, `#end`, `#error`, and `#media` to play anything (a canvas, a shader) over a clock of `duration` seconds. HLS plays natively where the browser can; elsewhere the `hls` prop loads hls.js (`() => import('hls.js')`), adding a quality menu
+  - `MAudioPlayer`: `variant="mini"` is Media3's `MiniController` (56dp artwork, title and artist, previous / play / next, a progress line, elevated card, `click` to open your full player); `standard` adds a seek bar (`seekBar`: slider, line or wavy), shuffle and repeat (`v-model:shuffle`/`repeat`, shown once bound), a speed menu (`speeds`) and volume. Previous/next stay in place, disabled, without `hasPrevious`/`hasNext`
+  - `useMediaPlayer(options)`: the reactive state and controls behind both (`playing`, `currentTime`, `rate`, `volume` and `muted` writable; `duration`, `buffered`, `waiting`, `ended`, `live`, `error`, `blocked`; `play`/`pause`/`toggle`/`seek`/`skip`/`stop`). Drives an `<audio>`/`<video>` (`media`), or runs its own clock over `duration` for anything else. With `metadata` it takes the Media Session while playing: lock screen and notification controls, artwork, seeking. `attach(el)`, and the players' `player` prop, let one player outlive the page that shows it
+  - 25 locale keys (`mediaPlay`, `mediaSeekBack`, `mediaSubtitles`…) in all 7 locales
+- `MIconButton` `iconSize`: the icon's size in px, instead of the size tier's (or 55% of a custom pixel `size`)
+
 ## [1.2.2] - 2026-10-23
 
 ### Added
