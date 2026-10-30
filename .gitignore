@@ -2,3 +2,11 @@ node_modules
 dist
 *.local
 *.tsbuildinfo
+
+# graphify: commit only the graph, report and labels
+graphify-out/cache/
+graphify-out/obsidian/
+graphify-out/graph.html
+graphify-out/cost.json
+graphify-out/.graphify_python
+graphify-out/.graphify_root
