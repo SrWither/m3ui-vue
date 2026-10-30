@@ -806,7 +806,7 @@ const TOOLS = computed(() => [
     v-bind="$attrs"
     role="region"
     :aria-label="docTitle || locale.pdfViewer"
-    class="m3-pdf relative flex flex-col overflow-hidden bg-surface-container text-on-surface"
+    class="m3-pdf bg-surface-container text-on-surface"
     @keydown="onKey"
   >
     <!-- Top bar -->
@@ -1132,6 +1132,16 @@ const TOOLS = computed(() => [
 </template>
 
 <style>
+/* Root defaults in the base layer, so any class the consumer gives (absolute inset-0, hidden…) wins */
+@layer base {
+  .m3-pdf {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+}
+
 /* pdf.js's text layer (from pdfjs-dist's pdf_viewer.css, Apache-2.0), for selectable text over the canvas */
 .m3-pdf .textLayer {
   position: absolute;

@@ -555,7 +555,7 @@ const fitClass = computed(() => {
     :aria-label="title || locale.mediaPlayer"
     tabindex="-1"
     class="m3-video-player group/player isolate overflow-hidden bg-black text-white outline-none select-none transform-gpu"
-    :class="[fullscreen ? 'fixed inset-0 z-400' : 'relative', !visible && player.playing.value && 'cursor-none']"
+    :class="[fullscreen && 'fixed inset-0 z-400', !visible && player.playing.value && 'cursor-none']"
     :style="fullscreen ? undefined : { aspectRatio: aspectRatio === 'auto' ? undefined : aspectRatio }"
     @pointermove="(e: PointerEvent) => e.pointerType !== 'touch' && poke()"
     @keydown="onKey"
@@ -821,6 +821,10 @@ const fitClass = computed(() => {
 </template>
 
 <style>
+/* Root default in the base layer, so a consumer's position class (absolute…) wins */
+@layer base {
+  .m3-video-player { position: relative; }
+}
 .m3-video-player video::cue {
   background: color-mix(in srgb, var(--color-scrim) 75%, transparent);
   color: #fff;

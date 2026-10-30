@@ -173,6 +173,10 @@ describe('MPdfViewer', () => {
     await settle()
     expect(w.text()).toContain('Pick a file')
     expect(w.classes()).toContain('h-96')
+    // Its position/display defaults live in @layer base (.m3-pdf), so a consumer's `absolute inset-0` wins:
+    // a `relative` utility on the root beat it and the viewer collapsed when its side panel closed
+    expect(w.classes()).not.toContain('relative')
+    expect(w.classes()).not.toContain('flex')
     expect(w.attributes('data-x')).toBe('1')
   })
 })

@@ -19,6 +19,8 @@ describe('MAudioPlayer', () => {
     expect(w.emitted('click')).toBeUndefined()
     await w.find('p').trigger('click')
     expect(w.emitted('click')).toHaveLength(1)
+    // position/display come from @layer base (.m3-audio-mini), so a consumer's classes win
+    expect(w.classes()).not.toContain('relative')
   })
 
   it('mini: the progress line follows the position', async () => {

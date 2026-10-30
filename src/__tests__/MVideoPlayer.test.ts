@@ -194,6 +194,8 @@ describe('MVideoPlayer', () => {
   it('forwards attrs to its root', () => {
     const w = mount(MVideoPlayer, { props: { duration: 1 }, attrs: { class: 'rounded-xl', 'data-x': '1' } })
     expect(w.classes()).toContain('rounded-xl')
+    // position: relative comes from @layer base (.m3-video-player), so a consumer's `absolute` wins
+    expect(w.classes()).not.toContain('relative')
     expect(w.attributes('data-x')).toBe('1')
   })
 })

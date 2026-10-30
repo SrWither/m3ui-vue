@@ -207,7 +207,7 @@ function onMiniClick(e: MouseEvent) {
     v-if="variant === 'mini'"
     role="region"
     :aria-label="title || locale.mediaPlayer"
-    class="relative flex cursor-pointer items-center gap-2 overflow-hidden rounded-md bg-surface-container-low px-2 py-1 text-on-surface shadow-elevation-2"
+    class="m3-audio-mini cursor-pointer items-center gap-2 rounded-md bg-surface-container-low px-2 py-1 text-on-surface shadow-elevation-2"
     @click="onMiniClick"
   >
     <slot name="artwork" :player="player">
@@ -306,3 +306,14 @@ function onMiniClick(e: MouseEvent) {
     </audio>
   </div>
 </template>
+
+<style>
+/* Root defaults in the base layer, so a consumer's position or display class wins */
+@layer base {
+  .m3-audio-mini {
+    position: relative;
+    display: flex;
+    overflow: hidden;
+  }
+}
+</style>
