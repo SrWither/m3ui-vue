@@ -1,0 +1,5 @@
+export { default as MVideoPlayer } from './components/MVideoPlayer.vue'
+export type { VideoSource, VideoTrack, VideoPlayerSlotProps, HlsLike, HlsModule } from './components/MVideoPlayer.vue'
+export { default as MAudioPlayer } from './components/MAudioPlayer.vue'
+export { useMediaPlayer } from './composables/useMediaPlayer'
+export type { MediaPlayer, MediaPlayerOptions, MediaPlayerMetadata } from './composables/useMediaPlayer'

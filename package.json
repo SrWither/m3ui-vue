@@ -60,6 +60,10 @@
       "types": "./dist/map.d.ts",
       "import": "./dist/map.js"
     },
+    "./media": {
+      "types": "./dist/media.d.ts",
+      "import": "./dist/media.js"
+    },
     "./styles": "./dist/styles.css",
     "./theme": "./src/styles/theme.css",
     "./palettes": "./src/styles/palettes.css",

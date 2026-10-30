@@ -16,6 +16,7 @@ export default defineConfig({
         qrcode: resolve(import.meta.dirname, 'src/qrcode.ts'),
         barcode: resolve(import.meta.dirname, 'src/barcode.ts'),
         map: resolve(import.meta.dirname, 'src/map.ts'),
+        media: resolve(import.meta.dirname, 'src/media.ts'),
         'locales/index': resolve(import.meta.dirname, 'src/locales/index.ts'),
       },
       formats: ['es'],

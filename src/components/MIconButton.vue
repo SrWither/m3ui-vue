@@ -37,6 +37,8 @@ const props = withDefaults(
     shape?: 'rounded' | 'squared'
     /** M3's 5-tier icon button sizing (xs:32, sm:40, md:56, lg:96, xl:136), or a custom pixel value */
     size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | number
+    /** Icon size in px. Default the size tier's (or 55% of a custom pixel `size`) */
+    iconSize?: number
     /** Disables interaction */
     disabled?: boolean
     /** Vue Router destination — renders as RouterLink instead of button */
@@ -240,6 +242,6 @@ const variantClasses = computed(() => {
     @pointercancel="onPointerUp"
     @click="onClick"
   >
-    <MIcon :name="checked && checkedIcon ? checkedIcon : icon" :size="resolved.icon" :filled="!!checked || iconFilled" />
+    <MIcon :name="checked && checkedIcon ? checkedIcon : icon" :size="iconSize ?? resolved.icon" :filled="!!checked || iconFilled" />
   </component>
 </template>

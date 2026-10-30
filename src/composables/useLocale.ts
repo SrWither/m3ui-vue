@@ -238,6 +238,32 @@ export interface M3Locale {
   /** MTimeline's button past `limit`; `{count}` is how many entries are hidden */
   timelineShowMore: string
   timelineShowLess: string
+  // Media players (MVideoPlayer, MAudioPlayer); `{seconds}` is the skip length
+  mediaPlayer: string
+  mediaPlay: string
+  mediaPause: string
+  mediaReplay: string
+  mediaSeekBack: string
+  mediaSeekForward: string
+  mediaSeconds: string
+  mediaMute: string
+  mediaUnmute: string
+  mediaVolume: string
+  mediaFullscreen: string
+  mediaExitFullscreen: string
+  mediaPictureInPicture: string
+  mediaSettings: string
+  mediaSpeed: string
+  mediaSpeedNormal: string
+  mediaSubtitles: string
+  mediaSubtitlesOff: string
+  mediaQuality: string
+  mediaQualityAuto: string
+  mediaLive: string
+  mediaError: string
+  mediaRepeat: string
+  mediaRepeatOne: string
+  mediaShuffle: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -456,6 +482,31 @@ export const defaultLocale: M3Locale = {
   mapSearchPlaces: 'Search places',
   timelineShowMore: 'Show {count} more',
   timelineShowLess: 'Show less',
+  mediaPlayer: 'Media player',
+  mediaPlay: 'Play',
+  mediaPause: 'Pause',
+  mediaReplay: 'Replay',
+  mediaSeekBack: 'Back {seconds} seconds',
+  mediaSeekForward: 'Forward {seconds} seconds',
+  mediaSeconds: '{seconds} seconds',
+  mediaMute: 'Mute',
+  mediaUnmute: 'Unmute',
+  mediaVolume: 'Volume',
+  mediaFullscreen: 'Full screen',
+  mediaExitFullscreen: 'Exit full screen',
+  mediaPictureInPicture: 'Picture-in-picture',
+  mediaSettings: 'Settings',
+  mediaSpeed: 'Playback speed',
+  mediaSpeedNormal: 'Normal',
+  mediaSubtitles: 'Subtitles',
+  mediaSubtitlesOff: 'Off',
+  mediaQuality: 'Quality',
+  mediaQualityAuto: 'Auto',
+  mediaLive: 'Live',
+  mediaError: 'This media can\'t be played',
+  mediaRepeat: 'Repeat',
+  mediaRepeatOne: 'Repeat one',
+  mediaShuffle: 'Shuffle',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')
