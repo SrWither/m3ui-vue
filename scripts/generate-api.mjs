@@ -36,6 +36,7 @@ const entries = [
   ['src/barcode.ts', `${PKG}/barcode`],
   ['src/map.ts', `${PKG}/map`],
   ['src/media.ts', `${PKG}/media`],
+  ['src/pdf.ts', `${PKG}/pdf`],
   ['src/index.ts', PKG],
 ]
 

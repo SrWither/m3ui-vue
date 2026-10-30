@@ -17,6 +17,7 @@ export default defineConfig({
         barcode: resolve(import.meta.dirname, 'src/barcode.ts'),
         map: resolve(import.meta.dirname, 'src/map.ts'),
         media: resolve(import.meta.dirname, 'src/media.ts'),
+        pdf: resolve(import.meta.dirname, 'src/pdf.ts'),
         'locales/index': resolve(import.meta.dirname, 'src/locales/index.ts'),
       },
       formats: ['es'],
@@ -34,6 +35,7 @@ export default defineConfig({
         'qrcode-generator',
         'jsbarcode',
         'maplibre-gl',
+        /^pdfjs-dist(\/|$)/,
       ],
       output: {
         globals: { vue: 'Vue' },

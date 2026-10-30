@@ -64,6 +64,10 @@
       "types": "./dist/media.d.ts",
       "import": "./dist/media.js"
     },
+    "./pdf": {
+      "types": "./dist/pdf.d.ts",
+      "import": "./dist/pdf.js"
+    },
     "./styles": "./dist/styles.css",
     "./theme": "./src/styles/theme.css",
     "./palettes": "./src/styles/palettes.css",
@@ -89,9 +93,9 @@
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
+    "maplibre-gl": "^5.0.0",
     "tailwindcss": "^4.0.0",
-    "vue": "^3.5.0",
-    "maplibre-gl": "^5.0.0"
+    "vue": "^3.5.0"
   },
   "peerDependenciesMeta": {
     "@tiptap/vue-3": {
@@ -198,6 +202,9 @@
     },
     "maplibre-gl": {
       "optional": true
+    },
+    "pdfjs-dist": {
+      "optional": true
     }
   },
   "devDependencies": {
@@ -242,6 +249,7 @@
     "jsbarcode": "^3.12.3",
     "maplibre-gl": "^5.24.0",
     "markdown-it": "^15.0.2",
+    "pdfjs-dist": "^6.4.299",
     "qrcode-generator": "^2.0.4",
     "typescript": "~6.0.3",
     "vite": "^8.3.0",

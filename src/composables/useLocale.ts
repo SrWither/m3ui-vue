@@ -264,6 +264,45 @@ export interface M3Locale {
   mediaRepeat: string
   mediaRepeatOne: string
   mediaShuffle: string
+  // MPdfViewer; `{current}`/`{total}` count search matches
+  pdfViewer: string
+  pdfThumbnails: string
+  pdfOutline: string
+  pdfPage: string
+  pdfZoom: string
+  pdfZoomIn: string
+  pdfZoomOut: string
+  pdfFitWidth: string
+  pdfFitPage: string
+  pdfSearch: string
+  pdfSearchPrevious: string
+  pdfSearchNext: string
+  pdfMatchCount: string
+  pdfNoMatches: string
+  pdfMore: string
+  pdfRotate: string
+  pdfDownload: string
+  pdfPrint: string
+  pdfFullscreen: string
+  pdfExitFullscreen: string
+  pdfPassword: string
+  pdfPasswordLabel: string
+  pdfWrongPassword: string
+  pdfOpen: string
+  pdfError: string
+  pdfLoading: string
+  pdfAnnotate: string
+  pdfSelect: string
+  pdfHighlight: string
+  pdfNote: string
+  pdfDraw: string
+  pdfEraser: string
+  pdfColor: string
+  pdfUndo: string
+  pdfCopy: string
+  pdfDelete: string
+  pdfNotePlaceholder: string
+  pdfAddComment: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -507,6 +546,44 @@ export const defaultLocale: M3Locale = {
   mediaRepeat: 'Repeat',
   mediaRepeatOne: 'Repeat one',
   mediaShuffle: 'Shuffle',
+  pdfViewer: 'PDF viewer',
+  pdfThumbnails: 'Pages',
+  pdfOutline: 'Contents',
+  pdfPage: 'Page',
+  pdfZoom: 'Zoom',
+  pdfZoomIn: 'Zoom in',
+  pdfZoomOut: 'Zoom out',
+  pdfFitWidth: 'Fit to width',
+  pdfFitPage: 'Fit page',
+  pdfSearch: 'Find in document',
+  pdfSearchPrevious: 'Previous match',
+  pdfSearchNext: 'Next match',
+  pdfMatchCount: '{current} of {total}',
+  pdfNoMatches: 'No matches',
+  pdfMore: 'More options',
+  pdfRotate: 'Rotate',
+  pdfDownload: 'Download',
+  pdfPrint: 'Print',
+  pdfFullscreen: 'Full screen',
+  pdfExitFullscreen: 'Exit full screen',
+  pdfPassword: 'This document is password protected',
+  pdfPasswordLabel: 'Password',
+  pdfWrongPassword: 'Wrong password',
+  pdfOpen: 'Open',
+  pdfError: 'This PDF can\'t be opened',
+  pdfLoading: 'Loading document',
+  pdfAnnotate: 'Annotate',
+  pdfSelect: 'Select',
+  pdfHighlight: 'Highlight',
+  pdfNote: 'Note',
+  pdfDraw: 'Draw',
+  pdfEraser: 'Eraser',
+  pdfColor: 'Color',
+  pdfUndo: 'Undo',
+  pdfCopy: 'Copy',
+  pdfDelete: 'Delete',
+  pdfNotePlaceholder: 'Write a note',
+  pdfAddComment: 'Add a comment',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')
