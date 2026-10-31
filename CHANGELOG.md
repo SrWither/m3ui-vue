@@ -25,6 +25,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - 43 locale keys (`floorAddTable`, `floorMerge`, `floorDecorDoor`…) in all 7 locales
 - `MDrawCanvas` `backgroundImageBox`: where the background image sits on an infinite canvas and its size (drawn covering that box); `fitView()` takes it in
 
+### Changed
+- **`MFlow` keeps the browser's context menu closed on its canvas** (a right click, or a long press on a phone, where it got in the way of selecting), and the long-press callout too; `node-contextmenu`, `edge-contextmenu` and `pane-contextmenu` still fire, for a menu of your own. Text fields inside nodes keep theirs. `nativeContextMenu` brings it back
+
 ### Fixed
 - The `FloorArea`, `FloorWall` and `FloorDecor` types (MFloorPlan's zones, walls and decor) are exported, as `FloorTable` was
 - `MDrawCanvas` and `MFloorPlan`: their root's defaults (position, overflow, background, corners) were utilities on the root, so a consumer's own `absolute inset-0` or background lost to them (Tailwind orders `relative` after `absolute`); they now live in `@layer base` on the component class
