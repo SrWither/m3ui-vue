@@ -450,4 +450,14 @@ describe('MFlow', () => {
     await w.trigger('keydown', { key: 'z', ctrlKey: true })
     expect((w.emitted('update:nodes')!.at(-1)![0] as FlowNode[])[0]!.position).toEqual({ x: 0, y: 0 })
   })
+  it('a circle splices into an edge between two circles, the new edges keeping its data', async () => {
+    const C = (id: string, x: number, y: number) => N(id, x, y, { type: 'circle', width: 60, height: 60 })
+    const w = await flow({ nodes: [C('a', 0, 0), C('c', 600, 0), C('b', 300, 300)], edges: [{ id: 'e1', source: 'a', target: 'c', data: { capacity: 7 } }] })
+    pointer(node(w, 'b'), 'pointerdown', 330, 330)
+    pointer(window, 'pointermove', 330, 30)
+    await nextTick()
+    pointer(window, 'pointerup', 330, 30)
+    const edges = w.emitted('update:edges')!.at(-1)![0] as FlowEdge[]
+    expect(edges.map((e) => [e.source, e.target, e.data.capacity])).toEqual([['a', 'b', 7], ['b', 'c', 7]])
+  })
 })

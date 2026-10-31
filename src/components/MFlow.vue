@@ -1411,16 +1411,16 @@ function findInsert(g: Extract<Gesture, { kind: 'node' }>): typeof insertPlan {
   const n = nodeById.value.get(id)
   if (!n || n.type === 'group' || n.connectable === false) return null
   if (edgesLocal.value.some((e) => e.source === id || e.target === id)) return null
-  // It needs a way in and a way out (or no handles at all: then edges meet its sides)
+  // It needs a way in and a way out (or no handles at all: then edges meet its sides; a circle's meet the circle)
   let target: string | null = null
   let source: string | null = null
   const list = handles.get(id)
   if (list?.length) {
     const t = list.find((h) => h.type === 'target' && h.connectable)
     const s = list.find((h) => h.type === 'source' && h.connectable)
-    if (!t || !s) return null
-    target = t.id
-    source = s.id
+    if ((!t && n.type !== 'circle') || (!s && n.type !== 'circle')) return null
+    target = t?.id ?? null
+    source = s?.id ?? null
   }
   // The node's center over the edge, within half its height
   const a = getAbsolutePosition(id)
