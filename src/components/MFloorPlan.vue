@@ -188,6 +188,8 @@ const emit = defineEmits<{
 const locale = useLocale()
 
 const root = ref<HTMLElement>()
+/** A finger: bigger handles */
+const coarse = ref(typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches)
 const scale = ref(1)
 let ro: ResizeObserver | null = null
 onMounted(() => {
@@ -268,20 +270,35 @@ const mergeBoxes = computed(() =>
 )
 
 // ── Dragging ────────────────────────────────────────────────────────────────────────────────────────────
-let drag: { id: number; sx: number; sy: number; start: Map<string | number, { x: number; y: number }>; moved: boolean } | null = null
+let drag: { id: number; sx: number; sy: number; start: Map<string | number, { x: number; y: number }>; moved: boolean; pick?: string | number } | null = null
 let suppressClick = false
 const snap = (v: number) => (props.grid ? Math.round(v / props.grid) * props.grid : v)
 function clamp(t: FloorTable, x: number, y: number) {
   const s = sizeOf(t)
   return { x: Math.min(props.width - s.w / 2, Math.max(s.w / 2, x)), y: Math.min(props.height - s.h / 2, Math.max(s.h / 2, y)) }
 }
+// A finger has no Shift: holding a table down adds it to the selection (or takes it out)
+const LONG_PRESS = 450
+let longPress = 0
+let longPressed = false
 function onDown(e: PointerEvent, t: FloorTable) {
   if (!props.editable || e.button !== 0 || tool.value !== 'select') return
   e.stopPropagation()
   picked.value = null
-  if (!selection.value.includes(t.id)) selection.value = e.shiftKey || e.ctrlKey || e.metaKey ? [...selection.value, t.id] : [t.id]
+  const touch = e.pointerType === 'touch'
+  longPressed = false
+  clearTimeout(longPress)
+  if (touch) {
+    longPress = window.setTimeout(() => {
+      if (!drag || drag.moved) return
+      longPressed = true
+      selection.value = selection.value.includes(t.id) ? selection.value.filter((x) => x !== t.id) : [...selection.value, t.id]
+      navigator.vibrate?.(10)
+    }, LONG_PRESS)
+  } else if (!selection.value.includes(t.id)) selection.value = e.shiftKey || e.ctrlKey || e.metaKey ? [...selection.value, t.id] : [t.id]
+  // A touch picks the table once it moves (or on release), so a long press can add to what's picked
   const ids = selection.value.includes(t.id) ? selection.value : [t.id]
-  drag = { id: e.pointerId, sx: e.clientX, sy: e.clientY, start: new Map(tables.value.filter((x) => ids.includes(x.id)).map((x) => [x.id, { x: x.x, y: x.y }])), moved: false }
+  drag = { id: e.pointerId, sx: e.clientX, sy: e.clientY, start: new Map(tables.value.filter((x) => ids.includes(x.id)).map((x) => [x.id, { x: x.x, y: x.y }])), moved: false, pick: touch && !selection.value.includes(t.id) ? t.id : undefined }
   window.addEventListener('pointermove', onMove)
   window.addEventListener('pointerup', onUp)
   window.addEventListener('pointercancel', onUp)
@@ -290,7 +307,11 @@ function onMove(e: PointerEvent) {
   if (!drag || e.pointerId !== drag.id) return
   const dx = (e.clientX - drag.sx) / scale.value
   const dy = (e.clientY - drag.sy) / scale.value
-  if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 4) return
+  if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < (e.pointerType === 'touch' ? 8 : 4)) return
+  if (!drag.moved) {
+    clearTimeout(longPress)
+    if (drag.pick !== undefined) selection.value = [drag.pick]
+  }
   drag.moved = true
   const next = new Map<string | number, { x: number; y: number }>()
   for (const [id, p] of drag.start) next.set(id, clamp(tables.value.find((x) => x.id === id)!, p.x + dx, p.y + dy))
@@ -298,6 +319,11 @@ function onMove(e: PointerEvent) {
 }
 function onUp(e: PointerEvent) {
   if (!drag || e.pointerId !== drag.id) return
+  clearTimeout(longPress)
+  if (longPressed) {
+    suppressClick = true
+    setTimeout(() => (suppressClick = false))
+  }
   window.removeEventListener('pointermove', onMove)
   window.removeEventListener('pointerup', onUp)
   window.removeEventListener('pointercancel', onUp)
@@ -696,6 +722,12 @@ const context: FloorPlanContext = {
   picked,
   tool,
   editable: computed(() => props.editable),
+  drawingWall: computed(() => !!drawing.value),
+  finishWall,
+  cancelWall: () => {
+    drawing.value = null
+    hover.value = null
+  },
   kinds,
   statuses: computed(() => props.statuses),
   size: computed(() => ({ width: props.width, height: props.height })),
@@ -787,7 +819,7 @@ const gridStyle = computed(() => {
       v-for="a in shownAreas"
       :key="`a${a.id}`"
       class="absolute rounded-lg border"
-      :class="[editable && tool === 'select' ? 'cursor-move' : 'pointer-events-none', isPicked('area', a.id) && 'ring-2 ring-primary']"
+      :class="[editable && tool === 'select' ? 'cursor-move touch-none' : 'pointer-events-none', isPicked('area', a.id) && 'ring-2 ring-primary']"
       :style="{ left: `${a.x * scale}px`, top: `${a.y * scale}px`, width: `${a.width * scale}px`, height: `${a.height * scale}px`, ...areaLook(a.color) }"
       @pointerdown="onAreaDown($event, a, null)"
     >
@@ -798,7 +830,7 @@ const gridStyle = computed(() => {
         <span
           v-for="c in (['nw', 'ne', 'sw', 'se'] as const)"
           :key="c"
-          class="absolute size-3 rounded-xs border-2 border-primary bg-surface"
+          class="m3-floor-handle absolute size-3 rounded-xs border-2 border-primary bg-surface"
           :class="[c[0] === 'n' ? '-top-1.5' : '-bottom-1.5', c[1] === 'w' ? '-left-1.5' : '-right-1.5', c === 'nw' || c === 'se' ? 'cursor-nwse-resize' : 'cursor-nesw-resize']"
           :data-corner="c"
           @pointerdown="onAreaDown($event, a, c)"
@@ -815,7 +847,7 @@ const gridStyle = computed(() => {
           stroke-linecap="round"
           stroke-linejoin="round"
           class="m3-floor-wall"
-          :class="[editable && tool === 'select' && 'pointer-events-auto cursor-move', isPicked('wall', w.id) && 'm3-floor-wall-picked']"
+          :class="[editable && tool === 'select' && 'pointer-events-auto cursor-move touch-none', isPicked('wall', w.id) && 'm3-floor-wall-picked']"
           :stroke-width="(w.thickness ?? 8) * scale"
           @pointerdown="onWallDown($event, w)"
           @dblclick="onWallDblclick($event, w)"
@@ -826,8 +858,8 @@ const gridStyle = computed(() => {
             :key="i"
             :cx="pt[0] * scale"
             :cy="pt[1] * scale"
-            :r="picked?.vertex === i ? 8 : 6"
-            class="pointer-events-auto cursor-move stroke-primary"
+            :r="(picked?.vertex === i ? 8 : 6) * (coarse ? 1.6 : 1)"
+            class="pointer-events-auto cursor-move touch-none stroke-primary"
             :class="picked?.vertex === i ? 'fill-primary' : 'fill-surface'"
             stroke-width="2"
             @pointerdown="onWallDown($event, w, i)"
@@ -851,7 +883,7 @@ const gridStyle = computed(() => {
       :key="`d${d.id}`"
       class="absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center text-on-surface-variant"
       :class="[
-        editable && tool === 'select' ? 'cursor-move' : 'pointer-events-none',
+        editable && tool === 'select' ? 'cursor-move touch-none' : 'pointer-events-none',
         isPicked('decor', d.id) && 'ring-2 ring-primary',
       ]"
       :style="{ left: `${d.x * scale}px`, top: `${d.y * scale}px`, width: `${decorSize(d).w * scale}px`, height: `${decorSize(d).h * scale}px`, rotate: `${rotationOf('decor', d.id, d.rotation)}deg`, ...decorLook(kindOf(d)) }"
@@ -865,13 +897,13 @@ const gridStyle = computed(() => {
       </slot>
       <span
         v-if="editable && isPicked('decor', d.id)"
-        class="absolute -right-1.5 -bottom-1.5 size-3 cursor-nwse-resize rounded-xs border-2 border-primary bg-surface"
+        class="m3-floor-handle absolute -right-1.5 -bottom-1.5 size-3 cursor-nwse-resize rounded-xs border-2 border-primary bg-surface"
         data-resize
         @pointerdown="onDecorDown($event, d, true)"
       />
       <span
         v-if="editable && isPicked('decor', d.id)"
-        class="absolute -top-6 left-1/2 size-3.5 -translate-x-1/2 cursor-grab rounded-full border-2 border-primary bg-surface"
+        class="m3-floor-handle absolute -top-6 left-1/2 size-3.5 -translate-x-1/2 cursor-grab rounded-full border-2 border-primary bg-surface"
         :aria-label="locale.floorRotate"
         data-rotate
         @pointerdown="onRotateDown($event, 'decor', d.id, d.x, d.y)"
@@ -900,7 +932,7 @@ const gridStyle = computed(() => {
       <!-- Rotation handle of the one table picked while editing -->
       <span
         v-if="editable && selection.length === 1 && selection[0] === p.t.id && tool === 'select'"
-        class="absolute z-10 size-3.5 -translate-x-1/2 -translate-y-1/2 cursor-grab rounded-full border-2 border-primary bg-surface"
+        class="m3-floor-handle absolute z-10 size-3.5 -translate-x-1/2 -translate-y-1/2 cursor-grab rounded-full border-2 border-primary bg-surface"
         :style="{ left: '0px', top: `${-(p.size.h / 2 + CHAIR + 18) * scale}px` }"
         :aria-label="locale.floorRotate"
         data-rotate
@@ -966,6 +998,20 @@ const gridStyle = computed(() => {
   }
 }
 @layer base {
+  /* Handles: never a scroll, and a finger-sized target around the small mark */
+  .m3-floor-handle {
+    touch-action: none;
+  }
+  .m3-floor-handle::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+  }
+  @media (pointer: coarse) {
+    .m3-floor-handle::after {
+      inset: -16px;
+    }
+  }
   .m3-floor-wall {
     stroke: var(--m3-floor-wall);
   }

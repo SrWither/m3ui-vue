@@ -405,6 +405,8 @@ export const zhLocale: M3Locale = {
   floorZone: '区域',
   floorWall: '墙',
   floorDeleteCorner: '删除拐角',
+  floorFinishWall: '完成墙',
+  floorCancel: '取消',
   floorDecorDoor: '门',
   floorDecorWindow: '窗',
   floorDecorPlant: '植物',

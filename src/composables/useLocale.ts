@@ -417,6 +417,8 @@ export interface M3Locale {
   floorZone: string
   floorWall: string
   floorDeleteCorner: string
+  floorFinishWall: string
+  floorCancel: string
   floorDecorDoor: string
   floorDecorWindow: string
   floorDecorPlant: string
@@ -837,6 +839,8 @@ export const defaultLocale: M3Locale = {
   floorZone: 'Zone',
   floorWall: 'Wall',
   floorDeleteCorner: 'Delete the corner',
+  floorFinishWall: 'Finish the wall',
+  floorCancel: 'Cancel',
   floorDecorDoor: 'Door',
   floorDecorWindow: 'Window',
   floorDecorPlant: 'Plant',

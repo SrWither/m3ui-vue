@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import MFloorPlan, { type FloorTable } from '../components/MFloorPlan.vue'
@@ -235,5 +235,49 @@ describe('MFloorPlan family', () => {
     await w.find('[aria-label="Undo"]').trigger('click')
     expect(w.findAll('.m3-floor-plan [role="button"]')).toHaveLength(2)
     w.unmount()
+  })
+})
+
+describe('MFloorPlan by touch', () => {
+  const touch = (type: string, el: EventTarget, x: number, y: number) =>
+    el.dispatchEvent(new PointerEvent(type, { bubbles: true, button: 0, clientX: x, clientY: y, pointerId: 9, pointerType: 'touch' }))
+  function plan(props: Record<string, unknown> = {}) {
+    const w: any = mount(MFloorPlan, {
+      props: { editable: true, grid: 10, tables: base(), ...props, ...Object.fromEntries(['tables', 'selection', 'walls'].map((k) => [`onUpdate:${k}`, (v: unknown) => w.setProps({ [k]: v })])) },
+      attachTo: document.body,
+    })
+    return w
+  }
+  it('holding a table down adds it to the selection; a tap still picks only it', async () => {
+    vi.useFakeTimers()
+    const w = plan({ selection: [1] })
+    touch('pointerdown', table(w, 'T2').element, 0, 0)
+    vi.advanceTimersByTime(500)
+    touch('pointerup', window, 0, 0)
+    await nextTick()
+    expect(w.props('selection')).toEqual([1, 2])
+    await table(w, 'T2').trigger('click')
+    expect(w.props('selection')).toEqual([1, 2])
+    vi.useRealTimers()
+  })
+  it('dragging an unpicked table with a finger picks it and moves it', async () => {
+    const w = plan({ selection: [1] })
+    touch('pointerdown', table(w, 'T2').element, 0, 0)
+    touch('pointermove', window, 40, 0)
+    touch('pointerup', window, 40, 0)
+    await nextTick()
+    expect(w.props('selection')).toEqual([2])
+    expect(w.props('tables')[1].x).toBe(340)
+  })
+  it('a wall being drawn can be finished from the context (the toolbar\'s Done)', async () => {
+    const w = plan({ tool: 'wall' })
+    const down = (x: number, y: number) => w.element.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, clientX: x, clientY: y, pointerId: 3 }))
+    down(0, 0)
+    down(100, 0)
+    await nextTick()
+    expect(w.vm.context.drawingWall.value).toBe(true)
+    w.vm.context.finishWall()
+    await nextTick()
+    expect(w.props('walls')[0].points).toEqual([[0, 0], [100, 0]])
   })
 })

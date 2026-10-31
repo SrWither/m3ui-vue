@@ -405,6 +405,8 @@ export const jaLocale: M3Locale = {
   floorZone: 'ゾーン',
   floorWall: '壁',
   floorDeleteCorner: '角を削除',
+  floorFinishWall: '壁を確定',
+  floorCancel: 'キャンセル',
   floorDecorDoor: 'ドア',
   floorDecorWindow: '窓',
   floorDecorPlant: '植物',

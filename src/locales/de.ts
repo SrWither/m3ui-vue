@@ -405,6 +405,8 @@ export const deLocale: M3Locale = {
   floorZone: 'Zone',
   floorWall: 'Wand',
   floorDeleteCorner: 'Ecke löschen',
+  floorFinishWall: 'Wand fertigstellen',
+  floorCancel: 'Abbrechen',
   floorDecorDoor: 'Tür',
   floorDecorWindow: 'Fenster',
   floorDecorPlant: 'Pflanze',

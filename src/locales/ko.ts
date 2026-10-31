@@ -405,6 +405,8 @@ export const koLocale: M3Locale = {
   floorZone: '구역',
   floorWall: '벽',
   floorDeleteCorner: '모서리 삭제',
+  floorFinishWall: '벽 완성',
+  floorCancel: '취소',
   floorDecorDoor: '문',
   floorDecorWindow: '창문',
   floorDecorPlant: '식물',

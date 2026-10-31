@@ -86,6 +86,10 @@ function add(p: FloorTablePreset) {
       density="compact"
       @update:model-value="ctx.tool.value = $event as 'select' | 'wall' | 'area'"
     />
+    <template v-if="ctx.drawingWall.value">
+      <MTooltip :text="locale.floorFinishWall" placement="top"><MIconButton icon="check" variant="filled" :label="locale.floorFinishWall" @click="ctx.finishWall()" /></MTooltip>
+      <MTooltip :text="locale.floorCancel" placement="top"><MIconButton icon="close" :label="locale.floorCancel" @click="ctx.cancelWall()" /></MTooltip>
+    </template>
     <MMenu>
       <template #trigger>
         <MTooltip :text="locale.floorAddTable" placement="top"><MIconButton icon="table_restaurant" :label="locale.floorAddTable" /></MTooltip>

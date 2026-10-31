@@ -20,6 +20,10 @@ export interface FloorPlanContext {
   picked: Ref<FloorPick>
   tool: Ref<FloorTool>
   editable: ComputedRef<boolean>
+  /** A wall is being drawn (tool `wall`): finish it (also double-click / Enter) or cancel it (Escape) */
+  drawingWall: ComputedRef<boolean>
+  finishWall(): void
+  cancelWall(): void
   /** The decor kinds: built-in ones merged with `decorKinds` */
   kinds: ComputedRef<Record<string, FloorDecorKind>>
   statuses: ComputedRef<Record<string, FloorStatus>>
