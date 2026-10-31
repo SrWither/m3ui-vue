@@ -355,6 +355,27 @@ describe('MFlow', () => {
     expect(w.emitted('update:viewport')).toBeUndefined()
     vi.useRealTimers()
   })
+  it('after a pinch, the finger left on pans, and the next single finger pans without zooming', async () => {
+    const w = await flow()
+    const touch = (el: EventTarget, type: string, id: number, x: number, y: number) => pointer(el, type, x, y, { pointerType: 'touch', pointerId: id })
+    touch(w.element, 'pointerdown', 1, 300, 400)
+    touch(w.element, 'pointerdown', 2, 500, 400)
+    touch(window, 'pointermove', 2, 700, 400)
+    const zoom = (w.emitted('update:viewport')!.at(-1)![0] as { zoom: number }).zoom
+    expect(zoom).toBeCloseTo(2)
+    // One finger lifts: the other keeps panning
+    touch(window, 'pointerup', 1, 300, 400)
+    const before = w.emitted('update:viewport')!.at(-1)![0] as { x: number; y: number; zoom: number }
+    touch(window, 'pointermove', 2, 700, 450)
+    expect(w.emitted('update:viewport')!.at(-1)![0]).toEqual({ x: before.x, y: before.y + 50, zoom })
+    touch(window, 'pointerup', 2, 700, 450)
+    // A fresh single finger is a pan, not a pinch against a finger that's gone
+    const start = w.emitted('update:viewport')!.at(-1)![0] as { x: number; y: number; zoom: number }
+    touch(w.element, 'pointerdown', 3, 400, 400)
+    touch(window, 'pointermove', 3, 460, 400)
+    expect(w.emitted('update:viewport')!.at(-1)![0]).toEqual({ x: start.x + 60, y: start.y, zoom })
+    touch(window, 'pointerup', 3, 460, 400)
+  })
   it('a node spliced in without room pushes the next one, and what comes after it, along', async () => {
     // a (0..180) → c (260..440) → d (600..): b (180 wide) can't fit between a and c with 48px each side
     const nodes = [N('a', 0, 0), N('c', 260, 0), N('d', 600, 0), N('b', 100, 300)]

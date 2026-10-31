@@ -934,6 +934,8 @@ function onPointerDown(e: PointerEvent) {
   const t = e.target as HTMLElement
   if (onOverlay(t)) return
   if (e.pointerType === 'touch') {
+    // With no gesture running nothing listens for fingers lifting: whatever is left in the map is stale
+    if (!gesture) touches.clear()
     touches.set(e.pointerId, { x: e.clientX, y: e.clientY })
     if (touches.size === 2) {
       // A second finger: whatever the first one started becomes a pinch
@@ -1088,7 +1090,7 @@ function onWindowMove(e: PointerEvent) {
 function onWindowUp(e: PointerEvent) {
   touches.delete(e.pointerId)
   if (pinch) {
-    if (touches.size < 2) { pinch = null; gesture = null; removeWindowListeners() }
+    if (touches.size < 2) endPinch()
     return
   }
   const g = gesture
@@ -1116,7 +1118,10 @@ function onWindowUp(e: PointerEvent) {
 function onWindowCancel(e: PointerEvent) {
   clearTimeout(longPress)
   touches.delete(e.pointerId)
-  if (pinch && touches.size < 2) pinch = null
+  if (pinch) {
+    if (touches.size < 2) endPinch()
+    return
+  }
   cancelGesture()
 }
 function cancelGesture() {
@@ -1176,6 +1181,14 @@ function startPinch() {
   gesture = { kind: 'pinch' }
   pinch = { ...p, zoom: vp.value.zoom, fx: (p.cx - vp.value.x) / vp.value.zoom, fy: (p.cy - vp.value.y) / vp.value.zoom }
   addWindowListeners()
+}
+// One finger lifted: the one left on keeps panning (and its pointerup still ends the gesture)
+function endPinch() {
+  pinch = null
+  const rest = [...touches][0]
+  if (!rest) { gesture = null; removeWindowListeners(); return }
+  const [id, p] = rest
+  gesture = { kind: 'pan', id, sx: p.x, sy: p.y, vx: vp.value.x, vy: vp.value.y, moved: true, target: 'pane', touch: true }
 }
 function movePinch() {
   if (!pinch || touches.size < 2) return
