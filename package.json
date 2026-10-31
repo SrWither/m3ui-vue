@@ -72,6 +72,10 @@
       "types": "./dist/flow.d.ts",
       "import": "./dist/flow.js"
     },
+    "./gantt": {
+      "types": "./dist/gantt.d.ts",
+      "import": "./dist/gantt.js"
+    },
     "./styles": "./dist/styles.css",
     "./theme": "./src/styles/theme.css",
     "./palettes": "./src/styles/palettes.css",

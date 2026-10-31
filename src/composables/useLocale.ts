@@ -319,6 +319,47 @@ export interface M3Locale {
   flowDeleted: string
   flowDeleteEdge: string
   flowDelete: string
+  ganttChart: string
+  ganttTask: string
+  ganttStart: string
+  ganttEnd: string
+  ganttDuration: string
+  ganttProgress: string
+  ganttDays: string
+  ganttHours: string
+  ganttMilestone: string
+  ganttQuarter: string
+  ganttToday: string
+  ganttZoomIn: string
+  ganttZoomOut: string
+  ganttExpandAll: string
+  ganttCollapseAll: string
+  ganttExpand: string
+  ganttCollapse: string
+  ganttUndo: string
+  ganttRedo: string
+  ganttScaleHour: string
+  ganttScaleDay: string
+  ganttScaleWeek: string
+  ganttScaleMonth: string
+  ganttScaleQuarter: string
+  ganttScaleYear: string
+  ganttMoved: string
+  ganttProgressSet: string
+  ganttLinked: string
+  ganttUnlink: string
+  ganttDeleted: string
+  ganttDelete: string
+  ganttReordered: string
+  ganttSlack: string
+  ganttCritical: string
+  ganttBaseline: string
+  ganttEmpty: string
+  ganttResize: string
+  timelineResource: string
+  timelineConflict: string
+  timelineMoved: string
+  timelineEmpty: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -616,6 +657,47 @@ export const defaultLocale: M3Locale = {
   flowDeleted: '{count} deleted',
   flowDeleteEdge: 'Delete connection',
   flowDelete: 'Delete',
+  ganttChart: 'Gantt chart',
+  ganttTask: 'Task',
+  ganttStart: 'Start',
+  ganttEnd: 'End',
+  ganttDuration: 'Duration',
+  ganttProgress: 'Progress',
+  ganttDays: '{n} d',
+  ganttHours: '{n} h',
+  ganttMilestone: 'Milestone',
+  ganttQuarter: 'Q{n}',
+  ganttToday: 'Today',
+  ganttZoomIn: 'Zoom in',
+  ganttZoomOut: 'Zoom out',
+  ganttExpandAll: 'Expand all',
+  ganttCollapseAll: 'Collapse all',
+  ganttExpand: 'Expand',
+  ganttCollapse: 'Collapse',
+  ganttUndo: 'Undo',
+  ganttRedo: 'Redo',
+  ganttScaleHour: 'Hours',
+  ganttScaleDay: 'Days',
+  ganttScaleWeek: 'Weeks',
+  ganttScaleMonth: 'Months',
+  ganttScaleQuarter: 'Quarters',
+  ganttScaleYear: 'Years',
+  ganttMoved: '{name}: {start} to {end}',
+  ganttProgressSet: '{name}: {progress}% done',
+  ganttLinked: '{from} linked to {to}',
+  ganttUnlink: 'Remove dependency',
+  ganttDeleted: '{count} deleted',
+  ganttDelete: 'Delete',
+  ganttReordered: '{name} moved to row {pos}',
+  ganttSlack: 'Slack: {n} d',
+  ganttCritical: 'Critical',
+  ganttBaseline: 'Baseline',
+  ganttEmpty: 'No tasks yet',
+  ganttResize: 'Resize the task list',
+  timelineResource: 'Resource',
+  timelineConflict: 'Overlaps another booking',
+  timelineMoved: '{title}: {resource}, {start} to {end}',
+  timelineEmpty: 'No resources',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')
