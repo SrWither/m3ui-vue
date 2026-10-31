@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.3.0] - Unreleased
+## [1.3.0] - 2026-10-31
 
 ### Added
 - Media family, from the new `/media` entry point (no dependencies):
