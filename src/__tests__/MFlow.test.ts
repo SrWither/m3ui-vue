@@ -423,6 +423,29 @@ describe('MFlow', () => {
     expect(edges.map((e) => [e.source, e.target])).toEqual([['a', 'b'], ['b', 'c']])
     expect(w.emitted('update:selection')!.at(-1)![0]).toEqual({ nodes: ['b'], edges: [] })
   })
+  it('startDrag with a finger keeps the touch from scrolling until it is lifted', async () => {
+    const w = await flow({ nodes: [N('a', 0, 0)] })
+    const ctx = w.vm as unknown as { addNodes(n: FlowNode): void; startDrag(id: string, e: PointerEvent): void }
+    // The finger came from a palette outside the canvas, whose touch-action lets the browser scroll
+    const palette = document.createElement('button')
+    document.body.appendChild(palette)
+    const move = () => {
+      const e = new Event('touchmove', { bubbles: true, cancelable: true })
+      palette.dispatchEvent(e)
+      return e.defaultPrevented
+    }
+    ctx.addNodes(N('b', 300, 300))
+    const down = new PointerEvent('pointermove', { clientX: 390, clientY: 330, pointerId: 3, pointerType: 'touch' })
+    Object.defineProperty(down, 'target', { value: palette })
+    ctx.startDrag('b', down)
+    await nextTick()
+    expect(move()).toBe(true)
+    // Its moves go to where it began even once that's gone from the page
+    palette.remove()
+    expect(move()).toBe(true)
+    pointer(window, 'pointerup', 390, 30, { pointerId: 3, pointerType: 'touch' })
+    expect(move()).toBe(false)
+  })
   it('a node shown again appears at its position instead of sliding from where it was hidden', async () => {
     vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance'] })
     const w = await flow({ animate: true })

@@ -172,7 +172,8 @@ export interface FlowContext {
   paste(at?: FlowXY): void
   /**
    * Drags a node with a pointer that's already down, e.g. one just added from a palette outside the canvas: it
-   * follows the pointer from there (guides, splicing into an edge) until it's let go
+   * follows the pointer from there (guides, splicing into an edge) until it's let go. With a finger, the page
+   * doesn't scroll under it meanwhile (start the drag from a long press, so a swipe still scrolls your palette)
    */
   startDrag(id: string, e: PointerEvent): void
 }

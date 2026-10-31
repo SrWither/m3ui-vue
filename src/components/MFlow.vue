@@ -928,6 +928,24 @@ function removeWindowListeners() {
   window.removeEventListener('pointermove', onWindowMove)
   window.removeEventListener('pointerup', onWindowUp)
   window.removeEventListener('pointercancel', onWindowCancel)
+  unblockTouchScroll()
+}
+
+// A touch handed over by startDrag began outside the canvas (a palette, a sheet), so its touch-action is that
+// element's and the browser would scroll or cancel it. Its touchmoves go to where it began, even once that's
+// gone from the page, so they're cancelled there (and on window) until the drag ends
+let touchBlocked: EventTarget[] = []
+function preventTouch(e: TouchEvent) {
+  if (e.cancelable) e.preventDefault()
+}
+function blockTouchScroll(target: EventTarget | null) {
+  unblockTouchScroll()
+  touchBlocked = target && target !== window ? [target, window] : [window]
+  for (const t of touchBlocked) t.addEventListener('touchmove', preventTouch as EventListener, { passive: false })
+}
+function unblockTouchScroll() {
+  for (const t of touchBlocked) t.removeEventListener('touchmove', preventTouch as EventListener)
+  touchBlocked = []
 }
 
 function onPointerDown(e: PointerEvent) {
@@ -1308,6 +1326,7 @@ function startDrag(id: string, e: PointerEvent) {
   pointer.x = e.clientX
   pointer.y = e.clientY
   addWindowListeners()
+  if (g.touch) blockTouchScroll(e.target)
   if (!beginNodeDrag(g, e)) {
     gesture = null
     removeWindowListeners()
