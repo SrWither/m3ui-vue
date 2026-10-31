@@ -19,8 +19,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - Delete removes the selected tables too (and takes them out of their merges); Ctrl+D duplicates the selected tables or the picked zone or decor
   - `decorKinds`: decor kinds of your own (icon, size, `box` / `round` / `bar` / `text` shape, color), or the built-in ones restyled; `#decor`, `#area` and `#merge` slots draw their insides, `#overlay` anything over the plan in plan units
   - `selectable` (`'single'` / `'multiple'`): pick tables outside editing; `merge()` / `split()` with `merge`, `split` and `merge-refused` events, and `canMerge` to refuse with a reason (two open bills, say)
+  - By touch: holding a table down adds it to the selection (a finger has no Shift); zones, walls and decor don't scroll the page while dragged; handles get a finger-sized target on coarse pointers; MFloorPlanToolbar finishes or cancels a wall being drawn (`drawingWall`, `finishWall()`, `cancelWall()` in the context)
   - CSS custom properties to restyle walls, chairs and merges (`--m3-floor-wall`, `--m3-floor-chair`, `--m3-floor-merge`…)
-  - 41 locale keys (`floorAddTable`, `floorMerge`, `floorDecorDoor`…) in all 7 locales
+  - 43 locale keys (`floorAddTable`, `floorMerge`, `floorDecorDoor`…) in all 7 locales
 - `MDrawCanvas` `backgroundImageBox`: where the background image sits on an infinite canvas and its size (drawn covering that box); `fitView()` takes it in
 
 ### Fixed
