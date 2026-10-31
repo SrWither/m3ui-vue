@@ -256,16 +256,42 @@ function look(st?: FloorStatus) {
   if (ROLES.has(st.color)) return { background: `var(--color-${st.color}-container)`, color: `var(--color-on-${st.color}-container)` }
   return { background: st.color, color: '#fff' }
 }
-const mergeBoxes = computed(() =>
+/**
+ * How a merge is drawn: tables that sit together share one outline (a cluster); clusters apart from each other get
+ * an outline each, joined by a dashed line, so a merge across the room doesn't swallow the tables in between
+ */
+const mergeShapes = computed(() =>
   merges.value.map((m) => {
     const ms = placed.value.filter((p) => m.tables.includes(p.t.id))
     if (!ms.length) return null
     const pad = CHAIR + 10
-    const x1 = Math.min(...ms.map((p) => p.x - p.size.w / 2)) - pad
-    const y1 = Math.min(...ms.map((p) => p.y - p.size.h / 2)) - pad
-    const x2 = Math.max(...ms.map((p) => p.x + p.size.w / 2)) + pad
-    const y2 = Math.max(...ms.map((p) => p.y + p.size.h / 2)) + pad
-    return { m, x: x1, y: y1, w: x2 - x1, h: y2 - y1 }
+    const boxes = ms.map((p) => ({ x1: p.x - p.size.w / 2 - pad, y1: p.y - p.size.h / 2 - pad, x2: p.x + p.size.w / 2 + pad, y2: p.y + p.size.h / 2 + pad }))
+    // Union-find over touching boxes
+    const parent = boxes.map((_, i) => i)
+    const find = (i: number): number => (parent[i] === i ? i : (parent[i] = find(parent[i]!)))
+    for (let i = 0; i < boxes.length; i++)
+      for (let j = i + 1; j < boxes.length; j++) {
+        const a = boxes[i]!
+        const b = boxes[j]!
+        if (a.x1 <= b.x2 && b.x1 <= a.x2 && a.y1 <= b.y2 && b.y1 <= a.y2) parent[find(i)] = find(j)
+      }
+    const groups = new Map<number, typeof boxes>()
+    boxes.forEach((b, i) => groups.set(find(i), [...(groups.get(find(i)) ?? []), b]))
+    const clusters = [...groups.values()].map((bs) => {
+      const x1 = Math.min(...bs.map((b) => b.x1))
+      const y1 = Math.min(...bs.map((b) => b.y1))
+      const x2 = Math.max(...bs.map((b) => b.x2))
+      const y2 = Math.max(...bs.map((b) => b.y2))
+      return { x: x1, y: y1, w: x2 - x1, h: y2 - y1, cx: (x1 + x2) / 2, cy: (y1 + y2) / 2 }
+    })
+    // Each cluster linked to the nearest one already linked (a small spanning tree)
+    const links: [number, number, number, number][] = []
+    for (let i = 1; i < clusters.length; i++) {
+      let best = 0
+      for (let j = 1; j < i; j++) if (Math.hypot(clusters[j]!.cx - clusters[i]!.cx, clusters[j]!.cy - clusters[i]!.cy) < Math.hypot(clusters[best]!.cx - clusters[i]!.cx, clusters[best]!.cy - clusters[i]!.cy)) best = j
+      links.push([clusters[best]!.cx, clusters[best]!.cy, clusters[i]!.cx, clusters[i]!.cy])
+    }
+    return { m, clusters, links }
   }).filter((b) => !!b),
 )
 
@@ -911,16 +937,34 @@ const gridStyle = computed(() => {
     </div>
 
     <!-- Merged tables: one outline around the group -->
-    <div
-      v-for="b in mergeBoxes"
-      :key="`m${b!.m.id}`"
-      class="m3-floor-merge pointer-events-none absolute rounded-2xl border-2 border-dashed"
-      :style="{ left: `${b!.x * scale}px`, top: `${b!.y * scale}px`, width: `${b!.w * scale}px`, height: `${b!.h * scale}px` }"
-    >
-      <slot name="merge" :merge="b!.m" :tables="b!.m.tables">
-        <span v-if="b!.m.label" class="m3-floor-merge-label absolute -top-2.5 left-3 rounded-full px-2 text-label-small">{{ b!.m.label }}</span>
-      </slot>
-    </div>
+    <svg v-if="mergeShapes.some((ms) => ms!.links.length)" class="pointer-events-none absolute inset-0 size-full overflow-visible">
+      <template v-for="ms in mergeShapes" :key="`ml${ms!.m.id}`">
+        <line
+          v-for="(l, i) in ms!.links"
+          :key="i"
+          class="m3-floor-merge-link"
+          :x1="l[0] * scale"
+          :y1="l[1] * scale"
+          :x2="l[2] * scale"
+          :y2="l[3] * scale"
+          stroke-width="2"
+          stroke-dasharray="6 5"
+          stroke-linecap="round"
+        />
+      </template>
+    </svg>
+    <template v-for="ms in mergeShapes" :key="`m${ms!.m.id}`">
+      <div
+        v-for="(b, i) in ms!.clusters"
+        :key="i"
+        class="m3-floor-merge pointer-events-none absolute rounded-2xl border-2 border-dashed"
+        :style="{ left: `${b.x * scale}px`, top: `${b.y * scale}px`, width: `${b.w * scale}px`, height: `${b.h * scale}px` }"
+      >
+        <slot v-if="i === 0" name="merge" :merge="ms!.m" :tables="ms!.m.tables">
+          <span v-if="ms!.m.label" class="m3-floor-merge-label absolute -top-2.5 left-3 rounded-full px-2 text-label-small whitespace-nowrap">{{ ms!.m.label }}</span>
+        </slot>
+      </div>
+    </template>
 
     <div
       v-for="p in placed"
@@ -1024,6 +1068,9 @@ const gridStyle = computed(() => {
   .m3-floor-merge {
     border-color: color-mix(in srgb, var(--m3-floor-merge) 60%, transparent);
     background: color-mix(in srgb, var(--m3-floor-merge) 5%, transparent);
+  }
+  .m3-floor-merge-link {
+    stroke: color-mix(in srgb, var(--m3-floor-merge) 60%, transparent);
   }
   .m3-floor-merge-label {
     background: var(--m3-floor-merge);

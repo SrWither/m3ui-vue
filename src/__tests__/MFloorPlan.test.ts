@@ -281,3 +281,19 @@ describe('MFloorPlan by touch', () => {
     expect(w.props('walls')[0].points).toEqual([[0, 0], [100, 0]])
   })
 })
+
+describe('MFloorPlan merges across the room', () => {
+  it('draws touching tables in one outline and tables apart in their own, joined by a line', () => {
+    const tables: FloorTable[] = [
+      { id: 1, label: '1', x: 100, y: 100, seats: 4 },
+      { id: 2, label: '2', x: 172, y: 100, seats: 4 },
+      { id: 3, label: '3', x: 700, y: 400, seats: 4 },
+      { id: 4, label: '4', x: 400, y: 250, seats: 4 },
+    ]
+    const w = mount(MFloorPlan, { props: { tables, merges: [{ id: 'm', tables: [1, 2, 3], label: '1 + 2 + 3' }] } })
+    // 1 and 2 touch: one outline; 3 is apart: its own; 4 (between them) isn't covered
+    expect(w.findAll('.m3-floor-merge')).toHaveLength(2)
+    expect(w.findAll('.m3-floor-merge-link')).toHaveLength(1)
+    expect(w.findAll('.m3-floor-merge-label')).toHaveLength(1)
+  })
+})
