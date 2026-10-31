@@ -14,7 +14,7 @@
  * @slot default Overlays: a toolbar (MDrawToolbar), a layers panel (MDrawLayers), anything positioned over the canvas
  * @event change Fires after every edit with the new items (the same as `update:modelValue`)
  */
-import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, shallowRef, useId, watch } from 'vue'
 import {
   constrain,
   drawId,
@@ -604,7 +604,8 @@ const visibleArea = computed(() => {
   const z = vp.value.zoom
   return { x: -vp.value.x / z, y: -vp.value.y / z, width: size2.value.width / z, height: size2.value.height / z }
 })
-const uid = `m3d${Math.random().toString(36).slice(2, 8)}`
+// Stable across server and client render (pattern and clip ids)
+const uid = `m3d${useId().replace(/[^a-zA-Z0-9-]/g, "")}`
 const rule = computed(() => props.backgroundSize)
 const cursor = computed(() => {
   if (gesture.value?.kind === 'pan' || gesture.value?.kind === 'pinch') return 'grabbing'
