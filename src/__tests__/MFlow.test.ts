@@ -402,4 +402,21 @@ describe('MFlow', () => {
     expect(edges.map((e) => [e.source, e.target])).toEqual([['a', 'b'], ['b', 'c']])
     expect(w.emitted('update:selection')!.at(-1)![0]).toEqual({ nodes: ['b'], edges: [] })
   })
+  it('a node shown again appears at its position instead of sliding from where it was hidden', async () => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance'] })
+    const w = await flow({ animate: true })
+    await w.setProps({ nodes: [N('a', 0, 0, { hidden: true }), N('b', 300, 0)] })
+    // Hidden, and moved meanwhile (a layout, say); then shown
+    await w.setProps({ nodes: [N('a', 500, 200, { hidden: true }), N('b', 300, 0)] })
+    await w.setProps({ nodes: [N('a', 500, 200), N('b', 300, 0)] })
+    await nextTick()
+    expect(node(w, 'a').style.transform).toBe('translate(500px, 200px)')
+    // A move once it shows still springs
+    await w.setProps({ nodes: [N('a', 600, 200), N('b', 300, 0)] })
+    expect(node(w, 'a').style.transform).toBe('translate(500px, 200px)')
+    vi.advanceTimersByTime(1500)
+    await nextTick()
+    expect(node(w, 'a').style.transform).toBe('translate(600px, 200px)')
+    vi.useRealTimers()
+  })
 })

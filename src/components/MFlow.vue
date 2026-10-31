@@ -364,11 +364,16 @@ const springs = new Map<string, Spring2>()
 const dragging = shallowRef(new Set<string>())
 let instantNext = false
 
+// Nodes hidden last time: one that shows again appears at its position instead of sliding in from where it was hidden
+let wasHidden = new Set<string>()
 function syncPositions() {
   const seen = new Set<string>()
+  const hiddenNow = new Set<string>()
   const animate = props.animate && ready.value && !instantNext && !prefersReducedMotion()
   for (const n of nodesLocal.value) {
     seen.add(n.id)
+    if (isHidden(n.id)) hiddenNow.add(n.id)
+    const reappears = wasHidden.has(n.id) && !hiddenNow.has(n.id)
     const d = disp.get(n.id)
     const { x, y } = n.position
     if (!d) {
@@ -377,10 +382,10 @@ function syncPositions() {
       continue
     }
     const s = springs.get(n.id)!
-    if (s.tx === x && s.ty === y) continue
+    if (s.tx === x && s.ty === y && !reappears) continue
     s.tx = x
     s.ty = y
-    if (!animate || dragging.value.has(n.id)) {
+    if (!animate || reappears || dragging.value.has(n.id)) {
       s.x = x
       s.y = y
       s.vx = s.vy = 0
@@ -389,6 +394,7 @@ function syncPositions() {
     } else kick()
   }
   for (const id of [...disp.keys()]) if (!seen.has(id)) { disp.delete(id); springs.delete(id) }
+  wasHidden = hiddenNow
   instantNext = false
 }
 watch(nodesLocal, syncPositions, { immediate: true })
