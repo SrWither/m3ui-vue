@@ -60,7 +60,10 @@ const canDelete = computed(() => props.delete && !flow.locked.value && (deletabl
       <MIconButton icon="undo" :label="locale.flowUndo" :disabled="!flow.canUndo.value" @click="flow.undo()" />
       <MIconButton icon="redo" :label="locale.flowRedo" :disabled="!flow.canRedo.value" @click="flow.redo()" />
     </template>
-    <MIconButton v-if="canDelete" icon="delete" :label="locale.flowDelete" color="error" @click="flow.remove(deletable)" />
+    <!-- The toolbar grows to make room for it instead of jumping -->
+    <Transition :name="vertical ? 'm3-flow-ctl-v' : 'm3-flow-ctl-h'">
+      <MIconButton v-if="canDelete" icon="delete" :label="locale.flowDelete" color="error" @click="flow.remove(deletable)" />
+    </Transition>
     <MIconButton
       v-if="lock"
       :icon="flow.locked.value ? 'lock' : 'lock_open'"
@@ -70,3 +73,38 @@ const canDelete = computed(() => props.delete && !flow.locked.value && (deletabl
     <slot />
   </div>
 </template>
+
+<style>
+.m3-flow-ctl-v-enter-active,
+.m3-flow-ctl-v-leave-active,
+.m3-flow-ctl-h-enter-active,
+.m3-flow-ctl-h-leave-active {
+  overflow: hidden;
+  transition: max-height 300ms cubic-bezier(0.2, 0, 0, 1), max-width 300ms cubic-bezier(0.2, 0, 0, 1), margin 300ms cubic-bezier(0.2, 0, 0, 1), scale 300ms cubic-bezier(0.2, 0, 0, 1), opacity 200ms linear;
+}
+.m3-flow-ctl-v-enter-from,
+.m3-flow-ctl-v-leave-to {
+  max-height: 0;
+  margin-top: -0.25rem;
+  scale: 0.5;
+  opacity: 0;
+}
+.m3-flow-ctl-v-enter-to,
+.m3-flow-ctl-v-leave-from {
+  max-height: 2.5rem;
+}
+.m3-flow-ctl-h-enter-from,
+.m3-flow-ctl-h-leave-to {
+  max-width: 0;
+  margin-left: -0.25rem;
+  scale: 0.5;
+  opacity: 0;
+}
+.m3-flow-ctl-h-enter-to,
+.m3-flow-ctl-h-leave-from {
+  max-width: 2.5rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  .m3-flow-ctl-v-enter-active, .m3-flow-ctl-v-leave-active, .m3-flow-ctl-h-enter-active, .m3-flow-ctl-h-leave-active { transition: none; }
+}
+</style>
