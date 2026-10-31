@@ -156,6 +156,8 @@ export interface FlowInternals extends FlowContext {
   /** The handle a connection being dragged would snap to (`nodeId:handleId:type`), and whether it's valid */
   connectionTarget: Readonly<Ref<{ key: string; valid: boolean } | null>>
   connecting: Readonly<Ref<boolean>>
+  /** The edge a dragged node would splice into if dropped now */
+  insertEdge: Readonly<Ref<string | null>>
   nodesConnectable: ComputedRef<boolean>
   direction: ComputedRef<'horizontal' | 'vertical'>
   registerNodeEl(id: string, el: HTMLElement | null): void

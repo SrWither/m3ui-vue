@@ -183,6 +183,44 @@ export function getSmoothStepPath(p: FlowEdgePathParams & { borderRadius?: numbe
   return { path: d, labelX, labelY, sourceAngle: angleOf(b[0] - a[0], b[1] - a[1]), targetAngle: angleOf(z[0] - y[0], z[1] - y[1]) }
 }
 
+/**
+ * Points along an edge's path, close enough together to measure how far something is from it (bezier curves are
+ * sampled; step paths are their corners)
+ */
+export function edgePathPoints(type: string | undefined, p: FlowEdgePathParams): [number, number][] {
+  if (type === 'straight') return [[p.sourceX, p.sourceY], [p.targetX, p.targetY]]
+  if (type === 'smoothstep' || type === 'step') return smoothStepPoints(p)
+  const sp = p.sourcePosition ?? 'bottom'
+  const tp = p.targetPosition ?? 'top'
+  const [c1x, c1y] = controlPoint(sp, p.sourceX, p.sourceY, p.targetX, p.targetY, 0.25)
+  const [c2x, c2y] = controlPoint(tp, p.targetX, p.targetY, p.sourceX, p.sourceY, 0.25)
+  const out: [number, number][] = []
+  for (let i = 0; i <= 24; i++) {
+    const t = i / 24
+    const u = 1 - t
+    out.push([
+      u * u * u * p.sourceX + 3 * u * u * t * c1x + 3 * u * t * t * c2x + t * t * t * p.targetX,
+      u * u * u * p.sourceY + 3 * u * u * t * c1y + 3 * u * t * t * c2y + t * t * t * p.targetY,
+    ])
+  }
+  return out
+}
+
+/** The distance from a point to a polyline */
+export function distanceToPoints(x: number, y: number, pts: [number, number][]): number {
+  let best = Infinity
+  for (let i = 1; i < pts.length; i++) {
+    const [ax, ay] = pts[i - 1]!
+    const [bx, by] = pts[i]!
+    const dx = bx - ax
+    const dy = by - ay
+    const len = dx * dx + dy * dy
+    const t = len ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / len)) : 0
+    best = Math.min(best, Math.hypot(ax + t * dx - x, ay + t * dy - y))
+  }
+  return best
+}
+
 /** `getSmoothStepPath` with sharp corners */
 export function getStepPath(p: FlowEdgePathParams & { offset?: number }): FlowEdgePath {
   return getSmoothStepPath({ ...p, borderRadius: 0 })

@@ -310,4 +310,48 @@ describe('MFlow', () => {
     expect((w.emitted('update:nodes')!.at(-1)![0] as FlowNode[]).map((n) => n.id)).toEqual(['b'])
     expect(w.emitted('delete')).toHaveLength(1)
   })
+  it('a lone node dropped onto an edge splices into it, in one undo step', async () => {
+    // a (0..180) → c (600..780) runs along y = 30; b starts below, unconnected
+    const w = await flow({ nodes: [N('a', 0, 0), N('c', 600, 0), N('b', 300, 300)], edges: [{ id: 'e1', source: 'a', target: 'c', type: 'straight', animated: true, label: 'x' }] })
+    pointer(node(w, 'b'), 'pointerdown', 390, 330)
+    pointer(window, 'pointermove', 390, 30)
+    await nextTick()
+    // Lit up while over it
+    expect(w.find('[data-flow-edge="e1"] path:nth-child(2)').attributes('stroke-width')).toBe('4')
+    pointer(window, 'pointerup', 390, 30)
+    const edges = w.emitted('update:edges')!.at(-1)![0] as FlowEdge[]
+    expect(edges.map((e) => [e.source, e.target])).toEqual([['a', 'b'], ['b', 'c']])
+    // The old edge's look, not its label
+    expect(edges.every((e) => e.type === 'straight' && e.animated && !e.label)).toBe(true)
+    expect((w.emitted('insert')![0]![0] as { edge: FlowEdge }).edge.id).toBe('e1')
+    await w.setProps({ nodes: w.emitted('update:nodes')!.at(-1)![0], edges })
+    await w.trigger('keydown', { key: 'z', ctrlKey: true })
+    expect((w.emitted('update:edges')!.at(-1)![0] as FlowEdge[]).map((e) => e.id)).toEqual(['e1'])
+    expect((w.emitted('update:nodes')!.at(-1)![0] as FlowNode[]).find((n) => n.id === 'b')!.position).toEqual({ x: 300, y: 300 })
+  })
+
+  it('a node that already has connections, or insertOnEdge off, just moves', async () => {
+    const w = await flow({ nodes: [N('a', 0, 0), N('c', 600, 0), N('b', 300, 300), N('d', 300, 500)], edges: [{ id: 'e1', source: 'a', target: 'c', type: 'straight' }, { id: 'e2', source: 'b', target: 'd' }] })
+    pointer(node(w, 'b'), 'pointerdown', 390, 330)
+    pointer(window, 'pointermove', 390, 30)
+    pointer(window, 'pointerup', 390, 30)
+    expect(w.emitted('insert')).toBeUndefined()
+    expect(w.emitted('update:edges')).toBeUndefined()
+    const off = await flow({ nodes: [N('a', 0, 0), N('c', 600, 0), N('b', 300, 300)], edges: [{ id: 'e1', source: 'a', target: 'c', type: 'straight' }], insertOnEdge: false })
+    pointer(node(off, 'b'), 'pointerdown', 390, 330)
+    pointer(window, 'pointermove', 390, 30)
+    pointer(window, 'pointerup', 390, 30)
+    expect(off.emitted('insert')).toBeUndefined()
+  })
+  it('on touch, a long press on the background starts a selection box', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    const w = await flow({ nodes: [N('a', 0, 0), N('b', 300, 0), N('c', 0, 300)] })
+    pointer(w.element, 'pointerdown', 250, -10, { pointerType: 'touch' })
+    vi.advanceTimersByTime(500)
+    pointer(window, 'pointermove', 500, 100, { pointerType: 'touch' })
+    pointer(window, 'pointerup', 500, 100, { pointerType: 'touch' })
+    expect(w.emitted('update:selection')!.at(-1)![0]).toEqual({ nodes: ['b'], edges: [] })
+    expect(w.emitted('update:viewport')).toBeUndefined()
+    vi.useRealTimers()
+  })
 })

@@ -15,7 +15,8 @@ const emptySelection = (): FlowSelection => ({ nodes: [], edges: [] })
  * drawn from handle to handle. Built from M3 pieces (nodes are cards, the controls a floating toolbar) with the
  * API shape of Vue Flow / React Flow. Nodes and edges are `v-model`s of plain objects; the view, the selection
  * and the lock are too. Pan by dragging the background (or the wheel, or two fingers), zoom with Ctrl + wheel, a
- * trackpad or touch pinch, or a double click. Shift + drag (or `selectionOnDrag`) draws a selection box; Delete
+ * trackpad or touch pinch, or a double click. Shift + drag (or `selectionOnDrag`; on touch, a long press on the
+ * background) draws a selection box; Delete
  * removes what's selected, Ctrl+Z/Ctrl+Shift+Z undo and redo, Ctrl+C/X/V/A copy, cut, paste and select all, and
  * the arrows move the selected nodes. A drag from a handle to another connects them; dropped on nothing it fires
  * `connect-end` with the spot, to offer a new node there. To disconnect: the × on a selected edge, Delete, dragging
@@ -33,13 +34,15 @@ const emptySelection = (): FlowSelection => ({ nodes: [], edges: [] })
  *
  * @slot default Drawn over the canvas: MFlowControls, MFlowMinimap, panels of yours. Props: `{ flow }`
  * @slot node-<type> A node of that type. Props: `{ node, data, selected, dragging }`
- * @slot edge-<type> An edge of that type, SVG inside a `<g>`. Props: `{ edge, path, labelX, labelY, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, selected }`
+ * @slot edge-<type> An edge of that type, SVG inside a `<g>`. Props: `{ edge, path, labelX, labelY, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, targetAngle, targetInset, selected, highlighted }` (`highlighted`: a dragged node would splice into it)
  * @slot edge-label An edge's label, instead of the default chip. Props: `{ edge, selected }`
  * @slot empty Shown while there are no nodes
  * @event connect A connection was made (it's also added to `edges` with `autoConnect`)
  * @event connect-start A connection drag started from a handle
  * @event connect-end A connection drag ended: `{ connection }` when it connected, else the flow `position` it was dropped at and where it came from
  * @event reconnect An edge's end was moved to another handle: `{ edge, connection }`
+ * @event insert A lone node was dropped onto an edge and spliced in: `{ node, edge, connections }` (with `autoConnect`
+ *   the edge is replaced by the two connections, keeping its type and look)
  * @event node-click / node-dblclick / node-contextmenu `(node, event)`
  * @event node-drag-start / node-drag `(nodes, event)`
  * @event node-drag-stop `{ nodes, intersecting, event }`: `intersecting` are the nodes under the dragged one
@@ -62,7 +65,7 @@ import {
   type FlowXY,
 } from '../composables/useFlow'
 import { layoutLayered, layoutTree, type FlowLayout, type FlowLayoutDirection, type FlowLayoutOptions } from '../composables/flowLayout'
-import { getBezierPath, getSmoothStepPath, getStepPath, getStraightPath, type FlowEdgePath } from '../composables/flowPaths'
+import { distanceToPoints, edgePathPoints, getBezierPath, getSmoothStepPath, getStepPath, getStraightPath, type FlowEdgePath } from '../composables/flowPaths'
 import { DEFAULT_SPATIAL } from '../composables/_useSpring'
 import { prefersReducedMotion } from '../composables/_springAnimation'
 import { useLocale } from '../composables/useLocale'
@@ -126,6 +129,11 @@ const props = withDefaults(defineProps<{
   /** Lays the nodes out when the graph's shape changes (nodes or edges added, removed, hidden) */
   layout?: 'tree' | 'layered' | FlowLayout | null
   layoutOptions?: FlowLayoutOptions
+  /**
+   * A node with no connections dropped onto an edge splices into it: A → C becomes A → B → C (the edge lights up
+   * while it's over one). Only when both new connections are valid
+   */
+  insertOnEdge?: boolean
   /** Nodes dropped onto a `group` join it (and leave it when dropped outside) */
   dropIntoGroups?: boolean
   /** Positions spring to their new place when they change from outside */
@@ -163,6 +171,7 @@ const props = withDefaults(defineProps<{
   guides: true,
   layout: null,
   dropIntoGroups: false,
+  insertOnEdge: true,
   animate: true,
 })
 
@@ -176,6 +185,7 @@ const emit = defineEmits<{
   'connect-start': [{ nodeId: string; handleId: string | null; type: 'source' | 'target' }]
   'connect-end': [{ connection: FlowConnection | null; position: FlowXY; from: { nodeId: string; handleId: string | null; type: 'source' | 'target' } }]
   reconnect: [{ edge: FlowEdge; connection: FlowConnection }]
+  insert: [{ node: FlowNode; edge: FlowEdge; connections: [FlowConnection, FlowConnection] }]
   'node-click': [FlowNode, MouseEvent]
   'node-dblclick': [FlowNode, MouseEvent]
   'node-contextmenu': [FlowNode, MouseEvent]
@@ -829,7 +839,7 @@ const DRAG_SLOP_TOUCH = 6
 const NO_DRAG = 'input, textarea, select, button, a, label, [contenteditable], [data-flow-nodrag]'
 
 type Gesture =
-  | { kind: 'pan'; id: number; sx: number; sy: number; vx: number; vy: number; moved: boolean; target: 'pane' }
+  | { kind: 'pan'; id: number; sx: number; sy: number; vx: number; vy: number; moved: boolean; target: 'pane'; touch?: boolean }
   | { kind: 'marquee'; id: number; sx: number; sy: number; x: number; y: number; additive: string[]; moved: boolean }
   | { kind: 'node'; id: number; nodeId: string; sx: number; sy: number; touch: boolean; active: boolean; starts: Map<string, FlowXY>; moved: boolean; reselect: boolean }
   | { kind: 'connect'; id: number; from: { nodeId: string; handleId: string | null; type: 'source' | 'target' }; reconnect?: { edge: FlowEdge; end: 'source' | 'target' }; moved: boolean }
@@ -925,10 +935,27 @@ function onPointerDown(e: PointerEvent) {
   startPan(e)
 }
 
+// On touch there's no Shift: holding a finger still on the background starts a selection box instead
+const LONG_PRESS = 450
+let longPress: ReturnType<typeof setTimeout> | undefined
 function startPan(e: PointerEvent) {
-  gesture = { kind: 'pan', id: e.pointerId, sx: e.clientX, sy: e.clientY, vx: vp.value.x, vy: vp.value.y, moved: false, target: 'pane' }
+  const touch = e.pointerType === 'touch'
+  const g: Gesture = { kind: 'pan', id: e.pointerId, sx: e.clientX, sy: e.clientY, vx: vp.value.x, vy: vp.value.y, moved: false, target: 'pane', touch }
+  gesture = g
   vpAnim = null
   addWindowListeners()
+  clearTimeout(longPress)
+  if (touch && canSelect.value) {
+    longPress = setTimeout(() => {
+      if (gesture !== g || g.moved) return
+      const r = rootRect()
+      const x = g.sx - r.left
+      const y = g.sy - r.top
+      gesture = { kind: 'marquee', id: g.id, sx: x, sy: y, x, y, additive: [...selLocal.value.nodes], moved: true }
+      marquee.value = { x, y, width: 0, height: 0 }
+      navigator.vibrate?.(10)
+    }, LONG_PRESS)
+  }
 }
 function startMarquee(e: PointerEvent) {
   const r = rootRect()
@@ -964,8 +991,9 @@ function onWindowMove(e: PointerEvent) {
   if (g.kind === 'pan') {
     const dx = e.clientX - g.sx
     const dy = e.clientY - g.sy
-    if (!g.moved && Math.hypot(dx, dy) < DRAG_SLOP_MOUSE) return
+    if (!g.moved && Math.hypot(dx, dy) < (g.touch ? DRAG_SLOP_TOUCH : DRAG_SLOP_MOUSE)) return
     g.moved = true
+    clearTimeout(longPress)
     panning.value = true
     writeViewport({ x: g.vx + dx, y: g.vy + dy, zoom: vp.value.zoom })
   } else if (g.kind === 'marquee') {
@@ -986,6 +1014,7 @@ function onWindowMove(e: PointerEvent) {
     }
     g.moved = true
     moveNodes(g, e.clientX, e.clientY)
+    updateInsertTarget(g)
     emit('node-drag', [...g.starts.keys()].map((id) => nodeById.value.get(id)!), e)
     kick()
   } else if (g.kind === 'connect') {
@@ -1004,6 +1033,7 @@ function onWindowUp(e: PointerEvent) {
   const g = gesture
   if (!g || g.kind === 'pinch' || g.id !== e.pointerId) return
   gesture = null
+  clearTimeout(longPress)
   removeWindowListeners()
   panning.value = false
   if (g.kind === 'pan') {
@@ -1023,6 +1053,7 @@ function onWindowUp(e: PointerEvent) {
   }
 }
 function onWindowCancel(e: PointerEvent) {
+  clearTimeout(longPress)
   touches.delete(e.pointerId)
   if (pinch && touches.size < 2) pinch = null
   cancelGesture()
@@ -1042,6 +1073,8 @@ function cancelGesture() {
     dragging.value = new Set()
     frozenGroups.clear()
     guideLines.value = []
+    insertEdge.value = null
+    insertPlan = null
     kick()
   }
   if (g?.kind === 'connect') {
@@ -1076,6 +1109,7 @@ function pinchInfo() {
   return { dist: Math.hypot(a!.x - b!.x, a!.y - b!.y) || 1, cx: (a!.x + b!.x) / 2 - r.left, cy: (a!.y + b!.y) / 2 - r.top }
 }
 function startPinch() {
+  clearTimeout(longPress)
   const p = pinchInfo()
   vpAnim = null
   gesture = { kind: 'pinch' }
@@ -1276,8 +1310,65 @@ function getIntersectingNodes(target: string | { x: number; y: number; width: nu
   })
 }
 
+// ── A lone node dropped onto an edge splices into it ─────────────────────────────────────────────────────
+const insertEdge = ref<string | null>(null)
+let insertPlan: { node: string; edge: FlowEdge; connections: [FlowConnection, FlowConnection] } | null = null
+function updateInsertTarget(g: Extract<Gesture, { kind: 'node' }>) {
+  insertPlan = null
+  const found = findInsert(g)
+  insertPlan = found
+  insertEdge.value = found?.edge.id ?? null
+}
+function findInsert(g: Extract<Gesture, { kind: 'node' }>): typeof insertPlan {
+  if (!props.insertOnEdge || g.starts.size !== 1 || !nodesConnectable.value) return null
+  const id = [...g.starts.keys()][0]!
+  const n = nodeById.value.get(id)
+  if (!n || n.type === 'group' || n.connectable === false) return null
+  if (edgesLocal.value.some((e) => e.source === id || e.target === id)) return null
+  // It needs a way in and a way out (or no handles at all: then edges meet its sides)
+  let target: string | null = null
+  let source: string | null = null
+  const list = handles.get(id)
+  if (list?.length) {
+    const t = list.find((h) => h.type === 'target' && h.connectable)
+    const s = list.find((h) => h.type === 'source' && h.connectable)
+    if (!t || !s) return null
+    target = t.id
+    source = s.id
+  }
+  // The node's center over the edge, within half its height
+  const a = getAbsolutePosition(id)
+  const size = getSize(id)
+  const cx = a.x + size.width / 2
+  const cy = a.y + size.height / 2
+  const reach = Math.max(8 / vp.value.zoom, Math.min(size.width, size.height) / 2)
+  let best: { edge: FlowEdge; d: number } | null = null
+  for (const e of visibleEdges.value) {
+    if (e.deletable === false) continue
+    const geo = edgeGeometry(e)
+    if (!geo) continue
+    const d = distanceToPoints(cx, cy, edgePathPoints(edgeType(e), geo))
+    if (d <= reach && (!best || d < best.d)) best = { edge: e, d }
+  }
+  if (!best) return null
+  const e = best.edge
+  const c1: FlowConnection = { source: e.source, sourceHandle: e.sourceHandle ?? null, target: id, targetHandle: target }
+  const c2: FlowConnection = { source: id, sourceHandle: source, target: e.target, targetHandle: e.targetHandle ?? null }
+  if (!isValid(c1) || !isValid(c2)) return null
+  return { node: id, edge: e, connections: [c1, c2] }
+}
+
 function endNodeDrag(g: Extract<Gesture, { kind: 'node' }>, e: PointerEvent) {
   document.body.style.userSelect = ''
+  const plan = insertPlan
+  insertPlan = null
+  insertEdge.value = null
+  // The two edges that take the old one's place, with its look (not its label)
+  let spliced: FlowEdge[] | undefined
+  if (plan && props.autoConnect) {
+    const { id: _id, label: _label, source: _s, target: _t, sourceHandle: _sh, targetHandle: _th, ...look } = plan.edge
+    spliced = plan.connections.map((c) => ({ ...look, id: makeId('edge'), ...c }))
+  }
   guideLines.value = []
   const moved = [...g.starts.keys()].filter((id) => {
     const s = springs.get(id)!
@@ -1327,13 +1418,14 @@ function endNodeDrag(g: Extract<Gesture, { kind: 'node' }>, e: PointerEvent) {
       else delete out.parentId
       return out
     })
-    commit({ nodes })
+    commit({ nodes, edges: spliced ? [...edgesLocal.value.filter((x) => x !== plan!.edge), ...spliced] : undefined })
     const first = nodeById.value.get(g.nodeId)
     if (first) announce(locale.flowMoved.replace('{label}', nodeLabel(first)))
   }
   dragging.value = new Set()
   frozenGroups.clear()
   const draggedNodes = [...g.starts.keys()].map((id) => nodeById.value.get(id)!).filter(Boolean)
+  if (plan) emit('insert', { node: nodeById.value.get(plan.node)!, edge: plan.edge, connections: plan.connections })
   emit('node-drag-stop', { nodes: draggedNodes, intersecting: getIntersectingNodes(g.nodeId), event: e })
 }
 
@@ -1594,6 +1686,7 @@ const context: FlowInternals = {
   startConnection,
   connectionTarget,
   connecting,
+  insertEdge,
   nodesConnectable,
   direction: computed(() => props.direction),
   // For the internal node shells and edges
@@ -1639,6 +1732,7 @@ onBeforeUnmount(() => {
   removeWindowListeners()
   ro?.disconnect()
   if (raf) cancelAnimationFrame(raf)
+  clearTimeout(longPress)
   document.body.style.userSelect = ''
 })
 
