@@ -181,6 +181,19 @@ const labelClasses = computed(() => {
     'peer-disabled:text-on-surface/38',
   ].join(' ')
 })
+
+defineExpose({
+  /** The `<input>` (or `<textarea>`) element */
+  inputEl: inputEl,
+  /** Focuses the field */
+  focus: (options?: FocusOptions) => inputEl.value?.focus(options),
+  /** Takes focus away from the field */
+  blur: () => inputEl.value?.blur(),
+  /** Selects all its text */
+  select: () => inputEl.value?.select(),
+  /** Selects part of its text (e.g. a file name without its extension) */
+  setSelectionRange: (start: number, end: number, direction?: 'forward' | 'backward' | 'none') => inputEl.value?.setSelectionRange(start, end, direction),
+})
 </script>
 
 <template>

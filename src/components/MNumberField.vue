@@ -60,6 +60,7 @@ const emit = defineEmits<{ 'update:modelValue': [number | null]; debounced: [num
 
 const id = useId()
 const fieldBgEl = ref<HTMLElement | null>(null)
+const inputEl = ref<HTMLInputElement | null>(null)
 const { resolvedFieldBg } = useFieldBg(fieldBgEl, () => props.fieldBg)
 
 const { debounced: emitDebounced } = useDebounce((v: number | null) => emit('debounced', v), props.debounce)
@@ -161,6 +162,17 @@ const labelClasses = computed(() => {
     'peer-disabled:text-on-surface/38',
   ].join(' ')
 })
+
+defineExpose({
+  /** The `<input>` (or `<textarea>`) element */
+  inputEl: inputEl,
+  /** Focuses the field */
+  focus: (options?: FocusOptions) => inputEl.value?.focus(options),
+  /** Takes focus away from the field */
+  blur: () => inputEl.value?.blur(),
+  /** Selects all its text */
+  select: () => inputEl.value?.select(),
+})
 </script>
 
 <template>
@@ -183,6 +195,7 @@ const labelClasses = computed(() => {
       </div>
 
       <input
+        ref="inputEl"
         :id="id"
         type="number"
         :value="modelValue ?? ''"

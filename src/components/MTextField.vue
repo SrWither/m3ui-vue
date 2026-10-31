@@ -76,6 +76,8 @@ const { resolvedFieldBg } = useFieldBg(fieldBgEl, () => props.fieldBg);
 const { debounced: emitDebounced, cancel: cancelDebounce } = useDebounce((v: string) => emit("debounced", v), props.debounce)
 
 const textareaEl = ref<HTMLTextAreaElement | null>(null);
+const inputOnlyEl = ref<HTMLInputElement | null>(null);
+const fieldEl = computed(() => textareaEl.value ?? inputOnlyEl.value);
 useAutoGrow(() => (props.multiline && props.autoGrow ? textareaEl.value : null), {
   minRows: () => props.rows,
   maxRows: () => props.maxRows,
@@ -174,6 +176,19 @@ function onInput(event: Event) {
   emit("update:modelValue", target.value);
   if (props.debounce > 0) emitDebounced(target.value)
 }
+
+defineExpose({
+  /** The `<input>` (or `<textarea>`) element */
+  inputEl: fieldEl,
+  /** Focuses the field */
+  focus: (options?: FocusOptions) => fieldEl.value?.focus(options),
+  /** Takes focus away from the field */
+  blur: () => fieldEl.value?.blur(),
+  /** Selects all its text */
+  select: () => fieldEl.value?.select(),
+  /** Selects part of its text (e.g. a file name without its extension) */
+  setSelectionRange: (start: number, end: number, direction?: 'forward' | 'backward' | 'none') => fieldEl.value?.setSelectionRange(start, end, direction),
+})
 </script>
 
 <template>
@@ -214,6 +229,7 @@ function onInput(event: Event) {
       />
       <input
         v-else
+        ref="inputOnlyEl"
         :id="id"
         :type="type"
         :value="modelValue"
