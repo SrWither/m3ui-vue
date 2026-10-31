@@ -26,7 +26,7 @@ import MTooltip from './MTooltip.vue'
 const props = withDefaults(defineProps<{
   /** The plan: its template ref (or its `context`). Not needed inside the plan's slots */
   plan?: { context: FloorPlanContext } | FloorPlanContext | null
-  /** Tables offered by Add a table (name, shape, seats, size…) */
+  /** Tables offered by Add a table (name, shape, seats, size…); `[]` hides it, when your app creates tables elsewhere */
   tables?: FloorTablePreset[]
   /** Decor kinds offered (default: every kind the plan knows, yours included) */
   decor?: string[]
@@ -90,7 +90,7 @@ function add(p: FloorTablePreset) {
       <MTooltip :text="locale.floorFinishWall" placement="top"><MIconButton icon="check" variant="filled" :label="locale.floorFinishWall" @click="ctx.finishWall()" /></MTooltip>
       <MTooltip :text="locale.floorCancel" placement="top"><MIconButton icon="close" :label="locale.floorCancel" @click="ctx.cancelWall()" /></MTooltip>
     </template>
-    <MMenu>
+    <MMenu v-if="tables.length">
       <template #trigger>
         <MTooltip :text="locale.floorAddTable" placement="top"><MIconButton icon="table_restaurant" :label="locale.floorAddTable" /></MTooltip>
       </template>

@@ -320,3 +320,10 @@ describe('MFloorPlan rotatable', () => {
     expect(off.findAll('[data-rotate]')).toHaveLength(0)
   })
 })
+
+describe('MFloorPlanToolbar without table presets', () => {
+  it('hides Add a table when tables is empty', () => {
+    const w = mount(MFloorPlanToolbar, { props: { plan: { context: { kinds: { value: {} }, picked: { value: null }, selection: { value: [] }, tool: { value: 'select' }, drawingWall: { value: false }, canUndo: { value: false }, canRedo: { value: false } } } as any, tables: [] } })
+    expect(w.find('[aria-label="Add a table"]').exists()).toBe(false)
+  })
+})
