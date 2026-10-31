@@ -573,3 +573,18 @@ describe('MFlow', () => {
     expect(w.find('[data-flow-edge="e1"] path').attributes('d')).toBe(d)
   })
 })
+
+describe('MFlow context menu', () => {
+  it("keeps the browser's menu closed on the canvas but still emits pane-contextmenu; nativeContextMenu lets it open", async () => {
+    const { default: MFlow } = await import('../components/MFlow.vue')
+    const { mount } = await import('@vue/test-utils')
+    for (const native of [false, true]) {
+      const w = mount(MFlow, { props: { nodes: [], edges: [], nativeContextMenu: native } })
+      const e = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 10, clientY: 10 })
+      w.element.dispatchEvent(e)
+      expect(e.defaultPrevented).toBe(!native)
+      expect(w.emitted('pane-contextmenu')).toHaveLength(1)
+      w.unmount()
+    }
+  })
+})

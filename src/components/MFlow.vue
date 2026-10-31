@@ -153,6 +153,12 @@ const props = withDefaults(defineProps<{
    * branches, so a swipe across one still pans
    */
   edgeBranching?: boolean
+  /**
+   * Let the browser's own context menu open on the canvas (right click, or a long press on a phone). Off by default:
+   * the `*-contextmenu` events still fire, for a menu of your own (MContextMenu's `showAt`). Text fields inside
+   * nodes always keep it, for copy and paste
+   */
+  nativeContextMenu?: boolean
   /** The canvas's accessible name */
   label?: string
 }>(), {
@@ -186,6 +192,7 @@ const props = withDefaults(defineProps<{
   dropIntoGroups: false,
   insertOnEdge: true,
   edgeBranching: false,
+  nativeContextMenu: false,
   animate: true,
 })
 
@@ -1273,6 +1280,8 @@ function onDblClick(e: MouseEvent) {
 function onContextMenu(e: MouseEvent) {
   const t = e.target as HTMLElement
   if (onOverlay(t)) return
+  // The browser's menu (and a phone's long-press menu) stays closed on the canvas, except in text fields
+  if (!props.nativeContextMenu && !t.closest('input, textarea, select, [contenteditable]')) e.preventDefault()
   const nodeEl = t.closest<HTMLElement>('[data-flow-node]')
   const edgeEl = t.closest<HTMLElement>('[data-flow-edge]')
   const n = nodeEl ? nodeById.value.get(nodeEl.dataset.flowNode!) : undefined
@@ -2020,6 +2029,8 @@ defineExpose(context as FlowContext)
     position: relative;
     display: block;
     touch-action: none;
+    /* No callout (save image, copy) on a long press: a long press there selects */
+    -webkit-touch-callout: none;
   }
 }
 .m3-flow-circle {
