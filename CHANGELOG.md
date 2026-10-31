@@ -41,6 +41,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - `toDrawSvg`, `svgToPng`, `strokePath`, `shapePath`, `eraseAt`, `hitItem`, `inLasso`, `transformItem` and more: the geometry as pure functions, to render or process drawings without the canvas
   - 34 locale keys (`drawPen`, `drawEraser`, `drawLayers`…) in all 7 locales
 - `MImageCropper`: crop a picture (a URL, a `File` or a `Blob`, e.g. from MFileUpload) to a frame you drag and resize by its corners and edges, with a rule-of-thirds grid while you do; at a fixed `aspect` or free (`aspects` offers some as chips), square or round (`shape="circle"` for avatars). Rotate a quarter turn at a time and flip, the frame turning with the picture. `v-model:crop` (in the picture's pixels), `rotation`, `flipped`, `aspect`; the template ref's `toCanvas()` / `toBlob()` export it at its size or yours (`maxSize`), round with a transparent outside for circles. Arrow keys move the frame, Shift + arrows resize it; `#controls`. Not an M3 spec component
+- `MTextField`, `MNumberField`, `MMaskField` and `MTagInput` expose `focus()`, `blur()`, `select()`, `setSelectionRange()` (not on the number field) and `inputEl`, so a dialog can focus a field and select part of it without reaching into its DOM
 - `MIconButton` `iconSize`: the icon's size in px, instead of the size tier's (or 55% of a custom pixel `size`)
 
 ## [1.2.2] - 2026-10-23
