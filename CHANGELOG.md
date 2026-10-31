@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.3.1] - Unreleased
+
+### Fixed
+- `MPdfViewer`: the picked annotation color's swatch grows by its real size instead of a CSS scale, which Firefox drew with a jagged ring
+
 ## [1.3.0] - 2026-10-31
 
 ### Added
