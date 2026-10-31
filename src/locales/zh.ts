@@ -373,6 +373,8 @@ export const zhLocale: M3Locale = {
   drawText: '文本',
   drawFill: '填充',
   drawColor: '颜色',
+  floorPlan: '平面图',
+  floorSeats: '{n} 个座位',
   drawCustomColor: '自定义颜色',
   drawSize: '大小',
   drawUndo: '撤销',

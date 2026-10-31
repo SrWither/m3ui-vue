@@ -373,6 +373,8 @@ export const ptLocale: M3Locale = {
   drawText: 'Texto',
   drawFill: 'Preenchimento',
   drawColor: 'Cor',
+  floorPlan: 'Planta do salão',
+  floorSeats: '{n} lugares',
   drawCustomColor: 'Cor personalizada',
   drawSize: 'Tamanho',
   drawUndo: 'Desfazer',

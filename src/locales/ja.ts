@@ -373,6 +373,8 @@ export const jaLocale: M3Locale = {
   drawText: 'テキスト',
   drawFill: '塗りつぶし',
   drawColor: '色',
+  floorPlan: 'フロアプラン',
+  floorSeats: '{n}席',
   drawCustomColor: 'カスタムカラー',
   drawSize: 'サイズ',
   drawUndo: '元に戻す',

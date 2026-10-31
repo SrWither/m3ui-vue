@@ -385,6 +385,8 @@ export interface M3Locale {
   drawText: string
   drawFill: string
   drawColor: string
+  floorPlan: string
+  floorSeats: string
   drawCustomColor: string
   drawSize: string
   drawUndo: string
@@ -764,6 +766,8 @@ export const defaultLocale: M3Locale = {
   drawText: 'Text',
   drawFill: 'Fill',
   drawColor: 'Color',
+  floorPlan: 'Floor plan',
+  floorSeats: '{n} seats',
   drawCustomColor: 'Custom color',
   drawSize: 'Size',
   drawUndo: 'Undo',

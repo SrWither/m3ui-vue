@@ -373,6 +373,8 @@ export const frLocale: M3Locale = {
   drawText: 'Texte',
   drawFill: 'Remplissage',
   drawColor: 'Couleur',
+  floorPlan: 'Plan de salle',
+  floorSeats: '{n} places',
   drawCustomColor: 'Couleur personnalisée',
   drawSize: 'Taille',
   drawUndo: 'Annuler',

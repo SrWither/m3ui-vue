@@ -373,6 +373,8 @@ export const deLocale: M3Locale = {
   drawText: 'Text',
   drawFill: 'Füllung',
   drawColor: 'Farbe',
+  floorPlan: 'Raumplan',
+  floorSeats: '{n} Plätze',
   drawCustomColor: 'Eigene Farbe',
   drawSize: 'Größe',
   drawUndo: 'Rückgängig',

@@ -373,6 +373,8 @@ export const koLocale: M3Locale = {
   drawText: '텍스트',
   drawFill: '채우기',
   drawColor: '색상',
+  floorPlan: '평면도',
+  floorSeats: '{n}석',
   drawCustomColor: '사용자 지정 색상',
   drawSize: '크기',
   drawUndo: '실행 취소',
