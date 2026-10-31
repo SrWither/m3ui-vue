@@ -54,3 +54,44 @@ describe('MFloorPlan', () => {
     expect(w.text()).toContain('T1 + T2')
   })
 })
+
+describe('MFloorPlan zones, walls and decor', () => {
+  const down = (el: Element, x: number, y: number) => el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, clientX: x, clientY: y, pointerId: 3 }))
+  const moveUp = (x: number, y: number) => {
+    window.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, pointerId: 3 }))
+    window.dispatchEvent(new PointerEvent('pointerup', { clientX: x, clientY: y, pointerId: 3 }))
+  }
+  function plan(props: Record<string, unknown>) {
+    const w = mount(MFloorPlan, { props: { editable: true, grid: 10, ...props }, attachTo: document.body })
+    for (const k of ['areas', 'walls', 'decor']) (w.vm as any)[`onUpdate:${k}`] = null
+    return w
+  }
+  it('draws a wall corner by corner, Enter ends it', async () => {
+    const w = plan({ tool: 'wall' })
+    const root = w.element as HTMLElement
+    down(root, 10, 10)
+    down(root, 200, 12)
+    down(root, 200, 300)
+    root.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    await nextTick()
+    expect((w.emitted('update:walls')!.at(-1)![0] as any[])[0].points).toEqual([[10, 10], [200, 10], [200, 300]])
+  })
+  it('drags out a zone, snapped', async () => {
+    const w = plan({ tool: 'area' })
+    down(w.element, 20, 20)
+    moveUp(203, 118)
+    await nextTick()
+    expect((w.emitted('update:areas')!.at(-1)![0] as any[])[0]).toMatchObject({ x: 20, y: 20, width: 180, height: 100 })
+  })
+  it('moves decor and deletes what is picked', async () => {
+    const w = plan({ decor: [{ id: 'p', kind: 'plant', x: 100, y: 100 }], 'onUpdate:decor': (v: unknown) => w.setProps({ decor: v as any }) })
+    const plant = w.find('[aria-label="plant"]').element
+    down(plant, 0, 0)
+    moveUp(41, 19)
+    await nextTick()
+    expect((w.props('decor') as any[])[0]).toMatchObject({ x: 140, y: 120 })
+    w.element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }))
+    await nextTick()
+    expect(w.props('decor')).toEqual([])
+  })
+})
