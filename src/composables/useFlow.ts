@@ -67,6 +67,11 @@ export interface FlowEdge<D = any> {
   targetHandle?: string | null
   /** `bezier` (default), `smoothstep`, `step`, `straight`, or a `#edge-<type>` slot */
   type?: string
+  /**
+   * For a `#edge-<type>` slot: how it's routed, which is the `path` the slot gets and where the edge is hit
+   * (default `bezier`)
+   */
+  pathType?: 'bezier' | 'smoothstep' | 'step' | 'straight'
   label?: string
   /** The label chip's color (default a neutral chip) */
   labelTone?: 'primary' | 'secondary' | 'tertiary' | 'error' | 'neutral'
@@ -188,6 +193,8 @@ export interface FlowInternals extends FlowContext {
   connecting: Readonly<Ref<boolean>>
   /** The edge a dragged node would splice into if dropped now */
   insertEdge: Readonly<Ref<string | null>>
+  /** Dragging an edge draws a branch from its source (edgeBranching) */
+  branching: ComputedRef<boolean>
   nodesConnectable: ComputedRef<boolean>
   direction: ComputedRef<'horizontal' | 'vertical'>
   registerNodeEl(id: string, el: HTMLElement | null): void

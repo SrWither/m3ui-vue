@@ -507,4 +507,69 @@ describe('MFlow', () => {
     const edges = w.emitted('update:edges')!.at(-1)![0] as FlowEdge[]
     expect(edges.map((e) => [e.source, e.target, e.data.capacity])).toEqual([['a', 'b', 7], ['b', 'c', 7]])
   })
+
+  it('edgeBranching: a drag from an edge connects its source to another node, the preview leaving from the grab', async () => {
+    const w = await flow({ nodes: [N('a', 0, 0), N('b', 300, 0), N('c', 300, 200)], edgeBranching: true })
+    const hit = w.find('[data-flow-edge="e1"] path').element
+    pointer(hit, 'pointerdown', 240, 30)
+    pointer(window, 'pointermove', 340, 220)
+    await nextTick()
+    // The preview starts where the edge was grabbed, not at a's handle
+    expect(w.find('.m3-flow-connection-line').attributes('d')).toMatch(/^M240,30/)
+    expect(w.emitted('connect-start')![0]![0]).toEqual({ nodeId: 'a', handleId: null, type: 'source' })
+    pointer(window, 'pointerup', 340, 220)
+    expect(w.emitted('connect')![0]![0]).toEqual({ source: 'a', sourceHandle: null, target: 'c', targetHandle: null })
+    expect((w.emitted('update:edges')!.at(-1)![0] as FlowEdge[]).map((e) => [e.source, e.target])).toEqual([['a', 'b'], ['a', 'c']])
+    // The view didn't pan meanwhile
+    expect(w.emitted('update:viewport')).toBeUndefined()
+  })
+  it('edgeBranching: a click still selects; off (the default), a drag from an edge pans; a finger only branches a selected edge', async () => {
+    let w = await flow({ nodes: [N('a', 0, 0), N('b', 300, 0), N('c', 300, 200)], edgeBranching: true })
+    let hit = w.find('[data-flow-edge="e1"] path').element
+    pointer(hit, 'pointerdown', 240, 30)
+    pointer(window, 'pointerup', 240, 30)
+    hit.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 240, clientY: 30 }))
+    await nextTick()
+    expect((w.emitted('update:selection')!.at(-1)![0] as { edges: string[] }).edges).toEqual(['e1'])
+    w.unmount()
+
+    w = await flow({ nodes: [N('a', 0, 0), N('b', 300, 0), N('c', 300, 200)] })
+    hit = w.find('[data-flow-edge="e1"] path').element
+    pointer(hit, 'pointerdown', 240, 30)
+    pointer(window, 'pointermove', 340, 220)
+    pointer(window, 'pointerup', 340, 220)
+    expect(w.emitted('connect')).toBeUndefined()
+    expect(w.emitted('update:viewport')).toBeDefined()
+    w.unmount()
+
+    const touch = { pointerType: 'touch' }
+    w = await flow({ nodes: [N('a', 0, 0), N('b', 300, 0), N('c', 300, 200)], edgeBranching: true })
+    hit = w.find('[data-flow-edge="e1"] path').element
+    pointer(hit, 'pointerdown', 240, 30, touch)
+    pointer(window, 'pointermove', 340, 220, touch)
+    pointer(window, 'pointerup', 340, 220, touch)
+    expect(w.emitted('connect')).toBeUndefined()
+    // (that touch panned the view: start again)
+    w.unmount()
+    w = await flow({ nodes: [N('a', 0, 0), N('b', 300, 0), N('c', 300, 200)], edgeBranching: true, selection: { nodes: [], edges: ['e1'] } })
+    hit = w.find('[data-flow-edge="e1"] path').element
+    pointer(hit, 'pointerdown', 240, 30, touch)
+    pointer(window, 'pointermove', 340, 220, touch)
+    pointer(window, 'pointerup', 340, 220, touch)
+    expect(w.emitted('connect')).toHaveLength(1)
+  })
+  it('pathType routes a slot edge: the path it gets and where it is hit', async () => {
+    const w = mount(MFlow, {
+      props: { nodes: [N('a', 0, 0), N('b', 300, 100)], edges: [{ id: 'e1', source: 'a', target: 'b', type: 'wire', pathType: 'step' }], animate: false },
+      slots: { 'edge-wire': `<template #edge-wire="{ path }"><path class="wire" :d="path" /></template>` },
+      attachTo: document.body,
+    })
+    await flushPromises()
+    await nextTick()
+    const d = w.find('.wire').attributes('d')
+    expect(d).not.toContain('C')
+    expect(d).toContain('L')
+    // The hit stroke follows the same route
+    expect(w.find('[data-flow-edge="e1"] path').attributes('d')).toBe(d)
+  })
 })

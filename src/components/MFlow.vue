@@ -147,6 +147,12 @@ const props = withDefaults(defineProps<{
   animate?: boolean
   /** Makes ids for pasted nodes and new edges */
   getId?: (kind: 'node' | 'edge') => string
+  /**
+   * A drag that starts on an edge draws a new edge from the same source, a branch, as in a circuit editor (the
+   * preview leaves from where you grabbed it). A click still selects the edge; with a finger, only a selected edge
+   * branches, so a swipe across one still pans
+   */
+  edgeBranching?: boolean
   /** The canvas's accessible name */
   label?: string
 }>(), {
@@ -179,6 +185,7 @@ const props = withDefaults(defineProps<{
   layout: null,
   dropIntoGroups: false,
   insertOnEdge: true,
+  edgeBranching: false,
   animate: true,
 })
 
@@ -271,6 +278,8 @@ function descendants(id: string): string[] {
 
 const selectedNodes = computed(() => new Set(selLocal.value.nodes))
 const selectedEdges = computed(() => new Set(selLocal.value.edges))
+// Edges branch when dragged (edgeBranching)
+const branching = computed(() => props.edgeBranching && nodesConnectable.value && !locked.value)
 function setSelection(s: Partial<FlowSelection>) {
   const next = { nodes: s.nodes ?? selLocal.value.nodes, edges: s.edges ?? selLocal.value.edges }
   if (sameIds(next.nodes, selLocal.value.nodes) && sameIds(next.edges, selLocal.value.edges)) return
@@ -593,6 +602,8 @@ function pathFor(type: string | undefined, p: Omit<EdgeGeometry, keyof FlowEdgeP
   }
 }
 const edgeType = (e: FlowEdge) => e.type ?? props.defaultEdgeOptions?.type ?? 'bezier'
+// How it's routed: its own type, or for an `#edge-<type>` slot its `pathType` (default bezier)
+const edgeRoute = (e: Partial<FlowEdge>) => e.pathType ?? props.defaultEdgeOptions?.pathType ?? edgeType(e as FlowEdge)
 // Opposite edges between two circles sit side by side
 const pairKeys = computed(() => new Set(edgesLocal.value.map((e) => `${e.source}>${e.target}`)))
 function circleOf(id: string) {
@@ -634,7 +645,7 @@ function edgeGeometry(e: FlowEdge): EdgeGeometry | null {
   const t = handlePoint(e.target, 'target', e.targetHandle)
   if (!s || !t) return null
   const ends = { sourceX: s.x, sourceY: s.y, sourcePosition: s.position, targetX: t.x, targetY: t.y, targetPosition: t.position }
-  return { ...ends, ...pathFor(edgeType(e), ends), sourceInset: s.inset, targetInset: t.inset }
+  return { ...ends, ...pathFor(edgeRoute(e), ends), sourceInset: s.inset, targetInset: t.inset }
 }
 
 // What's drawn: groups under the edges, other nodes over them; children over their parents
@@ -900,7 +911,7 @@ const DRAG_SLOP_TOUCH = 6
 const NO_DRAG = 'input, textarea, select, button, a, label, [contenteditable], [data-flow-nodrag]'
 
 type Gesture =
-  | { kind: 'pan'; id: number; sx: number; sy: number; vx: number; vy: number; moved: boolean; target: 'pane'; touch?: boolean }
+  | { kind: 'pan'; id: number; sx: number; sy: number; vx: number; vy: number; moved: boolean; target: 'pane'; touch?: boolean; branch?: FlowEdge }
   | { kind: 'marquee'; id: number; sx: number; sy: number; x: number; y: number; additive: string[]; moved: boolean }
   | { kind: 'node'; id: number; nodeId: string; sx: number; sy: number; touch: boolean; active: boolean; starts: Map<string, FlowXY>; moved: boolean; reselect: boolean }
   | { kind: 'connect'; id: number; from: { nodeId: string; handleId: string | null; type: 'source' | 'target' }; reconnect?: { edge: FlowEdge; end: 'source' | 'target' }; moved: boolean }
@@ -1005,8 +1016,12 @@ function onPointerDown(e: PointerEvent) {
     return startNode(e, nodeEl.dataset.flowNode!)
   }
   if (edgeEl) {
-    // Edges select on the click (pointerup) so a drag across them still pans
-    gesture = { kind: 'pan', id: e.pointerId, sx: e.clientX, sy: e.clientY, vx: vp.value.x, vy: vp.value.y, moved: false, target: 'pane' }
+    // Edges select on the click (pointerup) so a drag across them still pans, or branches (edgeBranching)
+    const touch = e.pointerType === 'touch'
+    const edge = edgeById.value.get(edgeEl.dataset.flowEdge!)
+    const branch = edge && branching.value && (!touch || selectedEdges.value.has(edge.id)) ? edge : undefined
+    if (branch) e.preventDefault()
+    gesture = { kind: 'pan', id: e.pointerId, sx: e.clientX, sy: e.clientY, vx: vp.value.x, vy: vp.value.y, moved: false, target: 'pane', touch, branch }
     addWindowListeners()
     return
   }
@@ -1073,6 +1088,7 @@ function onWindowMove(e: PointerEvent) {
     const dx = e.clientX - g.sx
     const dy = e.clientY - g.sy
     if (!g.moved && Math.hypot(dx, dy) < (g.touch ? DRAG_SLOP_TOUCH : DRAG_SLOP_MOUSE)) return
+    if (g.branch && !g.moved) return startBranch(g, g.branch, e)
     g.moved = true
     clearTimeout(longPress)
     panning.value = true
@@ -1620,11 +1636,24 @@ function startConnection(e: PointerEvent, nodeId: string, handleId: string | nul
   const from = handlePoint(nodeId, type, handleId)
   if (!from) return
   gesture = { kind: 'connect', id: e.pointerId, from: { nodeId, handleId, type }, moved: false }
-  connection.value = { from, to: { x: from.x, y: from.y }, toPosition: null, type, edgeType: edgeType({ ...props.defaultEdgeOptions } as FlowEdge) }
+  connection.value = { from, to: { x: from.x, y: from.y }, toPosition: null, type, edgeType: edgeRoute({ ...props.defaultEdgeOptions }) }
   pointer.x = e.clientX
   pointer.y = e.clientY
   emit('connect-start', { nodeId, handleId, type })
   addWindowListeners()
+}
+// A branch: a new connection from the edge's source, its preview leaving from where the edge was grabbed
+function startBranch(pan: { id: number; sx: number; sy: number }, edge: FlowEdge, e: PointerEvent) {
+  const src = handlePoint(edge.source, 'source', edge.sourceHandle)
+  if (!src) return
+  const handleId = edge.sourceHandle ?? null
+  const g: Gesture = { kind: 'connect', id: pan.id, from: { nodeId: edge.source, handleId, type: 'source' }, moved: true }
+  gesture = g
+  const at = screenToFlow({ x: pan.sx, y: pan.sy })
+  connection.value = { from: { x: at.x, y: at.y, position: src.position }, to: at, toPosition: null, type: 'source', edgeType: edgeRoute(edge) }
+  emit('connect-start', { nodeId: edge.source, handleId, type: 'source' })
+  moveConnection(g, e.clientX, e.clientY)
+  kick()
 }
 function startReconnect(e: PointerEvent, edge: FlowEdge, end: 'source' | 'target') {
   // Dragging the target end: the connection runs from the source, and the other way round
@@ -1633,7 +1662,7 @@ function startReconnect(e: PointerEvent, edge: FlowEdge, end: 'source' | 'target
   if (!from) return
   gesture = { kind: 'connect', id: e.pointerId, from: fixed, reconnect: { edge, end }, moved: false }
   const to = screenToFlow({ x: e.clientX, y: e.clientY })
-  connection.value = { from, to, toPosition: null, type: fixed.type, edgeType: edgeType(edge) }
+  connection.value = { from, to, toPosition: null, type: fixed.type, edgeType: edgeRoute(edge) }
   pointer.x = e.clientX
   pointer.y = e.clientY
   addWindowListeners()
@@ -1850,6 +1879,7 @@ const context: FlowInternals = {
   connectionTarget,
   connecting,
   insertEdge,
+  branching,
   nodesConnectable,
   direction: computed(() => props.direction),
   // For the internal node shells and edges
