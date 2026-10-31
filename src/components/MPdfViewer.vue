@@ -1103,7 +1103,8 @@ const TOOLS = computed(() => [
                 :aria-pressed="color === c"
                 @click="color = c"
               >
-                <span class="size-6 rounded-full border border-outline-variant transition-transform" :class="color === c && 'scale-125 ring-2 ring-on-surface ring-offset-2 ring-offset-surface-container-high'" :style="{ backgroundColor: c }" />
+                <!-- Grows by its real size, not a scale (Firefox draws a scaled ring jagged) -->
+                <span class="rounded-full border border-outline-variant transition-[width,height] duration-150" :class="color === c ? 'size-[30px] ring-2 ring-on-surface ring-offset-2 ring-offset-surface-container-high' : 'size-6'" :style="{ backgroundColor: c }" />
               </button>
               <!-- The pen's widths, drawn as dots of their size -->
               <template v-if="tool === 'ink' && inkWidths.length > 1">
