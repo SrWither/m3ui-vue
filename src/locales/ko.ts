@@ -285,6 +285,7 @@ export const koLocale: M3Locale = {
   pdfNote: '메모',
   pdfDraw: '그리기',
   pdfEraser: '지우개',
+  pdfInkWidth: '선 굵기 {n}pt',
   pdfColor: '색상',
   pdfUndo: '실행취소',
   pdfCopy: '복사',
@@ -348,4 +349,10 @@ export const koLocale: M3Locale = {
   timelineConflict: '다른 예약과 겹칩니다',
   timelineMoved: '{title}: {resource}, {start}~{end}',
   timelineEmpty: '리소스가 없습니다',
+  cropArea: '자르기 영역',
+  cropRotateLeft: '왼쪽으로 회전',
+  cropRotateRight: '오른쪽으로 회전',
+  cropFlip: '좌우 반전',
+  cropReset: '재설정',
+  cropFree: '자유',
 }

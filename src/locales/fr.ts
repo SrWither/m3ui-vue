@@ -285,6 +285,7 @@ export const frLocale: M3Locale = {
   pdfNote: 'Note',
   pdfDraw: 'Dessiner',
   pdfEraser: 'Gomme',
+  pdfInkWidth: 'Épaisseur {n} pt',
   pdfColor: 'Couleur',
   pdfUndo: 'Annuler',
   pdfCopy: 'Copier',
@@ -348,4 +349,10 @@ export const frLocale: M3Locale = {
   timelineConflict: 'Chevauche une autre réservation',
   timelineMoved: '{title} : {resource}, de {start} à {end}',
   timelineEmpty: 'Aucune ressource',
+  cropArea: 'Zone de recadrage',
+  cropRotateLeft: 'Faire pivoter à gauche',
+  cropRotateRight: 'Faire pivoter à droite',
+  cropFlip: 'Retourner horizontalement',
+  cropReset: 'Réinitialiser',
+  cropFree: 'Libre',
 }

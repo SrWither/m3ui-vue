@@ -285,6 +285,7 @@ export const jaLocale: M3Locale = {
   pdfNote: 'メモ',
   pdfDraw: '描画',
   pdfEraser: '消しゴム',
+  pdfInkWidth: '線の太さ {n} pt',
   pdfColor: '色',
   pdfUndo: '元に戻す',
   pdfCopy: 'コピー',
@@ -348,4 +349,10 @@ export const jaLocale: M3Locale = {
   timelineConflict: '別の予約と重なっています',
   timelineMoved: '{title}: {resource}、{start}〜{end}',
   timelineEmpty: 'リソースがありません',
+  cropArea: '切り抜き範囲',
+  cropRotateLeft: '左に回転',
+  cropRotateRight: '右に回転',
+  cropFlip: '左右反転',
+  cropReset: 'リセット',
+  cropFree: '自由',
 }

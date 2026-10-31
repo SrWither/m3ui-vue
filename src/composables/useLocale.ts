@@ -297,6 +297,7 @@ export interface M3Locale {
   pdfNote: string
   pdfDraw: string
   pdfEraser: string
+  pdfInkWidth: string
   pdfColor: string
   pdfUndo: string
   pdfCopy: string
@@ -360,6 +361,12 @@ export interface M3Locale {
   timelineConflict: string
   timelineMoved: string
   timelineEmpty: string
+  cropArea: string
+  cropRotateLeft: string
+  cropRotateRight: string
+  cropFlip: string
+  cropReset: string
+  cropFree: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -635,6 +642,7 @@ export const defaultLocale: M3Locale = {
   pdfNote: 'Note',
   pdfDraw: 'Draw',
   pdfEraser: 'Eraser',
+  pdfInkWidth: 'Line width {n} pt',
   pdfColor: 'Color',
   pdfUndo: 'Undo',
   pdfCopy: 'Copy',
@@ -698,6 +706,12 @@ export const defaultLocale: M3Locale = {
   timelineConflict: 'Overlaps another booking',
   timelineMoved: '{title}: {resource}, {start} to {end}',
   timelineEmpty: 'No resources',
+  cropArea: 'Crop area',
+  cropRotateLeft: 'Rotate left',
+  cropRotateRight: 'Rotate right',
+  cropFlip: 'Flip horizontally',
+  cropReset: 'Reset',
+  cropFree: 'Free',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')

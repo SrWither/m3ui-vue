@@ -285,6 +285,7 @@ export const zhLocale: M3Locale = {
   pdfNote: '注释',
   pdfDraw: '绘制',
   pdfEraser: '橡皮擦',
+  pdfInkWidth: '线宽 {n} pt',
   pdfColor: '颜色',
   pdfUndo: '撤消',
   pdfCopy: '复制',
@@ -348,4 +349,10 @@ export const zhLocale: M3Locale = {
   timelineConflict: '与另一个预订重叠',
   timelineMoved: '{title}：{resource}，{start} 至 {end}',
   timelineEmpty: '没有资源',
+  cropArea: '裁剪区域',
+  cropRotateLeft: '向左旋转',
+  cropRotateRight: '向右旋转',
+  cropFlip: '水平翻转',
+  cropReset: '重置',
+  cropFree: '自由',
 }

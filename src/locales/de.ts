@@ -285,6 +285,7 @@ export const deLocale: M3Locale = {
   pdfNote: 'Notiz',
   pdfDraw: 'Zeichnen',
   pdfEraser: 'Radierer',
+  pdfInkWidth: 'Strichstärke {n} pt',
   pdfColor: 'Farbe',
   pdfUndo: 'Rückgängig',
   pdfCopy: 'Kopieren',
@@ -348,4 +349,10 @@ export const deLocale: M3Locale = {
   timelineConflict: 'Überschneidet sich mit einer anderen Buchung',
   timelineMoved: '{title}: {resource}, {start} bis {end}',
   timelineEmpty: 'Keine Ressourcen',
+  cropArea: 'Zuschneidebereich',
+  cropRotateLeft: 'Nach links drehen',
+  cropRotateRight: 'Nach rechts drehen',
+  cropFlip: 'Horizontal spiegeln',
+  cropReset: 'Zurücksetzen',
+  cropFree: 'Frei',
 }
