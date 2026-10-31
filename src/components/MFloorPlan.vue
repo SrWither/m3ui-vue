@@ -115,6 +115,8 @@ const props = withDefaults(defineProps<{
   chairs?: boolean
   /** Decor kinds of yours, or the built-in ones restyled (merged over them by name) */
   decorKinds?: Record<string, FloorDecorKind>
+  /** Dragging (or nudging) a merged table moves its whole merge with it */
+  dragMerged?: boolean
   /** Outside editing, what a click on a table selects: nothing, one, or several (toggling; to merge them) */
   selectable?: 'none' | 'single' | 'multiple'
   /** Whether these tables may be merged: `true`, or `false` / a reason to refuse (shown by `merge-refused`) */
@@ -135,6 +137,7 @@ const props = withDefaults(defineProps<{
   showGrid: true,
   chairs: true,
   selectable: 'none',
+  dragMerged: false,
 })
 const tables = defineModel<FloorTable[]>('tables', { default: () => [] })
 const merges = defineModel<FloorMerge[]>('merges', { default: () => [] })
@@ -323,7 +326,7 @@ function onDown(e: PointerEvent, t: FloorTable) {
     }, LONG_PRESS)
   } else if (!selection.value.includes(t.id)) selection.value = e.shiftKey || e.ctrlKey || e.metaKey ? [...selection.value, t.id] : [t.id]
   // A touch picks the table once it moves (or on release), so a long press can add to what's picked
-  const ids = selection.value.includes(t.id) ? selection.value : [t.id]
+  const ids = withMerged(selection.value.includes(t.id) ? selection.value : [t.id])
   drag = { id: e.pointerId, sx: e.clientX, sy: e.clientY, start: new Map(tables.value.filter((x) => ids.includes(x.id)).map((x) => [x.id, { x: x.x, y: x.y }])), moved: false, pick: touch && !selection.value.includes(t.id) ? t.id : undefined }
   window.addEventListener('pointermove', onMove)
   window.addEventListener('pointerup', onUp)
@@ -375,6 +378,13 @@ function onClick(e: MouseEvent, t: FloorTable) {
     selection.value = selection.value.includes(t.id) ? selection.value.filter((x) => x !== t.id) : [...selection.value, t.id]
   emit('table-click', t, e)
 }
+/** With `dragMerged`, the tables merged with these come along */
+function withMerged(ids: (string | number)[]) {
+  if (!props.dragMerged) return ids
+  const all = new Set(ids)
+  for (const id of ids) for (const m of merges.value) if (m.tables.includes(id)) m.tables.forEach((x) => all.add(x))
+  return [...all]
+}
 function onKey(e: KeyboardEvent, t: FloorTable) {
   if (e.key === 'Enter' || e.key === ' ') {
     e.preventDefault()
@@ -385,7 +395,7 @@ function onKey(e: KeyboardEvent, t: FloorTable) {
   if (!dir || !props.editable) return
   e.preventDefault()
   const step = (props.grid || 1) * (e.shiftKey ? 5 : 1)
-  const ids = selection.value.includes(t.id) ? selection.value : [t.id]
+  const ids = withMerged(selection.value.includes(t.id) ? selection.value : [t.id])
   commitMoves(new Map(tables.value.filter((x) => ids.includes(x.id)).map((x) => [x.id, clamp(x, x.x + dir[0]! * step, x.y + dir[1]! * step)])))
 }
 onBeforeUnmount(() => {

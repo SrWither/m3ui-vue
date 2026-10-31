@@ -297,3 +297,17 @@ describe('MFloorPlan merges across the room', () => {
     expect(w.findAll('.m3-floor-merge-label')).toHaveLength(1)
   })
 })
+
+describe('MFloorPlan dragMerged', () => {
+  it('a merged table drags its merge along', async () => {
+    const w: any = mount(MFloorPlan, {
+      props: { editable: true, grid: 10, dragMerged: true, tables: base(), merges: [{ id: 'm', tables: [1, 2] }], 'onUpdate:tables': (v: FloorTable[]) => w.setProps({ tables: v }) },
+      attachTo: document.body,
+    })
+    table(w, 'T1').element.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, clientX: 0, clientY: 0, pointerId: 4 }))
+    window.dispatchEvent(new PointerEvent('pointermove', { clientX: 20, clientY: 30, pointerId: 4 }))
+    window.dispatchEvent(new PointerEvent('pointerup', { clientX: 20, clientY: 30, pointerId: 4 }))
+    await nextTick()
+    expect(w.props('tables').map((t: FloorTable) => [t.x, t.y])).toEqual([[120, 130], [320, 130]])
+  })
+})
