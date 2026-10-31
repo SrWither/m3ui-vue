@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.3.1] - Unreleased
+## [1.3.1] - 2026-10-31
 
 ### Added
 - Floor plan family, around `MFloorPlan` (main entry, no dependencies):
