@@ -387,6 +387,45 @@ export interface M3Locale {
   drawColor: string
   floorPlan: string
   floorSeats: string
+  floorRotate: string
+  floorTools: string
+  floorMove: string
+  floorDrawWall: string
+  floorDrawZone: string
+  floorAddTable: string
+  floorAddDecor: string
+  floorDuplicate: string
+  floorDelete: string
+  floorUndo: string
+  floorRedo: string
+  floorLabel: string
+  floorSeatsField: string
+  floorShape: string
+  floorRound: string
+  floorSquare: string
+  floorLong: string
+  floorAngle: string
+  floorColor: string
+  floorThickness: string
+  floorWidth: string
+  floorHeight: string
+  floorMerge: string
+  floorSplit: string
+  floorNothingPicked: string
+  floorTablesPicked: string
+  floorTableN: string
+  floorZone: string
+  floorWall: string
+  floorDeleteCorner: string
+  floorDecorDoor: string
+  floorDecorWindow: string
+  floorDecorPlant: string
+  floorDecorColumn: string
+  floorDecorRestroom: string
+  floorDecorKitchen: string
+  floorDecorRegister: string
+  floorDecorStairs: string
+  floorDecorLabel: string
   drawCustomColor: string
   drawSize: string
   drawUndo: string
@@ -768,6 +807,45 @@ export const defaultLocale: M3Locale = {
   drawColor: 'Color',
   floorPlan: 'Floor plan',
   floorSeats: '{n} seats',
+  floorRotate: 'Rotate',
+  floorTools: 'Floor plan tools',
+  floorMove: 'Move',
+  floorDrawWall: 'Wall',
+  floorDrawZone: 'Zone',
+  floorAddTable: 'Add a table',
+  floorAddDecor: 'Add decor',
+  floorDuplicate: 'Duplicate',
+  floorDelete: 'Delete',
+  floorUndo: 'Undo',
+  floorRedo: 'Redo',
+  floorLabel: 'Label',
+  floorSeatsField: 'Seats',
+  floorShape: 'Shape',
+  floorRound: 'Round',
+  floorSquare: 'Square',
+  floorLong: 'Long',
+  floorAngle: 'Angle',
+  floorColor: 'Color',
+  floorThickness: 'Thickness',
+  floorWidth: 'Width',
+  floorHeight: 'Height',
+  floorMerge: 'Merge tables',
+  floorSplit: 'Split',
+  floorNothingPicked: 'Pick a table, a zone, a wall or decor to change it',
+  floorTablesPicked: '{n} tables picked',
+  floorTableN: 'Table {label}',
+  floorZone: 'Zone',
+  floorWall: 'Wall',
+  floorDeleteCorner: 'Delete the corner',
+  floorDecorDoor: 'Door',
+  floorDecorWindow: 'Window',
+  floorDecorPlant: 'Plant',
+  floorDecorColumn: 'Column',
+  floorDecorRestroom: 'Restroom',
+  floorDecorKitchen: 'Kitchen',
+  floorDecorRegister: 'Register',
+  floorDecorStairs: 'Stairs',
+  floorDecorLabel: 'Text',
   drawCustomColor: 'Custom color',
   drawSize: 'Size',
   drawUndo: 'Undo',
