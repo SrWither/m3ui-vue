@@ -373,4 +373,33 @@ describe('MFlow', () => {
     expect(x('d') - x('c')).toBe(600 - 260)
     expect(x('a')).toBe(0)
   })
+  it('leaves what is in its default slot alone: no pan from a panel, its wheel scrolls it', async () => {
+    const w = mount(MFlow, {
+      props: { nodes: [N('a', 0, 0)], edges: [], animate: false },
+      slots: { default: '<div class="panel" style="position:absolute;right:0;top:0">Panel</div>' },
+      attachTo: document.body,
+    })
+    await flushPromises()
+    const panel = w.find('.panel').element
+    pointer(panel, 'pointerdown', 700, 10)
+    pointer(window, 'pointermove', 600, 100)
+    pointer(window, 'pointerup', 600, 100)
+    wheel(panel, { deltaY: 50 })
+    expect(w.emitted('update:viewport')).toBeUndefined()
+  })
+
+  it('startDrag hands a pointer that is already down to a node added from outside', async () => {
+    const w = await flow({ nodes: [N('a', 0, 0), N('c', 600, 0)], edges: [{ id: 'e1', source: 'a', target: 'c', type: 'straight' }] })
+    const ctx = w.vm as unknown as { addNodes(n: FlowNode): void; startDrag(id: string, e: PointerEvent): void }
+    // A palette item dragged in: added under the pointer, then dragged on and dropped onto the edge
+    ctx.addNodes(N('b', 300, 300))
+    ctx.startDrag('b', new PointerEvent('pointerdown', { clientX: 390, clientY: 330, pointerId: 1, pointerType: 'mouse' }))
+    // Mounted and measured on the next render, as between two pointer moves in a browser
+    await nextTick()
+    pointer(window, 'pointermove', 390, 30)
+    pointer(window, 'pointerup', 390, 30)
+    const edges = w.emitted('update:edges')!.at(-1)![0] as FlowEdge[]
+    expect(edges.map((e) => [e.source, e.target])).toEqual([['a', 'b'], ['b', 'c']])
+    expect(w.emitted('update:selection')!.at(-1)![0]).toEqual({ nodes: ['b'], edges: [] })
+  })
 })

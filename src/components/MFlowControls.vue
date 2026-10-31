@@ -35,7 +35,6 @@ const vertical = computed(() => props.orientation === 'vertical')
 
 <template>
   <div
-    data-flow-panel
     class="m3-flow-controls absolute z-20 m-4 flex gap-1 rounded-full bg-surface-container p-1 shadow-elevation-3"
     :class="[panelPositionClass[position], vertical ? 'flex-col' : 'flex-row']"
     role="toolbar"

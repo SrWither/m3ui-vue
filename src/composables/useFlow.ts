@@ -146,6 +146,11 @@ export interface FlowContext {
   cut(): void
   /** Pastes what was copied, at a flow point (default a step from the originals) */
   paste(at?: FlowXY): void
+  /**
+   * Drags a node with a pointer that's already down, e.g. one just added from a palette outside the canvas: it
+   * follows the pointer from there (guides, splicing into an edge) until it's let go
+   */
+  startDrag(id: string, e: PointerEvent): void
 }
 
 // Internal: what nodes and handles inside MFlow reach

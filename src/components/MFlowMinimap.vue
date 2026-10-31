@@ -95,7 +95,6 @@ function onWheel(e: WheelEvent) {
 
 <template>
   <div
-    data-flow-panel
     class="m3-flow-minimap absolute z-20 m-4 overflow-hidden rounded-lg bg-surface-container shadow-elevation-3"
     :class="panelPositionClass[position]"
     @wheel.stop.prevent="onWheel"

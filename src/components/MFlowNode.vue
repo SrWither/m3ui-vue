@@ -57,7 +57,7 @@ const ICON = {
 
 <template>
   <div
-    class="m3-flow-card relative min-w-44 max-w-72 rounded-md border text-on-surface transition-[box-shadow,border-color] duration-200"
+    class="m3-flow-card rounded-md border text-on-surface transition-[box-shadow,border-color] duration-200"
     :class="[
       VARIANT[variant],
       selected && 'border-primary! ring-1 ring-primary',
@@ -85,3 +85,14 @@ const ICON = {
     <MFlowHandle v-if="state && (handles === 'both' || handles === 'source')" type="source" :position="sides.source" />
   </div>
 </template>
+
+<style>
+/* Defaults in the base layer, so a width or position class of yours on the node wins */
+@layer base {
+  .m3-flow-card {
+    position: relative;
+    min-width: 11rem;
+    max-width: 18rem;
+  }
+}
+</style>

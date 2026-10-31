@@ -26,7 +26,10 @@ const emptySelection = (): FlowSelection => ({ nodes: [], edges: [] })
  * a `#node-<type>` slot of your own with MFlowHandles in it; edges are `bezier`, `smoothstep`, `step`, `straight`
  * or a `#edge-<type>` slot (with `getBezierPath` and friends). `layout` lays them out (`'tree'`, `'layered'` or a
  * function, e.g. one calling dagre) whenever the graph's shape changes. Put `MFlowControls`, `MFlowMinimap` or
- * anything of yours in the default slot: it's drawn over the canvas, and `useFlow()` works inside it.
+ * anything of yours in the default slot: it's drawn over the canvas, the canvas's gestures and wheel leave it alone,
+ * and `useFlow()` works inside it. Inside a node, controls (buttons, inputs, links) never start a drag; mark anything
+ * else that shouldn't with `data-flow-nodrag`, and an area that scrolls on its own with `data-flow-nowheel`.
+ * `startDrag(id, event)` hands a pointer that's already down to a node, to drag something in from outside (a palette).
  *
  * Positions spring to their new place when they change from outside (a layout, an undo); the view springs on
  * `fitView()`/zoom buttons. Nodes are rendered by small components of their own so moving one only redraws it
@@ -205,6 +208,10 @@ const emit = defineEmits<{
 const slots = useSlots()
 const locale = useLocale()
 const root = ref<HTMLElement>()
+const layer = ref<HTMLElement>()
+// What's in the default slot (controls, a minimap, panels of yours) sits over the canvas: the canvas's gestures and
+// wheel leave it alone, so it needs no marking
+const onOverlay = (t: EventTarget | null) => !!t && t !== root.value && !layer.value?.contains(t as Node)
 const size = ref({ width: 0, height: 0 })
 const ready = ref(false)
 const announcement = ref('')
@@ -872,7 +879,7 @@ function removeWindowListeners() {
 
 function onPointerDown(e: PointerEvent) {
   const t = e.target as HTMLElement
-  if (t.closest('[data-flow-panel]')) return
+  if (onOverlay(t)) return
   if (e.pointerType === 'touch') {
     touches.set(e.pointerId, { x: e.clientX, y: e.clientY })
     if (touches.size === 2) {
@@ -1128,7 +1135,8 @@ function movePinch() {
 // ── Wheel and double click ────────────────────────────────────────────────────────────────────────────────
 function onWheel(e: WheelEvent) {
   const t = e.target as HTMLElement
-  if (t.closest('[data-flow-nowheel]')) return
+  // Over a panel, or content inside a node marked to scroll on its own: the wheel is theirs
+  if (onOverlay(t) || t.closest('[data-flow-nowheel]')) return
   e.preventDefault()
   const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? size.value.height : 1
   const r = rootRect()
@@ -1145,7 +1153,7 @@ function onWheel(e: WheelEvent) {
 }
 function onDblClick(e: MouseEvent) {
   const t = e.target as HTMLElement
-  if (t.closest('[data-flow-panel]')) return
+  if (onOverlay(t)) return
   const nodeEl = t.closest<HTMLElement>('[data-flow-node]')
   const edgeEl = t.closest<HTMLElement>('[data-flow-edge]')
   if (nodeEl) {
@@ -1161,7 +1169,7 @@ function onDblClick(e: MouseEvent) {
 }
 function onContextMenu(e: MouseEvent) {
   const t = e.target as HTMLElement
-  if (t.closest('[data-flow-panel]')) return
+  if (onOverlay(t)) return
   const nodeEl = t.closest<HTMLElement>('[data-flow-node]')
   const edgeEl = t.closest<HTMLElement>('[data-flow-edge]')
   const n = nodeEl ? nodeById.value.get(nodeEl.dataset.flowNode!) : undefined
@@ -1214,6 +1222,27 @@ function beginNodeDrag(g: Extract<Gesture, { kind: 'node' }>, e: PointerEvent) {
   document.body.style.userSelect = 'none'
   emit('node-drag-start', ids.map((id) => nodeById.value.get(id)!), e)
   return true
+}
+
+/**
+ * Drags a node with a pointer that's already down (from a palette outside the canvas: add the node under the
+ * pointer, then hand it the event). It follows the pointer from there, with the guides and splicing into edges
+ */
+function startDrag(id: string, e: PointerEvent) {
+  if (!nodeById.value.has(id) || locked.value) return
+  if (gesture) cancelGesture()
+  // A node added this tick has no spring yet
+  if (!springs.has(id)) syncPositions()
+  if (canSelect.value) setSelection({ nodes: [id], edges: [] })
+  const g: Extract<Gesture, { kind: 'node' }> = { kind: 'node', id: e.pointerId, nodeId: id, sx: e.clientX, sy: e.clientY, touch: e.pointerType === 'touch', active: false, starts: new Map(), moved: true, reselect: false }
+  gesture = g
+  pointer.x = e.clientX
+  pointer.y = e.clientY
+  addWindowListeners()
+  if (!beginNodeDrag(g, e)) {
+    gesture = null
+    removeWindowListeners()
+  }
 }
 
 const GUIDE_SNAP = 6
@@ -1726,6 +1755,7 @@ const context: FlowInternals = {
   copy,
   cut,
   paste,
+  startDrag,
   registerHandle,
   measureNode: queueMeasure,
   startConnection,
@@ -1812,6 +1842,7 @@ defineExpose(context as FlowContext)
     </svg>
 
     <div
+      ref="layer"
       class="m3-flow-viewport absolute top-0 left-0 origin-top-left"
       :style="{ transform: `translate(${vp.x}px, ${vp.y}px) scale(${vp.zoom})`, visibility: ready ? undefined : 'hidden' }"
     >
@@ -1854,7 +1885,7 @@ defineExpose(context as FlowContext)
     />
 
     <div v-if="!nodesLocal.length && $slots.empty" class="pointer-events-none absolute inset-0 flex items-center justify-center">
-      <div class="pointer-events-auto" data-flow-panel>
+      <div class="pointer-events-auto">
         <slot name="empty" />
       </div>
     </div>
