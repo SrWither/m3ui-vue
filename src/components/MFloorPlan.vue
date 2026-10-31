@@ -929,10 +929,13 @@ const gridStyle = computed(() => {
         @click="onClick($event, p.t)"
         @keydown="onKey($event, p.t)"
       >
-        <slot name="table" :table="p.t" :status="p.status" :selected="selection.includes(p.t.id)">
-          <MIcon v-if="p.status?.icon && scale > 0.5" :name="p.status.icon" :size="Math.max(12, 18 * scale)" class="opacity-80" />
-          <span class="max-w-full truncate px-1 leading-tight font-medium">{{ p.t.label }}</span>
-        </slot>
+        <!-- The inside stays upright however the table turns -->
+        <span class="flex flex-col items-center justify-center gap-0.5" :style="{ transform: `rotate(${-rotationOf('table', p.t.id, p.t.rotation)}deg)` }">
+          <slot name="table" :table="p.t" :status="p.status" :selected="selection.includes(p.t.id)">
+            <MIcon v-if="p.status?.icon && scale > 0.5" :name="p.status.icon" :size="Math.max(12, 18 * scale)" class="opacity-80" />
+            <span class="max-w-full truncate px-1 leading-tight font-medium">{{ p.t.label }}</span>
+          </slot>
+        </span>
         <span
           v-if="p.t.badge !== undefined"
           class="absolute -top-2 -right-2 min-w-5 rounded-full bg-error px-1.5 text-center text-label-small leading-5 text-on-error"

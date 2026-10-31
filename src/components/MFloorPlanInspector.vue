@@ -84,10 +84,7 @@ function deleteCorner() {
         density="compact"
         @update:model-value="upTable({ shape: $event as FloorTable['shape'], width: undefined, height: undefined })"
       />
-      <div>
-        <div class="text-label-medium text-on-surface-variant">{{ locale.floorAngle }} · {{ table.rotation ?? 0 }}°</div>
-        <MSlider :model-value="table.rotation ?? 0" :min="0" :max="345" :step="15" :label="locale.floorAngle" @update:model-value="upTable({ rotation: $event as number })" />
-      </div>
+      <MSlider :model-value="table.rotation ?? 0" :min="0" :max="345" :step="15" :label="locale.floorAngle" @update:model-value="upTable({ rotation: $event as number })" show-value />
       <slot name="table" :table="table" :update="upTable" />
       <div class="flex flex-wrap gap-2">
         <MButton v-if="merging && mergeOf" variant="tonal" icon="call_split" @click="ctx.split(mergeOf.id)">{{ locale.floorSplit }} · {{ mergeOf.label }}</MButton>
@@ -141,10 +138,7 @@ function deleteCorner() {
     <!-- A wall -->
     <template v-else-if="wall">
       <div class="flex items-center gap-2 text-title-small"><MIcon name="timeline" :size="18" />{{ locale.floorWall }}</div>
-      <div>
-        <div class="text-label-medium text-on-surface-variant">{{ locale.floorThickness }} · {{ wall.thickness ?? 8 }}</div>
-        <MSlider :model-value="wall.thickness ?? 8" :min="2" :max="30" :step="1" :label="locale.floorThickness" @update:model-value="upWall({ thickness: $event as number })" />
-      </div>
+      <MSlider :model-value="wall.thickness ?? 8" :min="2" :max="30" :step="1" :label="locale.floorThickness" @update:model-value="upWall({ thickness: $event as number })" show-value />
       <slot name="wall" :wall="wall" :update="upWall" />
       <div class="flex flex-wrap gap-2">
         <MButton v-if="vertex !== undefined && wall.points.length > 2" variant="tonal" icon="remove" @click="deleteCorner">{{ locale.floorDeleteCorner }}</MButton>
@@ -160,10 +154,7 @@ function deleteCorner() {
         <MNumberField :model-value="Math.round(item.width ?? kind?.width ?? 40)" :label="locale.floorWidth" variant="outlined" :min="4" @update:model-value="upDecor({ width: $event ?? undefined })" />
         <MNumberField :model-value="Math.round(item.height ?? kind?.height ?? 40)" :label="locale.floorHeight" variant="outlined" :min="4" @update:model-value="upDecor({ height: $event ?? undefined })" />
       </div>
-      <div>
-        <div class="text-label-medium text-on-surface-variant">{{ locale.floorAngle }} · {{ item.rotation ?? 0 }}°</div>
-        <MSlider :model-value="item.rotation ?? 0" :min="0" :max="345" :step="15" :label="locale.floorAngle" @update:model-value="upDecor({ rotation: $event as number })" />
-      </div>
+      <MSlider :model-value="item.rotation ?? 0" :min="0" :max="345" :step="15" :label="locale.floorAngle" @update:model-value="upDecor({ rotation: $event as number })" show-value />
       <slot name="decor" :item="item" :kind="kind" :update="upDecor" />
       <div class="flex flex-wrap gap-2">
         <MButton variant="text" icon="content_copy" @click="ctx.duplicate()">{{ locale.floorDuplicate }}</MButton>
