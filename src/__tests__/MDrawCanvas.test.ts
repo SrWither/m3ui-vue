@@ -108,3 +108,11 @@ describe('MDrawCanvas', () => {
     expect(w.find('[aria-label="Custom color"]').attributes('aria-pressed')).toBe('true')
   })
 })
+
+describe('MDrawCanvas background image', () => {
+  it('places it by backgroundImageBox on an infinite canvas', () => {
+    const w = mount(MDrawCanvas, { props: { backgroundImage: 'photo.jpg', backgroundImageBox: { x: 10, y: 20, width: 300, height: 200 } } })
+    const img = w.find('image')
+    expect([img.attributes('x'), img.attributes('y'), img.attributes('width'), img.attributes('height')]).toEqual(['10', '20', '300', '200'])
+  })
+})

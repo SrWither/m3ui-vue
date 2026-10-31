@@ -56,6 +56,8 @@ const props = withDefaults(defineProps<{
   backgroundSize?: number
   /** An image under the drawing, to trace or annotate: fills each page, or sits at (0, 0) on an infinite canvas */
   backgroundImage?: string
+  /** Infinite canvas: where the background image goes and its size, in drawing units (fitView takes it in too) */
+  backgroundImageBox?: DrawBox
   /** Fingers only pan and zoom: `true`, `false`, or `'auto'` (once a stylus has touched the canvas) */
   penOnly?: boolean | 'auto'
   /** Use the stylus' pressure (without one, speed thins the line) */
@@ -192,7 +194,7 @@ function fitView() {
   if (!width || !height) return
   const b: DrawBox | null = isPages.value
     ? { x: 0, y: 0, width: props.pageSize.width, height: pageTop(pages.value - 1) + props.pageSize.height }
-    : unionBox(ordered.value.map((i) => itemBox(i)))
+    : unionBox([...ordered.value.map((i) => itemBox(i)), ...(props.backgroundImage && props.backgroundImageBox ? [props.backgroundImageBox] : [])])
   if (!b) {
     viewport.value = { x: width / 2, y: height / 2, zoom: 1 }
     return
@@ -682,7 +684,7 @@ defineExpose({ undo, redo, clear, deleteSelection, fitView, zoomIn: () => zoomBy
 <template>
   <div
     ref="root"
-    class="m3-draw-canvas relative overflow-hidden bg-surface-container outline-none select-none [touch-action:none]"
+    class="m3-draw-canvas outline-none select-none [touch-action:none]"
     :style="{ cursor }"
     tabindex="0"
     role="application"
@@ -715,7 +717,7 @@ defineExpose({ undo, redo, clear, deleteSelection, fitView, zoomIn: () => zoomBy
       <g :transform="`translate(${vp.x} ${vp.y}) scale(${vp.zoom})`">
         <template v-if="!isPages">
           <rect v-bind="visibleArea" :fill="paper" />
-          <image v-if="backgroundImage" :href="backgroundImage" x="0" y="0" />
+          <image v-if="backgroundImage" :href="backgroundImage" v-bind="backgroundImageBox ?? { x: 0, y: 0 }" preserveAspectRatio="xMidYMid slice" />
           <rect v-if="background !== 'none'" v-bind="visibleArea" :fill="`url(#${uid}-${background})`" />
         </template>
         <g v-for="p in pageList" :key="p ?? 'all'" :transform="p === undefined ? undefined : `translate(0 ${pageTop(p)})`">
@@ -799,9 +801,13 @@ defineExpose({ undo, redo, clear, deleteSelection, fitView, zoomIn: () => zoomBy
 </template>
 
 <style>
+/* Defaults a consumer's own utilities override (absolute inset-0, another background…): none on the root itself */
 @layer base {
   .m3-draw-canvas {
+    position: relative;
+    overflow: hidden;
     min-height: 240px;
+    background-color: var(--color-surface-container);
   }
 }
 .m3-draw-page {

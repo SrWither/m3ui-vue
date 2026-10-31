@@ -434,7 +434,7 @@ const gridStyle = computed(() => {
 <template>
   <div
     ref="root"
-    class="m3-floor-plan relative overflow-hidden rounded-xl bg-surface-container-low select-none"
+    class="m3-floor-plan select-none"
     :style="{ aspectRatio: `${width} / ${height}`, ...gridStyle }"
     role="group"
     tabindex="-1"
@@ -573,9 +573,14 @@ const gridStyle = computed(() => {
 </template>
 
 <style>
+/* Defaults a consumer's own utilities override: none on the root itself */
 @layer base {
   .m3-floor-plan {
+    position: relative;
+    overflow: hidden;
     width: 100%;
+    border-radius: var(--radius-xl, 12px);
+    background-color: var(--color-surface-container-low);
   }
 }
 </style>
