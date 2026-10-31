@@ -100,6 +100,32 @@ describe('MPdfViewer', () => {
     expect(w.emitted('update:annotations')!.at(-1)![0]).toEqual([])
   })
 
+  it('a tap on a highlight, under the text layer, opens it to delete; the pen offers its widths', async () => {
+    const annotations: PdfAnnotation[] = [{ id: 'h', type: 'highlight', page: 1, color: '#ff0', rects: [[72, 700, 200, 712]], createdAt: '' }]
+    const w = await viewer({ annotate: true, annotations, zoom: 1 })
+    const page = pages(w)[0]!
+    // The page on screen at its viewport's size: client px = viewBox units
+    const [, , vw, vh] = page.find('svg').attributes('viewBox')!.split(' ').map(Number)
+    const box = { left: 0, top: 0, width: vw!, height: vh!, right: vw!, bottom: vh!, x: 0, y: 0, toJSON: () => ({}) }
+    for (const el of [page.element, ...page.element.querySelectorAll('*')]) (el as HTMLElement).getBoundingClientRect = () => box as DOMRect
+    const rect = w.find('.m3-pdf-highlight rect')
+    const x = Number(rect.attributes('x')) + 4
+    const y = Number(rect.attributes('y')) + 4
+    // The text layer's host, over the highlights
+    const text = page.find('.overflow-hidden.absolute.inset-0').element
+    text.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, clientX: x, clientY: y }))
+    await new Promise((r) => setTimeout(r))
+    await nextTick()
+    await w.find('[aria-label="Delete"]').trigger('click')
+    expect(w.emitted('update:annotations')!.at(-1)![0]).toEqual([])
+    // The pen: its widths show with it, and the one picked goes into the strokes
+    await w.find('[aria-label="Annotate"]').trigger('click')
+    await w.find('[aria-label="Draw"]').trigger('click')
+    expect(w.findAll('[aria-label^="Line width"]')).toHaveLength(4)
+    await w.find('[aria-label="Line width 8 pt"]').trigger('click')
+    expect(w.find('[aria-label="Line width 8 pt"]').attributes('aria-pressed')).toBe('true')
+  })
+
   it('draws annotations from the model, and the eraser removes them', async () => {
     const annotations: PdfAnnotation[] = [
       { id: 'h', type: 'highlight', page: 1, color: '#ff0', rects: [[72, 700, 200, 712]], createdAt: '' },

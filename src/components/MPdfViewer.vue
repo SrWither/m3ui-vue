@@ -127,6 +127,8 @@ const props = withDefaults(defineProps<{
   tool?: PdfTool
   /** Colors offered for annotations */
   colors?: string[]
+  /** The pen's widths offered in the toolbar, in PDF points (the first one is the default) */
+  inkWidths?: number[]
   /** Written into new annotations' `author` */
   author?: string
   /** The side panel: thumbnails, the outline, or closed (v-model) */
@@ -152,6 +154,7 @@ const props = withDefaults(defineProps<{
   annotate: false,
   tool: 'select',
   colors: () => ['#FFE14D', '#7ED957', '#5EB8FF', '#FF7EB6', '#B388FF', '#1F1F1F'],
+  inkWidths: () => [1, 2, 4, 8],
   sidebar: null,
   toolbar: true,
   downloadable: true,
@@ -546,7 +549,7 @@ function setTool(t: PdfTool) {
   selected.value = null
 }
 const color = ref(props.colors[0]!)
-const inkWidth = ref(2)
+const inkWidth = ref(props.inkWidths[1] ?? props.inkWidths[0] ?? 2)
 const editing = ref(false)
 watch(() => props.annotate, (on) => { if (!on) closeEditing() })
 function openEditing() {
@@ -1102,6 +1105,22 @@ const TOOLS = computed(() => [
               >
                 <span class="size-6 rounded-full border border-outline-variant transition-transform" :class="color === c && 'scale-125 ring-2 ring-on-surface ring-offset-2 ring-offset-surface-container-high'" :style="{ backgroundColor: c }" />
               </button>
+              <!-- The pen's widths, drawn as dots of their size -->
+              <template v-if="tool === 'ink' && inkWidths.length > 1">
+                <span class="mx-1 h-6 w-px shrink-0 bg-outline-variant" />
+                <button
+                  v-for="w in inkWidths"
+                  :key="w"
+                  type="button"
+                  class="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full outline-none hover:bg-on-surface/8 focus-visible:ring-2 focus-visible:ring-primary"
+                  :class="inkWidth === w && 'bg-secondary-container'"
+                  :aria-label="locale.pdfInkWidth.replace('{n}', String(w))"
+                  :aria-pressed="inkWidth === w"
+                  @click="inkWidth = w"
+                >
+                  <span class="rounded-full" :style="{ width: `${Math.min(22, 3 + w * 2)}px`, height: `${Math.min(22, 3 + w * 2)}px`, backgroundColor: color }" />
+                </button>
+              </template>
               <span class="mx-1 h-6 w-px shrink-0 bg-outline-variant" />
               <MIconButton icon="undo" :label="locale.pdfUndo" :disabled="!canUndo" @click="undo" />
               <MIconButton icon="close" :label="locale.close" @click="closeEditing" />

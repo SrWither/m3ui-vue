@@ -305,12 +305,35 @@ function onInkUp(e: PointerEvent) {
 }
 const drawingPath = computed(() => (drawing.value ?? []).map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`).join(''))
 
+function openHighlightAt(clientX: number, clientY: number): boolean {
+  const vp = viewport.value
+  if (!vp || !root.value) return false
+  const r = root.value.getBoundingClientRect()
+  const sx = vp.width / (r.width || 1)
+  const sy = vp.height / (r.height || 1)
+  const x = (clientX - r.left) * sx
+  const y = (clientY - r.top) * sy
+  const PAD = 2
+  // The last one drawn is on top
+  for (const s of [...shapes.value].reverse()) {
+    if (!('rects' in s) || !s.rects) continue
+    const hit = s.rects.find((b) => x >= b.x - PAD && x <= b.x + b.w + PAD && y >= b.y - PAD && y <= b.y + b.h + PAD)
+    if (!hit) continue
+    emit('select', { id: s.a.id, anchor: new DOMRect(r.left + hit.x / sx, r.top + hit.y / sy, hit.w / sx, hit.h / sy) })
+    return true
+  }
+  return false
+}
+
 // Text selection: its rects, in PDF points, for a highlight (made at once with the highlight tool)
-function onTextPointerUp() {
+function onTextPointerUp(e?: PointerEvent) {
+  const at = e ? { x: e.clientX, y: e.clientY } : null
   setTimeout(() => {
     const sel = window.getSelection()
     const host = textHost.value
     if (!sel || sel.isCollapsed || !sel.rangeCount || !host || !viewport.value) {
+      // A tap on a highlight opens it (to comment on, recolor or delete): the text layer above it takes the tap
+      if (at && (props.tool === 'select' || props.tool === 'highlight') && openHighlightAt(at.x, at.y)) return
       if (props.tool === 'select') emit('text-selection', null)
       return
     }
