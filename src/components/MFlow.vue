@@ -131,7 +131,8 @@ const props = withDefaults(defineProps<{
   layoutOptions?: FlowLayoutOptions
   /**
    * A node with no connections dropped onto an edge splices into it: A → C becomes A → B → C (the edge lights up
-   * while it's over one). Only when both new connections are valid
+   * while it's over one). Only when both new connections are valid. Without room between A and C, the node moves
+   * to sit after A and C moves on (with everything after it) along the flow's `direction`
    */
   insertOnEdge?: boolean
   /** Nodes dropped onto a `group` join it (and leave it when dropped outside) */
@@ -1358,6 +1359,46 @@ function findInsert(g: Extract<Gesture, { kind: 'node' }>): typeof insertPlan {
   return { node: id, edge: e, connections: [c1, c2] }
 }
 
+// Room between spliced-in nodes, along the flow's direction
+const SPLICE_GAP = 48
+function makeRoom(nodes: FlowNode[], plan: NonNullable<typeof insertPlan>): FlowNode[] {
+  const byId = new Map(nodes.map((n) => [n.id, n]))
+  const a = byId.get(plan.edge.source)
+  const b = byId.get(plan.node)
+  const c = byId.get(plan.edge.target)
+  // Only among siblings: positions are relative to the same parent
+  if (!a || !b || !c || a.parentId !== b.parentId || b.parentId !== c.parentId) return nodes
+  const horizontal = props.direction !== 'vertical'
+  const k = horizontal ? 'x' : 'y'
+  const len = (id: string) => (horizontal ? getSize(id).width : getSize(id).height)
+  const aEnd = a.position[k] + len(a.id)
+  // C must come after A for "after" to mean anything (a loop back or a sideways edge is left alone)
+  if (c.position[k] < aEnd) return nodes
+  const bStart = Math.max(b.position[k], aEnd + SPLICE_GAP)
+  const push = Math.max(0, bStart + len(b.id) + SPLICE_GAP - c.position[k])
+  // C and everything downstream of it (A, B and A's own ancestors stay put)
+  const moving = new Set<string>()
+  if (push > 0) {
+    const out = new Map<string, string[]>()
+    for (const e of edgesLocal.value) if (e !== plan.edge) (out.get(e.source) ?? out.set(e.source, []).get(e.source)!).push(e.target)
+    const queue = [c.id]
+    while (queue.length) {
+      const id = queue.shift()!
+      if (moving.has(id) || id === a.id || id === b.id) continue
+      const n = byId.get(id)
+      if (!n || n.parentId !== c.parentId) continue
+      moving.add(id)
+      queue.push(...(out.get(id) ?? []))
+    }
+  }
+  if (bStart === b.position[k] && !moving.size) return nodes
+  return nodes.map((n) => {
+    if (n.id === b.id) return { ...n, position: { ...n.position, [k]: bStart } }
+    if (moving.has(n.id)) return { ...n, position: { ...n.position, [k]: n.position[k] + push } }
+    return n
+  })
+}
+
 function endNodeDrag(g: Extract<Gesture, { kind: 'node' }>, e: PointerEvent) {
   document.body.style.userSelect = ''
   const plan = insertPlan
@@ -1418,7 +1459,11 @@ function endNodeDrag(g: Extract<Gesture, { kind: 'node' }>, e: PointerEvent) {
       else delete out.parentId
       return out
     })
-    commit({ nodes, edges: spliced ? [...edgesLocal.value.filter((x) => x !== plan!.edge), ...spliced] : undefined })
+    // Spliced in without room: it moves to sit after A, and C with everything after it moves on to make room
+    const placed = spliced && plan ? makeRoom(nodes, plan) : nodes
+    // Let go first, so the spliced node springs to its place too
+    if (spliced) dragging.value = new Set()
+    commit({ nodes: placed, edges: spliced ? [...edgesLocal.value.filter((x) => x !== plan!.edge), ...spliced] : undefined })
     const first = nodeById.value.get(g.nodeId)
     if (first) announce(locale.flowMoved.replace('{label}', nodeLabel(first)))
   }

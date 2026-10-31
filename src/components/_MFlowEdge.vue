@@ -50,6 +50,8 @@ const scope = computed(() => ({ edge: props.edge, selected: selected.value, high
     @keydown="flow.onEdgeKey($event, edge.id)"
   >
     <path :d="geo.path" fill="none" stroke="transparent" stroke-width="16" :style="{ pointerEvents: 'stroke' }" :class="selectable && 'cursor-pointer'" />
+    <!-- A dragged node would splice in here: a halo around it -->
+    <path v-if="highlighted" :d="geo.path" fill="none" stroke-width="14" stroke-linecap="round" class="m3-flow-edge-halo stroke-primary/25" />
     <SlotOutlet v-if="render" :fn="render" :scope="scope" />
     <template v-else>
       <path

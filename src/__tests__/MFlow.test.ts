@@ -317,7 +317,8 @@ describe('MFlow', () => {
     pointer(window, 'pointermove', 390, 30)
     await nextTick()
     // Lit up while over it
-    expect(w.find('[data-flow-edge="e1"] path:nth-child(2)').attributes('stroke-width')).toBe('4')
+    expect(w.find('[data-flow-edge="e1"] .m3-flow-edge-halo').exists()).toBe(true)
+    expect(w.find('[data-flow-edge="e1"] path:nth-child(3)').attributes('stroke-width')).toBe('4')
     pointer(window, 'pointerup', 390, 30)
     const edges = w.emitted('update:edges')!.at(-1)![0] as FlowEdge[]
     expect(edges.map((e) => [e.source, e.target])).toEqual([['a', 'b'], ['b', 'c']])
@@ -353,5 +354,23 @@ describe('MFlow', () => {
     expect(w.emitted('update:selection')!.at(-1)![0]).toEqual({ nodes: ['b'], edges: [] })
     expect(w.emitted('update:viewport')).toBeUndefined()
     vi.useRealTimers()
+  })
+  it('a node spliced in without room pushes the next one, and what comes after it, along', async () => {
+    // a (0..180) → c (260..440) → d (600..): b (180 wide) can't fit between a and c with 48px each side
+    const nodes = [N('a', 0, 0), N('c', 260, 0), N('d', 600, 0), N('b', 100, 300)]
+    const edges: FlowEdge[] = [{ id: 'e1', source: 'a', target: 'c', type: 'straight' }, { id: 'e2', source: 'c', target: 'd' }]
+    const w = await flow({ nodes, edges })
+    pointer(node(w, 'b'), 'pointerdown', 190, 330)
+    pointer(window, 'pointermove', 220, 30)
+    await nextTick()
+    expect(w.find('.m3-flow-edge-halo').exists()).toBe(true)
+    pointer(window, 'pointerup', 220, 30)
+    const out = w.emitted('update:nodes')!.at(-1)![0] as FlowNode[]
+    const x = (id: string) => out.find((n) => n.id === id)!.position.x
+    // b sits 48px after a; c 48px after b; d keeps its distance from c
+    expect(x('b')).toBe(228)
+    expect(x('c')).toBe(228 + 180 + 48)
+    expect(x('d') - x('c')).toBe(600 - 260)
+    expect(x('a')).toBe(0)
   })
 })
