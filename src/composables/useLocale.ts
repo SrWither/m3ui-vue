@@ -367,6 +367,40 @@ export interface M3Locale {
   cropFlip: string
   cropReset: string
   cropFree: string
+  drawCanvas: string
+  drawTools: string
+  drawMore: string
+  drawSelect: string
+  drawPan: string
+  drawPen: string
+  drawBrush: string
+  drawMarker: string
+  drawHighlighter: string
+  drawEraser: string
+  drawStrokeEraser: string
+  drawLine: string
+  drawArrow: string
+  drawRect: string
+  drawEllipse: string
+  drawText: string
+  drawFill: string
+  drawColor: string
+  drawCustomColor: string
+  drawSize: string
+  drawUndo: string
+  drawRedo: string
+  drawDelete: string
+  drawLayers: string
+  drawLayer: string
+  drawLayerName: string
+  drawAddLayer: string
+  drawDeleteLayer: string
+  drawShowLayer: string
+  drawHideLayer: string
+  drawLockLayer: string
+  drawUnlockLayer: string
+  drawLayerUp: string
+  drawLayerDown: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -712,6 +746,40 @@ export const defaultLocale: M3Locale = {
   cropFlip: 'Flip horizontally',
   cropReset: 'Reset',
   cropFree: 'Free',
+  drawCanvas: 'Drawing canvas',
+  drawTools: 'Drawing tools',
+  drawMore: 'More tools',
+  drawSelect: 'Select',
+  drawPan: 'Pan',
+  drawPen: 'Pen',
+  drawBrush: 'Brush',
+  drawMarker: 'Marker',
+  drawHighlighter: 'Highlighter',
+  drawEraser: 'Eraser',
+  drawStrokeEraser: 'Stroke eraser',
+  drawLine: 'Line',
+  drawArrow: 'Arrow',
+  drawRect: 'Rectangle',
+  drawEllipse: 'Ellipse',
+  drawText: 'Text',
+  drawFill: 'Fill',
+  drawColor: 'Color',
+  drawCustomColor: 'Custom color',
+  drawSize: 'Size',
+  drawUndo: 'Undo',
+  drawRedo: 'Redo',
+  drawDelete: 'Delete selection',
+  drawLayers: 'Layers',
+  drawLayer: 'Layer {n}',
+  drawLayerName: 'Layer name',
+  drawAddLayer: 'Add layer',
+  drawDeleteLayer: 'Delete layer',
+  drawShowLayer: 'Show layer',
+  drawHideLayer: 'Hide layer',
+  drawLockLayer: 'Lock layer',
+  drawUnlockLayer: 'Unlock layer',
+  drawLayerUp: 'Move layer up',
+  drawLayerDown: 'Move layer down',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')

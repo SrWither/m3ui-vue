@@ -76,6 +76,10 @@
       "types": "./dist/gantt.d.ts",
       "import": "./dist/gantt.js"
     },
+    "./draw": {
+      "types": "./dist/draw.d.ts",
+      "import": "./dist/draw.js"
+    },
     "./styles": "./dist/styles.css",
     "./theme": "./src/styles/theme.css",
     "./palettes": "./src/styles/palettes.css",

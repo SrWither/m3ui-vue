@@ -40,6 +40,7 @@ const entries = [
   ['src/pdf.ts', `${PKG}/pdf`],
   ['src/flow.ts', `${PKG}/flow`],
   ['src/gantt.ts', `${PKG}/gantt`],
+  ['src/draw.ts', `${PKG}/draw`],
   ['src/index.ts', PKG],
 ]
 

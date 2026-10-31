@@ -20,6 +20,7 @@ export default defineConfig({
         pdf: resolve(import.meta.dirname, 'src/pdf.ts'),
         flow: resolve(import.meta.dirname, 'src/flow.ts'),
         gantt: resolve(import.meta.dirname, 'src/gantt.ts'),
+        draw: resolve(import.meta.dirname, 'src/draw.ts'),
         'locales/index': resolve(import.meta.dirname, 'src/locales/index.ts'),
       },
       formats: ['es'],
