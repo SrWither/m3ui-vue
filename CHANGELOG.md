@@ -8,6 +8,19 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [1.3.1] - Unreleased
 
 ### Added
+- Floor plan family, around `MFloorPlan` (main entry, no dependencies):
+  - `MFloorPlanToolbar`: move / draw a wall / drag out a zone, add a table (your `tables` presets) or decor (any kind the plan knows, yours too), duplicate, delete, undo and redo
+  - `MFloorPlanInspector`: edits what's picked (a table's name, seats, shape and angle, or splits its merge; several tables, merged with one button; a zone's name, color and size; a wall's thickness or a picked corner; decor's text, size and angle), with a slot per kind (`#table`, `#tables`, `#area`, `#wall`, `#decor`, `#empty`) for fields of your own, each with an `update` that's an undo step
+  - `useFloorPlan()`: the plan's state and actions (`addTable`, `addDecor`, `update`, `removeSelected`, `duplicate`, `merge`, `split`, `undo`…) for controls of your own, inside its slots; the toolbar and the inspector also take the plan's template ref (`:plan`) to sit anywhere
+- `MFloorPlan`:
+  - Undo and redo of every edit it makes (Ctrl+Z, Ctrl+Shift+Z / Ctrl+Y; `undo()`, `redo()`, `canUndo`, `canRedo`)
+  - `v-model:picked`: the zone, wall (and corner) or decor item picked, for an inspector of your own
+  - Zones resize by any corner; decor resizes by its corner; the picked table or decor rotates by a handle above it (15° steps, Shift free); a double-click on a wall adds a corner there, Delete removes a picked corner
+  - Delete removes the selected tables too (and takes them out of their merges); Ctrl+D duplicates the selected tables or the picked zone or decor
+  - `decorKinds`: decor kinds of your own (icon, size, `box` / `round` / `bar` / `text` shape, color), or the built-in ones restyled; `#decor`, `#area` and `#merge` slots draw their insides, `#overlay` anything over the plan in plan units
+  - `selectable` (`'single'` / `'multiple'`): pick tables outside editing; `merge()` / `split()` with `merge`, `split` and `merge-refused` events, and `canMerge` to refuse with a reason (two open bills, say)
+  - CSS custom properties to restyle walls, chairs and merges (`--m3-floor-wall`, `--m3-floor-chair`, `--m3-floor-merge`…)
+  - 41 locale keys (`floorAddTable`, `floorMerge`, `floorDecorDoor`…) in all 7 locales
 - `MDrawCanvas` `backgroundImageBox`: where the background image sits on an infinite canvas and its size (drawn covering that box); `fitView()` takes it in
 
 ### Fixed
