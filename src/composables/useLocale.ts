@@ -303,6 +303,21 @@ export interface M3Locale {
   pdfDelete: string
   pdfNotePlaceholder: string
   pdfAddComment: string
+  flowCanvas: string
+  flowNode: string
+  flowEdge: string
+  flowZoomIn: string
+  flowZoomOut: string
+  flowFitView: string
+  flowLock: string
+  flowUnlock: string
+  flowUndo: string
+  flowRedo: string
+  flowMinimap: string
+  flowMoved: string
+  flowConnected: string
+  flowDeleted: string
+  flowDeleteEdge: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -584,6 +599,21 @@ export const defaultLocale: M3Locale = {
   pdfDelete: 'Delete',
   pdfNotePlaceholder: 'Write a note',
   pdfAddComment: 'Add a comment',
+  flowCanvas: 'Diagram',
+  flowNode: 'node',
+  flowEdge: 'Connection from {source} to {target}',
+  flowZoomIn: 'Zoom in',
+  flowZoomOut: 'Zoom out',
+  flowFitView: 'Fit view',
+  flowLock: 'Lock',
+  flowUnlock: 'Unlock',
+  flowUndo: 'Undo',
+  flowRedo: 'Redo',
+  flowMinimap: 'Mini map',
+  flowMoved: '{label} moved',
+  flowConnected: 'Connected {source} to {target}',
+  flowDeleted: '{count} deleted',
+  flowDeleteEdge: 'Delete connection',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')

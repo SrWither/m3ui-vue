@@ -18,6 +18,7 @@ export default defineConfig({
         map: resolve(import.meta.dirname, 'src/map.ts'),
         media: resolve(import.meta.dirname, 'src/media.ts'),
         pdf: resolve(import.meta.dirname, 'src/pdf.ts'),
+        flow: resolve(import.meta.dirname, 'src/flow.ts'),
         'locales/index': resolve(import.meta.dirname, 'src/locales/index.ts'),
       },
       formats: ['es'],

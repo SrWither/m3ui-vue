@@ -1,0 +1,211 @@
+import { inject, type ComputedRef, type InjectionKey, type Ref } from 'vue'
+import type { FlowEdgePath, FlowPosition } from './flowPaths'
+import type { FlowLayout, FlowLayoutOptions } from './flowLayout'
+
+export type { FlowPosition }
+
+/** A point in flow coordinates */
+export interface FlowXY { x: number; y: number }
+
+/**
+ * A node. Treat nodes as immutable: MFlow emits new arrays with new objects for whatever changed (`v-model:nodes`),
+ * and the history (undo) keeps the old ones.
+ */
+export interface FlowNode<D = any> {
+  id: string
+  /**
+   * How it's drawn: `default` (an MFlowNode with a handle each side), `input` (only a source), `output` (only a
+   * target), `group` (a container for nodes whose `parentId` is this one), or any name you give a `#node-<type>` slot
+   */
+  type?: string
+  /** Its top left corner, in flow coordinates (relative to the parent's corner when it has a `parentId`) */
+  position: FlowXY
+  /** Anything; the default node shows `label`, `subtitle` and `icon` */
+  data?: D
+  /** A fixed size; otherwise it's measured. A `group` without one wraps its children */
+  width?: number
+  height?: number
+  /** The group this node sits in: it moves with it */
+  parentId?: string
+  /** `'parent'` keeps it inside its group */
+  extent?: 'parent'
+  /** Where the default node's handles go; default from MFlow's `direction` */
+  sourcePosition?: FlowPosition
+  targetPosition?: FlowPosition
+  hidden?: boolean
+  draggable?: boolean
+  selectable?: boolean
+  connectable?: boolean
+  deletable?: boolean
+  class?: string
+}
+
+export type FlowMarker = 'arrow' | 'arrow-closed' | 'none'
+
+export interface FlowEdge<D = any> {
+  id: string
+  source: string
+  target: string
+  /** The handle's `id` when its node has several */
+  sourceHandle?: string | null
+  targetHandle?: string | null
+  /** `bezier` (default), `smoothstep`, `step`, `straight`, or a `#edge-<type>` slot */
+  type?: string
+  label?: string
+  /** Dashes that flow from source to target */
+  animated?: boolean
+  /** Default `arrow-closed` */
+  markerEnd?: FlowMarker
+  markerStart?: FlowMarker
+  data?: D
+  hidden?: boolean
+  selectable?: boolean
+  deletable?: boolean
+  /** Its ends can be dragged to other handles once selected; default MFlow's `edgesReconnectable` */
+  reconnectable?: boolean
+  class?: string
+}
+
+/** The view: `x`/`y` in px, where the flow's origin is on the canvas, and the zoom */
+export interface FlowViewport { x: number; y: number; zoom: number }
+
+/** A connection being made or checked */
+export interface FlowConnection {
+  source: string
+  sourceHandle: string | null
+  target: string
+  targetHandle: string | null
+}
+
+export interface FlowSelection { nodes: string[]; edges: string[] }
+
+/** A handle as measured: its center relative to its node's corner, in flow units */
+export interface FlowHandleBounds {
+  id: string | null
+  type: 'source' | 'target'
+  position: FlowPosition
+  x: number
+  y: number
+  connectable: boolean
+}
+
+export interface FlowFitOptions {
+  /** Room around the nodes, a fraction of the view (default 0.1) */
+  padding?: number
+  /** Only these nodes */
+  nodes?: string[]
+  maxZoom?: number
+  minZoom?: number
+  /** Default true */
+  animate?: boolean
+}
+
+/** What MFlow provides to everything inside it, and `useFlow()` returns */
+export interface FlowContext {
+  nodes: ComputedRef<FlowNode[]>
+  edges: ComputedRef<FlowEdge[]>
+  viewport: Readonly<Ref<FlowViewport>>
+  selection: ComputedRef<FlowSelection>
+  minZoom: ComputedRef<number>
+  maxZoom: ComputedRef<number>
+  /** Canvas size in px */
+  size: Readonly<Ref<{ width: number; height: number }>>
+  /** Interaction switched off by the lock button (or MFlow's `locked`) */
+  locked: Ref<boolean>
+  getNode(id: string): FlowNode | undefined
+  /** A node's top left corner in flow coordinates, its parents added, where it's drawn right now */
+  getAbsolutePosition(id: string): FlowXY
+  /** A node's measured (or set) size */
+  getSize(id: string): { width: number; height: number }
+  /** Nodes overlapping this one (or a rectangle in flow coordinates), groups and its own family left out */
+  getIntersectingNodes(node: string | { x: number; y: number; width: number; height: number }): FlowNode[]
+  /** Page (client) coordinates → flow coordinates */
+  screenToFlow(p: { x: number; y: number }): FlowXY
+  flowToScreen(p: FlowXY): { x: number; y: number }
+  setViewport(v: Partial<FlowViewport>, opts?: { animate?: boolean }): void
+  fitView(opts?: FlowFitOptions): void
+  /** Centers the view on a flow point, at `zoom` or the current zoom */
+  setCenter(x: number, y: number, opts?: { zoom?: number; animate?: boolean }): void
+  zoomIn(): void
+  zoomOut(): void
+  zoomTo(zoom: number, opts?: { animate?: boolean }): void
+  addNodes(nodes: FlowNode | FlowNode[]): void
+  addEdges(edges: FlowEdge | FlowEdge[]): void
+  updateNode(id: string, patch: Partial<FlowNode> | ((n: FlowNode) => FlowNode)): void
+  updateEdge(id: string, patch: Partial<FlowEdge> | ((e: FlowEdge) => FlowEdge)): void
+  /** Deletes nodes (with their edges and children) and edges by id */
+  remove(ids: { nodes?: string[]; edges?: string[] }): void
+  setSelection(sel: Partial<FlowSelection>): void
+  /** Runs a layout over the nodes' measured sizes; default MFlow's `layout` (or the tree layout). Animated and undoable */
+  layout(fn?: 'tree' | 'layered' | FlowLayout, options?: FlowLayoutOptions): Promise<void>
+  undo(): void
+  redo(): void
+  canUndo: ComputedRef<boolean>
+  canRedo: ComputedRef<boolean>
+  copy(): void
+  cut(): void
+  /** Pastes what was copied, at a flow point (default a step from the originals) */
+  paste(at?: FlowXY): void
+}
+
+// Internal: what nodes and handles inside MFlow reach
+export interface FlowInternals extends FlowContext {
+  registerHandle(nodeId: string, el: HTMLElement, info: () => Omit<FlowHandleBounds, 'x' | 'y'>): () => void
+  measureNode(nodeId: string): void
+  startConnection(e: PointerEvent, nodeId: string, handleId: string | null, type: 'source' | 'target'): void
+  /** The handle a connection being dragged would snap to (`nodeId:handleId:type`), and whether it's valid */
+  connectionTarget: Readonly<Ref<{ key: string; valid: boolean } | null>>
+  connecting: Readonly<Ref<boolean>>
+  nodesConnectable: ComputedRef<boolean>
+  direction: ComputedRef<'horizontal' | 'vertical'>
+  registerNodeEl(id: string, el: HTMLElement | null): void
+  selectedNodes: ComputedRef<Set<string>>
+  selectedEdges: ComputedRef<Set<string>>
+  dragging: Readonly<Ref<Set<string>>>
+  isLifted(id: string): boolean
+  zIndexOf(id: string): number
+  edgeGeometry(e: FlowEdge): FlowEdgeGeometry | null
+  isReconnectable(e: FlowEdge): boolean
+  sidePositions(n: FlowNode): { source: FlowPosition; target: FlowPosition }
+  onNodeKey(e: KeyboardEvent, id: string): void
+  onEdgeKey(e: KeyboardEvent, id: string): void
+}
+
+// Internal: an edge's ends and path
+export interface FlowEdgeGeometry extends FlowEdgePath {
+  sourceX: number
+  sourceY: number
+  targetX: number
+  targetY: number
+  sourcePosition: FlowPosition
+  targetPosition: FlowPosition
+  /** How far the end sits inside a handle (0 at a node's side) */
+  sourceInset: number
+  targetInset: number
+}
+
+export const FLOW_KEY: InjectionKey<FlowInternals> = Symbol('m3-flow')
+
+// Internal: provided by each node's shell to the node (and its handles) inside
+export interface FlowNodeState {
+  id: string
+  node: ComputedRef<FlowNode>
+  selected: ComputedRef<boolean>
+  dragging: ComputedRef<boolean>
+}
+export const FLOW_NODE_KEY: InjectionKey<FlowNodeState> = Symbol('m3-flow-node')
+
+/**
+ * The enclosing `<MFlow>`'s state and controls, from any component rendered inside it (a `#node-<type>` slot, a
+ * panel of your own). Outside one, use MFlow's template ref, which exposes the same.
+ */
+export function useFlow(): FlowContext {
+  const ctx = inject(FLOW_KEY, null)
+  if (!ctx) throw new Error('useFlow() must be called inside <MFlow>')
+  return ctx
+}
+
+/** The node a component is rendered in (inside a `#node-<type>` slot), or null */
+export function useFlowNode() {
+  return inject(FLOW_NODE_KEY, null)
+}

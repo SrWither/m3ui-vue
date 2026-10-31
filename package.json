@@ -68,6 +68,10 @@
       "types": "./dist/pdf.d.ts",
       "import": "./dist/pdf.js"
     },
+    "./flow": {
+      "types": "./dist/flow.d.ts",
+      "import": "./dist/flow.js"
+    },
     "./styles": "./dist/styles.css",
     "./theme": "./src/styles/theme.css",
     "./palettes": "./src/styles/palettes.css",
