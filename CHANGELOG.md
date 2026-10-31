@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.3.2] - Unreleased
+
+### Added
+- `MFloorPlan` `dragMerged`: dragging or nudging a merged table moves its whole merge with it
+
 ## [1.3.1] - 2026-10-31
 
 ### Added
