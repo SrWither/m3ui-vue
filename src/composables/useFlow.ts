@@ -38,6 +38,8 @@ export interface FlowNode<D = any> {
   selectable?: boolean
   connectable?: boolean
   deletable?: boolean
+  /** `false` keeps it from splicing into an edge when dropped onto one */
+  insertable?: boolean
   class?: string
 }
 

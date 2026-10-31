@@ -306,4 +306,5 @@ export const zhLocale: M3Locale = {
   flowConnected: '已将 {source} 连接到 {target}',
   flowDeleted: '已删除 {count} 项',
   flowDeleteEdge: '删除连接',
+  flowDelete: '删除',
 }

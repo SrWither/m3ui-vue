@@ -306,4 +306,5 @@ export const ptLocale: M3Locale = {
   flowConnected: '{source} conectado a {target}',
   flowDeleted: '{count} excluídos',
   flowDeleteEdge: 'Excluir conexão',
+  flowDelete: 'Excluir',
 }

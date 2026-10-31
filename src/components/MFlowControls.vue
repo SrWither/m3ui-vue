@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * Zoom, fit and lock buttons over an MFlow, as an M3 floating toolbar (put it in MFlow's default slot). Undo and
- * redo with `history`. Not an M3 spec component.
+ * redo with `history`; a delete button shows while something deletable is selected (`delete`). Not an M3 spec component.
  *
  * @slot default More buttons at the end
  */
@@ -19,6 +19,8 @@ const props = withDefaults(defineProps<{
   lock?: boolean
   /** Undo and redo buttons */
   history?: boolean
+  /** A delete button while something deletable is selected (touch has no Delete key) */
+  delete?: boolean
 }>(), {
   position: 'bottom-left',
   orientation: 'vertical',
@@ -26,11 +28,20 @@ const props = withDefaults(defineProps<{
   fit: true,
   lock: true,
   history: false,
+  delete: true,
 })
 
 const flow = useFlow()
 const locale = useLocale()
 const vertical = computed(() => props.orientation === 'vertical')
+const deletable = computed(() => {
+  const s = flow.selection.value
+  return {
+    nodes: s.nodes.filter((id) => flow.getNode(id)?.deletable !== false),
+    edges: s.edges.filter((id) => flow.edges.value.find((e) => e.id === id)?.deletable !== false),
+  }
+})
+const canDelete = computed(() => props.delete && !flow.locked.value && (deletable.value.nodes.length + deletable.value.edges.length > 0))
 </script>
 
 <template>
@@ -49,6 +60,7 @@ const vertical = computed(() => props.orientation === 'vertical')
       <MIconButton icon="undo" :label="locale.flowUndo" :disabled="!flow.canUndo.value" @click="flow.undo()" />
       <MIconButton icon="redo" :label="locale.flowRedo" :disabled="!flow.canRedo.value" @click="flow.redo()" />
     </template>
+    <MIconButton v-if="canDelete" icon="delete" :label="locale.flowDelete" color="error" @click="flow.remove(deletable)" />
     <MIconButton
       v-if="lock"
       :icon="flow.locked.value ? 'lock' : 'lock_open'"

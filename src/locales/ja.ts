@@ -306,4 +306,5 @@ export const jaLocale: M3Locale = {
   flowConnected: '{source} を {target} に接続しました',
   flowDeleted: '{count} 件を削除しました',
   flowDeleteEdge: '接続を削除',
+  flowDelete: '削除',
 }

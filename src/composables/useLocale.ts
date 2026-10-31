@@ -318,6 +318,7 @@ export interface M3Locale {
   flowConnected: string
   flowDeleted: string
   flowDeleteEdge: string
+  flowDelete: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -614,6 +615,7 @@ export const defaultLocale: M3Locale = {
   flowConnected: 'Connected {source} to {target}',
   flowDeleted: '{count} deleted',
   flowDeleteEdge: 'Delete connection',
+  flowDelete: 'Delete',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')

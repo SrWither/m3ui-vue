@@ -306,4 +306,5 @@ export const koLocale: M3Locale = {
   flowConnected: '{source}을(를) {target}에 연결함',
   flowDeleted: '{count}개 삭제됨',
   flowDeleteEdge: '연결 삭제',
+  flowDelete: '삭제',
 }

@@ -1409,7 +1409,7 @@ function findInsert(g: Extract<Gesture, { kind: 'node' }>): typeof insertPlan {
   if (!props.insertOnEdge || g.starts.size !== 1 || !nodesConnectable.value) return null
   const id = [...g.starts.keys()][0]!
   const n = nodeById.value.get(id)
-  if (!n || n.type === 'group' || n.connectable === false) return null
+  if (!n || n.type === 'group' || n.connectable === false || n.insertable === false) return null
   if (edgesLocal.value.some((e) => e.source === id || e.target === id)) return null
   // It needs a way in and a way out (or no handles at all: then edges meet its sides; a circle's meet the circle)
   let target: string | null = null

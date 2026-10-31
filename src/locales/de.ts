@@ -306,4 +306,5 @@ export const deLocale: M3Locale = {
   flowConnected: '{source} mit {target} verbunden',
   flowDeleted: '{count} gelöscht',
   flowDeleteEdge: 'Verbindung löschen',
+  flowDelete: 'Löschen',
 }
