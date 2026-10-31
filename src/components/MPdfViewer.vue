@@ -262,10 +262,17 @@ const activePages = computed(() => {
 
 let scrollingTimer: ReturnType<typeof setTimeout> | undefined
 const scrolling = ref(false)
+// A scroll we made to keep the reading point through a resize: no page indicator for it
+let keptTop: number | null = null
 function onScroll() {
   const el = scroller.value!
   scrollTop.value = el.scrollTop
   updateCurrent()
+  if (keptTop !== null && Math.abs(el.scrollTop - keptTop) < 1) {
+    keptTop = null
+    return
+  }
+  keptTop = null
   scrolling.value = true
   clearTimeout(scrollingTimer)
   scrollingTimer = setTimeout(() => (scrolling.value = false), 1200)
@@ -761,9 +768,26 @@ onMounted(() => {
   const el = scroller.value!
   el.addEventListener('wheel', onWheel, { passive: false })
   ro = new ResizeObserver(() => {
+    // A fit mode rescales every page when the size changes (the side panel opening, a rotated phone):
+    // keep the point being read, a third of the way down like the current page, where it was
+    const boxes = layout.value.boxes
+    const ay = viewH.value / 3
+    const i = boxes.length ? pageAt(el.scrollTop + ay) : -1
+    const fy = i >= 0 ? (el.scrollTop + ay - boxes[i]!.top) / boxes[i]!.height : 0
     viewW.value = el.clientWidth
     viewH.value = el.clientHeight
     rootW.value = root.value?.clientWidth ?? rootW.value
+    if (i < 0) return
+    nextTick(() => {
+      const nb = layout.value.boxes[i]
+      if (!nb) return
+      const top = Math.round(nb.top + fy * nb.height - ay)
+      if (Math.abs(top - el.scrollTop) < 1) return
+      el.scrollTop = top
+      scrollTop.value = el.scrollTop
+      updateCurrent()
+      keptTop = el.scrollTop
+    })
   })
   ro.observe(el)
   ro.observe(root.value!)

@@ -179,4 +179,31 @@ describe('MPdfViewer', () => {
     expect(w.classes()).not.toContain('flex')
     expect(w.attributes('data-x')).toBe('1')
   })
+  it('keeps the reading point when the width changes a fit mode (the side panel opening)', async () => {
+    const callbacks: (() => void)[] = []
+    vi.stubGlobal('ResizeObserver', class {
+      constructor(cb: () => void) { callbacks.push(cb) }
+      observe() {}
+      disconnect() {}
+    })
+    const width = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(640)
+    const w = await viewer()
+    const scroller = w.find('.m3-pdf-scroller').element as HTMLElement
+    // A third of the way into page 3, under the reading point (a third of the 480px view)
+    const before = pageBox(w, 3)
+    const top3 = parseFloat(before.style.top)
+    const h3 = parseFloat(before.style.height)
+    scroller.scrollTop = top3 + h3 / 3 - 160
+    scroller.dispatchEvent(new Event('scroll'))
+    width.mockReturnValue(400)
+    callbacks.forEach((cb) => cb())
+    await nextTick()
+    await nextTick()
+    const after = pageBox(w, 3)
+    const point = scroller.scrollTop + 160
+    expect(parseFloat(after.style.height)).toBeLessThan(h3)
+    expect((point - parseFloat(after.style.top)) / parseFloat(after.style.height)).toBeCloseTo(1 / 3, 1)
+    expect(w.emitted('update:page')?.at(-1)).toEqual([3])
+    vi.unstubAllGlobals()
+  })
 })
