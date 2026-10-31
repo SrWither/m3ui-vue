@@ -115,6 +115,8 @@ const props = withDefaults(defineProps<{
   chairs?: boolean
   /** Decor kinds of yours, or the built-in ones restyled (merged over them by name) */
   decorKinds?: Record<string, FloorDecorKind>
+  /** The handle that turns the picked table or decor (off when your app doesn't keep angles) */
+  rotatable?: boolean
   /** Dragging (or nudging) a merged table moves its whole merge with it */
   dragMerged?: boolean
   /** Outside editing, what a click on a table selects: nothing, one, or several (toggling; to merge them) */
@@ -138,6 +140,7 @@ const props = withDefaults(defineProps<{
   chairs: true,
   selectable: 'none',
   dragMerged: false,
+  rotatable: true,
 })
 const tables = defineModel<FloorTable[]>('tables', { default: () => [] })
 const merges = defineModel<FloorMerge[]>('merges', { default: () => [] })
@@ -938,7 +941,7 @@ const gridStyle = computed(() => {
         @pointerdown="onDecorDown($event, d, true)"
       />
       <span
-        v-if="editable && isPicked('decor', d.id)"
+        v-if="editable && rotatable && isPicked('decor', d.id)"
         class="m3-floor-handle absolute -top-6 left-1/2 size-3.5 -translate-x-1/2 cursor-grab rounded-full border-2 border-primary bg-surface"
         :aria-label="locale.floorRotate"
         data-rotate
@@ -985,7 +988,7 @@ const gridStyle = computed(() => {
     >
       <!-- Rotation handle of the one table picked while editing -->
       <span
-        v-if="editable && selection.length === 1 && selection[0] === p.t.id && tool === 'select'"
+        v-if="editable && rotatable && selection.length === 1 && selection[0] === p.t.id && tool === 'select'"
         class="m3-floor-handle absolute z-10 size-3.5 -translate-x-1/2 -translate-y-1/2 cursor-grab rounded-full border-2 border-primary bg-surface"
         :style="{ left: '0px', top: `${-(p.size.h / 2 + CHAIR + 18) * scale}px` }"
         :aria-label="locale.floorRotate"

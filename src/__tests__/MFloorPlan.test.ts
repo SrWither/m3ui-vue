@@ -311,3 +311,12 @@ describe('MFloorPlan dragMerged', () => {
     expect(w.props('tables').map((t: FloorTable) => [t.x, t.y])).toEqual([[120, 130], [320, 130]])
   })
 })
+
+describe('MFloorPlan rotatable', () => {
+  it('has no rotate handle when rotatable is off', () => {
+    const on = mount(MFloorPlan, { props: { editable: true, tables: base(), selection: [1] } })
+    const off = mount(MFloorPlan, { props: { editable: true, tables: base(), selection: [1], rotatable: false } })
+    expect(on.findAll('[data-rotate]')).toHaveLength(1)
+    expect(off.findAll('[data-rotate]')).toHaveLength(0)
+  })
+})
