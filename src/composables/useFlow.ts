@@ -15,7 +15,8 @@ export interface FlowNode<D = any> {
   id: string
   /**
    * How it's drawn: `default` (an MFlowNode with a handle each side), `input` (only a source), `output` (only a
-   * target), `group` (a container for nodes whose `parentId` is this one), or any name you give a `#node-<type>` slot
+   * target), `circle` (a round vertex, see `FlowCircleData`), `group` (a container for nodes whose `parentId` is this
+   * one), or any name you give a `#node-<type>` slot
    */
   type?: string
   /** Its top left corner, in flow coordinates (relative to the parent's corner when it has a `parentId`) */
@@ -40,6 +41,19 @@ export interface FlowNode<D = any> {
   class?: string
 }
 
+/** What a `circle` node shows */
+export interface FlowCircleData {
+  label?: string
+  /** Its fill: a container role (default a neutral surface) */
+  color?: 'primary' | 'secondary' | 'tertiary' | 'error' | 'neutral' | 'inverse'
+  /** A small count or tag on its top right (a level, an excess) */
+  badge?: string | number
+  /** A soft halo around it, in a role's color */
+  ring?: 'primary' | 'secondary' | 'tertiary' | 'error'
+  /** Diameter in px (default 56) */
+  size?: number
+}
+
 export type FlowMarker = 'arrow' | 'arrow-closed' | 'none'
 
 export interface FlowEdge<D = any> {
@@ -52,8 +66,16 @@ export interface FlowEdge<D = any> {
   /** `bezier` (default), `smoothstep`, `step`, `straight`, or a `#edge-<type>` slot */
   type?: string
   label?: string
-  /** Dashes that flow from source to target */
-  animated?: boolean
+  /** The label chip's color (default a neutral chip) */
+  labelTone?: 'primary' | 'secondary' | 'tertiary' | 'error' | 'neutral'
+  /** Dashes that flow from source to target (`'reverse'`: from target to source) */
+  animated?: boolean | 'reverse'
+  /** The line's (and arrowhead's) color: an M3 role (`primary`, `tertiary`, `error`, `outline`…) or any CSS color. Changes animate */
+  color?: string
+  /** The line's width in px (default 2). Changes animate */
+  width?: number
+  /** A dashed line, standing still */
+  dashed?: boolean
   /** Default `arrow-closed` */
   markerEnd?: FlowMarker
   markerStart?: FlowMarker

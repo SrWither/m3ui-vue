@@ -419,4 +419,35 @@ describe('MFlow', () => {
     expect(node(w, 'a').style.transform).toBe('translate(600px, 200px)')
     vi.useRealTimers()
   })
+  it('circle nodes: edges run center to center cut at the rims, opposite ones side by side; edges restyle declaratively', async () => {
+    const C = (id: string, x: number, y: number) => N(id, x, y, { type: 'circle', width: 60, height: 60, data: { label: id, badge: 2, color: 'tertiary' } })
+    const w = await flow({
+      nodes: [C('a', 0, 0), C('b', 300, 0)],
+      edges: [{ id: 'ab', source: 'a', target: 'b', color: 'tertiary', width: 5, labelTone: 'error', label: '3/4' }, { id: 'ba', source: 'b', target: 'a', dashed: true }],
+    })
+    expect(node(w, 'a').textContent).toContain('2')
+    const d = w.find('[data-flow-edge="ab"] path:nth-child(2)')
+    // a's center (30, 30) + rim 30 → 60; b's center 330 - rim 30 - 2 → 298; shifted 6px sideways (b → a exists)
+    expect(d.attributes('d')).toBe('M60,36 L298,36')
+    expect(d.attributes('style')).toContain('stroke: var(--color-tertiary)')
+    expect(d.attributes('style')).toContain('stroke-width: 5px')
+    expect(w.find('[data-flow-edge="ba"] path:nth-child(2)').classes()).toContain('m3-flow-edge-dashed')
+    expect(w.find('.m3-flow-edge-label span').classes()).toContain('bg-error-container')
+  })
+
+  it('a double click on the background reports the spot', async () => {
+    const w = await flow({ zoomOnDoubleClick: false })
+    w.element.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, clientX: 500, clientY: 400 }))
+    expect(w.emitted('pane-dblclick')![0]![0]).toEqual({ x: 500, y: 400 })
+    expect(w.emitted('update:viewport')).toBeUndefined()
+  })
+  it('a parent that hands the nodes back copied makes one undo step, not two', async () => {
+    const w = await flow({ 'onUpdate:nodes': (ns: FlowNode[]) => w.setProps({ nodes: ns.map((n) => ({ ...n })) }) })
+    pointer(node(w, 'a'), 'pointerdown', 90, 30)
+    pointer(window, 'pointermove', 190, 30)
+    pointer(window, 'pointerup', 190, 30)
+    await flushPromises()
+    await w.trigger('keydown', { key: 'z', ctrlKey: true })
+    expect((w.emitted('update:nodes')!.at(-1)![0] as FlowNode[])[0]!.position).toEqual({ x: 0, y: 0 })
+  })
 })

@@ -5,6 +5,7 @@ export { default as MFlowControls } from './components/MFlowControls.vue'
 export { default as MFlowMinimap } from './components/MFlowMinimap.vue'
 export { useFlow, useFlowNode } from './composables/useFlow'
 export type {
+  FlowCircleData,
   FlowConnection,
   FlowContext,
   FlowEdge,

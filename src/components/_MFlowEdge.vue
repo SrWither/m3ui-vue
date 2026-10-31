@@ -35,6 +35,14 @@ const label = computed(() => {
   const name = (id: string) => String((flow.getNode(id)?.data as { label?: unknown } | undefined)?.label ?? id)
   return locale.flowEdge.replace('{source}', name(props.edge.source)).replace('{target}', name(props.edge.target))
 })
+// Declarative look: an M3 role reads its token, anything else is a CSS color
+const ROLE = /^(primary|secondary|tertiary|error|outline|outline-variant|on-surface|on-surface-variant|inverse-surface|inverse-primary)(-container)?$/
+const stroke = computed(() => {
+  if (selected.value || highlighted.value) return 'var(--color-primary)'
+  const c = props.edge.color
+  return c ? (ROLE.test(c) ? `var(--color-${c})` : c) : 'var(--color-outline)'
+})
+const width = computed(() => (props.edge.width ?? 2) + (highlighted.value ? 2 : 0))
 const scope = computed(() => ({ edge: props.edge, selected: selected.value, highlighted: highlighted.value, ...geo.value }))
 </script>
 
@@ -57,10 +65,11 @@ const scope = computed(() => ({ edge: props.edge, selected: selected.value, high
       <path
         :d="geo.path"
         fill="none"
-        :stroke-width="highlighted ? 4 : 2"
+        :stroke-width="width"
         stroke-linecap="round"
-        class="transition-[stroke] duration-150"
-        :class="[selected || highlighted ? 'stroke-primary' : 'stroke-outline', edge.animated && 'm3-flow-edge-animated']"
+        class="m3-flow-edge-line"
+        :class="[edge.animated === 'reverse' ? 'm3-flow-edge-animated m3-flow-edge-reverse' : edge.animated && 'm3-flow-edge-animated', edge.dashed && !edge.animated && 'm3-flow-edge-dashed']"
+        :style="{ stroke, strokeWidth: `${width}px` }"
       />
       <path
         v-for="(m, i) in [markerEnd, markerStart]"
@@ -70,8 +79,8 @@ const scope = computed(() => ({ edge: props.edge, selected: selected.value, high
         stroke-width="2"
         stroke-linejoin="round"
         stroke-linecap="round"
-        class="transition-[stroke,fill] duration-150"
-        :class="[selected || highlighted ? 'stroke-primary' : 'stroke-outline', (i === 0 ? edge.markerEnd ?? 'arrow-closed' : edge.markerStart) === 'arrow-closed' ? (selected || highlighted ? 'fill-primary' : 'fill-outline') : 'fill-none']"
+        class="m3-flow-edge-line"
+        :style="{ stroke, fill: (i === 0 ? edge.markerEnd ?? 'arrow-closed' : edge.markerStart) === 'arrow-closed' ? stroke : 'none' }"
       />
     </template>
     <template v-if="reconnectable">

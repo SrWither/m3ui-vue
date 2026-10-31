@@ -22,9 +22,11 @@ const emptySelection = (): FlowSelection => ({ nodes: [], edges: [] })
  * `connect-end` with the spot, to offer a new node there. To disconnect: the × on a selected edge, Delete, dragging
  * an edge's end (or a connected input) away and dropping it on nothing. Alignment guides show while dragging one node.
  *
- * Nodes are drawn by type: `default`/`input`/`output` (an MFlowNode), `group` (a box its children move with), or
+ * Nodes are drawn by type: `default`/`input`/`output` (an MFlowNode), `circle` (a vertex: `data.label`, `color`,
+ * `badge`, `ring`, `size`; its edges run center to center in any direction), `group` (a box its children move with), or
  * a `#node-<type>` slot of your own with MFlowHandles in it; edges are `bezier`, `smoothstep`, `step`, `straight`
- * or a `#edge-<type>` slot (with `getBezierPath` and friends). `layout` lays them out (`'tree'`, `'layered'` or a
+ * or a `#edge-<type>` slot (with `getBezierPath` and friends); `color`, `width`, `dashed`, `animated` and
+ * `labelTone` restyle one without a slot, with a transition. `layout` lays them out (`'tree'`, `'layered'` or a
  * function, e.g. one calling dagre) whenever the graph's shape changes. Put `MFlowControls`, `MFlowMinimap` or
  * anything of yours in the default slot: it's drawn over the canvas, the canvas's gestures and wheel leave it alone,
  * and `useFlow()` works inside it. Inside a node, controls (buttons, inputs, links) never start a drag; mark anything
@@ -50,7 +52,8 @@ const emptySelection = (): FlowSelection => ({ nodes: [], edges: [] })
  * @event node-drag-start / node-drag `(nodes, event)`
  * @event node-drag-stop `{ nodes, intersecting, event }`: `intersecting` are the nodes under the dragged one
  * @event edge-click / edge-dblclick / edge-contextmenu `(edge, event)`
- * @event pane-click / pane-contextmenu `(position, event)` with the flow position
+ * @event pane-click / pane-dblclick / pane-contextmenu `(position, event)` with the flow position (turn
+ *   `zoomOnDoubleClick` off to use the double click yourself, e.g. to add a node there)
  * @event delete Nodes and edges were deleted: `{ nodes, edges }`
  * @event init The canvas measured its nodes (and laid out / fitted them): the flow context
  */
@@ -201,6 +204,7 @@ const emit = defineEmits<{
   'edge-contextmenu': [FlowEdge, MouseEvent]
   'pane-click': [FlowXY, MouseEvent]
   'pane-contextmenu': [FlowXY, MouseEvent]
+  'pane-dblclick': [FlowXY, MouseEvent]
   delete: [{ nodes: FlowNode[]; edges: FlowEdge[] }]
   init: [FlowContext]
 }>()
@@ -298,8 +302,11 @@ function pushHistory(s: Snapshot, coalesce?: string) {
   future.value = []
 }
 let pendingExternal: Snapshot | null = null
+// What the parent hands back in the same tick as an emit of ours is that change coming back (maybe copied or
+// normalized), not a new step
+let echo = false
 function externalChange() {
-  if (pendingExternal) return
+  if (echo || pendingExternal) return
   pendingExternal = snapshot()
   queueMicrotask(() => {
     if (pendingExternal) pushHistory(pendingExternal)
@@ -321,6 +328,10 @@ watch(() => props.edges, (e) => {
 
 function commit(next: Partial<Snapshot>, opts: { history?: boolean; coalesce?: string } = {}) {
   if (opts.history !== false) pushHistory(snapshot(), opts.coalesce)
+  if (!echo) {
+    echo = true
+    nextTick(() => (echo = false))
+  }
   if (next.nodes && !same(next.nodes, nodesLocal.value)) {
     nodesLocal.value = next.nodes
     emit('update:nodes', next.nodes)
@@ -582,7 +593,43 @@ function pathFor(type: string | undefined, p: Omit<EdgeGeometry, keyof FlowEdgeP
   }
 }
 const edgeType = (e: FlowEdge) => e.type ?? props.defaultEdgeOptions?.type ?? 'bezier'
+// Opposite edges between two circles sit side by side
+const pairKeys = computed(() => new Set(edgesLocal.value.map((e) => `${e.source}>${e.target}`)))
+function circleOf(id: string) {
+  const a = getAbsolutePosition(id)
+  const s = getSize(id)
+  return { x: a.x + s.width / 2, y: a.y + s.height / 2, r: Math.min(s.width, s.height) / 2 }
+}
+// An edge touching a circle runs between the centers (a straight line unless it has a type), cut at the rims
+function circleGeometry(e: FlowEdge): EdgeGeometry | null {
+  const sc = nodeById.value.get(e.source)?.type === 'circle'
+  const tc = nodeById.value.get(e.target)?.type === 'circle'
+  const s = sc ? circleOf(e.source) : handlePoint(e.source, 'source', e.sourceHandle)
+  const t = tc ? circleOf(e.target) : handlePoint(e.target, 'target', e.targetHandle)
+  if (!s || !t) return null
+  const dx = t.x - s.x
+  const dy = t.y - s.y
+  const len = Math.hypot(dx, dy) || 1
+  const ux = dx / len
+  const uy = dy / len
+  const off = pairKeys.value.has(`${e.target}>${e.source}`) ? 6 : 0
+  const ox = -uy * off
+  const oy = ux * off
+  const rs = sc ? (s as { r: number }).r : 0
+  const rt = tc ? (t as { r: number }).r + 2 : 0
+  const horizontal = Math.abs(dx) >= Math.abs(dy)
+  const ends = {
+    sourceX: s.x + ux * rs + ox,
+    sourceY: s.y + uy * rs + oy,
+    sourcePosition: (horizontal ? (dx >= 0 ? 'right' : 'left') : dy >= 0 ? 'bottom' : 'top') as FlowPosition,
+    targetX: t.x - ux * rt + ox,
+    targetY: t.y - uy * rt + oy,
+    targetPosition: (horizontal ? (dx >= 0 ? 'left' : 'right') : dy >= 0 ? 'top' : 'bottom') as FlowPosition,
+  }
+  return { ...ends, ...pathFor(e.type ?? props.defaultEdgeOptions?.type ?? 'straight', ends), sourceInset: 0, targetInset: 0 }
+}
 function edgeGeometry(e: FlowEdge): EdgeGeometry | null {
+  if (nodeById.value.get(e.source)?.type === 'circle' || nodeById.value.get(e.target)?.type === 'circle') return circleGeometry(e)
   const s = handlePoint(e.source, 'source', e.sourceHandle)
   const t = handlePoint(e.target, 'target', e.targetHandle)
   if (!s || !t) return null
@@ -1168,9 +1215,12 @@ function onDblClick(e: MouseEvent) {
   } else if (edgeEl) {
     const ed = edgeById.value.get(edgeEl.dataset.flowEdge!)
     if (ed) emit('edge-dblclick', ed, e)
-  } else if (props.zoomOnDoubleClick) {
-    const r = rootRect()
-    zoomAt(targetZoom() * 2, e.clientX - r.left, e.clientY - r.top, true)
+  } else {
+    emit('pane-dblclick', screenToFlow({ x: e.clientX, y: e.clientY }), e)
+    if (props.zoomOnDoubleClick) {
+      const r = rootRect()
+      zoomAt(targetZoom() * 2, e.clientX - r.left, e.clientY - r.top, true)
+    }
   }
 }
 function onContextMenu(e: MouseEvent) {
@@ -1588,8 +1638,8 @@ function moveConnection(g: Extract<Gesture, { kind: 'connect' }>, cx: number, cy
         // Over the node's body, its nearest handle counts too (easier on touch)
         if ((d <= radius || over) && (!best || d < best.d)) best = { nodeId: n.id, h, d: over && d > radius ? d + radius : d, x, y, position: h.position }
       }
-    } else if (over && !handles.has(n.id)) {
-      // A node without handles connects at its side
+    } else if (over) {
+      // A node without a handle of that kind connects at its side (a circle, at its center)
       const position = sidePositions(n)[want]
       const sp = sidePoint(n.id, position)
       const d = Math.hypot(sp.x - p.x, sp.y - p.y)
@@ -1910,9 +1960,21 @@ defineExpose(context as FlowContext)
     touch-action: none;
   }
 }
+.m3-flow-circle {
+  transition: background-color 250ms cubic-bezier(0.2, 0, 0, 1), color 250ms cubic-bezier(0.2, 0, 0, 1), border-color 200ms, box-shadow 250ms cubic-bezier(0.2, 0, 0, 1);
+}
+.m3-flow-edge-line {
+  transition: stroke 250ms cubic-bezier(0.2, 0, 0, 1), stroke-width 250ms cubic-bezier(0.2, 0, 0, 1), fill 250ms cubic-bezier(0.2, 0, 0, 1);
+}
 .m3-flow-edge-animated {
   stroke-dasharray: 6 4;
   animation: m3-flow-dash 400ms linear infinite;
+}
+.m3-flow-edge-reverse {
+  animation-direction: reverse;
+}
+.m3-flow-edge-dashed {
+  stroke-dasharray: 6 4;
 }
 @keyframes m3-flow-dash {
   from { stroke-dashoffset: 10; }
@@ -1920,5 +1982,6 @@ defineExpose(context as FlowContext)
 }
 @media (prefers-reduced-motion: reduce) {
   .m3-flow-edge-animated { animation: none; }
+  .m3-flow-edge-line { transition: none; }
 }
 </style>

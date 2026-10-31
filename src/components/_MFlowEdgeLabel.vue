@@ -13,6 +13,13 @@ const selected = computed(() => flow.selectedEdges.value.has(props.edge.id))
 // A selected edge offers a delete button beside its label (or alone): the way to disconnect on touch
 const deletable = computed(() => selected.value && props.edge.deletable !== false && !flow.locked.value)
 const locale = useLocale()
+const TONES = {
+  primary: 'bg-primary-container text-on-primary-container',
+  secondary: 'bg-secondary-container text-on-secondary-container',
+  tertiary: 'bg-tertiary-container text-on-tertiary-container',
+  error: 'bg-error-container text-on-error-container',
+  neutral: 'bg-surface-container-high text-on-surface-variant',
+}
 </script>
 
 <template>
@@ -27,7 +34,7 @@ const locale = useLocale()
       <span
         v-else-if="edge.label"
         class="block rounded-sm px-2 py-0.5 text-label-medium whitespace-nowrap transition-colors"
-        :class="selected ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high text-on-surface-variant'"
+        :class="selected ? 'bg-secondary-container text-on-secondary-container' : TONES[edge.labelTone ?? 'neutral']"
       >{{ edge.label }}</span>
       <button
         v-if="deletable"
