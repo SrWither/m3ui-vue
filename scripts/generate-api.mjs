@@ -10,7 +10,8 @@
  * as the first thing in a component's <script setup> describes the component, and the usual
  * JSDoc above each prop, emit or exposed member describes that member.
  *
- * Run: node scripts/generate-api.mjs  (part of `pnpm build`)
+ * Run: node scripts/generate-api.mjs  (the end of `pnpm build:js`: vite empties dist/, and the docs' llms
+ * generator skips every .md page without dist/api.json)
  */
 import { createChecker } from 'vue-component-meta'
 import ts from 'typescript'
@@ -37,6 +38,7 @@ const entries = [
   ['src/map.ts', `${PKG}/map`],
   ['src/media.ts', `${PKG}/media`],
   ['src/pdf.ts', `${PKG}/pdf`],
+  ['src/flow.ts', `${PKG}/flow`],
   ['src/index.ts', PKG],
 ]
 

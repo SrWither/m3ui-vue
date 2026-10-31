@@ -12,7 +12,7 @@ There is no `docs/`, `playground/`, or `examples/` directory in this repo. The d
 
 Package manager is **pnpm** (see `pnpm-lock.yaml`, and the publish workflow pins `pnpm/action-setup@v4`).
 
-- `pnpm build` — full build: `build:js` (vite lib build → `dist/*.js` + copies `m3ui-vue.css` to `dist/styles.css`) → `build:types` (`vue-tsc -p tsconfig.build.json`, emits `.d.ts` only) → `build:css` (copies `src/styles/` to `dist/styles/`, which is how `./theme` and `./palettes` subpath exports resolve straight from source).
+- `pnpm build` — full build: `build:js` (vite lib build → `dist/*.js` + copies `m3ui-vue.css` to `dist/styles.css` + `generate-api.mjs` → `dist/API.md`/`dist/api.json`, which the docs' per-component `.md` pages need: vite empties `dist/`, so the API is regenerated in `build:js` itself) → `build:types` (`vue-tsc -p tsconfig.build.json`, emits `.d.ts` only) → `build:css` (copies `src/styles/` to `dist/styles/`, which is how `./theme` and `./palettes` subpath exports resolve straight from source).
 - `pnpm test` — runs the full vitest suite once (`vitest run`).
 - `pnpm test:watch` — vitest in watch mode.
 - Single test file: `pnpm exec vitest run src/__tests__/MDialog.test.ts`. Single test name: `pnpm exec vitest run -t "renders content when open"`.
