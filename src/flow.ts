@@ -22,3 +22,5 @@ export type { FlowEdgePath, FlowEdgePathParams, FlowPosition } from './composabl
 export { layoutTree, layoutLayered } from './composables/flowLayout'
 export type { FlowLayout, FlowLayoutDirection, FlowLayoutOptions, FlowLayoutResult } from './composables/flowLayout'
 export type { FlowPanelPosition } from './composables/_flowPanel'
+export { parseDot, toDot, parseMermaid, toMermaid } from './composables/flowFormats'
+export type { FlowGraph, FlowImportOptions, FlowExportOptions, FlowDotExportOptions } from './composables/flowFormats'
