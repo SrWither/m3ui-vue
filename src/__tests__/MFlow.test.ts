@@ -277,6 +277,9 @@ describe('MFlow', () => {
   it('disconnects: the × on a selected edge, an edge end dropped on nothing, an input pulled off', async () => {
     const w = await flow({ nodes: [N('a', 0, 0), N('b', 300, 0), N('c', 300, 200)], edges: [{ id: 'e1', source: 'a', target: 'b' }, { id: 'e2', source: 'a', target: 'c' }], selection: { nodes: [], edges: ['e1'] } })
     await nextTick()
+    // The click of the tap that selected the edge lands on the × that appeared under the finger: it keeps the edge
+    w.find('[data-flow-edge-delete="e1"]').element.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }))
+    expect(w.emitted('update:edges')).toBeUndefined()
     pointer(w.find('[data-flow-edge-delete="e1"]').element, 'pointerdown', 240, 30)
     expect((w.emitted('update:edges')!.at(-1)![0] as FlowEdge[]).map((e) => e.id)).toEqual(['e2'])
     await w.setProps({ edges: w.emitted('update:edges')!.at(-1)![0] })

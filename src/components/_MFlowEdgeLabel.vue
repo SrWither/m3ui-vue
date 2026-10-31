@@ -13,6 +13,11 @@ const selected = computed(() => flow.selectedEdges.value.has(props.edge.id))
 // A selected edge offers a delete button beside its label (or alone): the way to disconnect on touch
 const deletable = computed(() => selected.value && props.edge.deletable !== false && !flow.locked.value)
 const locale = useLocale()
+// A press on it deletes through MFlow's own pointerdown; its click is only for the keyboard (detail 0). The tap that
+// selects the edge makes it appear right under the finger, and that touch's click lands on it when it lifts
+function onClick(e: MouseEvent) {
+  if (e.detail === 0) flow.remove({ edges: [props.edge.id] })
+}
 const TONES = {
   primary: 'bg-primary-container text-on-primary-container',
   secondary: 'bg-secondary-container text-on-secondary-container',
@@ -42,7 +47,7 @@ const TONES = {
         class="m3-flow-edge-delete relative flex size-6 cursor-pointer items-center justify-center rounded-full bg-surface-container-highest text-on-surface-variant shadow-elevation-1 transition-colors outline-none before:absolute before:-inset-2 hover:bg-error-container hover:text-on-error-container focus-visible:ring-2 focus-visible:ring-secondary"
         :data-flow-edge-delete="edge.id"
         :aria-label="locale.flowDeleteEdge"
-        @click="flow.remove({ edges: [edge.id] })"
+        @click="onClick"
       >
         <span class="material-symbols-outlined text-[16px]" aria-hidden="true">close</span>
       </button>
