@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 - `MFloorPlan` `dragMerged`: dragging or nudging a merged table moves its whole merge with it
+- `MFloorPlan` `rotatable` (default `true`): turn it off to hide the rotate handle when your app doesn't keep angles
 
 ## [1.3.1] - 2026-10-31
 
