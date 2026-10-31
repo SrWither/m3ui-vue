@@ -7,7 +7,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [1.3.1] - Unreleased
 
+### Added
+- `MDrawCanvas` `backgroundImageBox`: where the background image sits on an infinite canvas and its size (drawn covering that box); `fitView()` takes it in
+
 ### Fixed
+- `MDrawCanvas` and `MFloorPlan`: their root's defaults (position, overflow, background, corners) were utilities on the root, so a consumer's own `absolute inset-0` or background lost to them (Tailwind orders `relative` after `absolute`); they now live in `@layer base` on the component class
 - `MPdfViewer`: the picked annotation color's swatch grows by its real size instead of a CSS scale, which Firefox drew with a jagged ring
 
 ## [1.3.0] - 2026-10-31
