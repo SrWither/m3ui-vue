@@ -111,6 +111,11 @@ const props = withDefaults(defineProps<{
   grid?: number
   /** Draw the grid while editing */
   showGrid?: boolean
+  /**
+   * Where a table's middle snaps: `point` a grid point (default), `cell` the middle of a grid square, so tables sit in
+   * the squares between the points while walls, zones and decor snap to the points (a plan of cells)
+   */
+  tableSnap?: 'point' | 'cell'
   /** Draw chairs from `seats` */
   chairs?: boolean
   /** Decor kinds of yours, or the built-in ones restyled (merged over them by name) */
@@ -141,6 +146,7 @@ const props = withDefaults(defineProps<{
   editable: false,
   grid: 10,
   showGrid: true,
+  tableSnap: 'point',
   chairs: true,
   selectable: 'none',
   dragMerged: false,
@@ -309,6 +315,12 @@ const mergeShapes = computed(() =>
 let drag: { id: number; sx: number; sy: number; start: Map<string | number, { x: number; y: number }>; moved: boolean; pick?: string | number } | null = null
 let suppressClick = false
 const snap = (v: number) => (props.grid ? Math.round(v / props.grid) * props.grid : v)
+/** A table's middle: on a grid point, or with `tableSnap="cell"` in the middle of a grid square */
+const snapTable = (v: number) => {
+  const g = props.grid
+  if (!g || props.tableSnap !== 'cell') return snap(v)
+  return Math.round((v - g / 2) / g) * g + g / 2
+}
 function clamp(t: FloorTable, x: number, y: number) {
   const s = sizeOf(t)
   return { x: Math.min(props.width - s.w / 2, Math.max(s.w / 2, x)), y: Math.min(props.height - s.h / 2, Math.max(s.h / 2, y)) }
@@ -372,7 +384,7 @@ function onUp(e: PointerEvent) {
   if (!moved) return
   suppressClick = true
   setTimeout(() => (suppressClick = false))
-  commitMoves(new Map([...d!].map(([id, p]) => [id, clamp(tables.value.find((x) => x.id === id)!, snap(p.x), snap(p.y))])))
+  commitMoves(new Map([...d!].map(([id, p]) => [id, clamp(tables.value.find((x) => x.id === id)!, snapTable(p.x), snapTable(p.y))])))
 }
 function commitMoves(next: Map<string | number, { x: number; y: number }>) {
   record()
@@ -745,7 +757,7 @@ function update(kind: FloorItemKind, id: string | number, patch: Record<string, 
 }
 function addTable(t: Partial<FloorTable> = {}): FloorTable {
   const n = Math.max(0, ...tables.value.map((x) => Number(x.label)).filter((x) => Number.isFinite(x))) + 1
-  const table: FloorTable = { id: newId('table'), label: String(n), x: snap(props.width / 2), y: snap(props.height / 2), shape: 'square', seats: 4, ...t }
+  const table: FloorTable = { id: newId('table'), label: String(n), x: snapTable(props.width / 2), y: snapTable(props.height / 2), shape: 'square', seats: 4, ...t }
   record()
   tables.value = [...tables.value, table]
   selection.value = [table.id]

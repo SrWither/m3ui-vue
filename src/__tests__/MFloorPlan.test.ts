@@ -70,6 +70,16 @@ describe('MFloorPlan', () => {
     expect((w.props('tables') as FloorTable[]).map((t) => t.x)).toEqual([160, 340])
     expect(w.props('selection')).toEqual([2, 1])
   })
+  it('tableSnap cell: a dropped table sits in the middle of a grid square, and arrows keep it there', async () => {
+    const w = setup({ editable: true, grid: 20, tableSnap: 'cell', selection: [1], 'onUpdate:selection': (v: unknown) => w.setProps({ selection: v as number[] }) })
+    table(w, 'T1').element.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, clientX: 0, clientY: 0, pointerId: 1 }))
+    window.dispatchEvent(new PointerEvent('pointermove', { clientX: 33, clientY: 47, pointerId: 1 }))
+    window.dispatchEvent(new PointerEvent('pointerup', { clientX: 33, clientY: 47, pointerId: 1 }))
+    await nextTick()
+    expect((w.props('tables') as FloorTable[])[0]).toMatchObject({ x: 130, y: 150 })
+    await table(w, 'T1').trigger('keydown', { key: 'ArrowRight' })
+    expect((w.props('tables') as FloorTable[])[0]).toMatchObject({ x: 150, y: 150 })
+  })
   it('editable: arrows nudge by the grid, and tables stay inside the plan', async () => {
     const w = setup({ editable: true, grid: 10 })
     await table(w, 'T1').trigger('keydown', { key: 'ArrowLeft' })
