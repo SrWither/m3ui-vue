@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.3.3] - Unreleased
+
+### Fixed
+- `MFloorPlanInspector`: paired fields (width and height, label and seats) stack when the inspector is narrow, instead of cutting their numbers short
+
 ## [1.3.2] - 2026-10-31
 
 ### Added
