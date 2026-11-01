@@ -5,6 +5,20 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.3.4] - Unreleased
+
+### Added
+- `MFlow` `edgesReroutable`: a selected `smoothstep`/`step` edge shows a grip on each segment; drag one sideways to lay the edge out, or the leg at either end to add a jog. The route is kept in the new `FlowEdge.route` (and `reroutable` per edge), stays square as nodes move, comes along when both ends move together, and goes when an end is reconnected; `reroute` event. `routePoints`, `pointsToRoute` and `getRoutedPath` are exported for slots of your own
+- `MFlow` `edgeBranching: 'junction'`: a branch leaves from the very point of the edge you grabbed and nothing is added; the new `branch` event gives that point (on the grid along the edge), the way the edge runs there, where it was dropped and the routes that keep a routed edge's halves, to split the edge at a junction node of your own (as Logisim does)
+- `MFlowHandle` `position="auto"`: a handle in the node's middle whose edges each leave or arrive on the side facing their other end; `FlowEdge.sourcePosition` / `targetPosition` pin the side an edge uses at one
+- `useFlow` / `MFlow` `change({ nodes?, edges? })`: several edits as one undo step; `getEdgeAt(point, { radius, ignore })`: the edge passing near a flow point, where on it and which way it runs (`FlowEdgeHit`)
+
+### Changed
+- **`MFlow`: a tap on a handle (without dragging) selects its node, as a tap anywhere else on it does; before, it did nothing** (a connected input tapped, not pulled, keeps its edge)
+
+### Fixed
+- `MFlow`: a pinch that starts with a finger on a node no longer selects that node
+
 ## [1.3.3] - 2026-11-01
 
 ### Fixed
