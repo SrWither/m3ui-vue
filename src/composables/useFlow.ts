@@ -40,6 +40,11 @@ export interface FlowNode<D = any> {
   deletable?: boolean
   /** `false` keeps it from splicing into an edge when dropped onto one */
   insertable?: boolean
+  /**
+   * With snapToGrid, what lands on the grid is its position plus this (default its corner): `{ x: w / 2, y: h / 2 }`
+   * puts its middle on the grid, e.g. a junction dot whose wires run along the grid lines
+   */
+  gridOffset?: FlowXY
   class?: string
 }
 

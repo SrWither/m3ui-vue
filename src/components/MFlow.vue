@@ -1518,8 +1518,9 @@ function moveNodes(g: Extract<Gesture, { kind: 'node' }>, cx: number, cy: number
   const leadId = g.starts.has(g.nodeId) ? g.nodeId : [...g.starts.keys()][0]!
   if (props.snapToGrid) {
     const gs = props.gridSize
-    dx = Math.round((lead.x + dx) / gs) * gs - lead.x
-    dy = Math.round((lead.y + dy) / gs) * gs - lead.y
+    const off = nodeById.value.get(leadId)?.gridOffset ?? { x: 0, y: 0 }
+    dx = Math.round((lead.x + off.x + dx) / gs) * gs - lead.x - off.x
+    dy = Math.round((lead.y + off.y + dy) / gs) * gs - lead.y - off.y
     guideLines.value = []
   } else if (props.guides && g.starts.size === 1) {
     const snapped = snapToGuides(leadId, lead, dx, dy)

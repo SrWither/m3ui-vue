@@ -409,6 +409,16 @@ describe('MFlow', () => {
     expect(cx).toBeGreaterThan(180)
     expect(cx).toBeLessThan(300)
   })
+  it('snapToGrid puts a node\'s position plus its gridOffset on the grid', async () => {
+    const w = await flow({ nodes: [N('a', 10, 10, { gridOffset: { x: 10, y: 10 } }), N('b', 300, 0)], snapToGrid: true, gridSize: 20 })
+    pointer(node(w, 'a'), 'pointerdown', 100, 40)
+    pointer(window, 'pointermove', 140, 80)
+    pointer(window, 'pointermove', 203, 143)
+    pointer(window, 'pointerup', 203, 143)
+    const nodes = w.emitted('update:nodes')!.at(-1)![0] as FlowNode[]
+    // Its middle (position + 10) sits on the 20px grid
+    expect(nodes.find((n) => n.id === 'a')!.position).toEqual({ x: 110, y: 110 })
+  })
   it('getEdgeAt finds the edge under a point, where on it, and which way it runs', async () => {
     const edges: FlowEdge[] = [{ id: 'e1', source: 'a', target: 'b', type: 'smoothstep' }]
     const w = await flow({ edges, snapToGrid: true, gridSize: 20 })
