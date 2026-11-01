@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.3.4] - Unreleased
+## [1.3.4] - 2026-11-01
 
 ### Added
 - `MFlow` `edgesReroutable`: a selected `smoothstep`/`step` edge shows a grip on each segment; drag one sideways to lay the edge out, or the leg at either end to add a jog. The route is kept in the new `FlowEdge.route` (and `reroutable` per edge), stays square as nodes move, comes along when both ends move together, and goes when an end is reconnected; `reroute` event. `routePoints`, `pointsToRoute` and `getRoutedPath` are exported for slots of your own
