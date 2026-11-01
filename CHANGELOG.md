@@ -12,6 +12,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MFlow` `edgeBranching: 'junction'`: a branch leaves from the very point of the edge you grabbed and nothing is added; the new `branch` event gives that point (on the grid along the edge), the way the edge runs there, where it was dropped and the routes that keep a routed edge's halves, to split the edge at a junction node of your own (as Logisim does)
 - `MFlowHandle` `position="auto"`: a handle in the node's middle whose edges each leave or arrive on the side facing their other end; `FlowEdge.sourcePosition` / `targetPosition` pin the side an edge uses at one
 - `useFlow` / `MFlow` `change({ nodes?, edges? })`: several edits as one undo step; `getEdgeAt(point, { radius, ignore })`: the edge passing near a flow point, where on it and which way it runs (`FlowEdgeHit`)
+- `FlowNode.gridOffset`: with `snapToGrid`, the node's position plus this lands on the grid (half its size puts its middle there)
 
 ### Changed
 - **`MFlow`: a tap on a handle (without dragging) selects its node, as a tap anywhere else on it does; before, it did nothing** (a connected input tapped, not pulled, keeps its edge)
