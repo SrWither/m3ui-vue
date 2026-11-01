@@ -6,7 +6,7 @@ export type FloorTablePreset = Partial<FloorTable> & { name?: string }
 
 <script setup lang="ts">
 /**
- * A toolbar for editing an MFloorPlan: move / draw a wall / drag out a zone, add a table (your presets) or decor (any
+ * A toolbar for editing an MFloorPlan: move / draw a wall / drag out a zone / draw a zone of any shape, add a table (your presets) or decor (any
  * kind, yours too), duplicate, delete, undo and redo. Inside the plan's `#overlay` slot it finds the plan by itself;
  * anywhere else, pass the plan's template ref as `plan`. Not an M3 spec component.
  *
@@ -14,7 +14,7 @@ export type FloorTablePreset = Partial<FloorTable> & { name?: string }
  * @slot end More controls at the end
  */
 import { computed, inject } from 'vue'
-import { FLOOR_PLAN_KEY, floorDecorName, type FloorPlanContext } from '../composables/useFloorPlan'
+import { FLOOR_PLAN_KEY, floorDecorName, type FloorPlanContext, type FloorTool } from '../composables/useFloorPlan'
 import { useLocale } from '../composables/useLocale'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
@@ -82,9 +82,10 @@ function add(p: FloorTablePreset) {
         { value: 'select', label: locale.floorMove, icon: 'open_with' },
         { value: 'wall', label: locale.floorDrawWall, icon: 'timeline' },
         { value: 'area', label: locale.floorDrawZone, icon: 'crop_square' },
+        { value: 'polygon', label: locale.floorDrawShape, icon: 'pentagon' },
       ]"
       density="compact"
-      @update:model-value="ctx.tool.value = $event as 'select' | 'wall' | 'area'"
+      @update:model-value="ctx.tool.value = $event as FloorTool"
     />
     <template v-if="ctx.drawingWall.value">
       <MTooltip :text="locale.floorFinishWall" placement="top"><MIconButton icon="check" variant="filled" :label="locale.floorFinishWall" @click="ctx.finishWall()" /></MTooltip>

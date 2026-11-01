@@ -1,8 +1,8 @@
 import { inject, type ComputedRef, type InjectionKey, type Ref } from 'vue'
 import type { M3Locale } from './useLocale'
-import type { FloorArea, FloorDecor, FloorDecorKind, FloorMerge, FloorPick, FloorStatus, FloorTable, FloorWall } from '../components/MFloorPlan.vue'
+import type { FloorArea, FloorDecor, FloorDecorKind, FloorMeasure, FloorMerge, FloorPick, FloorStatus, FloorTable, FloorWall } from '../components/MFloorPlan.vue'
 
-export type FloorTool = 'select' | 'wall' | 'area'
+export type FloorTool = 'select' | 'wall' | 'area' | 'polygon'
 export type FloorItemKind = 'table' | 'area' | 'wall' | 'decor'
 
 /**
@@ -20,10 +20,14 @@ export interface FloorPlanContext {
   picked: Ref<FloorPick>
   tool: Ref<FloorTool>
   editable: ComputedRef<boolean>
-  /** A wall is being drawn (tool `wall`): finish it (also double-click / Enter) or cancel it (Escape) */
+  /** A wall (tool `wall`) or a zone of any shape (tool `polygon`) is being drawn: finish it (also double-click / Enter) or cancel it (Escape) */
   drawingWall: ComputedRef<boolean>
   finishWall(): void
   cancelWall(): void
+  /** A table's size in plan units (its own, or the default for its shape and seats) */
+  tableSize(table: FloorTable): { w: number; h: number }
+  /** The plan's real lengths (`measure`), if it has them */
+  measure: ComputedRef<FloorMeasure | undefined>
   /** The decor kinds: built-in ones merged with `decorKinds` */
   kinds: ComputedRef<Record<string, FloorDecorKind>>
   statuses: ComputedRef<Record<string, FloorStatus>>

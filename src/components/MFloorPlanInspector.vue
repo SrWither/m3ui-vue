@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * Edits what's picked on an MFloorPlan: a table (name, seats, shape, angle; split it if merged), several tables (merge
- * them), a zone (name, color), a wall (thickness, delete a corner) or decor (text, size, angle); duplicate and delete.
+ * them), a zone (name, color), a wall (thickness, delete a corner) or decor (text, size, angle, a door's side); duplicate and delete.
  * A slot per kind adds fields of your own below the built-in ones, with an `update` to change the item (an undo step).
  * Inside the plan's `#overlay` slot it finds the plan by itself; anywhere else, pass the plan's template ref as `plan`.
  * Not an M3 spec component.
@@ -67,6 +67,13 @@ const swatch = (c: string) => (ROLES.has(c) ? `var(--color-${c})` : c)
 function deleteCorner() {
   ctx.value!.removeSelected()
 }
+// Sizes in the plan's unit when it has one (measure), else in plan units
+const unit = computed(() => ctx.value?.measure?.value)
+const shown = (v: number) => (unit.value ? Number((v / unit.value.per).toFixed(unit.value.decimals ?? 2)) : Math.round(v))
+const kept = (v: number | null) => (v === null ? null : unit.value ? v * unit.value.per : v)
+const sizeLabel = (l: string) => (unit.value ? `${l} (${unit.value.unit})` : l)
+const sizeStep = computed(() => (unit.value ? 10 ** -(unit.value.decimals ?? 2) : 1))
+const sizeMin = (v: number) => (unit.value ? v / unit.value.per : v)
 </script>
 
 <template>
@@ -84,6 +91,10 @@ function deleteCorner() {
         density="compact"
         @update:model-value="upTable({ shape: $event as FloorTable['shape'], width: undefined, height: undefined })"
       />
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-3">
+        <MNumberField :model-value="shown(ctx.tableSize(table).w)" :label="sizeLabel(locale.floorWidth)" variant="outlined" :min="sizeMin(20)" :step="sizeStep" @update:model-value="upTable({ width: kept($event) ?? undefined, height: $event === null ? undefined : ctx.tableSize(table).h })" />
+        <MNumberField :model-value="shown(ctx.tableSize(table).h)" :label="sizeLabel(locale.floorHeight)" variant="outlined" :min="sizeMin(20)" :step="sizeStep" @update:model-value="upTable({ height: kept($event) ?? undefined, width: $event === null ? undefined : ctx.tableSize(table).w })" />
+      </div>
       <MSlider :model-value="table.rotation ?? 0" :min="0" :max="345" :step="15" :label="locale.floorAngle" @update:model-value="upTable({ rotation: $event as number })" show-value />
       <slot name="table" :table="table" :update="upTable" />
       <div class="flex flex-wrap gap-2">
@@ -124,12 +135,15 @@ function deleteCorner() {
           />
         </div>
       </div>
-      <div class="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-3">
-        <MNumberField :model-value="Math.round(area.width)" :label="locale.floorWidth" variant="outlined" :min="10" @update:model-value="upArea({ width: $event ?? area.width })" />
-        <MNumberField :model-value="Math.round(area.height)" :label="locale.floorHeight" variant="outlined" :min="10" @update:model-value="upArea({ height: $event ?? area.height })" />
+      <!-- A zone of any shape is sized by its corners -->
+      <div v-if="!area.points" class="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-3">
+        <MNumberField :model-value="shown(area.width)" :label="sizeLabel(locale.floorWidth)" variant="outlined" :min="sizeMin(10)" :step="sizeStep" @update:model-value="upArea({ width: kept($event) ?? area.width })" />
+        <MNumberField :model-value="shown(area.height)" :label="sizeLabel(locale.floorHeight)" variant="outlined" :min="sizeMin(10)" :step="sizeStep" @update:model-value="upArea({ height: kept($event) ?? area.height })" />
       </div>
+      <p v-else class="text-body-small text-on-surface-variant">{{ locale.floorShapeHint }}</p>
       <slot name="area" :area="area" :update="upArea" />
       <div class="flex flex-wrap gap-2">
+        <MButton v-if="area.points && vertex !== undefined && area.points.length > 3" variant="tonal" icon="remove" @click="deleteCorner">{{ locale.floorDeleteCorner }}</MButton>
         <MButton variant="text" icon="content_copy" @click="ctx.duplicate()">{{ locale.floorDuplicate }}</MButton>
         <MButton variant="text" color="error" icon="delete" @click="ctx.removeSelected()">{{ locale.floorDelete }}</MButton>
       </div>
@@ -151,12 +165,13 @@ function deleteCorner() {
       <div class="flex items-center gap-2 text-title-small"><MIcon :name="kind?.icon ?? 'category'" :size="18" />{{ floorDecorName(item.kind, ctx.kinds.value, locale) }}</div>
       <MTextField :model-value="item.label ?? ''" :label="locale.floorLabel" variant="outlined" @update:model-value="upDecor({ label: String($event) || undefined })" />
       <div class="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-3">
-        <MNumberField :model-value="Math.round(item.width ?? kind?.width ?? 40)" :label="locale.floorWidth" variant="outlined" :min="4" @update:model-value="upDecor({ width: $event ?? undefined })" />
-        <MNumberField :model-value="Math.round(item.height ?? kind?.height ?? 40)" :label="locale.floorHeight" variant="outlined" :min="4" @update:model-value="upDecor({ height: $event ?? undefined })" />
+        <MNumberField :model-value="shown(item.width ?? kind?.width ?? 40)" :label="sizeLabel(locale.floorWidth)" variant="outlined" :min="sizeMin(4)" :step="sizeStep" @update:model-value="upDecor({ width: kept($event) ?? undefined })" />
+        <MNumberField :model-value="shown(item.height ?? kind?.height ?? 40)" :label="sizeLabel(locale.floorHeight)" variant="outlined" :min="sizeMin(4)" :step="sizeStep" @update:model-value="upDecor({ height: kept($event) ?? undefined })" />
       </div>
       <MSlider :model-value="item.rotation ?? 0" :min="0" :max="345" :step="15" :label="locale.floorAngle" @update:model-value="upDecor({ rotation: $event as number })" show-value />
       <slot name="decor" :item="item" :kind="kind" :update="upDecor" />
       <div class="flex flex-wrap gap-2">
+        <MButton v-if="kind?.shape === 'door'" variant="tonal" icon="flip" :aria-pressed="!!item.flip" @click="upDecor({ flip: !item.flip || undefined })">{{ locale.floorFlip }}</MButton>
         <MButton variant="text" icon="content_copy" @click="ctx.duplicate()">{{ locale.floorDuplicate }}</MButton>
         <MButton variant="text" color="error" icon="delete" @click="ctx.removeSelected()">{{ locale.floorDelete }}</MButton>
       </div>

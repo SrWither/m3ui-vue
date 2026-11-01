@@ -405,6 +405,15 @@ export interface M3Locale {
   floorSquare: string
   floorLong: string
   floorAngle: string
+  /** A door's button: hinge it on the other side */
+  floorFlip: string
+  floorZoomIn: string
+  floorZoomOut: string
+  floorZoomFit: string
+  floorOverlaps: string
+  floorSeatN: string
+  floorDrawShape: string
+  floorShapeHint: string
   floorColor: string
   floorThickness: string
   floorWidth: string
@@ -827,6 +836,14 @@ export const defaultLocale: M3Locale = {
   floorSquare: 'Square',
   floorLong: 'Long',
   floorAngle: 'Angle',
+  floorFlip: 'Flip',
+  floorZoomIn: 'Zoom in',
+  floorZoomOut: 'Zoom out',
+  floorZoomFit: 'Whole plan',
+  floorOverlaps: 'Overlaps another table',
+  floorSeatN: 'Seat {n}',
+  floorDrawShape: 'Zone of any shape',
+  floorShapeHint: 'Drag its corners; double-click an edge for a new corner, Delete removes the picked one',
   floorColor: 'Color',
   floorThickness: 'Thickness',
   floorWidth: 'Width',
