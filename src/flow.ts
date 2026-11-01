@@ -9,6 +9,7 @@ export type {
   FlowConnection,
   FlowContext,
   FlowEdge,
+  FlowEdgeHit,
   FlowFitOptions,
   FlowHandleBounds,
   FlowMarker,
@@ -17,7 +18,7 @@ export type {
   FlowViewport,
   FlowXY,
 } from './composables/useFlow'
-export { getBezierPath, getSmoothStepPath, getStepPath, getStraightPath, smoothStepPoints, arrowPath } from './composables/flowPaths'
+export { getBezierPath, getSmoothStepPath, getStepPath, getStraightPath, smoothStepPoints, routePoints, pointsToRoute, getRoutedPath, arrowPath } from './composables/flowPaths'
 export type { FlowEdgePath, FlowEdgePathParams, FlowPosition } from './composables/flowPaths'
 export { layoutTree, layoutLayered } from './composables/flowLayout'
 export type { FlowLayout, FlowLayoutDirection, FlowLayoutOptions, FlowLayoutResult } from './composables/flowLayout'

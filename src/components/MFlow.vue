@@ -44,8 +44,16 @@ const emptySelection = (): FlowSelection => ({ nodes: [], edges: [] })
  * @slot empty Shown while there are no nodes
  * @event connect A connection was made (it's also added to `edges` with `autoConnect`)
  * @event connect-start A connection drag started from a handle
+ * @event branch A branch was dragged off an edge (edgeBranching) and dropped: `{ edge, connection, position, direction, end }`,
+ *   the connection null when it was dropped on nothing, `position` the point on the edge where it was grabbed (on the
+ *   grid along the edge with snapToGrid), `direction` the way the edge runs there toward its target, `end` where it was
+ *   dropped, and for an edge with its own `route`, `routes` that keep each half's shape. With `'junction'` this is all
+ *   that happens: split the edge with a node there whose handles are at `position="auto"`, the first half arriving with
+ *   `targetPosition` opposite to `direction` and the second leaving with `sourcePosition: direction`, so it runs on
+ *   straight through
  * @event connect-end A connection drag ended: `{ connection }` when it connected, else the flow `position` it was dropped at and where it came from
  * @event reconnect An edge's end was moved to another handle: `{ edge, connection }`
+ * @event reroute A segment of an edge was dragged (`edgesReroutable`): the edge with its new `route`
  * @event insert A lone node was dropped onto an edge and spliced in: `{ node, edge, connections }` (with `autoConnect`
  *   the edge is replaced by the two connections, keeping its type and look)
  * @event node-click / node-dblclick / node-contextmenu `(node, event)`
@@ -63,6 +71,7 @@ import {
   type FlowConnection,
   type FlowContext,
   type FlowEdgeGeometry as EdgeGeometry,
+  type FlowEdgeHit,
   type FlowFitOptions,
   type FlowHandleBounds,
   type FlowInternals,
@@ -71,7 +80,7 @@ import {
   type FlowXY,
 } from '../composables/useFlow'
 import { layoutLayered, layoutTree, type FlowLayout, type FlowLayoutDirection, type FlowLayoutOptions } from '../composables/flowLayout'
-import { distanceToPoints, edgePathPoints, getBezierPath, getSmoothStepPath, getStepPath, getStraightPath, type FlowEdgePath } from '../composables/flowPaths'
+import { distanceToPoints, edgePathPoints, getBezierPath, getRoutedPath, getSmoothStepPath, getStepPath, getStraightPath, pointsToRoute, routePoints, smoothStepPoints, type FlowEdgePath } from '../composables/flowPaths'
 import { DEFAULT_SPATIAL } from '../composables/_useSpring'
 import { prefersReducedMotion } from '../composables/_springAnimation'
 import { useLocale } from '../composables/useLocale'
@@ -112,6 +121,11 @@ const props = withDefaults(defineProps<{
   nodesConnectable?: boolean
   elementsSelectable?: boolean
   edgesReconnectable?: boolean
+  /**
+   * The segments of a selected `smoothstep`/`step` edge get grips: drag one sideways to reroute the edge (it keeps
+   * the route in `edge.route`), or drag a leg at either end to add a jog. Default off
+   */
+  edgesReroutable?: boolean
   /** Merged into edges made by connecting (`type`, `animated`, `markerEnd`…) */
   defaultEdgeOptions?: Partial<FlowEdge>
   /** Adds an edge to `edges` when a connection is made; off, only `connect` fires */
@@ -150,9 +164,11 @@ const props = withDefaults(defineProps<{
   /**
    * A drag that starts on an edge draws a new edge from the same source, a branch, as in a circuit editor (the
    * preview leaves from where you grabbed it). A click still selects the edge; with a finger, only a selected edge
-   * branches, so a swipe across one still pans
+   * branches, so a swipe across one still pans. `'junction'`: the branch leaves from the very point you grabbed,
+   * as in Logisim: nothing is added, `branch` fires with that point on the edge, and you split the edge there with a
+   * junction node of your own (or leave a loose end where it was dropped on nothing)
    */
-  edgeBranching?: boolean
+  edgeBranching?: boolean | 'junction'
   /**
    * Let the browser's own context menu open on the canvas (right click, or a long press on a phone). Off by default:
    * the `*-contextmenu` events still fire, for a menu of your own (MContextMenu's `showAt`). Text fields inside
@@ -182,6 +198,7 @@ const props = withDefaults(defineProps<{
   nodesConnectable: true,
   elementsSelectable: true,
   edgesReconnectable: true,
+  edgesReroutable: false,
   autoConnect: true,
   connectionRadius: 24,
   deleteKeys: () => ['Delete', 'Backspace'],
@@ -204,8 +221,10 @@ const emit = defineEmits<{
   'update:locked': [boolean]
   connect: [FlowConnection]
   'connect-start': [{ nodeId: string; handleId: string | null; type: 'source' | 'target' }]
+  branch: [{ edge: FlowEdge; connection: FlowConnection | null; position: FlowXY; direction: FlowPosition; end: FlowXY; routes?: { before: number[]; after: number[] } }]
   'connect-end': [{ connection: FlowConnection | null; position: FlowXY; from: { nodeId: string; handleId: string | null; type: 'source' | 'target' } }]
   reconnect: [{ edge: FlowEdge; connection: FlowConnection }]
+  reroute: [edge: FlowEdge]
   insert: [{ node: FlowNode; edge: FlowEdge; connections: [FlowConnection, FlowConnection] }]
   'node-click': [FlowNode, MouseEvent]
   'node-dblclick': [FlowNode, MouseEvent]
@@ -286,7 +305,7 @@ function descendants(id: string): string[] {
 const selectedNodes = computed(() => new Set(selLocal.value.nodes))
 const selectedEdges = computed(() => new Set(selLocal.value.edges))
 // Edges branch when dragged (edgeBranching)
-const branching = computed(() => props.edgeBranching && nodesConnectable.value && !locked.value)
+const branching = computed(() => !!props.edgeBranching && nodesConnectable.value && !locked.value)
 function setSelection(s: Partial<FlowSelection>) {
   const next = { nodes: s.nodes ?? selLocal.value.nodes, edges: s.edges ?? selLocal.value.edges }
   if (sameIds(next.nodes, selLocal.value.nodes) && sameIds(next.edges, selLocal.value.edges)) return
@@ -585,7 +604,19 @@ function sidePoint(id: string, pos: FlowPosition): FlowXY {
     default: return { x: a.x + s.width, y: a.y + s.height / 2 }
   }
 }
-function handlePoint(nodeId: string, type: 'source' | 'target', handleId?: string | null): { x: number; y: number; position: FlowPosition; inset: number } | null {
+// The side an 'auto' handle uses for an edge: the one facing its other end
+function sideToward(from: FlowXY, to: FlowXY): FlowPosition {
+  const dx = to.x - from.x
+  const dy = to.y - from.y
+  return Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? 'right' : 'left') : dy >= 0 ? 'bottom' : 'top'
+}
+const resolveSide = (side: FlowPosition | 'auto', at: FlowXY, toward: FlowXY | null, type: 'source' | 'target'): FlowPosition =>
+  side !== 'auto' ? side : toward ? sideToward(at, toward) : type === 'source' ? 'right' : 'left'
+function handlePoint(nodeId: string, type: 'source' | 'target', handleId?: string | null, toward: FlowXY | null = null): { x: number; y: number; position: FlowPosition; inset: number } | null {
+  const raw = rawHandlePoint(nodeId, type, handleId)
+  return raw && { ...raw, position: resolveSide(raw.position, raw, toward, type) }
+}
+function rawHandlePoint(nodeId: string, type: 'source' | 'target', handleId?: string | null): { x: number; y: number; position: FlowPosition | 'auto'; inset: number } | null {
   const n = nodeById.value.get(nodeId)
   if (!n) return null
   const list = handles.get(nodeId)?.filter((h) => h.type === type)
@@ -646,14 +677,52 @@ function circleGeometry(e: FlowEdge): EdgeGeometry | null {
   }
   return { ...ends, ...pathFor(e.type ?? props.defaultEdgeOptions?.type ?? 'straight', ends), sourceInset: 0, targetInset: 0 }
 }
-function edgeGeometry(e: FlowEdge): EdgeGeometry | null {
-  if (nodeById.value.get(e.source)?.type === 'circle' || nodeById.value.get(e.target)?.type === 'circle') return circleGeometry(e)
-  const s = handlePoint(e.source, 'source', e.sourceHandle)
-  const t = handlePoint(e.target, 'target', e.targetHandle)
-  if (!s || !t) return null
-  const ends = { sourceX: s.x, sourceY: s.y, sourcePosition: s.position, targetX: t.x, targetY: t.y, targetPosition: t.position }
-  return { ...ends, ...pathFor(edgeRoute(e), ends), sourceInset: s.inset, targetInset: t.inset }
+const isCircleEdge = (e: FlowEdge) => nodeById.value.get(e.source)?.type === 'circle' || nodeById.value.get(e.target)?.type === 'circle'
+const isOrthogonal = (e: FlowEdge) => !isCircleEdge(e) && (edgeRoute(e) === 'smoothstep' || edgeRoute(e) === 'step')
+// The route an edge runs: the one being dragged, else its own (orthogonal edges only)
+function routeOf(e: FlowEdge) {
+  if (rerouting.value?.id === e.id) return rerouting.value.route
+  if (!e.route) return undefined
+  // Both ends being dragged: the route comes along
+  if (isLifted(e.source) && isLifted(e.target)) {
+    const d = disp.get(e.source)
+    const n = nodeById.value.get(e.source)
+    if (d && n && (d.x !== n.position.x || d.y !== n.position.y)) return shiftRoute(e, d.x - n.position.x, d.y - n.position.y)
+  }
+  return e.route
 }
+/** An edge's route moved by (dx, dy): its x's by dx and its y's by dy */
+function shiftRoute(e: FlowEdge, dx: number, dy: number) {
+  const s = edgeEnds(e)?.s
+  const startX = !s || s.position === 'left' || s.position === 'right'
+  return e.route!.map((v, i) => v + ((i % 2 === 0) === startX ? dx : dy))
+}
+function edgeEnds(e: FlowEdge) {
+  const s0 = rawHandlePoint(e.source, 'source', e.sourceHandle)
+  const t0 = rawHandlePoint(e.target, 'target', e.targetHandle)
+  if (!s0 || !t0) return null
+  // An 'auto' handle: the side the edge asks for, else the one facing its other end
+  const s = { ...s0, position: s0.position === 'auto' && e.sourcePosition ? e.sourcePosition : resolveSide(s0.position, s0, t0, 'source') }
+  const t = { ...t0, position: t0.position === 'auto' && e.targetPosition ? e.targetPosition : resolveSide(t0.position, t0, s0, 'target') }
+  return { s, t, ends: { sourceX: s.x, sourceY: s.y, sourcePosition: s.position, targetX: t.x, targetY: t.y, targetPosition: t.position } }
+}
+function edgeGeometry(e: FlowEdge): EdgeGeometry | null {
+  if (isCircleEdge(e)) return circleGeometry(e)
+  const at = edgeEnds(e)
+  if (!at) return null
+  const { s, t, ends } = at
+  const route = isOrthogonal(e) ? routeOf(e) : undefined
+  const path = route ? getRoutedPath({ ...ends, route, borderRadius: edgeRoute(e) === 'step' ? 0 : 8 }) : pathFor(edgeRoute(e), ends)
+  return { ...ends, ...path, sourceInset: s.inset, targetInset: t.inset }
+}
+function edgeCorners(e: FlowEdge): [number, number][] | null {
+  if (!isOrthogonal(e)) return null
+  const at = edgeEnds(e)
+  if (!at) return null
+  const route = routeOf(e)
+  return route ? routePoints({ ...at.ends, route }) : smoothStepPoints(at.ends)
+}
+const isReroutable = (e: FlowEdge) => !locked.value && isOrthogonal(e) && (e.reroutable ?? props.edgesReroutable)
 
 // What's drawn: groups under the edges, other nodes over them; children over their parents
 const visibleNodes = computed(() => nodesLocal.value.filter((n) => !isHidden(n.id)))
@@ -782,6 +851,10 @@ function addNodes(ns: FlowNode | FlowNode[]) {
 }
 function addEdges(es: FlowEdge | FlowEdge[]) {
   commit({ edges: [...edgesLocal.value, ...asArray(es)] })
+}
+/** Several changes as one undoable step: each list given replaces the current one */
+function change(next: { nodes?: FlowNode[]; edges?: FlowEdge[] }) {
+  commit({ nodes: next.nodes, edges: next.edges })
 }
 function updateNode(id: string, patch: Partial<FlowNode> | ((n: FlowNode) => FlowNode)) {
   commit({ nodes: nodesLocal.value.map((n) => (n.id !== id ? n : typeof patch === 'function' ? patch(n) : { ...n, ...patch })) })
@@ -920,8 +993,9 @@ const NO_DRAG = 'input, textarea, select, button, a, label, [contenteditable], [
 type Gesture =
   | { kind: 'pan'; id: number; sx: number; sy: number; vx: number; vy: number; moved: boolean; target: 'pane'; touch?: boolean; branch?: FlowEdge }
   | { kind: 'marquee'; id: number; sx: number; sy: number; x: number; y: number; additive: string[]; moved: boolean }
-  | { kind: 'node'; id: number; nodeId: string; sx: number; sy: number; touch: boolean; active: boolean; starts: Map<string, FlowXY>; moved: boolean; reselect: boolean }
-  | { kind: 'connect'; id: number; from: { nodeId: string; handleId: string | null; type: 'source' | 'target' }; reconnect?: { edge: FlowEdge; end: 'source' | 'target' }; moved: boolean }
+  | { kind: 'node'; id: number; nodeId: string; sx: number; sy: number; touch: boolean; active: boolean; starts: Map<string, FlowXY>; moved: boolean; reselect: boolean; select?: () => void }
+  | { kind: 'connect'; id: number; from: { nodeId: string; handleId: string | null; type: 'source' | 'target' }; reconnect?: { edge: FlowEdge; end: 'source' | 'target' }; branch?: { edge: FlowEdge; at: FlowXY; direction: FlowPosition; segment: number }; tap?: { x: number; y: number; touch: boolean; nodeId: string }; moved: boolean }
+  | { kind: 'reroute'; id: number; edge: FlowEdge; segment: number; corners: [number, number][]; sx: number; sy: number; moved: boolean }
   | { kind: 'pinch' }
 let gesture: Gesture | null = null
 // What the gesture's pointerdown landed on: a click is resolved against it, not the pointerup's target
@@ -931,11 +1005,13 @@ let pinch: { dist: number; cx: number; cy: number; zoom: number; fx: number; fy:
 const pointer = { x: 0, y: 0, inside: false }
 
 const marquee = ref<{ x: number; y: number; width: number; height: number } | null>(null)
-const connection = shallowRef<{ from: { x: number; y: number; position: FlowPosition }; to: FlowXY; toPosition: FlowPosition | null; type: 'source' | 'target'; edgeType: string } | null>(null)
+const connection = shallowRef<{ from: { x: number; y: number; position: FlowPosition | 'auto' }; to: FlowXY; toPosition: FlowPosition | 'auto' | null; type: 'source' | 'target'; edgeType: string } | null>(null)
 const connectionTarget = ref<{ key: string; valid: boolean } | null>(null)
 const connecting = computed(() => !!connection.value)
 const guideLines = shallowRef<{ x?: number; y?: number; from: number; to: number }[]>([])
 const panning = ref(false)
+/** The route of the edge whose segment is being dragged, until it's dropped */
+const rerouting = shallowRef<{ id: string; route: number[] } | null>(null)
 
 function addWindowListeners() {
   window.addEventListener('pointermove', onWindowMove)
@@ -998,6 +1074,18 @@ function onPointerDown(e: PointerEvent) {
     remove({ edges: [deleteButton.dataset.flowEdgeDelete!] })
     return
   }
+  const segment = t.closest<HTMLElement>('[data-flow-segment]')
+  if (segment && edgeEl) {
+    const edge = edgeById.value.get(edgeEl.dataset.flowEdge!)
+    const corners = edge && isReroutable(edge) ? edgeCorners(edge) : null
+    if (edge && corners) {
+      e.preventDefault()
+      gesture = { kind: 'reroute', id: e.pointerId, edge, segment: Number(segment.dataset.flowSegment), corners, sx: e.clientX, sy: e.clientY, moved: false }
+      addWindowListeners()
+      if (e.pointerType === 'touch') blockTouchScroll(null)
+      return
+    }
+  }
   if (reconnect && edgeEl) {
     const edge = edgeById.value.get(edgeEl.dataset.flowEdge!)
     if (edge && isReconnectable(edge)) {
@@ -1014,7 +1102,13 @@ function onPointerDown(e: PointerEvent) {
       const hid = handle.dataset.handleId || null
       const attached = visibleEdges.value.filter((ed) => ed.target === nodeId && (ed.targetHandle ?? null) === hid && isReconnectable(ed))
       const edge = attached[attached.length - 1]
-      if (edge) return startReconnect(e, edge, 'target')
+      if (edge) {
+        startReconnect(e, edge, 'target')
+        // Tapped, not pulled: it selects the node like a tap on any other handle
+        const g = gesture as Gesture | null
+        if (g?.kind === 'connect') g.tap = { x: e.clientX, y: e.clientY, touch: e.pointerType === 'touch', nodeId }
+        return
+      }
     }
     return startConnection(e, nodeEl.dataset.flowNode!, handle.dataset.handleId || null, handle.dataset.flowHandle as 'source' | 'target')
   }
@@ -1069,16 +1163,20 @@ function startNode(e: PointerEvent, nodeId: string) {
   const n = nodeById.value.get(nodeId)
   if (!n) return
   let reselect = false
+  let select: (() => void) | undefined
   if (canSelect.value && n.selectable !== false) {
     if (e.shiftKey || e.metaKey || e.ctrlKey) {
       const has = selectedNodes.value.has(nodeId)
       setSelection({ nodes: has ? selLocal.value.nodes.filter((i) => i !== nodeId) : [...selLocal.value.nodes, nodeId] })
       if (has) return
     } else if (!selectedNodes.value.has(nodeId)) {
-      setSelection({ nodes: [nodeId], edges: [] })
+      select = () => setSelection({ nodes: [nodeId], edges: [] })
     } else reselect = true
   }
-  gesture = { kind: 'node', id: e.pointerId, nodeId, sx: e.clientX, sy: e.clientY, touch: e.pointerType === 'touch', active: false, starts: new Map(), moved: false, reselect }
+  const touch = e.pointerType === 'touch'
+  // A finger waits for the drag or the tap to select: it may be the first of a pinch, which shouldn't select
+  if (select && !touch) select()
+  gesture = { kind: 'node', id: e.pointerId, nodeId, sx: e.clientX, sy: e.clientY, touch, active: false, starts: new Map(), moved: false, reselect, select: touch ? select : undefined }
   addWindowListeners()
 }
 
@@ -1125,7 +1223,46 @@ function onWindowMove(e: PointerEvent) {
     g.moved = true
     moveConnection(g, e.clientX, e.clientY)
     kick()
+  } else if (g.kind === 'reroute') {
+    if (!g.moved && Math.hypot(e.clientX - g.sx, e.clientY - g.sy) < (e.pointerType === 'touch' ? DRAG_SLOP_TOUCH : DRAG_SLOP_MOUSE)) return
+    g.moved = true
+    rerouting.value = { id: g.edge.id, route: rerouted(g, e) }
   }
+}
+
+// A segment dragged sideways: its two corners move with it. A leg at an end can't leave its handle, so it gets a
+// jog instead: it turns a grid step from the handle, runs where the pointer is, and comes back
+function rerouted(g: Extract<Gesture, { kind: 'reroute' }>, e: PointerEvent): number[] {
+  const pts = g.corners.map((p) => [p[0], p[1]] as [number, number])
+  const k = g.segment
+  const a = pts[k]!
+  const b = pts[k + 1]!
+  const horizontal = Math.abs(a[1] - b[1]) < 0.01
+  const axis: 0 | 1 = horizontal ? 1 : 0
+  const step = props.gridSize || 20
+  const snap = (v: number) => (props.snapToGrid ? Math.round(v / step) * step : Math.round(v))
+  const delta = ((horizontal ? e.clientY - g.sy : e.clientX - g.sx) / vp.value.zoom)
+  const to = snap(a[axis] + delta)
+  const first = k === 0
+  const last = k === pts.length - 2
+  const along: 0 | 1 = axis === 1 ? 0 : 1
+  const dir = Math.sign(b[along] - a[along]) || 1
+  const len = Math.abs(b[along] - a[along])
+  const room = Math.min(step, len / 3)
+  const at = (p: [number, number], v: number): [number, number] => (axis === 1 ? [p[0], v] : [v, p[1]])
+  const off = (p: [number, number], d: number): [number, number] => (along === 0 ? [p[0] + d, p[1]] : [p[0], p[1] + d])
+  const inner: [number, number][] = []
+  if (first) {
+    const j = off(a, dir * room)
+    inner.push(j, at(j, to))
+  } else inner.push(at(a, to))
+  if (last) {
+    const j = off(b, -dir * room)
+    inner.push(at(j, to), j)
+  } else inner.push(at(b, to))
+  const next = [...pts.slice(0, first ? 1 : k), ...inner, ...pts.slice(last ? k + 1 : k + 2)]
+  const ends = edgeEnds(g.edge)
+  return pointsToRoute(next, ends?.s.position, ends?.t.position)
 }
 
 function onWindowUp(e: PointerEvent) {
@@ -1148,12 +1285,23 @@ function onWindowUp(e: PointerEvent) {
   } else if (g.kind === 'node') {
     if (g.active) endNodeDrag(g, e)
     else {
+      g.select?.()
       if (g.reselect && !e.shiftKey) setSelection({ nodes: [g.nodeId], edges: [] })
       const n = nodeById.value.get(g.nodeId)
       if (n) emit('node-click', n, e)
     }
   } else if (g.kind === 'connect') {
     endConnection(g, e)
+  } else if (g.kind === 'reroute') {
+    const r = rerouting.value
+    rerouting.value = null
+    if (g.moved && r) {
+      const edge = edgeById.value.get(g.edge.id)
+      if (edge) {
+        updateEdge(edge.id, { route: r.route })
+        emit('reroute', { ...edge, route: r.route })
+      }
+    }
   }
 }
 function onWindowCancel(e: PointerEvent) {
@@ -1188,6 +1336,7 @@ function cancelGesture() {
     connection.value = null
     connectionTarget.value = null
   }
+  if (g?.kind === 'reroute') rerouting.value = null
 }
 
 // What the click (a pointerup that didn't move) landed on
@@ -1316,6 +1465,8 @@ function updateMarquee(g: Extract<Gesture, { kind: 'marquee' }>) {
 
 // ── Dragging nodes ────────────────────────────────────────────────────────────────────────────────────────
 function beginNodeDrag(g: Extract<Gesture, { kind: 'node' }>, e: PointerEvent) {
+  g.select?.()
+  g.select = undefined
   const sel = selectedNodes.value.has(g.nodeId) ? selLocal.value.nodes : [g.nodeId]
   // A node whose group moves too comes along by itself
   const ids = sel.filter((id) => {
@@ -1490,7 +1641,7 @@ function findInsert(g: Extract<Gesture, { kind: 'node' }>): typeof insertPlan {
     if (e.deletable === false) continue
     const geo = edgeGeometry(e)
     if (!geo) continue
-    const d = distanceToPoints(cx, cy, edgePathPoints(edgeType(e), geo))
+    const d = distanceToPoints(cx, cy, edgeCorners(e) ?? edgePathPoints(edgeRoute(e), geo))
     if (d <= reach && (!best || d < best.d)) best = { edge: e, d }
   }
   if (!best) return null
@@ -1603,9 +1754,16 @@ function endNodeDrag(g: Extract<Gesture, { kind: 'node' }>, e: PointerEvent) {
     })
     // Spliced in without room: it moves to sit after A, and C with everything after it moves on to make room
     const placed = spliced && plan ? makeRoom(nodes, plan) : nodes
+    // Routes between two moved nodes move with them
+    const p0 = g.starts.get(g.nodeId)
+    const s0 = springs.get(g.nodeId)
+    let edges = spliced ? [...edgesLocal.value.filter((x) => x !== plan!.edge), ...spliced] : undefined
+    if (p0 && s0 && !reparent.size && (s0.tx !== p0.x || s0.ty !== p0.y) && edgesLocal.value.some((x) => x.route && movedSet.has(x.source) && movedSet.has(x.target))) {
+      edges = (edges ?? edgesLocal.value).map((x) => (x.route && movedSet.has(x.source) && movedSet.has(x.target) ? { ...x, route: shiftRoute(x, s0.tx - p0.x, s0.ty - p0.y) } : x))
+    }
     // Let go first, so the spliced node springs to its place too
     if (spliced) dragging.value = new Set()
-    commit({ nodes: placed, edges: spliced ? [...edgesLocal.value.filter((x) => x !== plan!.edge), ...spliced] : undefined })
+    commit({ nodes: placed, edges })
     const first = nodeById.value.get(g.nodeId)
     if (first) announce(locale.flowMoved.replace('{label}', nodeLabel(first)))
   }
@@ -1642,9 +1800,9 @@ function autoPan(dt: number) {
 
 // ── Connecting ────────────────────────────────────────────────────────────────────────────────────────────
 function startConnection(e: PointerEvent, nodeId: string, handleId: string | null, type: 'source' | 'target') {
-  const from = handlePoint(nodeId, type, handleId)
+  const from = rawHandlePoint(nodeId, type, handleId)
   if (!from) return
-  gesture = { kind: 'connect', id: e.pointerId, from: { nodeId, handleId, type }, moved: false }
+  gesture = { kind: 'connect', id: e.pointerId, from: { nodeId, handleId, type }, tap: { x: e.clientX, y: e.clientY, touch: e.pointerType === 'touch', nodeId }, moved: false }
   connection.value = { from, to: { x: from.x, y: from.y }, toPosition: null, type, edgeType: edgeRoute({ ...props.defaultEdgeOptions }) }
   pointer.x = e.clientX
   pointer.y = e.clientY
@@ -1653,21 +1811,78 @@ function startConnection(e: PointerEvent, nodeId: string, handleId: string | nul
 }
 // A branch: a new connection from the edge's source, its preview leaving from where the edge was grabbed
 function startBranch(pan: { id: number; sx: number; sy: number }, edge: FlowEdge, e: PointerEvent) {
-  const src = handlePoint(edge.source, 'source', edge.sourceHandle)
+  const src = rawHandlePoint(edge.source, 'source', edge.sourceHandle)
   if (!src) return
   const handleId = edge.sourceHandle ?? null
-  const g: Gesture = { kind: 'connect', id: pan.id, from: { nodeId: edge.source, handleId, type: 'source' }, moved: true }
+  const { direction, segment, ...at } = pointOnEdge(edge, screenToFlow({ x: pan.sx, y: pan.sy }))
+  const g: Gesture = { kind: 'connect', id: pan.id, from: { nodeId: edge.source, handleId, type: 'source' }, branch: { edge, at, direction, segment }, moved: true }
   gesture = g
-  const at = screenToFlow({ x: pan.sx, y: pan.sy })
   connection.value = { from: { x: at.x, y: at.y, position: src.position }, to: at, toPosition: null, type: 'source', edgeType: edgeRoute(edge) }
   emit('connect-start', { nodeId: edge.source, handleId, type: 'source' })
   moveConnection(g, e.clientX, e.clientY)
   kick()
 }
+// The point of an edge nearest to p; with snapToGrid, on the grid along the segment it falls on (so it stays on the edge)
+function pointOnEdge(edge: FlowEdge, p: FlowXY): FlowXY & { direction: FlowPosition; segment: number } {
+  const geo = edgeGeometry(edge)
+  if (!geo) return { ...p, direction: 'right', segment: 0 }
+  const pts = edgeCorners(edge) ?? edgePathPoints(edgeRoute(edge), geo)
+  let best = { x: p.x, y: p.y, d: Infinity, a: pts[0]!, b: pts[0]!, i: 0 }
+  for (let i = 1; i < pts.length; i++) {
+    const [ax, ay] = pts[i - 1]!
+    const [bx, by] = pts[i]!
+    const dx = bx - ax
+    const dy = by - ay
+    const len = dx * dx + dy * dy
+    const t = len ? Math.max(0, Math.min(1, ((p.x - ax) * dx + (p.y - ay) * dy) / len)) : 0
+    const x = ax + t * dx
+    const y = ay + t * dy
+    const d = Math.hypot(x - p.x, y - p.y)
+    if (d < best.d) best = { x, y, d, a: pts[i - 1]!, b: pts[i]!, i: i - 1 }
+  }
+  let { x, y } = best
+  const step = props.gridSize || 20
+  if (props.snapToGrid) {
+    const clamp = (v: number, u: number, w: number) => Math.max(Math.min(u, w), Math.min(Math.max(u, w), v))
+    if (Math.abs(best.a[1] - best.b[1]) < 0.01) x = clamp(Math.round(x / step) * step, best.a[0], best.b[0])
+    else if (Math.abs(best.a[0] - best.b[0]) < 0.01) y = clamp(Math.round(y / step) * step, best.a[1], best.b[1])
+  }
+  const dx = best.b[0] - best.a[0]
+  const dy = best.b[1] - best.a[1]
+  const direction: FlowPosition = Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? 'right' : 'left') : dy >= 0 ? 'bottom' : 'top'
+  return { x, y, direction, segment: best.i }
+}
+function getEdgeAt(p: FlowXY, opts: { radius?: number; ignore?: (e: FlowEdge) => boolean } = {}): FlowEdgeHit | null {
+  const radius = opts.radius ?? 8
+  let best: { edge: FlowEdge; d: number } | null = null
+  for (const e of visibleEdges.value) {
+    if (opts.ignore?.(e)) continue
+    const geo = edgeGeometry(e)
+    if (!geo) continue
+    const d = distanceToPoints(p.x, p.y, edgeCorners(e) ?? edgePathPoints(edgeRoute(e), geo))
+    if (d <= radius && (!best || d < best.d)) best = { edge: e, d }
+  }
+  if (!best) return null
+  const { direction, segment, ...position } = pointOnEdge(best.edge, p)
+  return { edge: best.edge, position, direction, routes: splitRoute(best.edge, position, segment, direction) }
+}
+// An orthogonal edge's own route cut at a point of its segment `k`: the routes that keep each half's shape
+function splitRoute(edge: FlowEdge, at: FlowXY, k: number, direction: FlowPosition) {
+  const corners = edgeCorners(edge)
+  const ends = edgeEnds(edge)
+  if (!corners || !ends || !edge.route) return undefined
+  const p: [number, number] = [at.x, at.y]
+  const back = OPPOSITE[direction]
+  return {
+    before: pointsToRoute([...corners.slice(0, k + 1), p], ends.s.position, back),
+    after: pointsToRoute([p, ...corners.slice(k + 1)], direction, ends.t.position),
+  }
+}
+const OPPOSITE: Record<FlowPosition, FlowPosition> = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' }
 function startReconnect(e: PointerEvent, edge: FlowEdge, end: 'source' | 'target') {
   // Dragging the target end: the connection runs from the source, and the other way round
   const fixed = end === 'target' ? { nodeId: edge.source, handleId: edge.sourceHandle ?? null, type: 'source' as const } : { nodeId: edge.target, handleId: edge.targetHandle ?? null, type: 'target' as const }
-  const from = handlePoint(fixed.nodeId, fixed.type, fixed.handleId)
+  const from = rawHandlePoint(fixed.nodeId, fixed.type, fixed.handleId)
   if (!from) return
   gesture = { kind: 'connect', id: e.pointerId, from: fixed, reconnect: { edge, end }, moved: false }
   const to = screenToFlow({ x: e.clientX, y: e.clientY })
@@ -1693,7 +1908,7 @@ function moveConnection(g: Extract<Gesture, { kind: 'connect' }>, cx: number, cy
   const p = screenToFlow({ x: cx, y: cy })
   const want = g.from.type === 'source' ? 'target' : 'source'
   const radius = props.connectionRadius / vp.value.zoom
-  let best: { nodeId: string; h: FlowHandleBounds | null; d: number; x: number; y: number; position: FlowPosition } | null = null
+  let best: { nodeId: string; h: FlowHandleBounds | null; d: number; x: number; y: number; position: FlowPosition | 'auto' } | null = null
   for (const n of visibleNodes.value) {
     if (n.connectable === false) continue
     const a = getAbsolutePosition(n.id)
@@ -1736,17 +1951,31 @@ function endConnection(g: Extract<Gesture, { kind: 'connect' }>, e: PointerEvent
   connection.value = null
   connectionTarget.value = null
   const position = screenToFlow({ x: e.clientX, y: e.clientY })
+  // A tap on a handle (no drag) selects its node, as a tap anywhere else on it would
+  const t = g.tap
+  if (t && Math.hypot(e.clientX - t.x, e.clientY - t.y) < (t.touch ? DRAG_SLOP_TOUCH : DRAG_SLOP_MOUSE)) {
+    const n = nodeById.value.get(t.nodeId)
+    if (n && canSelect.value && n.selectable !== false) setSelection({ nodes: [n.id], edges: [] })
+    if (n) emit('node-click', n, e)
+    emit('connect-end', { connection: null, position, from: g.from })
+    return
+  }
   const c = cand?.valid ? connectionFor(g.from, cand.nodeId, cand.handleId) : null
   if (g.reconnect) {
     const edge = g.reconnect.edge
     if (c) {
       emit('reconnect', { edge, connection: c })
-      if (props.autoConnect) updateEdge(edge.id, { source: c.source, target: c.target, sourceHandle: c.sourceHandle, targetHandle: c.targetHandle })
+      if (props.autoConnect) updateEdge(edge.id, { source: c.source, target: c.target, sourceHandle: c.sourceHandle, targetHandle: c.targetHandle, route: undefined, [g.reconnect.end === 'source' ? 'sourcePosition' : 'targetPosition']: undefined })
     } else if (g.moved && !cand && edge.deletable !== false) {
       // Pulled off and dropped on nothing: disconnected (dropped on a handle it can't join, it stays)
       remove({ edges: [edge.id] })
     }
     return
+  }
+  if (g.branch) {
+    const b = g.branch
+    emit('branch', { edge: b.edge, connection: c, position: b.at, direction: b.direction, end: position, routes: splitRoute(b.edge, b.at, b.segment, b.direction) })
+    if (props.edgeBranching === 'junction') return
   }
   if (c) {
     emit('connect', c)
@@ -1764,10 +1993,11 @@ const connectionPath = computed(() => {
   if (!c) return ''
   const flip = c.type === 'target'
   const opposite: Record<FlowPosition, FlowPosition> = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' }
-  const toPos = c.toPosition ?? opposite[c.from.position]
+  const fromPos = resolveSide(c.from.position, c.from, c.to, c.type)
+  const toPos = c.toPosition && c.toPosition !== 'auto' ? c.toPosition : c.toPosition === 'auto' ? sideToward(c.to, c.from) : opposite[fromPos]
   const ends = flip
-    ? { sourceX: c.to.x, sourceY: c.to.y, sourcePosition: toPos, targetX: c.from.x, targetY: c.from.y, targetPosition: c.from.position }
-    : { sourceX: c.from.x, sourceY: c.from.y, sourcePosition: c.from.position, targetX: c.to.x, targetY: c.to.y, targetPosition: toPos }
+    ? { sourceX: c.to.x, sourceY: c.to.y, sourcePosition: toPos, targetX: c.from.x, targetY: c.from.y, targetPosition: fromPos }
+    : { sourceX: c.from.x, sourceY: c.from.y, sourcePosition: fromPos, targetX: c.to.x, targetY: c.to.y, targetPosition: toPos }
   return pathFor(c.edgeType, ends).path
 })
 
@@ -1859,6 +2089,7 @@ const context: FlowInternals = {
   getAbsolutePosition,
   getSize,
   getIntersectingNodes,
+  getEdgeAt,
   screenToFlow,
   flowToScreen,
   setViewport,
@@ -1868,6 +2099,7 @@ const context: FlowInternals = {
   zoomOut,
   zoomTo,
   addNodes,
+  change,
   addEdges,
   updateNode,
   updateEdge,
@@ -1900,6 +2132,8 @@ const context: FlowInternals = {
   zIndexOf,
   edgeGeometry,
   isReconnectable,
+  isReroutable,
+  edgeCorners,
   sidePositions,
   onNodeKey,
   onEdgeKey,

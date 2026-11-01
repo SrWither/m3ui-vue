@@ -92,7 +92,27 @@ export interface FlowEdge<D = any> {
   deletable?: boolean
   /** Its ends can be dragged to other handles once selected; default MFlow's `edgesReconnectable` */
   reconnectable?: boolean
+  /**
+   * A `smoothstep`/`step` edge's own route: where its segments after the first run, alternately x and y (see
+   * `routePoints`). Dragging a selected edge's segments writes it (MFlow's `edgesReroutable`); without one it's
+   * routed automatically
+   */
+  route?: number[]
+  /** Its segments can be dragged once selected; default MFlow's `edgesReroutable` */
+  reroutable?: boolean
+  /** The side it leaves an `'auto'` handle by (default the side facing its other end) */
+  sourcePosition?: FlowPosition
+  /** The side it arrives at an `'auto'` handle by (default the side facing its other end) */
+  targetPosition?: FlowPosition
   class?: string
+}
+
+/** An edge found under a point (`getEdgeAt`) */
+export interface FlowEdgeHit {
+  edge: FlowEdge
+  position: FlowXY
+  direction: FlowPosition
+  routes?: { before: number[]; after: number[] }
 }
 
 /** The view: `x`/`y` in px, where the flow's origin is on the canvas, and the zoom */
@@ -112,7 +132,8 @@ export interface FlowSelection { nodes: string[]; edges: string[] }
 export interface FlowHandleBounds {
   id: string | null
   type: 'source' | 'target'
-  position: FlowPosition
+  /** 'auto': each edge leaves or arrives on the side that faces its other end */
+  position: FlowPosition | 'auto'
   x: number
   y: number
   connectable: boolean
@@ -148,6 +169,13 @@ export interface FlowContext {
   getSize(id: string): { width: number; height: number }
   /** Nodes overlapping this one (or a rectangle in flow coordinates), groups and its own family left out */
   getIntersectingNodes(node: string | { x: number; y: number; width: number; height: number }): FlowNode[]
+  /**
+   * The edge passing within `radius` (flow units, default 8) of a flow point, nearest first, skipping the ones
+   * `ignore` returns true for: where on it the point falls (on the grid along it with snapToGrid), the way it runs
+   * there toward its target, and for an edge with its own route, the routes that keep each half's shape if it's split
+   * there (as the `branch` event gives). For dropping something onto an edge, e.g. a junction
+   */
+  getEdgeAt(p: FlowXY, opts?: { radius?: number; ignore?: (e: FlowEdge) => boolean }): FlowEdgeHit | null
   /** Page (client) coordinates → flow coordinates */
   screenToFlow(p: { x: number; y: number }): FlowXY
   flowToScreen(p: FlowXY): { x: number; y: number }
@@ -160,6 +188,8 @@ export interface FlowContext {
   zoomTo(zoom: number, opts?: { animate?: boolean }): void
   addNodes(nodes: FlowNode | FlowNode[]): void
   addEdges(edges: FlowEdge | FlowEdge[]): void
+  /** Several changes as one undoable step (nodes and edges added, changed or removed together): each list given replaces the current one */
+  change(next: { nodes?: FlowNode[]; edges?: FlowEdge[] }): void
   updateNode(id: string, patch: Partial<FlowNode> | ((n: FlowNode) => FlowNode)): void
   updateEdge(id: string, patch: Partial<FlowEdge> | ((e: FlowEdge) => FlowEdge)): void
   /** Deletes nodes (with their edges and children) and edges by id */
@@ -205,6 +235,9 @@ export interface FlowInternals extends FlowContext {
   zIndexOf(id: string): number
   edgeGeometry(e: FlowEdge): FlowEdgeGeometry | null
   isReconnectable(e: FlowEdge): boolean
+  isReroutable(e: FlowEdge): boolean
+  /** The corners of an orthogonal edge (its ends first and last), or null for a curve or a straight line */
+  edgeCorners(e: FlowEdge): [number, number][] | null
   sidePositions(n: FlowNode): { source: FlowPosition; target: FlowPosition }
   onNodeKey(e: KeyboardEvent, id: string): void
   onEdgeKey(e: KeyboardEvent, id: string): void

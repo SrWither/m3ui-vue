@@ -10,7 +10,8 @@ import { FLOW_KEY, FLOW_NODE_KEY, type FlowPosition } from '../composables/useFl
 const props = withDefaults(defineProps<{
   /** `source`: edges leave from it; `target`: they arrive */
   type?: 'source' | 'target'
-  position?: FlowPosition
+  /** Its side; `'auto'` sits in the node's middle (or where you put it) and each edge leaves or arrives on the side facing its other end */
+  position?: FlowPosition | 'auto'
   id?: string
   connectable?: boolean
 }>(), {
@@ -23,12 +24,13 @@ const props = withDefaults(defineProps<{
 const flow = inject(FLOW_KEY, null)
 const state = inject(FLOW_NODE_KEY, null)
 const el = ref<HTMLElement>()
-const side = computed<FlowPosition>(() => props.position ?? (props.type === 'source' ? (flow?.direction.value === 'vertical' ? 'bottom' : 'right') : (flow?.direction.value === 'vertical' ? 'top' : 'left')))
+const side = computed<FlowPosition | 'auto'>(() => props.position ?? (props.type === 'source' ? (flow?.direction.value === 'vertical' ? 'bottom' : 'right') : (flow?.direction.value === 'vertical' ? 'top' : 'left')))
 const canConnect = computed(() => props.connectable && !!flow?.nodesConnectable.value && state?.node.value.connectable !== false)
 const key = computed(() => `${state?.id}:${props.id ?? ''}:${props.type}`)
 const candidate = computed(() => flow?.connectionTarget.value?.key === key.value ? flow.connectionTarget.value : null)
 
-const PLACE: Record<FlowPosition, string> = {
+const PLACE: Record<FlowPosition | 'auto', string> = {
+  auto: 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
   top: 'top-0 left-1/2 -translate-x-1/2 -translate-y-1/2',
   right: 'top-1/2 right-0 translate-x-1/2 -translate-y-1/2',
   bottom: 'bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2',

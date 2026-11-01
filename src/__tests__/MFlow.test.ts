@@ -2,7 +2,9 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import MFlow from '../components/MFlow.vue'
-import type { FlowEdge, FlowNode } from '../composables/useFlow'
+import MFlowHandle from '../components/MFlowHandle.vue'
+import type { FlowEdge, FlowNode, FlowXY } from '../composables/useFlow'
+import { routePoints, pointsToRoute } from '../composables/flowPaths'
 
 // happy-dom has no layout: the canvas is 800×600 at the page's corner, every node 180×60
 beforeEach(() => {
@@ -16,7 +18,7 @@ beforeEach(() => {
     if (this.classList.contains('m3-flow')) return r(0, 0, 800, 600)
     if (this.classList.contains('m3-flow-handle')) {
       const c = this.className
-      const [x, y] = c.includes('right-0') ? [180, 30] : c.includes('bottom-0') ? [90, 60] : c.includes('top-1/2') ? [0, 30] : [90, 0]
+      const [x, y] = c.includes('left-1/2') && c.includes('top-1/2') ? [90, 30] : c.includes('right-0') ? [180, 30] : c.includes('bottom-0') ? [90, 60] : c.includes('top-1/2') ? [0, 30] : [90, 0]
       return r(x - 5, y - 5, 10, 10)
     }
     return r(0, 0, 0, 0)
@@ -379,6 +381,102 @@ describe('MFlow', () => {
     expect(w.emitted('update:viewport')!.at(-1)![0]).toEqual({ x: start.x + 60, y: start.y, zoom })
     touch(window, 'pointerup', 3, 460, 400)
   })
+  it('edgesReroutable: dragging a selected step edge\'s segment gives it a route, which moves with both its nodes', async () => {
+    const edges: FlowEdge[] = [{ id: 'e1', source: 'a', target: 'b', type: 'smoothstep' }]
+    const w = await flow({ edges, edgesReroutable: true, selection: { nodes: [], edges: ['e1'] } })
+    await nextTick()
+    const grip = w.find('[data-flow-segment="0"]')
+    expect(grip.exists()).toBe(true)
+    pointer(grip.element, 'pointerdown', 240, 30)
+    pointer(window, 'pointermove', 240, 60)
+    pointer(window, 'pointermove', 240, 90)
+    pointer(window, 'pointerup', 240, 90)
+    const out = w.emitted('update:edges')!.at(-1)![0] as FlowEdge[]
+    // A jog a grid step from each handle, running where the pointer let go
+    expect(out[0]!.route).toEqual([200, 90, 280])
+    expect(w.emitted('reroute')![0]![0]).toMatchObject({ id: 'e1', route: [200, 90, 280] })
+    await w.setProps({ edges: out })
+    expect(w.find('.m3-flow-edge-line').attributes('d')).toMatch(/^M180,30 L/)
+  })
+  it('a segment grip moves out from under the delete button', async () => {
+    const edges: FlowEdge[] = [{ id: 'e1', source: 'a', target: 'b', type: 'smoothstep' }]
+    const w = await flow({ edges, edgesReroutable: true, selection: { nodes: [], edges: ['e1'] } })
+    await nextTick()
+    // The × sits at (240, 30), 40px wide with its hit area: the grip of the one segment (180 → 300) slides clear of it
+    const grip = w.find('[data-flow-segment="0"]')
+    const cx = Number(grip.attributes('x')) + 9
+    expect(Math.abs(cx - 240)).toBeGreaterThanOrEqual(20 + 9)
+    expect(cx).toBeGreaterThan(180)
+    expect(cx).toBeLessThan(300)
+  })
+  it('getEdgeAt finds the edge under a point, where on it, and which way it runs', async () => {
+    const edges: FlowEdge[] = [{ id: 'e1', source: 'a', target: 'b', type: 'smoothstep' }]
+    const w = await flow({ edges, snapToGrid: true, gridSize: 20 })
+    const ctx = w.vm as unknown as { getEdgeAt: (p: FlowXY, o?: object) => unknown }
+    expect(ctx.getEdgeAt({ x: 243, y: 34 })).toMatchObject({ edge: { id: 'e1' }, position: { x: 240, y: 30 }, direction: 'right' })
+    expect(ctx.getEdgeAt({ x: 243, y: 60 })).toBeNull()
+    expect(ctx.getEdgeAt({ x: 243, y: 34 }, { ignore: (e: FlowEdge) => e.id === 'e1' })).toBeNull()
+  })
+  it('a tap on a handle selects its node; a drag from it still connects', async () => {
+    const w = await flow({ nodes: [N('a', 0, 0), N('b', 300, 0), N('c', 300, 200)] })
+    const out = w.find('[data-flow-node="a"] [data-flow-handle="source"]').element
+    pointer(out, 'pointerdown', 180, 30)
+    pointer(window, 'pointerup', 181, 30)
+    expect(w.emitted('update:selection')!.at(-1)![0]).toEqual({ nodes: ['a'], edges: [] })
+    expect(w.emitted('connect')).toBeUndefined()
+    // b's input already has e1: tapped (not pulled), it selects b and leaves e1 alone
+    pointer(w.find('[data-flow-node="b"] [data-flow-handle="target"]').element, 'pointerdown', 300, 30)
+    pointer(window, 'pointerup', 300, 30)
+    expect(w.emitted('update:selection')!.at(-1)![0]).toEqual({ nodes: ['b'], edges: [] })
+    expect(w.emitted('update:edges')).toBeUndefined()
+  })
+  it("a handle at position 'auto' leaves on the side facing the edge's other end", async () => {
+    const edges: FlowEdge[] = [{ id: 'e1', source: 'a', target: 'b', type: 'step', markerEnd: 'none' }]
+    const w = mount(MFlow, {
+      props: { nodes: [N('a', 0, 0, { type: 'dot' }), N('b', 300, 200)], edges, animate: false },
+      slots: { 'node-dot': `<template #node-dot><div style="width:180px;height:60px"><MFlowHandle type="source" position="auto" /></div></template>` },
+      global: { components: { MFlowHandle } },
+      attachTo: document.body,
+    })
+    await flushPromises()
+    await nextTick()
+    // From the middle of a (90, 30) toward b's left side (300, 230): it goes right first
+    expect(w.find('.m3-flow-edge-line').attributes('d')).toMatch(/^M90,30 L\d+/)
+    const first = () => w.find('.m3-flow-edge-line').attributes('d').match(/^M90,30 L(-?[\d.]+),(-?[\d.]+)/)!
+    expect(Number(first()[1])).toBeGreaterThan(90)
+    // b far below and only a little to the right: it goes down first
+    await w.setProps({ nodes: [N('a', 0, 0, { type: 'dot' }), N('b', 120, 600)] })
+    await nextTick()
+    expect(Number(first()[1])).toBe(90)
+    expect(Number(first()[2])).toBeGreaterThan(30)
+    // An edge can ask for its side: up first, whatever the other end
+    await w.setProps({ edges: [{ ...edges[0]!, sourcePosition: 'top' as const }] })
+    await nextTick()
+    expect(Number(first()[1])).toBe(90)
+    expect(Number(first()[2])).toBeLessThan(30)
+  })
+  it('routePoints / pointsToRoute round-trip, and the ends stretch when a node moves', () => {
+    const ends = { sourceX: 0, sourceY: 0, sourcePosition: 'right' as const, targetX: 200, targetY: 100, targetPosition: 'left' as const }
+    const pts = routePoints({ ...ends, route: [60, 40, 140] })
+    expect(pts).toEqual([[0, 0], [60, 0], [60, 40], [140, 40], [140, 100], [200, 100]])
+    expect(pointsToRoute(pts, 'right', 'left')).toEqual([60, 40, 140])
+    expect(pointsToRoute(pts, 'right')).toEqual([60, 40, 140, 100])
+    // The target went up: the last leg still arrives level with it
+    expect(routePoints({ ...ends, targetY: -20, route: [60, 40, 140] }).at(-2)).toEqual([140, -20])
+  })
+  it('a pinch that starts on a node zooms without selecting it; a tap on a node still selects it', async () => {
+    const w = await flow()
+    const touch = (el: EventTarget, type: string, id: number, x: number, y: number) => pointer(el, type, x, y, { pointerType: 'touch', pointerId: id })
+    touch(node(w, 'a'), 'pointerdown', 1, 60, 30)
+    touch(w.element, 'pointerdown', 2, 260, 30)
+    touch(window, 'pointermove', 2, 460, 30)
+    touch(window, 'pointerup', 1, 60, 30)
+    touch(window, 'pointerup', 2, 460, 30)
+    expect(w.emitted('update:selection')).toBeUndefined()
+    touch(node(w, 'b'), 'pointerdown', 3, 360, 30)
+    touch(window, 'pointerup', 3, 360, 30)
+    expect(w.emitted('update:selection')!.at(-1)![0]).toEqual({ nodes: ['b'], edges: [] })
+  })
   it('a node spliced in without room pushes the next one, and what comes after it, along', async () => {
     // a (0..180) → c (260..440) → d (600..): b (180 wide) can't fit between a and c with 48px each side
     const nodes = [N('a', 0, 0), N('c', 260, 0), N('d', 600, 0), N('b', 100, 300)]
@@ -522,6 +620,35 @@ describe('MFlow', () => {
     expect((w.emitted('update:edges')!.at(-1)![0] as FlowEdge[]).map((e) => [e.source, e.target])).toEqual([['a', 'b'], ['a', 'c']])
     // The view didn't pan meanwhile
     expect(w.emitted('update:viewport')).toBeUndefined()
+  })
+  it("edgeBranching 'junction': adds nothing, and tells where on the edge the branch was grabbed", async () => {
+    const edges: FlowEdge[] = [{ id: 'e1', source: 'a', target: 'b', type: 'smoothstep' }]
+    const w = await flow({ nodes: [N('a', 0, 0), N('b', 300, 0), N('c', 300, 200)], edges, edgeBranching: 'junction', snapToGrid: true, gridSize: 20 })
+    pointer(w.find('[data-flow-edge="e1"] path').element, 'pointerdown', 243, 34)
+    pointer(window, 'pointermove', 340, 220)
+    pointer(window, 'pointerup', 340, 220)
+    // On the edge (y 30) and on the grid along it (x 240)
+    expect(w.emitted('branch')![0]![0]).toMatchObject({ edge: { id: 'e1' }, connection: { source: 'a', target: 'c' }, position: { x: 240, y: 30 }, direction: 'right', end: { x: 340, y: 220 } })
+    expect(w.emitted('connect')).toBeUndefined()
+    expect(w.emitted('update:edges')).toBeUndefined()
+    // Dropped on nothing: still a branch, with no connection
+    pointer(w.find('[data-flow-edge="e1"] path').element, 'pointerdown', 260, 30)
+    pointer(window, 'pointermove', 500, 500)
+    pointer(window, 'pointerup', 500, 500)
+    expect(w.emitted('branch')![1]![0]).toMatchObject({ connection: null, position: { x: 260, y: 30 } })
+  })
+  it("edgeBranching 'junction': on a vertical run, says it runs down, and splits an edge's own route in two", async () => {
+    // a's right (180, 30) → over at x 240 → down to b's left (300, 230)
+    const edges: FlowEdge[] = [{ id: 'e1', source: 'a', target: 'b', type: 'smoothstep', route: [240] }]
+    const w = await flow({ nodes: [N('a', 0, 0), N('b', 300, 200), N('c', 600, 400)], edges, edgeBranching: 'junction', snapToGrid: true, gridSize: 20 })
+    pointer(w.find('[data-flow-edge="e1"] path').element, 'pointerdown', 243, 128)
+    pointer(window, 'pointermove', 500, 500)
+    pointer(window, 'pointerup', 500, 500)
+    const ev = w.emitted('branch')![0]![0] as { position: FlowXY; direction: string; routes: { before: number[]; after: number[] } }
+    expect(ev.position).toEqual({ x: 240, y: 120 })
+    expect(ev.direction).toBe('bottom')
+    expect(routePoints({ sourceX: 180, sourceY: 30, sourcePosition: 'right', targetX: 240, targetY: 120, targetPosition: 'top', route: ev.routes.before })).toEqual([[180, 30], [240, 30], [240, 120]])
+    expect(routePoints({ sourceX: 240, sourceY: 120, sourcePosition: 'bottom', targetX: 300, targetY: 230, targetPosition: 'left', route: ev.routes.after })).toEqual([[240, 120], [240, 230], [300, 230]])
   })
   it('edgeBranching: a click still selects; off (the default), a drag from an edge pans; a finger only branches a selected edge', async () => {
     let w = await flow({ nodes: [N('a', 0, 0), N('b', 300, 0), N('c', 300, 200)], edgeBranching: true })

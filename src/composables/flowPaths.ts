@@ -125,8 +125,11 @@ export function smoothStepPoints(p: FlowEdgePathParams & { offset?: number }): P
     if ((ty - sy) * nsy >= off && (tx - sx) * -ntx >= off) mid = [[sx, ty]]
     else mid = [s1, [t1[0], s1[1]], t1]
   }
-  const pts: Pt[] = [[sx, sy], ...mid, [tx, ty]]
-  // Drop repeated and collinear points
+  return cleanPoints([[sx, sy], ...mid, [tx, ty]])
+}
+
+/** Drops repeated and collinear points from an orthogonal polyline */
+function cleanPoints(pts: Pt[]): Pt[] {
   const out: Pt[] = []
   for (const q of pts) {
     const a = out[out.length - 1]
@@ -155,10 +158,76 @@ function midpointAlong(pts: Pt[]): Pt {
   return pts[0] ?? [0, 0]
 }
 
+/**
+ * The corners of an orthogonal edge routed through `route`: the positions of its segments after the first, alternately
+ * x and y, starting with where the leg leaving the source ends (an x when the source's side is left or right). The
+ * legs at the ends stretch to wherever the nodes are, and a corner is added before the target when it's needed to
+ * arrive square to its side, so the route stays orthogonal as the nodes move.
+ */
+export function routePoints(p: FlowEdgePathParams & { route: number[] }): Pt[] {
+  const { sourceX: sx, sourceY: sy, targetX: tx, targetY: ty } = p
+  const sp = p.sourcePosition ?? 'bottom'
+  const tp = p.targetPosition ?? 'top'
+  let horizontal = NORMAL[sp][0] !== 0
+  const tH = NORMAL[tp][0] !== 0
+  let cur: Pt = [sx, sy]
+  const pts: Pt[] = [cur]
+  for (const c of p.route) {
+    cur = horizontal ? [c, cur[1]] : [cur[0], c]
+    pts.push(cur)
+    horizontal = !horizontal
+  }
+  if (horizontal === tH) {
+    // The next leg runs the target's way: straight in when it's level with it, else a jog halfway
+    if (Math.abs(tH ? cur[1] - ty : cur[0] - tx) > 0.01) {
+      if (tH) {
+        const mx = (cur[0] + tx) / 2
+        pts.push([mx, cur[1]], [mx, ty])
+      } else {
+        const my = (cur[1] + ty) / 2
+        pts.push([cur[0], my], [tx, my])
+      }
+    }
+  } else pts.push(tH ? [cur[0], ty] : [tx, cur[1]])
+  pts.push([tx, ty])
+  return cleanPoints(pts)
+}
+
+/** The other way round: the `route` that runs an orthogonal edge through these corners (its ends first and last) */
+export function pointsToRoute(points: Pt[], sourcePosition: FlowPosition = 'bottom', targetPosition?: FlowPosition): number[] {
+  const pts = cleanPoints(points)
+  const route: number[] = []
+  let horizontal = NORMAL[sourcePosition][0] !== 0
+  let cur = pts[0]
+  if (!cur) return route
+  for (let i = 1; i < pts.length - 1; i++) {
+    const q = pts[i]!
+    const segH = Math.abs(q[1] - cur[1]) < 0.01
+    // A leg the other way first: a zero-length one keeps the axes alternating
+    if (segH !== horizontal) {
+      route.push(horizontal ? cur[0] : cur[1])
+      horizontal = !horizontal
+    }
+    // The last corner follows the target (when the last leg arrives square to its side), so it isn't kept
+    if (i === pts.length - 2 && targetPosition && (NORMAL[targetPosition][0] !== 0) === !horizontal) break
+    route.push(horizontal ? q[0] : q[1])
+    horizontal = !horizontal
+    cur = q
+  }
+  return route
+}
+
+/** Right-angled steps through `route` (see `routePoints`), rounded like `getSmoothStepPath` */
+export function getRoutedPath(p: FlowEdgePathParams & { route: number[]; borderRadius?: number }): FlowEdgePath {
+  return roundedPath(routePoints(p), p.borderRadius ?? 8)
+}
+
 /** Right-angled steps with rounded corners (`borderRadius`, default 8; 0 gives sharp steps). `offset` (default 20) is how far it leaves a node before turning */
 export function getSmoothStepPath(p: FlowEdgePathParams & { borderRadius?: number; offset?: number }): FlowEdgePath {
-  const pts = smoothStepPoints(p)
-  const radius = p.borderRadius ?? 8
+  return roundedPath(smoothStepPoints(p), p.borderRadius ?? 8)
+}
+
+function roundedPath(pts: Pt[], radius: number): FlowEdgePath {
   let d = `M${r(pts[0]![0])},${r(pts[0]![1])}`
   for (let i = 1; i < pts.length; i++) {
     const [x, y] = pts[i]!
@@ -187,7 +256,8 @@ export function getSmoothStepPath(p: FlowEdgePathParams & { borderRadius?: numbe
  * Points along an edge's path, close enough together to measure how far something is from it (bezier curves are
  * sampled; step paths are their corners)
  */
-export function edgePathPoints(type: string | undefined, p: FlowEdgePathParams): [number, number][] {
+export function edgePathPoints(type: string | undefined, p: FlowEdgePathParams & { route?: number[] }): [number, number][] {
+  if (p.route && (type === 'smoothstep' || type === 'step')) return routePoints({ ...p, route: p.route })
   if (type === 'straight') return [[p.sourceX, p.sourceY], [p.targetX, p.targetY]]
   if (type === 'smoothstep' || type === 'step') return smoothStepPoints(p)
   const sp = p.sourcePosition ?? 'bottom'
@@ -222,8 +292,8 @@ export function distanceToPoints(x: number, y: number, pts: [number, number][]):
 }
 
 /** `getSmoothStepPath` with sharp corners */
-export function getStepPath(p: FlowEdgePathParams & { offset?: number }): FlowEdgePath {
-  return getSmoothStepPath({ ...p, borderRadius: 0 })
+export function getStepPath(p: FlowEdgePathParams & { offset?: number; route?: number[] }): FlowEdgePath {
+  return p.route ? getRoutedPath({ ...p, route: p.route, borderRadius: 0 }) : getSmoothStepPath({ ...p, borderRadius: 0 })
 }
 
 /** An arrowhead's path at (x, y) pointing along `angle`: open (two strokes) or closed (a filled triangle's outline) */
