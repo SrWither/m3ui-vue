@@ -10,3 +10,7 @@ graphify-out/graph.html
 graphify-out/cost.json
 graphify-out/.graphify_python
 graphify-out/.graphify_root
+graphify-out/.graphify_build_state.json
+graphify-out/.graphify_labels.json.sig
+graphify-out/.graphify_labels.pending.json
+graphify-out/20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]/
