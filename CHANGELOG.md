@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 - `MFloorPlan`: `editable` with `selectable="multiple"` keeps a plain click toggling tables in and out of the selection (to merge them) while editing, and a drag moves the table pressed on its own, to bring the tables being merged together. Before, `selectable` only applied outside editing; without `multiple`, editing works as it did
+- `MFloorPlan` `tableSnap="cell"`: tables snap their middle to the middle of a grid square (default `point`, a grid point as before), so a plan of cells keeps its tables in the squares and steps them a square at a time, while walls, zones and decor snap to the points
 
 ## [1.3.4] - 2026-11-01
 
