@@ -74,7 +74,7 @@ function deleteCorner() {
     <!-- A table -->
     <template v-if="table">
       <div class="flex items-center gap-2 text-title-small"><MIcon name="table_restaurant" :size="18" />{{ locale.floorTableN.replace('{label}', table.label) }}</div>
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-3">
         <MTextField :model-value="table.label" :label="locale.floorLabel" variant="outlined" @update:model-value="upTable({ label: String($event) })" />
         <MNumberField :model-value="table.seats ?? 0" :label="locale.floorSeatsField" variant="outlined" :min="0" :max="40" @update:model-value="upTable({ seats: $event ?? 0, width: undefined, height: undefined })" />
       </div>
@@ -124,7 +124,7 @@ function deleteCorner() {
           />
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-3">
         <MNumberField :model-value="Math.round(area.width)" :label="locale.floorWidth" variant="outlined" :min="10" @update:model-value="upArea({ width: $event ?? area.width })" />
         <MNumberField :model-value="Math.round(area.height)" :label="locale.floorHeight" variant="outlined" :min="10" @update:model-value="upArea({ height: $event ?? area.height })" />
       </div>
@@ -150,7 +150,7 @@ function deleteCorner() {
     <template v-else-if="item">
       <div class="flex items-center gap-2 text-title-small"><MIcon :name="kind?.icon ?? 'category'" :size="18" />{{ floorDecorName(item.kind, ctx.kinds.value, locale) }}</div>
       <MTextField :model-value="item.label ?? ''" :label="locale.floorLabel" variant="outlined" @update:model-value="upDecor({ label: String($event) || undefined })" />
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-3">
         <MNumberField :model-value="Math.round(item.width ?? kind?.width ?? 40)" :label="locale.floorWidth" variant="outlined" :min="4" @update:model-value="upDecor({ width: $event ?? undefined })" />
         <MNumberField :model-value="Math.round(item.height ?? kind?.height ?? 40)" :label="locale.floorHeight" variant="outlined" :min="4" @update:model-value="upDecor({ height: $event ?? undefined })" />
       </div>
