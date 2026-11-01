@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.3.5] - Unreleased
+## [1.3.5] - 2026-11-01
 
 ### Added
 - `MFloorPlan`: `editable` with `selectable="multiple"` keeps a plain click toggling tables in and out of the selection (to merge them) while editing, and a drag moves the table pressed on its own, to bring the tables being merged together. Before, `selectable` only applied outside editing; without `multiple`, editing works as it did
