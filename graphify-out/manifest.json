@@ -12,9 +12,9 @@
     "semantic_hash": "f61180fe689860444f103430f328873f"
   },
   "package.json": {
-    "mtime": 1793483456.901398,
-    "seen": 1793483931.8639646,
-    "ast_hash": "40abe800102f3bee3e14253ae61d9c82",
+    "mtime": 1793558238.467688,
+    "seen": 1793558504.7500339,
+    "ast_hash": "58bd350aa66e8a2b7f251bff47d63a2a",
     "semantic_hash": ""
   },
   "scripts/generate-api.mjs": {
@@ -2094,9 +2094,9 @@
     "semantic_hash": "a5d6dfe73f3317d1e548282b95557b41"
   },
   "src/composables/useLocale.ts": {
-    "mtime": 1793484921.8142364,
-    "seen": 1793485233.6840117,
-    "ast_hash": "dbe0cbc33fa419dc3c465577032ba9e1",
+    "mtime": 1793560013.2260518,
+    "seen": 1793560559.0489523,
+    "ast_hash": "b29e1a4e6f8a05ad8909a38d1f697b3e",
     "semantic_hash": ""
   },
   "src/composables/useMap.ts": {
@@ -2298,27 +2298,27 @@
     "semantic_hash": "dda986e28d3b06e795360687082de8c5"
   },
   "src/index.ts": {
-    "mtime": 1793484921.814055,
-    "seen": 1793485233.6840475,
-    "ast_hash": "54ddaa19828318e7cce84ae6c31ca4e0",
+    "mtime": 1793560055.999135,
+    "seen": 1793560559.048988,
+    "ast_hash": "2953b1ca069a226355cb0c04b45d8654",
     "semantic_hash": ""
   },
   "src/locales/de.ts": {
-    "mtime": 1793484921.814782,
-    "seen": 1793485233.6840482,
-    "ast_hash": "f912dc529f6a4aa3fb4f3d52ec17daf6",
+    "mtime": 1793560013.2266116,
+    "seen": 1793560559.0489888,
+    "ast_hash": "c830fa7c081a99356c638ec77274b76a",
     "semantic_hash": ""
   },
   "src/locales/es.ts": {
-    "mtime": 1793484921.814469,
-    "seen": 1793485233.684049,
-    "ast_hash": "755f51b65c2ce6af6f8b36627268f39b",
+    "mtime": 1793560013.2263095,
+    "seen": 1793560559.0489898,
+    "ast_hash": "5d18bac4c90695cc9fb8726fdf834092",
     "semantic_hash": ""
   },
   "src/locales/fr.ts": {
-    "mtime": 1793484921.8145711,
-    "seen": 1793485233.6840496,
-    "ast_hash": "0916a0e1636348ab75819e11d62fbe97",
+    "mtime": 1793560013.2264273,
+    "seen": 1793560559.0489905,
+    "ast_hash": "6b75a0603eac4ab9c80f25f83cceed1a",
     "semantic_hash": ""
   },
   "src/locales/index.ts": {
@@ -2328,27 +2328,27 @@
     "semantic_hash": "248a0c9a6940d27c4afe06debc95e638"
   },
   "src/locales/ja.ts": {
-    "mtime": 1793484921.8149292,
-    "seen": 1793485233.6840515,
-    "ast_hash": "128028de18ef6f55e17876d96d1b6059",
+    "mtime": 1793560013.2267184,
+    "seen": 1793560559.0489922,
+    "ast_hash": "a7ae80b548ee3b2dcd9d2f8b52c6f7da",
     "semantic_hash": ""
   },
   "src/locales/ko.ts": {
-    "mtime": 1793484921.8151875,
-    "seen": 1793485233.6840522,
-    "ast_hash": "fc6749b2d6d1d275bde065022279011a",
+    "mtime": 1793560013.226972,
+    "seen": 1793560559.048993,
+    "ast_hash": "dba93580d4a7f0af925b4beac0e2fc47",
     "semantic_hash": ""
   },
   "src/locales/pt.ts": {
-    "mtime": 1793484921.8147044,
-    "seen": 1793485233.684053,
-    "ast_hash": "b00fb6cd8624e98f59644846a46bfc91",
+    "mtime": 1793560013.2265198,
+    "seen": 1793560559.0489938,
+    "ast_hash": "0f78641ab48cec02fbbee5c9cb772295",
     "semantic_hash": ""
   },
   "src/locales/zh.ts": {
-    "mtime": 1793484921.8150477,
-    "seen": 1793485233.6840537,
-    "ast_hash": "ced050c64ff4c9fdb656ec6ddfc0c01e",
+    "mtime": 1793560013.2268376,
+    "seen": 1793560559.0489945,
+    "ast_hash": "5956886d383bc6174ab23e90191ccc4d",
     "semantic_hash": ""
   },
   "src/map.ts": {
@@ -2412,9 +2412,9 @@
     "semantic_hash": "c11c1004e9d7542f8fbaa5f1f8d58de2"
   },
   "CHANGELOG.md": {
-    "mtime": 1793485399.3333094,
-    "seen": 1793485403.7345078,
-    "ast_hash": "cba0c1a4036d197c4571c38edbc0157e",
+    "mtime": 1793563300.299596,
+    "seen": 1793566850.8988135,
+    "ast_hash": "a06aa2860b2395c40d9540e9cf9e7e94",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
@@ -2514,9 +2514,9 @@
     "semantic_hash": ""
   },
   "src/components/MPdfViewer.vue": {
-    "mtime": 1793431855.109966,
-    "seen": 1793432126.1198568,
-    "ast_hash": "b3bcc261d6d5908d7ae9418963495f82",
+    "mtime": 1793487149.4871063,
+    "seen": 1793487151.6080778,
+    "ast_hash": "f91b523865c7e5b10b50908609f73840",
     "semantic_hash": ""
   },
   "src/components/_MPdfPage.vue": {
@@ -2538,9 +2538,9 @@
     "semantic_hash": ""
   },
   "src/__tests__/MFlow.test.ts": {
-    "mtime": 1793470758.5029786,
-    "seen": 1793471031.6724107,
-    "ast_hash": "1ead85839e379c80feacd7977c1569ff",
+    "mtime": 1793509457.5293465,
+    "seen": 1793509561.987781,
+    "ast_hash": "49c91dc0baa2194f8129fa4159d06b6e",
     "semantic_hash": ""
   },
   "src/__tests__/flowLayout.test.ts": {
@@ -2550,9 +2550,9 @@
     "semantic_hash": ""
   },
   "src/components/MFlow.vue": {
-    "mtime": 1793470762.326662,
-    "seen": 1793471031.672762,
-    "ast_hash": "45e538a15c8bf5fa9cda861699474160",
+    "mtime": 1793509440.440073,
+    "seen": 1793509561.9879396,
+    "ast_hash": "29fd49c8dc56175e4c10e07eee15b6e8",
     "semantic_hash": ""
   },
   "src/components/MFlowControls.vue": {
@@ -2562,9 +2562,9 @@
     "semantic_hash": ""
   },
   "src/components/MFlowHandle.vue": {
-    "mtime": 1793406745.7701128,
-    "seen": 1793408623.0076177,
-    "ast_hash": "8a059fc887d3762365d683aea1c0bc9a",
+    "mtime": 1793508075.3474925,
+    "seen": 1793508206.3730192,
+    "ast_hash": "4de9cb104cc36dcb8295f28b8e69b5fe",
     "semantic_hash": ""
   },
   "src/components/MFlowMinimap.vue": {
@@ -2580,9 +2580,9 @@
     "semantic_hash": ""
   },
   "src/components/_MFlowEdge.vue": {
-    "mtime": 1793470762.326662,
-    "seen": 1793471031.6729941,
-    "ast_hash": "f71548f5db8f09aa2cee0d49002cb0fe",
+    "mtime": 1793507762.7896025,
+    "seen": 1793507824.8238802,
+    "ast_hash": "56f128cfff0e9adec86ec26899dfe256",
     "semantic_hash": ""
   },
   "src/components/_MFlowEdgeLabel.vue": {
@@ -2616,21 +2616,21 @@
     "semantic_hash": ""
   },
   "src/composables/flowPaths.ts": {
-    "mtime": 1793408984.2723708,
-    "seen": 1793409208.8479185,
-    "ast_hash": "c1dbfd33a632e13a5223ae018ab49d1a",
+    "mtime": 1793505851.905508,
+    "seen": 1793506598.9466243,
+    "ast_hash": "4be4e924fda8300ed2dfb10233f59716",
     "semantic_hash": ""
   },
   "src/composables/useFlow.ts": {
-    "mtime": 1793470762.326662,
-    "seen": 1793471031.6731043,
-    "ast_hash": "7a73ad85e12a83b1f20b82a1e03658f1",
+    "mtime": 1793509440.439528,
+    "seen": 1793509561.9881027,
+    "ast_hash": "93eb83b98269f135ace6747fde12d582",
     "semantic_hash": ""
   },
   "src/flow.ts": {
-    "mtime": 1793426288.468625,
-    "seen": 1793426393.47927,
-    "ast_hash": "b44bf3a5b9aaac709ec32b87316df1f9",
+    "mtime": 1793508986.74025,
+    "seen": 1793509145.5753257,
+    "ast_hash": "3080ba1a929e37495b3224c1148ed658",
     "semantic_hash": ""
   },
   "src/__tests__/flowFormats.test.ts": {
@@ -2754,9 +2754,9 @@
     "semantic_hash": ""
   },
   "src/__tests__/MDrawCanvas.test.ts": {
-    "mtime": 1793484109.809547,
-    "seen": 1793484186.2648923,
-    "ast_hash": "eaa1d51433d6020455ff5fe585b27a97",
+    "mtime": 1793487770.730803,
+    "seen": 1793487827.0678384,
+    "ast_hash": "c37d41e208179c6c164f42dbb5074595",
     "semantic_hash": ""
   },
   "src/__tests__/drawGeometry.test.ts": {
@@ -2766,9 +2766,9 @@
     "semantic_hash": ""
   },
   "src/components/MDrawCanvas.vue": {
-    "mtime": 1793485684.8284593,
-    "seen": 1793485722.5833104,
-    "ast_hash": "bd7edf18c41e24f4b35920bd613148b8",
+    "mtime": 1793487759.9275503,
+    "seen": 1793487827.068131,
+    "ast_hash": "ae5c371423eb238ac597dbc6b2d99e9b",
     "semantic_hash": ""
   },
   "src/components/MDrawLayers.vue": {
@@ -2808,15 +2808,33 @@
     "semantic_hash": ""
   },
   "src/__tests__/MFloorPlan.test.ts": {
-    "mtime": 1793485309.5056815,
-    "seen": 1793485403.7341225,
-    "ast_hash": "3c3bfc585cd1f09e3108209e361ab0c2",
+    "mtime": 1793562890.1176574,
+    "seen": 1793563286.067894,
+    "ast_hash": "9a1668d03780fc55b06b866521bcd682",
     "semantic_hash": ""
   },
   "src/components/MFloorPlan.vue": {
-    "mtime": 1793485309.5038826,
-    "seen": 1793485403.7342904,
-    "ast_hash": "6d4adadc875898348c54a61b413d00c7",
+    "mtime": 1793562880.603228,
+    "seen": 1793563286.0681512,
+    "ast_hash": "cb73576d9e4020e2a61385eb59e8cccb",
+    "semantic_hash": ""
+  },
+  "src/components/MFloorPlanInspector.vue": {
+    "mtime": 1793559952.954052,
+    "seen": 1793560559.0487814,
+    "ast_hash": "0835f7a2bc7c9695e16e3868cb5497b3",
+    "semantic_hash": ""
+  },
+  "src/components/MFloorPlanToolbar.vue": {
+    "mtime": 1793559998.4497268,
+    "seen": 1793560559.0487826,
+    "ast_hash": "2a4b97f09fb3924bb5e1e3d086c81275",
+    "semantic_hash": ""
+  },
+  "src/composables/useFloorPlan.ts": {
+    "mtime": 1793559933.5107737,
+    "seen": 1793560559.048949,
+    "ast_hash": "f1e3d89e884d9fe8de6014b5425b3b89",
     "semantic_hash": ""
   },
   "pnpm-lock.yaml": {

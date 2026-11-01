@@ -1,17 +1,17 @@
-# Graph Report - m3ui-vue  (2026-10-31)
+# Graph Report - m3ui-vue  (2026-11-01)
 
 ## Corpus Check
-- 467 files · ~476,108 words
+- 470 files · ~501,112 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 6 file(s) not represented in the graph (top: (none) 3, .css 3)
 
 ## Summary
-- 6421 nodes · 12155 edges · 311 communities (253 shown, 58 thin omitted)
-- Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 706 edges (avg confidence: 0.88)
+- 6613 nodes · 12645 edges · 319 communities (261 shown, 58 thin omitted)
+- Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 742 edges (avg confidence: 0.87)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b76576f8`
+- Built from commit: `76e72ee5`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -47,10 +47,10 @@
 - MGantt.vue
 - MMultiSelect
 - Layout Primitives (MBox/MText)
-- MDialog & Confirm Dialog
+- MDialog.vue
 - Carousel Keyline Strategy
 - MSeekBar Core
-- MTree
+- MTree.vue
 - Changelog Concepts & Mechanisms
 - API.md Generator
 - MFab
@@ -59,19 +59,19 @@
 - _MColorPanel.vue
 - MEmojiSelector.vue
 - MTimePickerModal
-- map.ts
-- MScheme.vue
+- MMapFilter.vue
+- FloorPlanContext
 - Package Exports Map
 - MMenu
 - Locale System
 - Fake Maplibre Map (tests)
-- loadModules
+- package.json
 - flowFormats.ts
 - Map Measure & GeoJSON Geometry
 - MNavigationRail
 - Map Identify/Marker/Popup
 - MTable
-- MTimeScroll.vue
+- _useSpring.ts
 - MVideoPlayer.vue
 - MSparkline
 - MMenuItem
@@ -82,47 +82,47 @@
 - Progress Bars & Page Progress
 - MCircleProgressBar
 - Split Button & Popup Positioning
-- MDatePickerModal & Calendar Month
+- MDatePickerModal.vue
 - MContextMenu
 - MPdfViewer.vue
 - MBottomSheet
 - Carousel Keyline Steps
 - useFireworks.ts
-- _useSpring.ts
-- getSize
+- MMapHover.vue
+- devDependencies
 - MSwipeToDismiss
 - _MPdfPage.vue
-- MEmojiButton.vue
-- useConfetti.ts
+- ganttSchedule.ts
+- MBottomSheetScaffold.vue
 - MFileUpload
 - MRating
 - MSearchBar
 - useNotification.ts
 - MDrawCanvas.vue
 - MDateRangePicker
-- MMapFilter
+- map.ts
 - _MFlowNodeShell.vue
 - MProgressBar
 - MTimePicker
-- MMapHover.vue
+- _containerTransform.ts
 - MAudioPlayer.vue
-- useColorPalette.ts
+- record
 - Repo Conventions (docs)
 - MNavigationSuite.vue
 - MMapControl
 - MTagInput
 - MTour
 - FlowContext
-- Release 1.2.0
+- MFlowMinimap.vue
 - MIconButton
 - MMapMeasure Interaction
-- MMaskField
-- MTextField.vue
+- MMaskField.vue
+- _MFlowEdge.vue
 - shape-morph & v-sparkle
-- MDateRangePickerModal
+- getSize
 - MMapSearch
 - MSignaturePad
-- attrsFallthrough.test.ts
+- show
 - go
 - MAppBarWithSearch
 - MButton
@@ -132,35 +132,35 @@
 - MDatePicker
 - Release 0.8.0
 - MCommandPalette.vue
-- MSpotlightSearch
+- MSpotlightSearch.vue
 - MAvatar & MChatBubble
 - MCalendar
 - MPinInput
 - MFloorPlan.vue
-- attrsFallthrough.test.ts
+- MSpinner.vue
 - MMapGeoJson
 - MToggleButton
 - MVirtualTable.vue
 - Sheet Motion (Web Animations)
-- Fragment-root attrs fallthrough
+- Release 0.8.6
 - MNumberField.vue
 - MTreeTable
-- MScrollable.vue
+- flowPaths.ts
 - Fake Maplibre Evented
 - Markdown (markdown-it)
 - Terminal (xterm)
 - License Allowlist Script
 - Contrast Palette Generator
 - Carousel Snap & Scroll
-- useNotification.ts
+- MScrollable.vue
 - emit
-- vClickOutside.ts
+- _MTreeNode.vue
 - MSeekBar Scrubbing
 - MSlider Centered Geometry
 - MTabs Indicator
 - v-scroll-elevation
 - Type Build Config
-- Release 0.9.2
+- Release 1.1.0
 - gantt.ts
 - src/index.ts
 - Docs Examples & Gotchas
@@ -170,93 +170,93 @@
 - MQRCode
 - MSwitch
 - MTransition
-- MTerminal.test.ts
+- MNavigationSuite.vue
 - MChip.vue
 - MPasswordMeter
-- useScrollReveal.ts
+- useScrollReveal.test.ts
 - MSplitter
-- ganttFormats.ts
-- MStack.vue
+- viewportHints.ts
+- vSwipe.ts
 - MRadio.vue
 - _fakeMaplibre.ts
-- devDependencies
+- MDateRangePickerModal.vue
 - drawGeometry.ts
-- vSwipe.ts
+- Release 1.2.0
 - MMap.test.ts
-- ganttSchedule.ts
-- show
-- MFlowMinimap.vue
-- useMap
+- ganttFormats.ts
+- useColorPalette.ts
+- MBottomAppBar.vue
+- Release 1.2.2
 - MSlider Keyboard
-- vRipple.ts
+- useConfetti.ts
 - emit
 - pdfMock.ts
-- Release 0.8.1
+- MContainerTransform.test.ts
 - onGridKeydown
-- _useEscapeStack.ts
+- MFloorPlanInspector.vue
 - NPM Scripts
-- MDragHandle
-- _colorUtils.ts
-- _useScrollLock.ts
+- onKey
+- useReactions.ts
+- useToast.ts
 - MGrid
-- useThemeTokens.ts
+- _colorUtils.ts
 - usePdf.ts
 - MSearchField.vue
-- Release 1.1.0
+- MRelativeTime.vue
 - peerDependenciesMeta
-- vStateLayer.ts
+- Release 1.2.2
 - API.md Component Extraction
-- _colorUtils.ts
-- vLongPress.ts
-- MKanban.test.ts
+- MEmojiButton.vue
+- Release 1.1.3
+- Release 0.9.2
 - media.ts
 - Drag-and-Drop Conventions (docs)
 - MHotkeys
 - MMasonry
 - Keyline Pivot Builder
-- eq
+- MTextField.vue
 - MSlider Tests
 - Base TS Config
-- MFabMenu.vue
-- MMap
+- onPointerUp
+- MFloorPlanToolbar.vue
 - useMediaPlayer
 - MExportButton
-- onUp
+- _colorUtils.ts
 - MAbsolute.vue
-- MResult.vue
-- MCard.vue
-- snap
-- MPagination.vue
-- MFloorPlan.test.ts
+- toSVG
+- _effectCanvas.ts
+- vLongPress.ts
+- startTransfer
+- vRipple.ts
 - usePdf
 - Change Landing Workflow
-- _ganttTime.ts
-- _MDrawerItemList.vue
+- commit
+- Release 1.0.0
 - pick
-- MShape.vue
+- useConfetti.test.ts
 - Third-Party Licensing
-- MSticky.vue
+- boxOf
 - plugin.ts
-- MFlow.test.ts
-- vSkeleton.ts
+- _MTransferPane.vue
+- ssr.test.ts
 - Logo & Branding
-- Release 1.2.2
-- MRelativeTime.vue
-- repository
+- MExpansionPanel.vue
+- pad
+- Fragment-root attrs fallthrough
 - MSlider Percent Math
 - onPointerDown
-- Adaptive layouts (useWindowSizeClass, MNavigationSuite, MListDetail, MSupportingPane)
+- MStack.vue
 - Entry Points & Optional Peers
-- MNavigationSuite.vue
-- MFlex.vue
-- ssr.test.ts
+- vue
+- parseHex
+- useDevice.ts
 - MVideoPlayer.test.ts
-- componentApi
+- ref_node_path
 - useMenuNav
 - Slider Active Thumb
 - Slider Track Lengths
 - Optional Peer: @codemirror/lang-cpp
-- MStepper.vue
+- _useScrollLock.ts
 - Optional Peer: @codemirror/lang-html
 - Optional Peer: @codemirror/lang-javascript
 - Optional Peer: @codemirror/lang-python
@@ -280,56 +280,64 @@
 - Optional Peer: @tiptap/extension-placeholder
 - Optional Peer: @tiptap/extension-text-align
 - Optional Peer: @tiptap/extension-text-style
-- useDevice.ts
+- vStateLayer.ts
 - Optional Peer: @tiptap/starter-kit
 - Optional Peer: @tiptap/vue-3
-- MBottomSheetScaffold.vue
+- animate
 - Optional Peer: @xterm/addon-fit
 - Optional Peer: @xterm/xterm
-- componentMd
-- normalize
-- placed
-- editable
-- MResponsive.vue
+- _MMapAttribution.vue
+- MTransferList.test.ts
+- MSparkline.test.ts
+- MCheckbox.vue
+- MFlex.vue
+- frame
+- _MDrawerItemList.vue
+- MFabMenu.vue
 - handleClick
-- MSegmentedButton.vue
-- finishWall
-- neighbor
-- signatureOf
+- fmt
+- clampPan
 - env.d.ts, @xterm/xterm/css/xterm.css
 - dist/API.md API reference for AI agents
-- emoji-names-de.ts
+- HlsLike
 - emoji-names-en.ts
 - emoji-names-es.ts
-- emoji-names-fr.ts
-- MJsonViewer.vue
-- emoji-names-ja.ts
-- _MMapAttribution.vue
+- useLocale
+- MColorPickerModal.vue
+- MResult.vue
 - MPdfViewer.test.ts
-- emoji-names-ko.ts
-- emoji-names-pt.ts
+- _MToolbarFab.vue
+- attrsFallthrough.test.ts
 - emoji-names-zh.ts
 - MDrawLayers.vue
 - DrawContext
 - MGantt.test.ts
-- Release 0.8.6
 - @codemirror/commands
 - @codemirror/lang-json
 - peerDependencies
-- openDropdown
+- toPx
 - jsbarcode
 - pdfjs-dist
 - MDrawToolbar.vue
-- MExpansionPanel.vue
+- emoji-names-fr.ts
+- FakeWatcher
+- Release 0.1.10
+- el
+- hasClickListener
 - h
-- isSelected
-- MSwipeToDismiss.test.ts
+- MResponsive.vue
+- emoji-names-de.ts
+- emoji-names-ja.ts
+- mdText
+- emoji-names-ko.ts
+- emoji-names-pt.ts
+- useThemeTokens
 
 ## God Nodes (most connected - your core abstractions)
-1. `vue` - 308 edges
+1. `vue` - 311 edges
 2. `vitest` - 140 edges
 3. `@vue/test-utils` - 118 edges
-4. `useLocale()` - 94 edges
+4. `useLocale()` - 96 edges
 5. `CHANGELOG` - 51 edges
 6. `FakeMap` - 38 edges
 7. `Release 1.2.0` - 38 edges
@@ -346,8 +354,8 @@
   README.md → scripts/licenses/apache-2.0.txt
 - `Bundled third-party code and dist/THIRD_PARTY_LICENSES.md` --references--> `Unicode License v3`  [INFERRED]
   README.md → scripts/licenses/unicode-license-v3.txt
-- `onRowKey()` --calls--> `go()`  [INFERRED]
-  src/components/MGantt.vue → src/components/MLightbox.vue
+- `setup()` --indirect_call--> `onLayer()`  [INFERRED]
+  src/__tests__/MMap.test.ts → src/composables/useMap.ts
 
 ## Import Cycles
 - None detected.
@@ -360,23 +368,23 @@
 - **Spring motion infrastructure** — claude_raf_spring_convention, claude_spring_substeps, claude_springanimation_composable, claude_web_animations_exception, claude_usesheetmotion [EXTRACTED 1.00]
 - **Bundled third-party code licensing** — readme_third_party_licenses, scripts_licenses_apache_2_0_apache_license_2_0, scripts_licenses_unicode_license_v3_unicode_license_v3, claude_carouselstrategy, scripts_generate_emoji_data [INFERRED 0.85]
 
-## Communities (311 total, 58 thin omitted)
+## Communities (319 total, 58 thin omitted)
 
 ### Community 0 - "vue"
 Cohesion: 0.03
-Nodes (13): vitest, vue, @vue/test-utils, received, Stub, sampleData, items, items (+5 more)
+Nodes (6): vitest, @vue/test-utils, sampleData, items, items, tabs
 
 ### Community 1 - "MKanban Board"
-Cohesion: 0.06
-Nodes (54): activate(), announcement, areaEls, autoScroll(), boardEl, cancelKeyboard(), cancelPress(), captureRects() (+46 more)
+Cohesion: 0.05
+Nodes (59): activate(), announcement, areaEls, autoScroll(), boardEl, cancelKeyboard(), cancelPress(), captureRects() (+51 more)
 
 ### Community 2 - "MContainerTransform.vue"
-Cohesion: 0.05
-Nodes (55): anchor, anchorElement(), anims, clearRun(), clip, closed(), CloseWatcherLike, ctl (+47 more)
+Cohesion: 0.11
+Nodes (15): anchor, anchorElement(), anims, clip, CloseWatcherLike, ctl, mounted, openFromSlot() (+7 more)
 
 ### Community 3 - "Toolbar & Bottom App Bar"
-Cohesion: 0.06
-Nodes (49): arrangementClass, attach(), colorClass, detach(), frame(), innerEl, limit(), onScroll() (+41 more)
+Cohesion: 0.09
+Nodes (26): alignClass, attachScroll(), body, collapsible, colorClasses, expanded, fabBox, fabColor (+18 more)
 
 ### Community 4 - "MWindow Desktop Windows"
 Cohesion: 0.07
@@ -384,19 +392,19 @@ Nodes (50): active, activeWindowId, addListeners(), animateGeometry(), animating
 
 ### Community 5 - "MDataTable"
 Cohesion: 0.06
-Nodes (36): colWidths, currentPage, DataTableColumn, DataTableFetchParams, DataTableGroup, emit, emitFetch(), emptyStateMinHeight (+28 more)
+Nodes (44): allOnPageSelected, colWidths, currentPage, DataTableColumn, DataTableFetchParams, DataTableGroup, emit, emitFetch() (+36 more)
 
 ### Community 6 - "MList.vue"
-Cohesion: 0.11
-Nodes (17): MList, MListGroup, classes, emit, keepTabStop(), listEl, onKeydown(), options() (+9 more)
+Cohesion: 0.10
+Nodes (16): MListGroup, classes, emit, keepTabStop(), listEl, onKeydown(), options(), props (+8 more)
 
 ### Community 7 - "MLightbox Viewer"
 Cohesion: 0.04
-Nodes (45): backdrop, box, chrome, containerEl, count, current, currentIndex, dismissY (+37 more)
+Nodes (48): backdrop, box, chrome, containerEl, count, current, currentIndex, dismissY (+40 more)
 
 ### Community 8 - "MMultiAutocomplete"
-Cohesion: 0.08
-Nodes (26): chipsExpanded, closeDropdown(), dropdownEl, dropPos, fieldEl, filterQuery, hasValue, highlightIndex (+18 more)
+Cohesion: 0.07
+Nodes (45): chipsExpanded, closeDropdown(), computeDropPos(), { debounced: setFilterQuery }, { debounced: setModalFilterQuery }, displayChips, dropdownEl, dropPos (+37 more)
 
 ### Community 9 - "MCarousel Component"
 Cohesion: 0.08
@@ -404,11 +412,11 @@ Nodes (41): CarouselFlingBehavior, CarouselItem, CarouselVariant, clampIndex(), 
 
 ### Community 10 - "MTooltip & v-tooltip"
 Cohesion: 0.07
-Nodes (35): open(), props, reposition(), tipEl, tipStyle, triggerEl, visible, createTooltipTrigger() (+27 more)
+Nodes (34): open(), props, reposition(), tipEl, tipStyle, triggerEl, visible, createTooltipTrigger() (+26 more)
 
 ### Community 11 - "MTransferList"
-Cohesion: 0.06
-Nodes (39): activateSource(), activateTarget(), checkedSource, checkedTarget, emit, locale, matches(), moveAllLeft() (+31 more)
+Cohesion: 0.13
+Nodes (23): activateSource(), activateTarget(), checkedSource, checkedTarget, emit, locale, matches(), moveAllLeft() (+15 more)
 
 ### Community 12 - "MAutocomplete Dropdown"
 Cohesion: 0.06
@@ -424,7 +432,7 @@ Nodes (41): animateTo(), beginDrag(), bindModal(), close(), collapsedRef, Drawer
 
 ### Community 15 - "Rich Text Editor (tiptap)"
 Cohesion: 0.04
-Nodes (31): @tiptap/extension-color@^3.31.3, @tiptap/extension-highlight@^3.31.3, @tiptap/extension-image@^3.31.3, @tiptap/extension-link@^3.31.3, @tiptap/extension-placeholder@^3.31.3, @tiptap/extension-text-align@^3.31.3, @tiptap/extension-text-style@^3.31.3, @tiptap/vue-3@^3.31.3 (+23 more)
+Nodes (35): @tiptap/extension-color@^3.31.3, @tiptap/extension-highlight@^3.31.3, @tiptap/extension-image@^3.31.3, @tiptap/extension-link@^3.31.3, @tiptap/extension-placeholder@^3.31.3, @tiptap/extension-text-align@^3.31.3, @tiptap/extension-text-style@^3.31.3, @tiptap/extension-underline@^3.31.3 (+27 more)
 
 ### Community 16 - "MDragDropList"
 Cohesion: 0.08
@@ -432,7 +440,7 @@ Nodes (33): activate(), announcement, cancelKeyboard(), cancelPress(), commit(),
 
 ### Community 17 - "MFlow.vue"
 Cohesion: 0.03
-Nodes (108): patch(), rename(), addEdges(), addNodes(), announce(), announcement, applyRemove(), applySnapshot() (+100 more)
+Nodes (107): patch(), rename(), addEdges(), addNodes(), announce(), announcement, applyRemove(), applySnapshot() (+99 more)
 
 ### Community 18 - "Publish Workflow"
 Cohesion: 0.05
@@ -440,11 +448,11 @@ Nodes (37): jobs, publish, name, on, push, contents, id-token, environment (+29 
 
 ### Community 19 - "MImageCropper.vue"
 Cohesion: 0.05
-Nodes (44): animateTo(), applyRotation(), box, clampRect(), commit(), CropAspect, CropOutputOptions, CropRect (+36 more)
+Nodes (46): chairsOf(), placed, animateTo(), applyRotation(), box, clampRect(), commit(), CropAspect (+38 more)
 
 ### Community 20 - "MListItem"
 Cohesion: 0.05
-Nodes (41): activeIconClass, activeTextClass, childrenId, containerClasses, el(), expressiveRadii, focused, hasClickListener() (+33 more)
+Nodes (35): activeIconClass, activeTextClass, childrenId, containerClasses, expressiveRadii, focused, hasDivider, hovered (+27 more)
 
 ### Community 21 - "MSlider Core"
 Cohesion: 0.05
@@ -463,20 +471,20 @@ Cohesion: 0.07
 Nodes (33): activeRenderer, canvasRef, containerRef, createWebGLBackend(), buildFragmentSource(), buildProgram(), compileShader(), createWebGPUBackend() (+25 more)
 
 ### Community 25 - "flow.ts"
-Cohesion: 0.09
-Nodes (47): connectionPath, pathFor(), FlowDotExportOptions, FlowExportOptions, FlowGraph, FlowImportOptions, FlowLayout, FlowLayoutDirection (+39 more)
+Cohesion: 0.10
+Nodes (32): FlowDotExportOptions, FlowExportOptions, FlowGraph, FlowImportOptions, FlowLayout, FlowLayoutDirection, FlowLayoutOptions, FlowLayoutResult (+24 more)
 
 ### Community 26 - "MMapLayers.vue"
-Cohesion: 0.10
-Nodes (24): MMapLayers, emit, { isVisible, toggle, opacityOf, setOpacity }, t, expanded, groups, matches(), { model, layersOf, isVisible, groupState, setGroupVisible } (+16 more)
+Cohesion: 0.08
+Nodes (26): emit, { isVisible, toggle, opacityOf, setOpacity }, t, expanded, groups, matches(), { model, layersOf, isVisible, groupState, setGroupVisible }, props (+18 more)
 
 ### Community 27 - "MMap Core (maplibre)"
 Cohesion: 0.07
-Nodes (30): maplibre-gl, activeTool, added, container, context, ControlName, CONTROLS, emit (+22 more)
+Nodes (31): activeTool, added, container, context, ControlName, CONTROLS, emit, hideTip() (+23 more)
 
 ### Community 28 - "MGantt.vue"
 Cohesion: 0.03
-Nodes (122): activate(), addTasks(), addWindow(), announce(), axis, barAt(), barEls, barH (+114 more)
+Nodes (126): activate(), addTasks(), addWindow(), announce(), axis, barAt(), barEls, barH (+118 more)
 
 ### Community 29 - "MMultiSelect"
 Cohesion: 0.08
@@ -486,7 +494,7 @@ Nodes (35): chipsExpanded, close(), computeDropPos(), displayChips, dropdownEl, 
 Cohesion: 0.06
 Nodes (30): MBox, MText, Release 0.1.9, classes, elevationClasses, paddingClasses, props, roundedClasses (+22 more)
 
-### Community 31 - "MDialog & Confirm Dialog"
+### Community 31 - "MDialog.vue"
 Cohesion: 0.06
 Nodes (18): MConfirmDialog, emit, locale, props, close(), contentEl, contentInnerEl, emit (+10 more)
 
@@ -495,12 +503,12 @@ Cohesion: 0.10
 Nodes (30): strategy, Alignment, Arrangement, arrangementCost(), calculateMediumChildSize(), createCenterAlignedKeylineList(), createLeftAlignedKeylineList(), EMPTY (+22 more)
 
 ### Community 33 - "MSeekBar Core"
-Cohesion: 0.05
-Nodes (48): advancing(), ampTarget(), baseAt, bubbleEl, bubbleW, bufferedRanges, chapterAt(), colors (+40 more)
+Cohesion: 0.06
+Nodes (33): baseAt, bubbleEl, bubbleW, bufferedRanges, chapterAt(), colors, current, dur (+25 more)
 
-### Community 34 - "MTree"
-Cohesion: 0.07
-Nodes (24): buildInitialExpanded(), checkedSet, emit, expandAll(), expandedIds, getAllIds(), getDescendantIds(), getLeafIds() (+16 more)
+### Community 34 - "MTree.vue"
+Cohesion: 0.16
+Nodes (15): buildInitialExpanded(), checkedSet, emit, expandAll(), expandedIds, getAllIds(), getDescendantIds(), getLeafIds() (+7 more)
 
 ### Community 35 - "Changelog Concepts & Mechanisms"
 Cohesion: 0.09
@@ -523,24 +531,24 @@ Cohesion: 0.10
 Nodes (20): chart.js@^4.5.1, vue-chartjs@^5.3.4, chart.js, vue-chartjs, chartComponent, ChartType, componentMap, deepMerge() (+12 more)
 
 ### Community 40 - "_MColorPanel.vue"
-Cohesion: 0.06
-Nodes (58): a, alphaEl, alphaField, areaEl, canEyedrop, clamp(), commit(), dragging (+50 more)
+Cohesion: 0.08
+Nodes (19): a, alphaEl, alphaField, areaEl, canEyedrop, dragging, editing, Field (+11 more)
 
 ### Community 41 - "MEmojiSelector.vue"
 Cohesion: 0.06
-Nodes (30): activeSection, cancelPress(), categoryLabel, englishNames, firstKey, focusKey, gridColumns, gridEl (+22 more)
+Nodes (33): activeSection, cancelPress(), categoryLabel, englishNames, firstKey, focusKey, gridColumns, gridEl (+25 more)
 
 ### Community 42 - "MTimePickerModal"
 Cohesion: 0.09
-Nodes (30): applyAngle(), cancel(), clampInput(), confirm(), dialEl, emit, getDialAngle(), handEnd (+22 more)
+Nodes (24): applyAngle(), cancel(), dialEl, emit, getDialAngle(), handEnd, inputHour, inputHourEl (+16 more)
 
-### Community 43 - "map.ts"
-Cohesion: 0.18
-Nodes (17): t, fieldLabel(), genericAdapter(), identifyFeatures(), INTERNAL_KEYS, MapAdapter, MapAdapterContext, MapFieldFormat (+9 more)
+### Community 43 - "MMapFilter.vue"
+Cohesion: 0.17
+Nodes (12): read(), emit, found, local, { onReady, styleVersion }, options, props, refreshValues() (+4 more)
 
-### Community 44 - "MScheme.vue"
-Cohesion: 0.09
-Nodes (19): activeSeed, emit, imageSeed, imageSeeds, paletteAttr, paletteSeed, props, scheme (+11 more)
+### Community 44 - "FloorPlanContext"
+Cohesion: 0.11
+Nodes (15): FloorArea, FloorDecor, FloorDecorKind, FloorMeasure, FloorMerge, FloorPick, FloorStatus, FloorTable (+7 more)
 
 ### Community 45 - "Package Exports Map"
 Cohesion: 0.04
@@ -551,12 +559,12 @@ Cohesion: 0.09
 Nodes (30): close(), computePos(), dropdownEl, dropStyle, flattenVNodes(), focusableItems(), focusFirstItem(), groups (+22 more)
 
 ### Community 47 - "Locale System"
-Cohesion: 0.15
-Nodes (13): appLocale, defaultLocale, M3_LOCALE_KEY, M3Locale, deLocale, esLocale, frLocale, jaLocale (+5 more)
+Cohesion: 0.11
+Nodes (19): emit, pageLabel, props, rangeLabel, t, totalPages, appLocale, defaultLocale (+11 more)
 
-### Community 49 - "loadModules"
+### Community 49 - "package.json"
 Cohesion: 0.05
-Nodes (47): dependencies, shape-morph@^0.4.0, description, @codemirror/commands@^6.11.0, @codemirror/lang-cpp@^6.0.3, @codemirror/lang-css@^6.3.1, @codemirror/lang-html@^6.4.12, @codemirror/lang-javascript@^6.2.5 (+39 more)
+Nodes (41): dependencies, shape-morph@^0.4.0, description, codemirror@^6.0.2, happy-dom@^20.14.5, jsbarcode@^3.12.3, qrcode-generator@^2.0.4, @types/jsbarcode@^3.11.4 (+33 more)
 
 ### Community 50 - "flowFormats.ts"
 Cohesion: 0.09
@@ -567,24 +575,24 @@ Cohesion: 0.09
 Nodes (27): collection(), corner, count, draft, ensureLayers(), Feature, fmtArea(), fmtDistance() (+19 more)
 
 ### Community 52 - "MNavigationRail"
-Cohesion: 0.12
-Nodes (26): apply(), close(), emit, expandedWidth, finishSlide(), itemLink, longestLabel, measureLabels() (+18 more)
+Cohesion: 0.11
+Nodes (25): apply(), close(), emit, expandedWidth, finishSlide(), itemLink, longestLabel, measureLabels() (+17 more)
 
 ### Community 53 - "Map Identify/Marker/Popup"
-Cohesion: 0.10
-Nodes (21): MMapMarker, bindCursor(), emit, enter(), hovered, leave(), lngLat, { model } (+13 more)
+Cohesion: 0.08
+Nodes (30): MMapPopup, maplibre-gl, bindCursor(), emit, enter(), hovered, leave(), lngLat (+22 more)
 
 ### Community 54 - "MTable"
 Cohesion: 0.09
-Nodes (26): allOnPageSelected, currentPage, emit, emitFetch(), extraCols, hasActions, internalPage, isSelected() (+18 more)
+Nodes (27): MTable, allOnPageSelected, currentPage, emit, emitFetch(), extraCols, hasActions, internalPage (+19 more)
 
-### Community 55 - "MTimeScroll.vue"
-Cohesion: 0.11
-Nodes (22): commit(), emit, formatHour(), formatMinute(), hour, hourCount, hourIndex, isPm (+14 more)
+### Community 55 - "_useSpring.ts"
+Cohesion: 0.17
+Nodes (16): active, barEl, pressed, props, { snap }, cubicBezier(), motionDurations, motionEasings (+8 more)
 
 ### Community 56 - "MVideoPlayer.vue"
 Cohesion: 0.04
-Nodes (62): allSources, chapterTitle, compact, emit, endFast(), errorText, fast, fitClass (+54 more)
+Nodes (50): allSources, chapterTitle, compact, emit, errorText, fast, fitClass, flash (+42 more)
 
 ### Community 57 - "MSparkline"
 Cohesion: 0.09
@@ -595,8 +603,8 @@ Cohesion: 0.08
 Nodes (25): checkable, controlEl, emit, handleClick(), hasChildren, iconSlotEl, itemEl, menuClose (+17 more)
 
 ### Community 59 - "MScrollField"
-Cohesion: 0.10
-Nodes (26): animateTo(), custom, emit, EMPHASIS, frame(), itemEls, kick(), mod() (+18 more)
+Cohesion: 0.05
+Nodes (48): animateTo(), custom, emit, EMPHASIS, frame(), itemEls, kick(), mod() (+40 more)
 
 ### Community 60 - "MSelect"
 Cohesion: 0.08
@@ -622,7 +630,7 @@ Nodes (25): Anim, appearAnim, arcLen, buildPath(), clampedValue, collapseAnim, e
 Cohesion: 0.11
 Nodes (21): placeDrop(), placeDrop(), buttonStateClasses, colorStyles, computeMenuPos(), containerClasses, containerEl, emit (+13 more)
 
-### Community 66 - "MDatePickerModal & Calendar Month"
+### Community 66 - "MDatePickerModal.vue"
 Cohesion: 0.10
 Nodes (21): applyInput(), cancel(), confirm(), dateFormat, dateInput, datePattern, displayToIso(), emit (+13 more)
 
@@ -644,15 +652,15 @@ Nodes (7): createShiftedKeylineListForContentPadding(), findLastIndex(), getEndK
 
 ### Community 71 - "useFireworks.ts"
 Cohesion: 0.10
-Nodes (20): Burst, bursts, DEFAULT_SHAPES, easeOut(), emitters, FireworkShape, FireworksOptions, launchFireworks() (+12 more)
+Nodes (20): themeColors(), Burst, bursts, DEFAULT_SHAPES, easeOut(), emitters, FireworkShape, FireworksOptions (+12 more)
 
-### Community 72 - "_useSpring.ts"
-Cohesion: 0.22
-Nodes (12): cubicBezier(), motionDurations, motionEasings, motionSprings, SpringSpec, SAMPLE_MS, samplesDuration(), MenuNavEntry (+4 more)
+### Community 72 - "MMapHover.vue"
+Cohesion: 0.14
+Nodes (17): bind(), bound, corner, emit, hoverLayers, leave(), lngLat, { model } (+9 more)
 
-### Community 73 - "getSize"
-Cohesion: 0.12
-Nodes (32): ancestors(), boundsOf(), circleGeometry(), circleOf(), depthOf(), descendants(), edgeGeometry(), endNodeDrag() (+24 more)
+### Community 73 - "devDependencies"
+Cohesion: 0.08
+Nodes (37): devDependencies, @codemirror/commands@^6.11.0, @codemirror/lang-cpp@^6.0.3, @codemirror/lang-css@^6.3.1, @codemirror/lang-html@^6.4.12, @codemirror/lang-javascript@^6.2.5, @codemirror/lang-json@^6.0.2, @codemirror/lang-python@^6.2.1 (+29 more)
 
 ### Community 74 - "MSwipeToDismiss"
 Cohesion: 0.12
@@ -662,13 +670,13 @@ Nodes (22): along(), anchorOf(), animateTo(), computeTarget(), contentEl, direct
 Cohesion: 0.09
 Nodes (38): canvasHost, currentHit, drawing, drawingPath, emit, eraseAt(), eraserAt, erasing (+30 more)
 
-### Community 76 - "MEmojiButton.vue"
-Cohesion: 0.19
-Nodes (12): displayed, emit, getPool(), onClick(), onEnter(), props, allEmojis, emojiCategories (+4 more)
+### Community 76 - "ganttSchedule.ts"
+Cohesion: 0.10
+Nodes (51): dateAt(), dragTo(), extent, snapStep(), parseMsProjectXml(), addWorkingDays(), calendarOf(), criticalPath() (+43 more)
 
-### Community 77 - "useConfetti.ts"
-Cohesion: 0.07
-Nodes (41): EffectLayer, EffectOrigin, ensureCanvas(), frame(), layers, originPoint(), reducedMotion(), __resetEffectCanvas() (+33 more)
+### Community 77 - "MBottomSheetScaffold.vue"
+Cohesion: 0.14
+Nodes (22): anchors(), animateTo(), BottomSheetValue, contentEl, emit, frame(), handleLabel, locale (+14 more)
 
 ### Community 78 - "MFileUpload"
 Cohesion: 0.12
@@ -683,8 +691,8 @@ Cohesion: 0.11
 Nodes (22): appBar, barEl, close(), computePanelPos(), contained, emit, expanded, fullscreen (+14 more)
 
 ### Community 81 - "useNotification.ts"
-Cohesion: 0.18
-Nodes (19): dismiss(), ensureMounted(), error(), info(), loading(), Notification, NotificationAction, NotificationOptions (+11 more)
+Cohesion: 0.19
+Nodes (18): dismiss(), ensureMounted(), error(), info(), loading(), Notification, NotificationAction, NotificationOptions (+10 more)
 
 ### Community 82 - "MDrawCanvas.vue"
 Cohesion: 0.04
@@ -694,13 +702,13 @@ Nodes (51): activeLayer, clampZoom(), color, corners, cursor, draft, editing, ed
 Cohesion: 0.09
 Nodes (18): clear(), DateRange, displayValue, dropPos, emit, hovered, localeStrings, open (+10 more)
 
-### Community 84 - "MMapFilter"
-Cohesion: 0.08
-Nodes (28): read(), { baseLayers, baseLayer, setBaseLayer }, props, t, emit, found, local, { onReady, styleVersion } (+20 more)
+### Community 84 - "map.ts"
+Cohesion: 0.12
+Nodes (27): { baseLayers, baseLayer, setBaseLayer }, props, t, t, genericAdapter(), INTERNAL_KEYS, MapAdapter, MapAdapterContext (+19 more)
 
 ### Community 85 - "_MFlowNodeShell.vue"
-Cohesion: 0.04
-Nodes (55): geo, highlighted, label, locale, marker(), markerEnd, markerStart, props (+47 more)
+Cohesion: 0.05
+Nodes (40): deletable, geo, locale, props, selected, TONES, canConnect, candidate (+32 more)
 
 ### Community 86 - "MProgressBar"
 Cohesion: 0.11
@@ -710,17 +718,17 @@ Nodes (20): Anim, appearAnim, buildWavePath(), clampedValue, colorVars, easeInOu
 Cohesion: 0.11
 Nodes (19): clear(), displayValue, dropPos, emit, hours, locale, minutes, mode (+11 more)
 
-### Community 88 - "MMapHover.vue"
+### Community 88 - "_containerTransform.ts"
 Cohesion: 0.15
-Nodes (15): bind(), bound, corner, emit, hoverLayers, leave(), lngLat, { model } (+7 more)
+Nodes (18): Box, CLOSE_MS, containerFrame(), containerFrames(), emphasized(), ENTER, Frame, lerp() (+10 more)
 
 ### Community 89 - "MAudioPlayer.vue"
 Cohesion: 0.10
 Nodes (21): activeColor, allSources, audioEl, cycleRepeat(), emit, hasFile, hasNext, hasPrevious (+13 more)
 
-### Community 90 - "useColorPalette.ts"
-Cohesion: 0.10
-Nodes (36): schemeToCss(), activeContrast, applyAttribute(), applyContrast(), applyCss(), applyStored(), builtInIds, builtInPalettes (+28 more)
+### Community 90 - "record"
+Cohesion: 0.12
+Nodes (30): addDecor(), boxAround(), distinct(), finishWall(), follow(), isFloor(), nearestSegment(), newId() (+22 more)
 
 ### Community 91 - "Repo Conventions (docs)"
 Cohesion: 0.10
@@ -728,23 +736,23 @@ Nodes (20): createM3UI() plugin (src/plugin.ts), localePresets.test.ts (all 7 lo
 
 ### Community 92 - "MNavigationSuite.vue"
 Cohesion: 0.06
-Nodes (28): MSupportingPane, back(), detailHidden, emit, listHidden, props, root, twoPane (+20 more)
+Nodes (34): MSupportingPane, back(), detailHidden, emit, listHidden, props, root, twoPane (+26 more)
 
 ### Community 93 - "MMapControl"
 Cohesion: 0.14
 Nodes (21): close(), control, el, emit, finish(), from, grow(), measure() (+13 more)
 
 ### Community 94 - "MTagInput"
-Cohesion: 0.10
-Nodes (21): addTag(), canAddMore, { debounced: emitDebounced, cancel: cancelDebounce }, emit, fieldEl, focused, hasValue, id (+13 more)
+Cohesion: 0.13
+Nodes (20): addTag(), canAddMore, { debounced: emitDebounced, cancel: cancelDebounce }, emit, fieldEl, focused, hasValue, id (+12 more)
 
 ### Community 95 - "MTour"
 Cohesion: 0.13
 Nodes (18): arrowStyle, clearHighlight(), close(), currentStep, emit, goNext(), isFirst, isLast (+10 more)
 
-### Community 97 - "Release 1.2.0"
-Cohesion: 0.09
-Nodes (27): Contrast levels, MAppBarWithSearch, MBottomAppBar, MChart, MChip, Motion tokens, MRichTextEditor, MSearchBar (+19 more)
+### Community 97 - "MFlowMinimap.vue"
+Cohesion: 0.10
+Nodes (20): canDelete, deletable, flow, locale, props, vertical, blocks, box (+12 more)
 
 ### Community 98 - "MIconButton"
 Cohesion: 0.11
@@ -754,37 +762,37 @@ Nodes (16): colorStyle, disabledContainerClasses, emit, isToggle, onClick(), pai
 Cohesion: 0.23
 Nodes (19): clear(), emit, finish(), keyboard(), lngLatOf(), lockEscape(), onClick(), onDblClick() (+11 more)
 
-### Community 100 - "MMaskField"
+### Community 100 - "MMaskField.vue"
 Cohesion: 0.13
 Nodes (19): { debounced: emitDebounced, cancel: cancelDebounce }, emit, fieldBgEl, hasTrailing, id, inputClasses, inputEl, labelClasses (+11 more)
 
-### Community 101 - "MTextField.vue"
-Cohesion: 0.09
-Nodes (23): { debounced: emitDebounced, cancel: cancelDebounce }, emit, fieldBgEl, fieldEl, id, inputClasses, inputOnlyEl, labelClasses (+15 more)
+### Community 101 - "_MFlowEdge.vue"
+Cohesion: 0.14
+Nodes (16): geo, highlighted, label, labelBox(), locale, marker(), markerEnd, markerStart (+8 more)
 
 ### Community 102 - "shape-morph & v-sparkle"
-Cohesion: 0.17
-Nodes (10): active(), pathFor(), paths, schedule(), SparkleOptions, SparkleState, SparkleValue, spawn() (+2 more)
+Cohesion: 0.24
+Nodes (8): active(), pathFor(), paths, schedule(), SparkleOptions, SparkleState, spawn(), states
 
-### Community 103 - "MDateRangePickerModal"
-Cohesion: 0.12
-Nodes (15): cancel(), confirm(), DateRange, emit, end, hovered, locale, onDialog() (+7 more)
+### Community 103 - "getSize"
+Cohesion: 0.17
+Nodes (24): ancestors(), beginNodeDrag(), boundsOf(), circleGeometry(), circleOf(), descendants(), endNodeDrag(), getAbsolutePosition() (+16 more)
 
 ### Community 104 - "MMapSearch"
-Cohesion: 0.13
-Nodes (17): clear(), emit, ICONS, loading, { map }, onInput(), open, picked (+9 more)
+Cohesion: 0.08
+Nodes (26): clickableClasses, containerClasses, fieldBgByVariant, isInteractive, props, resolvedVariant, clear(), emit (+18 more)
 
 ### Community 105 - "MSignaturePad"
 Cohesion: 0.17
 Nodes (17): canvasEl, clear(), containerClasses, drawing, emit, empty, getContext(), onPointerDown() (+9 more)
 
-### Community 106 - "attrsFallthrough.test.ts"
-Cohesion: 0.12
-Nodes (8): MBarcode, error, props, svgEl, borderRadius, props, STEPS, cases
+### Community 106 - "show"
+Cohesion: 0.24
+Nodes (14): clearRun(), closed(), hide(), hideSource(), makeGhost(), opened(), play(), shadeTransition() (+6 more)
 
 ### Community 107 - "go"
-Cohesion: 0.24
-Nodes (11): clampPanTargets(), close(), emit, go(), next(), onPointerUp(), onTap(), open() (+3 more)
+Cohesion: 0.23
+Nodes (12): clampPanTargets(), close(), currentImg(), emit, go(), next(), onPointerUp(), onTap() (+4 more)
 
 ### Community 108 - "MAppBarWithSearch"
 Cohesion: 0.20
@@ -800,25 +808,25 @@ Nodes (15): ButtonGroupOption, buttons, emit, eq(), isSelected(), measureWidths(
 
 ### Community 111 - "MResourceTimeline.vue"
 Cohesion: 0.04
-Nodes (88): ACCENT, activate(), addEvents(), addWindow(), announce(), announceMove(), axis, bindBlock() (+80 more)
+Nodes (92): ACCENT, activate(), addEvents(), addWindow(), announce(), announceMove(), axis, bindBlock() (+84 more)
 
 ### Community 112 - "MColorPicker"
 Cohesion: 0.14
 Nodes (16): buttonEl, close(), colorPanel, dropPos, emit, onOut(), onPanelFocusOut(), onPanelKeydown() (+8 more)
 
 ### Community 113 - "MDatePicker"
-Cohesion: 0.10
-Nodes (20): clear(), displayValue, dropPos, emit, localeStrings, open, panelEl, props (+12 more)
+Cohesion: 0.12
+Nodes (14): clear(), displayValue, dropPos, emit, localeStrings, open, panelEl, props (+6 more)
 
 ### Community 114 - "Release 0.8.0"
-Cohesion: 0.11
-Nodes (28): Color palettes, MButton, MButtonGroup, MCheckbox, MContainerTransform, MFab, MFabMenu, MIconButton (+20 more)
+Cohesion: 0.13
+Nodes (26): Color palettes, MButton, MButtonGroup, MCard, MCheckbox, MContainerTransform, MFab, MFabMenu (+18 more)
 
 ### Community 115 - "MCommandPalette.vue"
 Cohesion: 0.17
 Nodes (16): MCommandPalette, activeIndex, close(), CommandItem, emit, filtered, grouped, inputRef (+8 more)
 
-### Community 116 - "MSpotlightSearch"
+### Community 116 - "MSpotlightSearch.vue"
 Cohesion: 0.17
 Nodes (16): MSpotlightSearch, activeIndex, close(), emit, emitSearch(), grouped, hasQuery, inputRef (+8 more)
 
@@ -835,10 +843,10 @@ Cohesion: 0.18
 Nodes (14): allowedPattern, boxClasses, charsToValue(), digits, emit, focusInput(), groupBoundaries, inputEls (+6 more)
 
 ### Community 120 - "MFloorPlan.vue"
-Cohesion: 0.05
-Nodes (31): areaDraft, areas, decor, decorDraft, draft, drawing, FloorArea, FloorBox (+23 more)
+Cohesion: 0.03
+Nodes (55): areaDraft, areas, base, BUILTIN_DECOR, coarse, context, Corner, decor (+47 more)
 
-### Community 121 - "attrsFallthrough.test.ts"
+### Community 121 - "MSpinner.vue"
 Cohesion: 0.11
 Nodes (15): createObserver(), emit, locale, props, sentinelRef, containerClass, isTop, locale (+7 more)
 
@@ -847,8 +855,8 @@ Cohesion: 0.19
 Nodes (16): add(), added, addLayers(), defaultLayers, DistributiveOmit, emit, is(), layers (+8 more)
 
 ### Community 123 - "MToggleButton"
-Cohesion: 0.13
-Nodes (14): MToggleButton, animate(), applyRadius(), containerClasses, disabledContainerClasses, emit, pressed, props (+6 more)
+Cohesion: 0.12
+Nodes (15): MToggleButton, velocity(), animate(), applyRadius(), containerClasses, disabledContainerClasses, emit, pressed (+7 more)
 
 ### Community 124 - "MVirtualTable.vue"
 Cohesion: 0.12
@@ -858,33 +866,33 @@ Nodes (12): containerH, emit, props, scrollEl, scrollTop, sortDir, sortedRows, s
 Cohesion: 0.24
 Nodes (17): sampleAt(), useSheetMotion(), animate(), bind(), dragEnd(), dragMove(), dragStart(), maybeSettle() (+9 more)
 
-### Community 126 - "Fragment-root attrs fallthrough"
-Cohesion: 0.15
-Nodes (22): Fragment-root attrs fallthrough, MBottomSheet, MBottomSheetScaffold, MContextMenu, Menu panel registry, MMenu, MMenuDivider, MMenuItem (+14 more)
+### Community 126 - "Release 0.8.6"
+Cohesion: 0.14
+Nodes (20): MChatBubble, MDragDropList, MFileUpload, MKanban, MListDetail, MNavigationRail, MNavigationSuite, MPagination (+12 more)
 
 ### Community 127 - "MNumberField.vue"
-Cohesion: 0.20
-Nodes (15): clamp(), { debounced: emitDebounced }, decrement(), emit, fieldBgEl, hasValue, id, increment() (+7 more)
+Cohesion: 0.14
+Nodes (21): clamp(), { debounced: emitDebounced }, decrement(), emit, fieldBgEl, hasValue, id, increment() (+13 more)
 
 ### Community 128 - "MTreeTable"
 Cohesion: 0.15
 Nodes (11): collectIds(), emit, expandAll(), expanded, FlatRow, flatRows, isExpanded(), locale (+3 more)
 
-### Community 129 - "MScrollable.vue"
-Cohesion: 0.19
-Nodes (13): classes, draw(), fadeOut(), hThumb, onScroll(), overflowClasses, props, rootEl (+5 more)
+### Community 129 - "flowPaths.ts"
+Cohesion: 0.12
+Nodes (37): edgeCorners(), edgeEnds(), edgeGeometry(), edgeRoute(), findInsert(), getEdgeAt(), isCircleEdge(), isOrthogonal() (+29 more)
 
 ### Community 131 - "Markdown (markdown-it)"
 Cohesion: 0.14
 Nodes (8): MMarkdown, highlight.js@^11.12.0, markdown-it@^15.0.2, highlight.js, markdown-it, md, props, rendered
 
 ### Community 132 - "Terminal (xterm)"
-Cohesion: 0.15
-Nodes (9): @xterm/addon-fit@^0.11.0, @xterm/xterm@^6.0.0, @xterm/addon-fit, @xterm/xterm, applyTheme(), containerRef, emit, getThemeColors() (+1 more)
+Cohesion: 0.08
+Nodes (10): @xterm/addon-fit@^0.11.0, @xterm/xterm@^6.0.0, @xterm/addon-fit, @xterm/xterm, applyTheme(), containerRef, emit, getThemeColors() (+2 more)
 
 ### Community 133 - "License Allowlist Script"
-Cohesion: 0.12
-Nodes (15): vite@^8.3.0, @vitejs/plugin-vue@^6.0.8, vite, @vitejs/plugin-vue, ALLOWED, bundled, config, externals (+7 more)
+Cohesion: 0.18
+Nodes (11): ALLOWED, bundled, config, externals, imported, isExternal(), licenseOf(), other (+3 more)
 
 ### Community 134 - "Contrast Palette Generator"
 Cohesion: 0.15
@@ -894,17 +902,17 @@ Nodes (9): block(), camel(), colors, levels, out, palettes, roles, root (+1 more
 Cohesion: 0.16
 Nodes (7): maxScroll, snaps, clamp(), maxScrollOffset(), snapPositionOffset(), snapScrollOffset(), items
 
-### Community 136 - "useNotification.ts"
-Cohesion: 0.11
-Nodes (26): MSnackbar, containerClass, isTop, locale, props, { toasts, position, dismiss }, VariantStyle, variantStyles (+18 more)
+### Community 136 - "MScrollable.vue"
+Cohesion: 0.19
+Nodes (13): classes, draw(), fadeOut(), hThumb, onScroll(), overflowClasses, props, rootEl (+5 more)
 
 ### Community 137 - "emit"
-Cohesion: 0.12
-Nodes (38): addWindowListeners(), autoPan(), beginNodeDrag(), blockTouchScroll(), cancelGesture(), clickAt(), edgeRoute(), emit (+30 more)
+Cohesion: 0.08
+Nodes (49): addWindowListeners(), autoPan(), blockTouchScroll(), cancelGesture(), clampZoom(), clickAt(), emit, emptySelection() (+41 more)
 
-### Community 138 - "vClickOutside.ts"
-Cohesion: 0.20
-Nodes (5): ClickOutsideOptions, ClickOutsideState, ClickOutsideValue, states, vClickOutside
+### Community 138 - "_MTreeNode.vue"
+Cohesion: 0.12
+Nodes (9): checkedLeafCount, hasChildren, isChecked, isExpanded, isIndeterminate, isSelected, leafIds, locale (+1 more)
 
 ### Community 139 - "MSeekBar Scrubbing"
 Cohesion: 0.20
@@ -926,17 +934,17 @@ Nodes (8): attach(), resolve(), ScrollElevationOptions, ScrollElevationState, Sc
 Cohesion: 0.14
 Nodes (13): compilerOptions, declaration, declarationDir, emitDeclarationOnly, noEmit, noUncheckedIndexedAccess, outDir, rootDir (+5 more)
 
-### Community 144 - "Release 0.9.2"
-Cohesion: 0.12
-Nodes (17): Dynamic color (seed), MAnimatedNumber, MColorPicker, MColorPickerModal, MIcon, MListItem, MMultiSelect, MScheme (+9 more)
+### Community 144 - "Release 1.1.0"
+Cohesion: 0.19
+Nodes (17): Escape stack, MDatePickerModal, MDateRangePickerModal, MDialog, MMap, MMapControl, MMapFilter, MMapLayers (+9 more)
 
 ### Community 145 - "gantt.ts"
 Cohesion: 0.04
-Nodes (28): LinkInfo, injected, locale, NAMES, options, props, GanttCsvOptions, GanttXmlOptions (+20 more)
+Nodes (26): LinkInfo, injected, locale, NAMES, options, props, GanttCalendar, GanttCriticalPath (+18 more)
 
 ### Community 146 - "src/index.ts"
 Cohesion: 0.04
-Nodes (31): MBadge, MNavigationBar, colorMap, props, style, props, style, BadgeOverlap (+23 more)
+Nodes (46): MBadge, MNavigationBar, colorMap, props, style, BadgeOverlap, BadgePosition, colorMap (+38 more)
 
 ### Community 147 - "Docs Examples & Gotchas"
 Cohesion: 0.19
@@ -947,8 +955,8 @@ Cohesion: 0.15
 Nodes (11): bases, byName, CATEGORIES, LANGS, root, text, TONE_NAMES, toneable (+3 more)
 
 ### Community 149 - "animate"
-Cohesion: 0.28
-Nodes (13): animate(), dragging(), onPointerMove(), onWheel(), reducedMotion(), setNow(), settleZoom(), stagePoint() (+5 more)
+Cohesion: 0.20
+Nodes (21): animate(), dragging(), hide(), measure(), onKeydown(), onPointerDown(), onPointerMove(), onWheel() (+13 more)
 
 ### Community 150 - "Map Geometry Helpers"
 Cohesion: 0.30
@@ -966,6 +974,10 @@ Nodes (10): emit, iconClasses, isPressed, props, stateLayerBg, stateLayerStyle, 
 Cohesion: 0.26
 Nodes (11): AXIS_FADE, clear(), Motion, onEnter(), onLeave(), props, run(), running (+3 more)
 
+### Community 154 - "MNavigationSuite.vue"
+Cohesion: 0.12
+Nodes (15): NavRailItem, isBar, isRail, NavigationSuiteItem, NavigationSuiteLayout, props, resolved, root (+7 more)
+
 ### Community 155 - "MChip.vue"
 Cohesion: 0.10
 Nodes (21): checkEl, customStyle, emit, hasAvatar, hasTrailing, isCustomColor, leadingIconClass, locale (+13 more)
@@ -974,21 +986,21 @@ Nodes (21): checkEl, customStyle, emit, hasAvatar, hasTrailing, isCustomColor, l
 Cohesion: 0.17
 Nodes (11): barColor, COLORS, emit, filledCount, hasValue, label, props, score (+3 more)
 
-### Community 157 - "useScrollReveal.ts"
-Cohesion: 0.08
-Nodes (20): useScrollReveal, hide(), hiddenStyle(), OFFSET, RevealEffect, ScrollRevealOptions, Target, useScrollReveal() (+12 more)
+### Community 157 - "useScrollReveal.test.ts"
+Cohesion: 0.17
+Nodes (5): useScrollReveal(), delays, FakeIO, list(), observers
 
 ### Community 158 - "MSplitter"
 Cohesion: 0.14
 Nodes (9): MDragHandle, MSplitter, containerRef, dragging, isHorizontal, panelAStyle, panelBStyle, props (+1 more)
 
-### Community 159 - "ganttFormats.ts"
-Cohesion: 0.13
-Nodes (23): child(), CSV_ALIASES, CSV_COLUMNS, csvCell(), csvDate(), decodeXml(), depsFromText(), depToText() (+15 more)
-
-### Community 160 - "MStack.vue"
+### Community 159 - "viewportHints.ts"
 Cohesion: 0.29
-Nodes (6): alignClasses, classes, dividerClass, gapClasses, justifyClasses, props
+Nodes (10): VIEWPORT_KEY, fromCookie(), guess(), GUESSES, header(), RequestHeaders, size(), VIEWPORT_HINTS (+2 more)
+
+### Community 160 - "vSwipe.ts"
+Cohesion: 0.15
+Nodes (9): applyTouchAction(), axes(), states, SwipeDirection, SwipeInfo, SwipeOptions, SwipeState, SwipeValue (+1 more)
 
 ### Community 161 - "MRadio.vue"
 Cohesion: 0.17
@@ -998,45 +1010,45 @@ Nodes (10): checkedBgColor, checkedColor, emit, iconColorClasses, id, isChecked,
 Cohesion: 0.09
 Nodes (8): Control, created, FakeMarker, fakeModule, Listener, mountBeside(), mountWithLayers(), orvianStyle()
 
-### Community 163 - "devDependencies"
-Cohesion: 0.06
-Nodes (33): devDependencies, codemirror@^6.0.2, happy-dom@^20.14.5, jsbarcode@^3.12.3, maplibre-gl@^5.24.0, @material/material-color-utilities@^0.4.0, qrcode-generator@^2.0.4, @tiptap/extension-underline@^3.31.3 (+25 more)
+### Community 163 - "MDateRangePickerModal.vue"
+Cohesion: 0.12
+Nodes (15): cancel(), confirm(), DateRange, emit, end, hovered, locale, onDialog() (+7 more)
 
 ### Community 164 - "drawGeometry.ts"
 Cohesion: 0.13
 Nodes (32): eraseUnder(), geometryOf(), DrawBox, DrawItem, DrawItemBase, DrawPen, DrawPoint, DrawShape (+24 more)
 
-### Community 165 - "vSwipe.ts"
-Cohesion: 0.15
-Nodes (9): applyTouchAction(), axes(), states, SwipeDirection, SwipeInfo, SwipeOptions, SwipeState, SwipeValue (+1 more)
+### Community 165 - "Release 1.2.0"
+Cohesion: 0.14
+Nodes (16): MChart, MRichTextEditor, MSegmentedButton, MSkeleton, MTimeline, MTooltip, Release 1.2.0, Release 1.2.1 (+8 more)
 
 ### Community 166 - "MMap.test.ts"
 Cohesion: 0.20
 Nodes (6): mountExpanding(), mountMap(), setup(), Style, switchStyle(), mountMap()
 
-### Community 167 - "ganttSchedule.ts"
-Cohesion: 0.16
-Nodes (34): cellText(), dateAt(), dragTo(), durationText(), extent, geometry, snapStep(), extent (+26 more)
+### Community 167 - "ganttFormats.ts"
+Cohesion: 0.12
+Nodes (25): child(), CSV_ALIASES, CSV_COLUMNS, csvCell(), csvDate(), decodeXml(), depsFromText(), depToText() (+17 more)
 
-### Community 168 - "show"
-Cohesion: 0.33
-Nodes (9): currentImg(), hide(), measure(), onKeydown(), onPointerDown(), originTransform(), resetZoom(), show() (+1 more)
+### Community 168 - "useColorPalette.ts"
+Cohesion: 0.05
+Nodes (60): @material/material-color-utilities, activeSeed, emit, imageSeed, imageSeeds, paletteAttr, paletteSeed, props (+52 more)
 
-### Community 169 - "MFlowMinimap.vue"
-Cohesion: 0.11
-Nodes (19): canDelete, deletable, flow, locale, props, vertical, blocks, box (+11 more)
+### Community 169 - "MBottomAppBar.vue"
+Cohesion: 0.26
+Nodes (15): arrangementClass, attach(), colorClass, detach(), frame(), innerEl, limit(), onScroll() (+7 more)
 
-### Community 170 - "useMap"
-Cohesion: 0.22
-Nodes (9): MMapPopup, content, emit, { onReady }, props, useMap(), on(), onLayer() (+1 more)
+### Community 170 - "Release 1.2.2"
+Cohesion: 0.21
+Nodes (12): MCalendar, MCarousel, MCodeEditor, MDatePicker, MJsonEditor, MJsonViewer, MScheduler, MSimpleCarousel (+4 more)
 
 ### Community 171 - "MSlider Keyboard"
 Cohesion: 0.36
 Nodes (11): clamp(), emit, focusThumb(), onKeyDown(), onPointerDown(), onPointerMove(), onPointerUp(), onThumbKeyDown() (+3 more)
 
-### Community 172 - "vRipple.ts"
-Cohesion: 0.20
-Nodes (5): RippleOptions, RippleState, RippleValue, states, vRipple
+### Community 172 - "useConfetti.ts"
+Cohesion: 0.14
+Nodes (16): reducedMotion(), ConfettiOptions, ConfettiOrigin, DEFAULT_SHAPES, Emitter, emitters, fireConfetti(), layer (+8 more)
 
 ### Community 173 - "emit"
 Cohesion: 0.13
@@ -1046,41 +1058,41 @@ Nodes (23): activePages, closeEditing(), closeSearch(), commit(), commitPageInpu
 Cohesion: 0.12
 Nodes (10): fakeDoc, FakePage, getDocument, GlobalWorkerOptions, page(), PasswordResponses, PDFDateString, TextLayer (+2 more)
 
-### Community 175 - "Release 0.8.1"
-Cohesion: 0.13
-Nodes (17): MCalendar, MCarousel, MCodeEditor, MDatePicker, MEmoji, MEmojiButton, MEmojiSelector, MJsonEditor (+9 more)
+### Community 175 - "MContainerTransform.test.ts"
+Cohesion: 0.20
+Nodes (10): ContainerTransformController, ContainerTransformOrigin, useContainerTransform(), animations(), card, finishAll(), flush(), page (+2 more)
 
 ### Community 176 - "onGridKeydown"
 Cohesion: 0.22
 Nodes (10): baseOf(), buttons(), focusButton(), keepVisible(), onEmojiContextMenu(), onEmojiPointerDown(), onGridKeydown(), onSearchKeydown() (+2 more)
 
-### Community 177 - "_useEscapeStack.ts"
-Cohesion: 0.24
-Nodes (9): close(), emit, locale, motion, props, onKeydown(), stack, useEscapeStack() (+1 more)
+### Community 177 - "MFloorPlanInspector.vue"
+Cohesion: 0.07
+Nodes (18): area, ctx, injected, item, kind, locale, many, mergeOf (+10 more)
 
 ### Community 178 - "NPM Scripts"
 Cohesion: 0.20
 Nodes (10): scripts, build, build:api, build:css, build:js, build:types, generate:contrast, prepublishOnly (+2 more)
 
-### Community 179 - "MDragHandle"
-Cohesion: 0.24
-Nodes (9): active, barEl, pressed, props, { snap }, useSpring(), frame(), snap() (+1 more)
-
-### Community 180 - "_colorUtils.ts"
-Cohesion: 0.33
-Nodes (9): fromCookie(), guess(), GUESSES, header(), RequestHeaders, size(), VIEWPORT_HINTS, viewportFromHeaders() (+1 more)
-
-### Community 181 - "_useScrollLock.ts"
+### Community 179 - "onKey"
 Cohesion: 0.23
-Nodes (10): MOverlay, close(), emit, fade, props, style, lock(), unlock() (+2 more)
+Nodes (12): endFast(), onKey(), onSurfaceUp(), poke(), seconds(), setSpeed(), show(), skip() (+4 more)
+
+### Community 180 - "useReactions.ts"
+Cohesion: 0.21
+Nodes (14): EffectOrigin, originPoint(), easeOut(), ensureLayer(), fireReaction(), floatFrames(), ReactionContent, ReactionOptions (+6 more)
+
+### Community 181 - "useToast.ts"
+Cohesion: 0.11
+Nodes (26): MSnackbar, containerClass, isTop, locale, props, { toasts, position, dismiss }, VariantStyle, variantStyles (+18 more)
 
 ### Community 182 - "MGrid"
 Cohesion: 0.20
 Nodes (9): alignClasses, classes, colClasses, gapClasses, lgColClasses, mdColClasses, props, smColClasses (+1 more)
 
-### Community 183 - "useThemeTokens.ts"
-Cohesion: 0.14
-Nodes (14): STYLE_ID, COLOR_TOKENS, hasProperty(), isGecko(), THEME_TRANSITION_MS, themeTransition(), ease, mix() (+6 more)
+### Community 183 - "_colorUtils.ts"
+Cohesion: 0.08
+Nodes (30): Hsl, Hsv, pushRecentColor(), readRecents(), recentColors, onStoragePrefix(), reloaders, setStoragePrefix() (+22 more)
 
 ### Community 184 - "usePdf.ts"
 Cohesion: 0.19
@@ -1090,40 +1102,44 @@ Nodes (15): pdfjs-dist@^6.4.299, pdfjs-dist, PdfZoom, loadPdfjs(), PdfDocument, 
 Cohesion: 0.19
 Nodes (12): attrs, clear(), emit, iconSize, inputAttrs, inputEl, locale, onInput() (+4 more)
 
-### Community 186 - "Release 1.1.0"
-Cohesion: 0.22
-Nodes (14): Escape stack, MDatePickerModal, MDateRangePickerModal, MDialog, MScrollField, MSeekBar, MTimePickerModal, MTimeScroll (+6 more)
+### Community 186 - "MRelativeTime.vue"
+Cohesion: 0.06
+Nodes (26): M3Locale, MCopyButton, MExportButton, MKbd, MPasswordMeter, MPinInput, MQRCode, MRelativeTime (+18 more)
 
 ### Community 187 - "peerDependenciesMeta"
 Cohesion: 0.22
 Nodes (9): optional, optional, peerDependenciesMeta, chart.js, @codemirror/lang-css, @tiptap/extension-underline, vue-chartjs, optional (+1 more)
 
-### Community 188 - "vStateLayer.ts"
-Cohesion: 0.22
-Nodes (5): StateLayerOptions, StateLayerState, StateLayerValue, states, vStateLayer
+### Community 188 - "Release 1.2.2"
+Cohesion: 0.24
+Nodes (11): MShape, MTextField, Release 1.1.1, Release 1.2.2, shape-morph, storagePrefix, useAutoGrow, useConfetti (+3 more)
 
 ### Community 189 - "API.md Component Extraction"
-Cohesion: 0.29
-Nodes (7): declaredTypes(), dedent(), looseTypes, scriptOf(), sourceFile(), typeSource(), virtualSource
+Cohesion: 0.18
+Nodes (13): componentApi(), componentHeader(), componentList, declaredTypes(), dedent(), fullDescription(), looseTypes, read() (+5 more)
 
-### Community 190 - "_colorUtils.ts"
-Cohesion: 0.12
-Nodes (29): readRecents(), recentColors, isHydrating(), enableCookies(), initialState(), readCookie(), ssrValue(), trackViewport() (+21 more)
+### Community 190 - "MEmojiButton.vue"
+Cohesion: 0.19
+Nodes (12): displayed, emit, getPool(), onClick(), onEnter(), props, allEmojis, emojiCategories (+4 more)
 
-### Community 191 - "vLongPress.ts"
-Cohesion: 0.22
-Nodes (5): LongPressOptions, LongPressState, LongPressValue, states, vLongPress
+### Community 191 - "Release 1.1.3"
+Cohesion: 0.17
+Nodes (13): Dynamic color (seed), MAnimatedNumber, MAutocomplete, MIcon, MMultiAutocomplete, MMultiSelect, MScheme, MSelect (+5 more)
 
-### Community 192 - "MKanban.test.ts"
-Cohesion: 0.28
-Nodes (5): KanbanColumn, board(), layout(), mountBoard(), rect()
+### Community 192 - "Release 0.9.2"
+Cohesion: 0.14
+Nodes (16): MColorPicker, MColorPickerModal, MList, MListItem, MScrollable, MScrollField, MSwipeToDismiss, MTimePickerModal (+8 more)
 
 ### Community 193 - "media.ts"
+Cohesion: 0.20
+Nodes (8): HlsModule, VideoPlayerSlotProps, VideoSource, VideoTrack, MediaPlayer, MediaPlayerMetadata, MediaPlayerOptions, setup()
+
+### Community 194 - "Drag-and-Drop Conventions (docs)"
 Cohesion: 0.13
-Nodes (9): HlsLike, HlsModule, VideoPlayerSlotProps, VideoSource, VideoTrack, MediaPlayer, MediaPlayerMetadata, MediaPlayerOptions (+1 more)
+Nodes (6): FLIP reorder animation (onBeforeUpdate/onUpdated), MotionSchemeKeyTokens (Standard vs Expressive springs), MTransferList, _useItemLink.ts (RouterLink / a / button resolution), Composables list (useTheme, useColorPalette, useSpring, useWindowSizeClass, ...), Motion tokens (motionSprings, motionEasings, motionDurations, cubicBezier)
 
 ### Community 195 - "MHotkeys"
-Cohesion: 0.32
+Cohesion: 0.24
 Nodes (5): HotkeyBinding, matchesEvent(), onKeydown(), parseCombo(), props
 
 ### Community 196 - "MMasonry"
@@ -1134,9 +1150,9 @@ Nodes (7): activeCols, containerRef, gapPx, getActiveCols(), layout(), props, sl
 Cohesion: 0.36
 Nodes (4): createKeylinesWithPivot(), isCutoffLeft(), isCutoffRight(), KeylineListBuilder
 
-### Community 198 - "eq"
-Cohesion: 0.19
-Nodes (14): { debounced: setFilterQuery }, { debounced: setModalFilterQuery }, displayChips, emit, eq(), filteredOptions, includes(), modalFilteredOptions (+6 more)
+### Community 198 - "MTextField.vue"
+Cohesion: 0.07
+Nodes (25): { debounced: emitDebounced, cancel: cancelDebounce }, emit, fieldBgEl, fieldEl, id, inputClasses, inputOnlyEl, labelClasses (+17 more)
 
 ### Community 199 - "MSlider Tests"
 Cohesion: 0.39
@@ -1146,13 +1162,13 @@ Nodes (5): bar(), endDot(), pieces(), startDot(), track()
 Cohesion: 0.25
 Nodes (7): compilerOptions, composite, noUncheckedIndexedAccess, tsBuildInfoFile, extends, include, @vue/tsconfig/tsconfig.dom.json
 
-### Community 201 - "MFabMenu.vue"
-Cohesion: 0.17
-Nodes (8): MDialog generic modal shell, MFabMenu, colorMap, FabMenuItem, iconSize, props, revealClass, sizeClasses
+### Community 201 - "onPointerUp"
+Cohesion: 0.23
+Nodes (12): clear(), commit(), deleteSelection(), editable(), emit, layerOf(), onKeydown(), ordered (+4 more)
 
-### Community 202 - "MMap"
-Cohesion: 0.39
-Nodes (8): MMap, MMapControl, MMapFilter, MMapMeasure, MMapSearch, orvianAdapter, PaletteId, Release 1.0.3
+### Community 202 - "MFloorPlanToolbar.vue"
+Cohesion: 0.12
+Nodes (15): canDelete, canDuplicate, ctx, decorKinds, FloorTablePreset, injected, locale, presetName() (+7 more)
 
 ### Community 203 - "useMediaPlayer"
 Cohesion: 0.31
@@ -1162,33 +1178,33 @@ Nodes (14): useMediaPlayer(), claimSession(), pause(), play(), readAll(), readRa
 Cohesion: 0.48
 Nodes (6): download(), emit, escapeCsvField(), onClick(), props, toCsv()
 
-### Community 205 - "onUp"
-Cohesion: 0.39
-Nodes (8): clamp(), commitMoves(), emit, onClick(), onDown(), onKey(), onMove(), onUp()
+### Community 205 - "_colorUtils.ts"
+Cohesion: 0.29
+Nodes (8): fields, hex, opaqueHex, setHsv(), hslToHsv(), hsvToHsl(), hsvToRgb(), toHex()
 
 ### Community 206 - "MAbsolute.vue"
 Cohesion: 0.27
 Nodes (8): MAbsolute, Placement, props, style, toUnit(), props, style, toUnit()
 
-### Community 207 - "MResult.vue"
-Cohesion: 0.29
-Nodes (6): MResult, config, httpCode, props, STATUS_STYLE, t
+### Community 207 - "toSVG"
+Cohesion: 0.17
+Nodes (13): v, decorLook(), decorSize(), duplicate(), esc(), kindOf(), look(), onDecorDown() (+5 more)
 
-### Community 208 - "MCard.vue"
+### Community 208 - "_effectCanvas.ts"
+Cohesion: 0.42
+Nodes (7): EffectLayer, ensureCanvas(), frame(), layers, resize(), runLayer(), teardown()
+
+### Community 209 - "vLongPress.ts"
 Cohesion: 0.22
-Nodes (7): MCard, clickableClasses, containerClasses, fieldBgByVariant, isInteractive, props, resolvedVariant
+Nodes (5): LongPressOptions, LongPressState, LongPressValue, states, vLongPress
 
-### Community 209 - "snap"
-Cohesion: 0.39
-Nodes (8): follow(), onAreaDown(), onDecorDown(), onPlanMove(), onPlanPointer(), onWallDown(), snap(), toPlan()
+### Community 210 - "startTransfer"
+Cohesion: 0.14
+Nodes (26): addTable(), cellReach(), clamp(), commitMoves(), emit, merge(), onClick(), onDown() (+18 more)
 
-### Community 210 - "MPagination.vue"
-Cohesion: 0.29
-Nodes (6): emit, pageLabel, props, rangeLabel, t, totalPages
-
-### Community 211 - "MFloorPlan.test.ts"
-Cohesion: 0.40
-Nodes (3): FloorTable, base(), setup()
+### Community 211 - "vRipple.ts"
+Cohesion: 0.20
+Nodes (5): RippleOptions, RippleState, RippleValue, states, vRipple
 
 ### Community 212 - "usePdf"
 Cohesion: 0.18
@@ -1198,49 +1214,57 @@ Nodes (17): src(), fold(), parseDate(), usePdf(), blobUrl(), download(), getPage
 Cohesion: 0.33
 Nodes (4): CLAUDE.md (repo guidance), m3ui-vue-docs sibling repo (m3ui.dev), @m3ui-vue/m3ui-vue library, README.md (M3UI Vue)
 
-### Community 214 - "_ganttTime.ts"
-Cohesion: 0.12
-Nodes (24): defaultSnap(), floorUnit(), HOUR, HOUR_STEPS, MIN_CELL, nearestScale(), nextUnit(), pad() (+16 more)
+### Community 214 - "commit"
+Cohesion: 0.28
+Nodes (9): clamp(), commit(), emit, onFieldInput(), onFieldKeydown(), onKeydown(), onPointerDown(), onPointerMove() (+1 more)
 
-### Community 215 - "_MDrawerItemList.vue"
-Cohesion: 0.22
-Nodes (3): iSize(), itemStyle(), DrawerItem
+### Community 215 - "Release 1.0.0"
+Cohesion: 0.21
+Nodes (12): Contrast levels, MAppBarWithSearch, MBottomAppBar, MChip, Motion tokens, MSearchBar, MSearchField, MTopAppBar (+4 more)
 
 ### Community 216 - "pick"
 Cohesion: 0.25
 Nodes (8): chooseTone(), emit, onEmojiClick(), pick(), show(), store(), withSkinTone(), length()
 
+### Community 217 - "useConfetti.test.ts"
+Cohesion: 0.25
+Nodes (4): __resetEffectCanvas(), __resetConfetti(), __resetFireworks(), fills
+
 ### Community 218 - "Third-Party Licensing"
 Cohesion: 0.40
 Nodes (5): _carouselStrategy.ts keyline engine, MIT license, Bundled third-party code and dist/THIRD_PARTY_LICENSES.md, Apache License 2.0 (Copyright 2021 Google LLC), Unicode License v3
 
-### Community 219 - "MSticky.vue"
-Cohesion: 0.67
-Nodes (3): props, style, toUnit()
+### Community 219 - "boxOf"
+Cohesion: 0.22
+Nodes (9): boxOf(), crosses(), measured(), measureLabels, overlapping, rectCorners(), rotationOf(), tableAt() (+1 more)
 
 ### Community 220 - "plugin.ts"
-Cohesion: 0.11
-Nodes (25): SeedOptions, M3_HYDRATING_KEY, M3_INITIAL_STATE_KEY, M3InitialState, ResolvedInitialState, THEME_KEY, metas(), syncThemeColor() (+17 more)
+Cohesion: 0.10
+Nodes (29): SeedOptions, isHydrating(), M3_HYDRATING_KEY, enableCookies(), M3_INITIAL_STATE_KEY, M3InitialState, ResolvedInitialState, ssrValue() (+21 more)
 
-### Community 222 - "vSkeleton.ts"
-Cohesion: 0.25
-Nodes (8): apply(), clear(), normalize(), SkeletonOptions, SkeletonState, SkeletonValue, states, vSkeleton
+### Community 221 - "_MTransferPane.vue"
+Cohesion: 0.20
+Nodes (12): allChecked, checkedVisible, emit, fromControl(), listEl, onRowActivate(), onRowClick(), onRowSpace() (+4 more)
+
+### Community 222 - "ssr.test.ts"
+Cohesion: 0.29
+Nodes (3): items, open, props
 
 ### Community 223 - "Logo & Branding"
 Cohesion: 0.50
 Nodes (4): @m3ui-vue/m3ui-vue component library, m3ui-vue Logo (stylized 'M' with 'V' and '3'), Material Design 3 visual identity (purple baseline palette, rounded-square app icon), Vue 'V' mark embedded in the M
 
-### Community 224 - "Release 1.2.2"
-Cohesion: 0.24
-Nodes (11): MShape, MTextField, Release 1.1.1, Release 1.2.2, shape-morph, storagePrefix, useAutoGrow, useConfetti (+3 more)
+### Community 224 - "MExpansionPanel.vue"
+Cohesion: 0.33
+Nodes (6): emit, internal, isOpen, props, toggle(), wrapperClass
 
-### Community 225 - "MRelativeTime.vue"
-Cohesion: 0.06
-Nodes (26): M3Locale, MCopyButton, MExportButton, MKbd, MPasswordMeter, MPinInput, MQRCode, MRelativeTime (+18 more)
+### Community 225 - "pad"
+Cohesion: 0.47
+Nodes (6): clampInput(), confirm(), hourItems, minuteItems, pad(), posAt()
 
-### Community 226 - "repository"
-Cohesion: 0.67
-Nodes (3): repository, type, url
+### Community 226 - "Fragment-root attrs fallthrough"
+Cohesion: 0.16
+Nodes (21): Fragment-root attrs fallthrough, MBottomSheet, MBottomSheetScaffold, MContextMenu, Menu panel registry, MMenu, MMenuDivider, MMenuItem (+13 more)
 
 ### Community 227 - "MSlider Percent Math"
 Cohesion: 0.50
@@ -1250,29 +1274,29 @@ Nodes (4): centerPct, pctHi, pctLo, toPct()
 Cohesion: 0.13
 Nodes (22): editText(), handleAt(), isPen(), isShape(), local(), offsetOf(), onDblclick(), onPointerDown() (+14 more)
 
-### Community 229 - "Adaptive layouts (useWindowSizeClass, MNavigationSuite, MListDetail, MSupportingPane)"
+### Community 229 - "MStack.vue"
 Cohesion: 0.29
-Nodes (4): MotionSchemeKeyTokens (Standard vs Expressive springs), _useItemLink.ts (RouterLink / a / button resolution), Composables list (useTheme, useColorPalette, useSpring, useWindowSizeClass, ...), Motion tokens (motionSprings, motionEasings, motionDurations, cubicBezier)
+Nodes (6): alignClasses, classes, dividerClass, gapClasses, justifyClasses, props
 
-### Community 231 - "MNavigationSuite.vue"
-Cohesion: 0.12
-Nodes (15): NavRailItem, isBar, isRail, NavigationSuiteItem, NavigationSuiteLayout, props, resolved, root (+7 more)
+### Community 231 - "vue"
+Cohesion: 0.04
+Nodes (20): vue, props, style, classes, props, classes, maxWidthClasses, props (+12 more)
 
-### Community 232 - "MFlex.vue"
+### Community 232 - "parseHex"
+Cohesion: 0.32
+Nodes (8): onHexInput(), pick(), pickFromScreen(), previewInk, setFromRgb(), inkFor(), parseHex(), rgbToHsv()
+
+### Community 233 - "useDevice.ts"
+Cohesion: 0.40
+Nodes (5): useDevice, useDevice() (ref-counted resize listener), isMobile, update(), useDevice()
+
+### Community 235 - "ref_node_path"
 Cohesion: 0.29
-Nodes (6): alignClasses, classes, directionClasses, gapClasses, justifyClasses, props
-
-### Community 233 - "ssr.test.ts"
-Cohesion: 0.29
-Nodes (3): items, open, props
-
-### Community 235 - "componentApi"
-Cohesion: 0.29
-Nodes (8): componentApi(), componentHeader(), componentList, fullDescription(), mdText(), oneLine(), read(), stripUndefined()
+Nodes (4): vite@^8.3.0, @vitejs/plugin-vue@^6.0.8, vite, @vitejs/plugin-vue
 
 ### Community 236 - "useMenuNav"
-Cohesion: 0.20
-Nodes (19): playSamples(), prefersReducedMotion(), sampleSpring(), useMenuNav(), levelEl(), onCancel(), onMove(), onNavPointerDown() (+11 more)
+Cohesion: 0.14
+Nodes (27): slide(), playSamples(), prefersReducedMotion(), samplesDuration(), sampleSpring(), MenuNavEntry, useMenuNav(), levelEl() (+19 more)
 
 ### Community 237 - "Slider Active Thumb"
 Cohesion: 0.67
@@ -1282,117 +1306,133 @@ Nodes (3): ct, resolveActive(), thumbCt
 Cohesion: 0.67
 Nodes (3): endLen, posPx(), startLen
 
-### Community 241 - "MStepper.vue"
-Cohesion: 0.33
-Nodes (5): canClick, emit, props, select(), StepItem
+### Community 241 - "_useScrollLock.ts"
+Cohesion: 0.12
+Nodes (19): MOverlay, close(), emit, fade, props, style, close(), emit (+11 more)
 
-### Community 265 - "useDevice.ts"
+### Community 265 - "vStateLayer.ts"
+Cohesion: 0.22
+Nodes (5): StateLayerOptions, StateLayerState, StateLayerValue, states, vStateLayer
+
+### Community 268 - "animate"
 Cohesion: 0.40
-Nodes (5): useDevice, useDevice() (ref-counted resize listener), isMobile, update(), useDevice()
+Nodes (6): animate(), frame(), measure(), reduceMotion(), size(), write()
 
-### Community 268 - "MBottomSheetScaffold.vue"
-Cohesion: 0.14
-Nodes (22): anchors(), animateTo(), BottomSheetValue, contentEl, emit, frame(), handleLabel, locale (+14 more)
+### Community 271 - "_MMapAttribution.vue"
+Cohesion: 0.18
+Nodes (9): MapControlPosition, credits, end, html, maxWidth, { on, onReady }, open, props (+1 more)
 
-### Community 271 - "componentMd"
-Cohesion: 1.00
-Nodes (3): code(), componentMd(), propLine()
+### Community 272 - "MTransferList.test.ts"
+Cohesion: 0.25
+Nodes (4): TransferItem, items, panes(), rows()
 
-### Community 272 - "normalize"
-Cohesion: 0.67
-Nodes (3): normalize(), results, searchIndex
+### Community 274 - "MCheckbox.vue"
+Cohesion: 0.50
+Nodes (3): checkedBgClasses, checkedClasses, emit
 
-### Community 273 - "placed"
-Cohesion: 0.67
-Nodes (3): chairsOf(), placed, sizeOf()
+### Community 275 - "MFlex.vue"
+Cohesion: 0.29
+Nodes (6): alignClasses, classes, directionClasses, gapClasses, justifyClasses, props
 
-### Community 274 - "editable"
-Cohesion: 0.23
-Nodes (12): clear(), commit(), deleteSelection(), editable(), emit, layerOf(), onKeydown(), ordered (+4 more)
-
-### Community 275 - "MResponsive.vue"
+### Community 276 - "frame"
 Cohesion: 0.33
-Nodes (5): Breakpoint, classes, hideClasses, props, showClasses
+Nodes (6): advancing(), ampTarget(), drawWave(), frame(), kick(), syncPos()
 
-### Community 276 - "handleClick"
+### Community 277 - "_MDrawerItemList.vue"
+Cohesion: 0.22
+Nodes (3): iSize(), itemStyle(), DrawerItem
+
+### Community 278 - "MFabMenu.vue"
+Cohesion: 0.17
+Nodes (8): MDialog generic modal shell, MFabMenu, colorMap, FabMenuItem, iconSize, props, revealClass, sizeClasses
+
+### Community 279 - "handleClick"
 Cohesion: 0.40
 Nodes (6): emit, handleClick(), handleTrailingToggle(), onHeaderKeyDown(), onRowKeyDown(), toggleExpand()
 
-### Community 277 - "MSegmentedButton.vue"
-Cohesion: 0.50
-Nodes (3): emit, SegmentedOption, toggle()
+### Community 280 - "fmt"
+Cohesion: 0.40
+Nodes (5): endText, fmt(), pad(), startText, valueText
 
-### Community 278 - "finishWall"
-Cohesion: 0.67
-Nodes (3): finishWall(), newId(), onPlanKey()
+### Community 281 - "clampPan"
+Cohesion: 0.31
+Nodes (10): centerOn(), clampPan(), onFingerDown(), onFingerMove(), onFingerUp(), onWheel(), startGesture(), startPan() (+2 more)
 
-### Community 280 - "neighbor"
-Cohesion: 0.67
-Nodes (3): neighbor(), nextIndex, prevIndex
+### Community 289 - "useLocale"
+Cohesion: 0.10
+Nodes (16): config, emit, locale, props, bracketClose, bracketOpen, childCount, dataType (+8 more)
 
-### Community 281 - "signatureOf"
-Cohesion: 0.83
-Nodes (4): memberType(), signatureOf(), tidy(), valueApi()
+### Community 290 - "MColorPickerModal.vue"
+Cohesion: 0.24
+Nodes (10): isSelected(), showOriginal, cancel(), confirm(), draft, emit, props, t (+2 more)
 
-### Community 289 - "MJsonViewer.vue"
-Cohesion: 0.08
-Nodes (20): config, emit, locale, props, bracketClose, bracketOpen, childCount, dataType (+12 more)
-
-### Community 291 - "_MMapAttribution.vue"
-Cohesion: 0.18
-Nodes (9): MapControlPosition, credits, end, html, maxWidth, { on, onReady }, open, props (+1 more)
+### Community 291 - "MResult.vue"
+Cohesion: 0.29
+Nodes (6): MResult, config, httpCode, props, STATUS_STYLE, t
 
 ### Community 292 - "MPdfViewer.test.ts"
 Cohesion: 0.20
 Nodes (8): near(), eraseAt(), eraseFrom(), PdfAnnotation, pageBox(), pages(), settle(), viewer()
 
+### Community 294 - "attrsFallthrough.test.ts"
+Cohesion: 0.09
+Nodes (13): MBarcode, error, props, svgEl, borderRadius, props, STEPS, canClick (+5 more)
+
 ### Community 296 - "MDrawLayers.vue"
 Cohesion: 0.14
 Nodes (10): finishText(), newText(), add(), draw, input, list, locale, renaming (+2 more)
-
-### Community 299 - "Release 0.8.6"
-Cohesion: 0.11
-Nodes (24): MAutocomplete, MChatBubble, MDragDropList, MFileUpload, MKanban, MListDetail, MMultiAutocomplete, MNavigationRail (+16 more)
 
 ### Community 302 - "peerDependencies"
 Cohesion: 0.40
 Nodes (5): peerDependencies, maplibre-gl@^5.0.0, tailwindcss@^4.0.0, vue@^3.5.0, tailwindcss
 
-### Community 303 - "openDropdown"
+### Community 303 - "toPx"
 Cohesion: 0.50
-Nodes (5): computeDropPos(), onInput(), onInputFocus(), openDropdown(), updateSearch()
+Nodes (4): pieces, previewX, thumbX, toPx()
 
 ### Community 306 - "MDrawToolbar.vue"
 Cohesion: 0.15
 Nodes (10): draw, GROUPS, INFO, isCustom, isShape, last, locale, picking (+2 more)
 
-### Community 307 - "MExpansionPanel.vue"
+### Community 311 - "Release 0.1.10"
 Cohesion: 0.33
-Nodes (6): emit, internal, isOpen, props, toggle(), wrapperClass
+Nodes (5): MEmoji, MEmojiButton, MEmojiSelector, Release 0.1.10, props
 
-### Community 309 - "isSelected"
-Cohesion: 0.32
-Nodes (8): allOnPageSelected, isExpanded(), isSelected(), rowId(), someOnPageSelected, toggleAll(), toggleExpand(), toggleRow()
+### Community 312 - "el"
+Cohesion: 0.67
+Nodes (3): el(), segmentPosition, { snap }
+
+### Community 313 - "hasClickListener"
+Cohesion: 0.67
+Nodes (3): hasClickListener(), isButton, isClickable
+
+### Community 315 - "MResponsive.vue"
+Cohesion: 0.33
+Nodes (5): Breakpoint, classes, hideClasses, props, showClasses
+
+### Community 319 - "mdText"
+Cohesion: 0.31
+Nodes (9): code(), componentMd(), mdText(), memberType(), oneLine(), propLine(), signatureOf(), tidy() (+1 more)
 
 ## Knowledge Gaps
-- **34 isolated node(s):** `@vue/tsconfig/tsconfig.dom.json`, `@vue/tsconfig/tsconfig.dom.json`, `Color palettes`, `THIRD_PARTY_LICENSES`, `FLIP reorder animation (onBeforeUpdate/onUpdated)` (+29 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 3118 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **34 isolated node(s):** `@vue/tsconfig/tsconfig.dom.json`, `@vue/tsconfig/tsconfig.dom.json`, `Color palettes`, `PaletteId`, `v-click-outside` (+29 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 3193 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **58 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `vue` connect `vue` to `MKanban Board`, `MContainerTransform.vue`, `Toolbar & Bottom App Bar`, `MWindow Desktop Windows`, `MDataTable`, `MList.vue`, `MLightbox Viewer`, `MMultiAutocomplete`, `MCarousel Component`, `MTooltip & v-tooltip`, `MTransferList`, `MAutocomplete Dropdown`, `MLoadingIndicator Shapes`, `MNavigationDrawer`, `Rich Text Editor (tiptap)`, `MDragDropList`, `MFlow.vue`, `Publish Workflow`, `MImageCropper.vue`, `MListItem`, `MSlider Core`, `Code Editor (CodeMirror)`, `MScheduler`, `MShader Renderer`, `flow.ts`, `MMapLayers.vue`, `MMap Core (maplibre)`, `MGantt.vue`, `MMultiSelect`, `Layout Primitives (MBox/MText)`, `MDialog & Confirm Dialog`, `MSeekBar Core`, `MTree`, `MFab`, `MTimeline`, `MChart & Theme Tokens`, `_MColorPanel.vue`, `MEmojiSelector.vue`, `MTimePickerModal`, `MScheme.vue`, `MMenu`, `Locale System`, `loadModules`, `Map Measure & GeoJSON Geometry`, `MNavigationRail`, `Map Identify/Marker/Popup`, `MTable`, `MTimeScroll.vue`, `MVideoPlayer.vue`, `MSparkline`, `MMenuItem`, `MScrollField`, `MSelect`, `MSimpleCarousel`, `MTopAppBar`, `Progress Bars & Page Progress`, `MCircleProgressBar`, `Split Button & Popup Positioning`, `MDatePickerModal & Calendar Month`, `MContextMenu`, `MPdfViewer.vue`, `MBottomSheet`, `_useSpring.ts`, `MSwipeToDismiss`, `_MPdfPage.vue`, `MEmojiButton.vue`, `MFileUpload`, `MRating`, `MSearchBar`, `useNotification.ts`, `MDrawCanvas.vue`, `MDateRangePicker`, `MMapFilter`, `_MFlowNodeShell.vue`, `MProgressBar`, `MTimePicker`, `MMapHover.vue`, `MAudioPlayer.vue`, `useColorPalette.ts`, `MNavigationSuite.vue`, `MMapControl`, `MTagInput`, `MTour`, `MIconButton`, `MMaskField`, `MTextField.vue`, `shape-morph & v-sparkle`, `MDateRangePickerModal`, `MMapSearch`, `MSignaturePad`, `attrsFallthrough.test.ts`, `MAppBarWithSearch`, `MButton`, `MButtonGroup`, `MResourceTimeline.vue`, `MColorPicker`, `MDatePicker`, `MCommandPalette.vue`, `MSpotlightSearch`, `MAvatar & MChatBubble`, `MCalendar`, `MPinInput`, `MFloorPlan.vue`, `attrsFallthrough.test.ts`, `MMapGeoJson`, `MToggleButton`, `MVirtualTable.vue`, `MNumberField.vue`, `MTreeTable`, `MScrollable.vue`, `Markdown (markdown-it)`, `Terminal (xterm)`, `Carousel Snap & Scroll`, `useNotification.ts`, `vClickOutside.ts`, `MTabs Indicator`, `v-scroll-elevation`, `gantt.ts`, `src/index.ts`, `Map Geometry Helpers`, `MQRCode`, `MSwitch`, `MChip.vue`, `MPasswordMeter`, `useScrollReveal.ts`, `MSplitter`, `MStack.vue`, `MRadio.vue`, `_fakeMaplibre.ts`, `devDependencies`, `drawGeometry.ts`, `vSwipe.ts`, `MMap.test.ts`, `MFlowMinimap.vue`, `useMap`, `vRipple.ts`, `_useEscapeStack.ts`, `MDragHandle`, `_useScrollLock.ts`, `MGrid`, `useThemeTokens.ts`, `usePdf.ts`, `MSearchField.vue`, `vStateLayer.ts`, `_colorUtils.ts`, `vLongPress.ts`, `MKanban.test.ts`, `media.ts`, `MHotkeys`, `MMasonry`, `MSlider Tests`, `MFabMenu.vue`, `MAbsolute.vue`, `MResult.vue`, `MCard.vue`, `MPagination.vue`, `MFloorPlan.test.ts`, `_ganttTime.ts`, `_MDrawerItemList.vue`, `MShape.vue`, `MSticky.vue`, `plugin.ts`, `MFlow.test.ts`, `vSkeleton.ts`, `MRelativeTime.vue`, `MNavigationSuite.vue`, `MFlex.vue`, `ssr.test.ts`, `MVideoPlayer.test.ts`, `MStepper.vue`, `useDevice.ts`, `MBottomSheetScaffold.vue`, `MResponsive.vue`, `MColorPicker.test.ts`, `MJsonViewer.vue`, `_MMapAttribution.vue`, `MPdfViewer.test.ts`, `MDrawLayers.vue`, `MGantt.test.ts`, `peerDependencies`, `MDrawToolbar.vue`, `MExpansionPanel.vue`, `MSwipeToDismiss.test.ts`?**
-  _High betweenness centrality (0.523) - this node is a cross-community bridge._
+- **Why does `vue` connect `vue` to `vue`, `MKanban Board`, `MContainerTransform.vue`, `Toolbar & Bottom App Bar`, `MWindow Desktop Windows`, `MDataTable`, `MList.vue`, `MLightbox Viewer`, `MMultiAutocomplete`, `MCarousel Component`, `MTooltip & v-tooltip`, `MTransferList`, `MAutocomplete Dropdown`, `MLoadingIndicator Shapes`, `MNavigationDrawer`, `Rich Text Editor (tiptap)`, `MDragDropList`, `MFlow.vue`, `Publish Workflow`, `MImageCropper.vue`, `MListItem`, `MSlider Core`, `Code Editor (CodeMirror)`, `MScheduler`, `MShader Renderer`, `flow.ts`, `MMapLayers.vue`, `MMap Core (maplibre)`, `MGantt.vue`, `MMultiSelect`, `Layout Primitives (MBox/MText)`, `MDialog.vue`, `MSeekBar Core`, `MTree.vue`, `MFab`, `MTimeline`, `MChart & Theme Tokens`, `_MColorPanel.vue`, `MEmojiSelector.vue`, `MTimePickerModal`, `MMapFilter.vue`, `FloorPlanContext`, `MMenu`, `Locale System`, `package.json`, `Map Measure & GeoJSON Geometry`, `MNavigationRail`, `Map Identify/Marker/Popup`, `MTable`, `_useSpring.ts`, `MVideoPlayer.vue`, `MSparkline`, `MMenuItem`, `MScrollField`, `MSelect`, `MSimpleCarousel`, `MTopAppBar`, `Progress Bars & Page Progress`, `MCircleProgressBar`, `Split Button & Popup Positioning`, `MDatePickerModal.vue`, `MContextMenu`, `MPdfViewer.vue`, `MBottomSheet`, `MMapHover.vue`, `devDependencies`, `MSwipeToDismiss`, `_MPdfPage.vue`, `ganttSchedule.ts`, `MBottomSheetScaffold.vue`, `MFileUpload`, `MRating`, `MSearchBar`, `useNotification.ts`, `MDrawCanvas.vue`, `MDateRangePicker`, `map.ts`, `_MFlowNodeShell.vue`, `MProgressBar`, `MTimePicker`, `MAudioPlayer.vue`, `MNavigationSuite.vue`, `MMapControl`, `MTagInput`, `MTour`, `MFlowMinimap.vue`, `MIconButton`, `MMaskField.vue`, `_MFlowEdge.vue`, `shape-morph & v-sparkle`, `MMapSearch`, `MSignaturePad`, `MAppBarWithSearch`, `MButton`, `MButtonGroup`, `MResourceTimeline.vue`, `MColorPicker`, `MDatePicker`, `MCommandPalette.vue`, `MSpotlightSearch.vue`, `MAvatar & MChatBubble`, `MCalendar`, `MPinInput`, `MFloorPlan.vue`, `MSpinner.vue`, `MMapGeoJson`, `MToggleButton`, `MVirtualTable.vue`, `MNumberField.vue`, `MTreeTable`, `Markdown (markdown-it)`, `Terminal (xterm)`, `Carousel Snap & Scroll`, `MScrollable.vue`, `_MTreeNode.vue`, `MTabs Indicator`, `v-scroll-elevation`, `gantt.ts`, `src/index.ts`, `Map Geometry Helpers`, `MQRCode`, `MSwitch`, `MNavigationSuite.vue`, `MChip.vue`, `MPasswordMeter`, `useScrollReveal.test.ts`, `MSplitter`, `vSwipe.ts`, `MRadio.vue`, `_fakeMaplibre.ts`, `MDateRangePickerModal.vue`, `drawGeometry.ts`, `MMap.test.ts`, `useColorPalette.ts`, `MBottomAppBar.vue`, `MContainerTransform.test.ts`, `MFloorPlanInspector.vue`, `useToast.ts`, `MGrid`, `_colorUtils.ts`, `usePdf.ts`, `MSearchField.vue`, `MRelativeTime.vue`, `MEmojiButton.vue`, `media.ts`, `MHotkeys`, `MMasonry`, `MTextField.vue`, `MSlider Tests`, `MFloorPlanToolbar.vue`, `MAbsolute.vue`, `vLongPress.ts`, `vRipple.ts`, `plugin.ts`, `_MTransferPane.vue`, `ssr.test.ts`, `MExpansionPanel.vue`, `MStack.vue`, `useDevice.ts`, `MVideoPlayer.test.ts`, `useMenuNav`, `_useScrollLock.ts`, `vStateLayer.ts`, `_MMapAttribution.vue`, `MFlex.vue`, `_MDrawerItemList.vue`, `MFabMenu.vue`, `MWindow.test.ts`, `useLocale`, `MColorPickerModal.vue`, `MResult.vue`, `MPdfViewer.test.ts`, `_MToolbarFab.vue`, `attrsFallthrough.test.ts`, `MDrawLayers.vue`, `MGantt.test.ts`, `peerDependencies`, `MDrawToolbar.vue`, `MResponsive.vue`, `useThemeTokens`?**
+  _High betweenness centrality (0.522) - this node is a cross-community bridge._
 - **What connects `@vue/tsconfig/tsconfig.dom.json`, `@vue/tsconfig/tsconfig.dom.json`, `Color palettes` to the rest of the system?**
   _34 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `vue` be split into smaller, more focused modules?**
-  _Cohesion score 0.02630853994490358 - nodes in this community are weakly interconnected._
-- **Why does `useLocale()` connect `MJsonViewer.vue` to `MKanban Board`, `MWindow Desktop Windows`, `MDataTable`, `MLightbox Viewer`, `MMultiAutocomplete`, `MCarousel Component`, `MTransferList`, `MAutocomplete Dropdown`, `MLoadingIndicator Shapes`, `Rich Text Editor (tiptap)`, `MDragDropList`, `MFlow.vue`, `Publish Workflow`, `MImageCropper.vue`, `MSlider Core`, `Code Editor (CodeMirror)`, `MScheduler`, `MMapLayers.vue`, `MMap Core (maplibre)`, `MGantt.vue`, `MMultiSelect`, `MDialog & Confirm Dialog`, `MSeekBar Core`, `MTree`, `MTimeline`, `_MColorPanel.vue`, `MEmojiSelector.vue`, `MTimePickerModal`, `map.ts`, `Locale System`, `Map Measure & GeoJSON Geometry`, `MTable`, `MTimeScroll.vue`, `MVideoPlayer.vue`, `MSparkline`, `MSelect`, `MSimpleCarousel`, `MTopAppBar`, `Split Button & Popup Positioning`, `MDatePickerModal & Calendar Month`, `MPdfViewer.vue`, `MBottomSheet`, `MFileUpload`, `MSearchBar`, `MDrawCanvas.vue`, `MDateRangePicker`, `MMapFilter`, `_MFlowNodeShell.vue`, `MTimePicker`, `MMapHover.vue`, `MAudioPlayer.vue`, `MTagInput`, `MTour`, `MMaskField`, `MTextField.vue`, `MDateRangePickerModal`, `MMapSearch`, `MAppBarWithSearch`, `MResourceTimeline.vue`, `MColorPicker`, `MDatePicker`, `MCommandPalette.vue`, `MSpotlightSearch`, `MAvatar & MChatBubble`, `MCalendar`, `MFloorPlan.vue`, `attrsFallthrough.test.ts`, `MTreeTable`, `useNotification.ts`, `gantt.ts`, `src/index.ts`, `MChip.vue`, `MFlowMinimap.vue`, `_useEscapeStack.ts`, `MSearchField.vue`, `MResult.vue`, `MPagination.vue`, `MRelativeTime.vue`, `MBottomSheetScaffold.vue`, `_MMapAttribution.vue`, `MDrawLayers.vue`, `MDrawToolbar.vue`?**
-  _High betweenness centrality (0.074) - this node is a cross-community bridge._
+  _Cohesion score 0.03417366946778711 - nodes in this community are weakly interconnected._
+- **Why does `useLocale()` connect `useLocale` to `MKanban Board`, `MWindow Desktop Windows`, `MDataTable`, `MLightbox Viewer`, `MMultiAutocomplete`, `MCarousel Component`, `MTransferList`, `MAutocomplete Dropdown`, `MLoadingIndicator Shapes`, `Rich Text Editor (tiptap)`, `MDragDropList`, `MFlow.vue`, `Publish Workflow`, `MImageCropper.vue`, `MSlider Core`, `Code Editor (CodeMirror)`, `MScheduler`, `MMapLayers.vue`, `MMap Core (maplibre)`, `MGantt.vue`, `MMultiSelect`, `MDialog.vue`, `MSeekBar Core`, `MTree.vue`, `MTimeline`, `_MColorPanel.vue`, `MEmojiSelector.vue`, `MTimePickerModal`, `Locale System`, `Map Measure & GeoJSON Geometry`, `MTable`, `MVideoPlayer.vue`, `MSparkline`, `MScrollField`, `MSelect`, `MSimpleCarousel`, `MTopAppBar`, `Split Button & Popup Positioning`, `MDatePickerModal.vue`, `MPdfViewer.vue`, `MBottomSheet`, `MMapHover.vue`, `MBottomSheetScaffold.vue`, `MFileUpload`, `MSearchBar`, `MDrawCanvas.vue`, `MDateRangePicker`, `map.ts`, `_MFlowNodeShell.vue`, `MTimePicker`, `MAudioPlayer.vue`, `MTagInput`, `MTour`, `MFlowMinimap.vue`, `MMaskField.vue`, `_MFlowEdge.vue`, `MMapSearch`, `MAppBarWithSearch`, `MResourceTimeline.vue`, `MColorPicker`, `MDatePicker`, `MCommandPalette.vue`, `MSpotlightSearch.vue`, `MAvatar & MChatBubble`, `MCalendar`, `MFloorPlan.vue`, `MSpinner.vue`, `MTreeTable`, `_MTreeNode.vue`, `gantt.ts`, `src/index.ts`, `MChip.vue`, `MDateRangePickerModal.vue`, `MFloorPlanInspector.vue`, `useToast.ts`, `MSearchField.vue`, `MRelativeTime.vue`, `MTextField.vue`, `MFloorPlanToolbar.vue`, `_useScrollLock.ts`, `_MMapAttribution.vue`, `MColorPickerModal.vue`, `MResult.vue`, `MDrawLayers.vue`, `MDrawToolbar.vue`?**
+  _High betweenness centrality (0.076) - this node is a cross-community bridge._
 - **Should `MKanban Board` be split into smaller, more focused modules?**
-  _Cohesion score 0.0633879781420765 - nodes in this community are weakly interconnected._
-- **Why does `vitest` connect `vue` to `MContainerTransform.vue`, `License Allowlist Script`, `Carousel Snap & Scroll`, `vClickOutside.ts`, `MTransferList`, `MTooltip & v-tooltip`, `MNavigationDrawer`, `v-scroll-elevation`, `MDragDropList`, `gantt.ts`, `src/index.ts`, `MImageCropper.vue`, `Map Geometry Helpers`, `MColorPicker.test.ts`, `MQRCode`, `flow.ts`, `MScheduler`, `MTerminal.test.ts`, `MPasswordMeter`, `useScrollReveal.ts`, `ganttFormats.ts`, `MDialog & Confirm Dialog`, `_fakeMaplibre.ts`, `devDependencies`, `drawGeometry.ts`, `MPdfViewer.test.ts`, `MMap.test.ts`, `ganttSchedule.ts`, `vSwipe.ts`, `MGantt.test.ts`, `MScheme.vue`, `vRipple.ts`, `pdfMock.ts`, `Locale System`, `loadModules`, `flowFormats.ts`, `_colorUtils.ts`, `useThemeTokens.ts`, `vStateLayer.ts`, `MSwipeToDismiss.test.ts`, `_colorUtils.ts`, `Progress Bars & Page Progress`, `MKanban.test.ts`, `Split Button & Popup Positioning`, `MDatePickerModal & Calendar Month`, `media.ts`, `vLongPress.ts`, `MSlider Tests`, `_useSpring.ts`, `useFireworks.ts`, `useConfetti.ts`, `MFileUpload`, `useNotification.ts`, `MFloorPlan.test.ts`, `MShape.vue`, `useColorPalette.ts`, `MNavigationSuite.vue`, `MFlow.test.ts`, `plugin.ts`, `MTagInput`, `vSkeleton.ts`, `MRelativeTime.vue`, `MTextField.vue`, `shape-morph & v-sparkle`, `ssr.test.ts`, `attrsFallthrough.test.ts`, `MVideoPlayer.test.ts`, `MAvatar & MChatBubble`, `attrsFallthrough.test.ts`?**
-  _High betweenness centrality (0.035) - this node is a cross-community bridge._
+  _Cohesion score 0.05300207039337474 - nodes in this community are weakly interconnected._
+- **Why does `vitest` connect `vue` to `MKanban Board`, `Terminal (xterm)`, `MList.vue`, `Carousel Snap & Scroll`, `vStateLayer.ts`, `MTooltip & v-tooltip`, `MNavigationDrawer`, `v-scroll-elevation`, `MDragDropList`, `gantt.ts`, `MSparkline.test.ts`, `MImageCropper.vue`, `MTransferList.test.ts`, `src/index.ts`, `Map Geometry Helpers`, `MQRCode`, `MScheduler`, `flow.ts`, `MPasswordMeter`, `useScrollReveal.test.ts`, `MDialog.vue`, `MWindow.test.ts`, `viewportHints.ts`, `_fakeMaplibre.ts`, `vSwipe.ts`, `drawGeometry.ts`, `MPdfViewer.test.ts`, `attrsFallthrough.test.ts`, `ganttFormats.ts`, `useColorPalette.ts`, `MMap.test.ts`, `MGantt.test.ts`, `pdfMock.ts`, `Locale System`, `MContainerTransform.test.ts`, `package.json`, `flowFormats.ts`, `useReactions.ts`, `_useSpring.ts`, `_colorUtils.ts`, `MRelativeTime.vue`, `Progress Bars & Page Progress`, `Split Button & Popup Positioning`, `MDatePickerModal.vue`, `MHotkeys`, `media.ts`, `useThemeTokens`, `MTextField.vue`, `MSlider Tests`, `useFireworks.ts`, `devDependencies`, `MFloorPlanToolbar.vue`, `ganttSchedule.ts`, `MFileUpload`, `useNotification.ts`, `vLongPress.ts`, `vRipple.ts`, `useConfetti.test.ts`, `MNavigationSuite.vue`, `plugin.ts`, `ssr.test.ts`, `vue`, `MVideoPlayer.test.ts`, `ref_node_path`, `MSpinner.vue`?**
+  _High betweenness centrality (0.043) - this node is a cross-community bridge._
 - **Should `MContainerTransform.vue` be split into smaller, more focused modules?**
-  _Cohesion score 0.05268065268065268 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.10526315789473684 - nodes in this community are weakly interconnected._
