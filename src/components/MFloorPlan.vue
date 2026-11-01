@@ -119,7 +119,11 @@ const props = withDefaults(defineProps<{
   rotatable?: boolean
   /** Dragging (or nudging) a merged table moves its whole merge with it */
   dragMerged?: boolean
-  /** Outside editing, what a click on a table selects: nothing, one, or several (toggling; to merge them) */
+  /**
+   * What a click on a table selects outside editing: nothing, one, or several (toggling; to merge them). While
+   * editing, `multiple` keeps clicks toggling tables in and out of the selection, and a drag moves the table pressed
+   * on its own (to bring the ones being merged together)
+   */
   selectable?: 'none' | 'single' | 'multiple'
   /** Whether these tables may be merged: `true`, or `false` / a reason to refuse (shown by `merge-refused`) */
   canMerge?: (ids: (string | number)[]) => boolean | string
@@ -327,10 +331,12 @@ function onDown(e: PointerEvent, t: FloorTable) {
       selection.value = selection.value.includes(t.id) ? selection.value.filter((x) => x !== t.id) : [...selection.value, t.id]
       navigator.vibrate?.(10)
     }, LONG_PRESS)
-  } else if (!selection.value.includes(t.id)) selection.value = e.shiftKey || e.ctrlKey || e.metaKey ? [...selection.value, t.id] : [t.id]
-  // A touch picks the table once it moves (or on release), so a long press can add to what's picked
-  const ids = withMerged(selection.value.includes(t.id) ? selection.value : [t.id])
-  drag = { id: e.pointerId, sx: e.clientX, sy: e.clientY, start: new Map(tables.value.filter((x) => ids.includes(x.id)).map((x) => [x.id, { x: x.x, y: x.y }])), moved: false, pick: touch && !selection.value.includes(t.id) ? t.id : undefined }
+  } else if (!selection.value.includes(t.id) && !toggling.value) selection.value = e.shiftKey || e.ctrlKey || e.metaKey ? [...selection.value, t.id] : [t.id]
+  // A touch picks the table once it moves (or on release), so a long press can add to what's picked. With
+  // `selectable="multiple"` the selection is the click's to change, and a drag moves only the table pressed (not the
+  // rest of the selection nor its merge): to bring the tables being merged together one by one
+  const ids = toggling.value ? [t.id] : withMerged(selection.value.includes(t.id) ? selection.value : [t.id])
+  drag = { id: e.pointerId, sx: e.clientX, sy: e.clientY, start: new Map(tables.value.filter((x) => ids.includes(x.id)).map((x) => [x.id, { x: x.x, y: x.y }])), moved: false, pick: touch && !toggling.value && !selection.value.includes(t.id) ? t.id : undefined }
   window.addEventListener('pointermove', onMove)
   window.addEventListener('pointerup', onUp)
   window.addEventListener('pointercancel', onUp)
@@ -373,9 +379,12 @@ function commitMoves(next: Map<string | number, { x: number; y: number }>) {
   tables.value = tables.value.map((t) => (next.has(t.id) ? { ...t, ...next.get(t.id)! } : t))
   emit('move', [...next].map(([id, p]) => ({ id, ...p })))
 }
+/** Editing with `selectable="multiple"`: a click toggles a table in the selection (to merge them), a drag moves that table alone */
+const toggling = computed(() => props.editable && props.selectable === 'multiple')
 function onClick(e: MouseEvent, t: FloorTable) {
   if (suppressClick) return
-  if (props.editable && !(e.shiftKey || e.ctrlKey || e.metaKey)) selection.value = [t.id]
+  if (toggling.value) selection.value = selection.value.includes(t.id) ? selection.value.filter((x) => x !== t.id) : [...selection.value, t.id]
+  else if (props.editable && !(e.shiftKey || e.ctrlKey || e.metaKey)) selection.value = [t.id]
   else if (!props.editable && props.selectable === 'single') selection.value = selection.value.length === 1 && selection.value[0] === t.id ? [] : [t.id]
   else if (!props.editable && props.selectable === 'multiple')
     selection.value = selection.value.includes(t.id) ? selection.value.filter((x) => x !== t.id) : [...selection.value, t.id]

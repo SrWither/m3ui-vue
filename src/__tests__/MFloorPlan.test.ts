@@ -42,6 +42,34 @@ describe('MFloorPlan', () => {
     expect(w.emitted('move')![0]![0]).toEqual([{ id: 1, x: 140, y: 140 }, { id: 2, x: 340, y: 140 }])
     expect((w.props('tables') as FloorTable[])[0]).toMatchObject({ x: 140, y: 140 })
   })
+  it('editable + selectable multiple: a click toggles a table in the selection, a drag moves that table alone', async () => {
+    const w = setup({ editable: true, selectable: 'multiple', dragMerged: true, merges: [{ id: 'm', tables: [1, 2] }], grid: 20, selection: [], 'onUpdate:selection': (v: unknown) => w.setProps({ selection: v as number[] }) })
+    const press = (label: string, dx = 0) => {
+      table(w, label).element.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, clientX: 0, clientY: 0, pointerId: 1 }))
+      if (dx) window.dispatchEvent(new PointerEvent('pointermove', { clientX: dx, clientY: 0, pointerId: 1 }))
+      window.dispatchEvent(new PointerEvent('pointerup', { clientX: dx, clientY: 0, pointerId: 1 }))
+    }
+    // A press alone doesn't change the selection; the click toggles
+    press('T1')
+    expect(w.props('selection')).toEqual([])
+    await table(w, 'T1').trigger('click')
+    await table(w, 'T2').trigger('click')
+    expect(w.props('selection')).toEqual([1, 2])
+    await table(w, 'T1').trigger('click')
+    expect(w.props('selection')).toEqual([2])
+    // A drag moves only the table pressed: not the rest of the selection, nor its merge (dragMerged); the selection stays
+    await table(w, 'T1').trigger('click')
+    expect(w.props('selection')).toEqual([2, 1])
+    await new Promise((r) => setTimeout(r))
+    press('T2', 40)
+    await nextTick()
+    expect((w.props('tables') as FloorTable[]).map((t) => t.x)).toEqual([100, 340])
+    await new Promise((r) => setTimeout(r))
+    press('T1', 60)
+    await nextTick()
+    expect((w.props('tables') as FloorTable[]).map((t) => t.x)).toEqual([160, 340])
+    expect(w.props('selection')).toEqual([2, 1])
+  })
   it('editable: arrows nudge by the grid, and tables stay inside the plan', async () => {
     const w = setup({ editable: true, grid: 10 })
     await table(w, 'T1').trigger('keydown', { key: 'ArrowLeft' })
