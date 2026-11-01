@@ -5,6 +5,36 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.3.6] - 2026-11-01
+
+### Added
+- `MFloorPlan` `zoomable` (with `maxZoom`, `zoomControls` and `v-model:zoom`): Ctrl + wheel or a pinch zooms about the pointer, the wheel, two fingers, a middle-button drag or (outside editing, or with a finger) a drag on empty floor pans, with + / − / whole-plan buttons; exposed `zoomTo()` and `centerOn()`
+- `MFloorPlan` `backgroundImage` (`backgroundBox`, `backgroundOpacity`): an image under the plan, such as a scanned floor plan to trace over
+- `MFloorPlan`: a mouse or pen drag on empty floor while editing selects the tables it touches (Shift adds to the selection)
+- `MFloorPlan` `transferable` (and `canTransfer`): in service, carrying a table onto another one (a mouse drags it, a finger holds it down first) emits `transfer` with both tables, or `transfer-refused`, to move a party or a bill; the tables stay where they are
+- `MFloorPlan`: a handle at the selected table's corner resizes it (`resizable`, default `true`), and `MFloorPlanInspector` has width and height for tables; `resizeSnap` (`grid`, `subgrid` or `free`, the default) makes the handles of tables and decor step, keeping a table's margin inside its square
+- `MFloorPlan`: zones of any shape (`FloorArea.points`): the new `polygon` tool (Zone of any shape in `MFloorPlanToolbar`) draws one corner by corner, a double-click on a zone's edge adds a corner, corners drag and Delete removes the picked one
+- `MFloorPlan`: wall and zone corners join another wall's or zone's corner within a few pixels, so walls drawn apart meet end to end
+- `MFloorPlan` `overlap` (`warn`, the default; `prevent`; `allow`): tables on top of each other while editing are outlined, and with `prevent` a move or resize that would cause it is undone
+- `MFloorPlan` `seatNumbers`: chairs numbered from the top-left, clockwise; `FloorTable.activeSeats` colors the taken ones and a click on a chair in service emits `seat-click`
+- `MFloorPlan` `measure` (`{ unit, per, decimals? }`): while editing, the picked wall's or zone's sides, the wall being drawn and the picked table's or decor's size are labeled in your unit, and `MFloorPlanInspector`'s sizes use it
+- `MFloorPlan` exposed `toSVG()` and `toPNG(pixelRatio)`: the plan as a standalone picture, with the theme's colors
+- `MFloorPlan` `cellSize`: tables placed and handed back as a column and a row; a table bigger than its cell starts at it and covers the next ones. `tableOrigin="corner"`: a table's `x` / `y` are its top-left corner
+- `MFloorPlan` `subgrid`: walls, zones and decor also snap halfway (or more often) between the grid points, drawn as smaller dots, while tables keep to the grid
+- `MFloorPlan`: the arrows move the picked zone, decor or wall corner (Shift: five steps)
+- `MFloorPlan` `rotatable` takes a list too (`['decor']`: only decor turns)
+- `FloorDecor.flip`, and Flip in `MFloorPlanInspector` for doors: a door hinged on the other side
+
+### Changed
+- **`MFloorPlan`: a door is drawn as an opening with its leaf and swing, and a window as a framed pane; both cut the wall they sit on (they looked the same before)**
+- **`MFloorPlan`: a decor item's corner handle keeps the opposite corner in place, instead of growing both ways about its middle**
+
+### Fixed
+- `MFloorPlan`: resizing a turned door or window follows its own axes; before, the drag was read as if it weren't turned
+- `MFloorPlan`: the grid dots sit on the points things snap to; they were drawn in the middle of each square
+- `MFloorPlan`: duplicating a zone, decor item or table near the edge keeps the copy inside the plan
+- `MFloorPlan`: tables no longer slide into place when the plan zooms or resizes, only when they move
+
 ## [1.3.5] - 2026-11-01
 
 ### Added
