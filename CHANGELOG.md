@@ -5,6 +5,25 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.3.7] - Unreleased
+
+### Added
+- `MFloorPlan`: while dragging a corner, a wall, a zone, decor or tables in a zoomed-in plan, the view scrolls near its edges and brings what's dragged along (as `MFlow`'s canvas does)
+- `MFloorPlan`: undo while drawing a wall or a zone takes back the last corner placed
+
+### Changed
+- **`MFloorPlan` by touch: a finger places a wall's (or a polygon zone's) corner where it lifts, not where it lands; while it's down the next side follows it, snapped. A tap still places a corner, tapping the last corner again ends the wall (the toolbar's Done still works), and a pinch drops the corner being placed**
+- **`MFloorPlan`: corners land on the plan's edges and corners nearby (farther with a finger, which can't reach the screen's very edge), and moved or resized walls, zones and decor stop at the plan's edges instead of going past them** (what already sat outside may stay). Corners also join other walls' corners from farther with a finger
+- `MFloorPlan`: with a finger, walls take the touch on a wider, unseen band, so a thin wall is easy to pick
+
+### Fixed
+- `MFloorPlan`: dragging a wall's corner (or a whole wall, or a polygon zone's corner) with a finger scrolled the page and the drag was dropped: Chrome ignores `touch-action` on SVG shapes. The page is now held still while a finger drags something on the plan
+- `MFloorPlan`: zoomed in, a finger with the wall, zone or polygon tool panned the plan instead of drawing; one finger now draws and two pan
+- `MFloorPlan`: dragging out a zone with a finger scrolled the page at zoom 1; the drawing tools now keep the page still under the finger
+- `MFloorPlan`: the second finger of a pinch no longer acts on the plan (with a drawing tool it placed a corner)
+
+---
+
 ## [1.3.6] - 2026-11-01
 
 ### Added
