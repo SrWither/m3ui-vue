@@ -6,12 +6,12 @@
 - Unclassified: 6 file(s) not represented in the graph (top: (none) 3, .css 3)
 
 ## Summary
-- 6622 nodes · 12673 edges · 330 communities (272 shown, 58 thin omitted)
-- Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 743 edges (avg confidence: 0.87)
+- 6622 nodes · 12672 edges · 330 communities (272 shown, 58 thin omitted)
+- Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 742 edges (avg confidence: 0.87)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `d0489aae`
+- Built from commit: `ab5d3ed7`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -365,8 +365,8 @@
   README.md → scripts/licenses/apache-2.0.txt
 - `Bundled third-party code and dist/THIRD_PARTY_LICENSES.md` --references--> `Unicode License v3`  [INFERRED]
   README.md → scripts/licenses/unicode-license-v3.txt
-- `setup()` --indirect_call--> `onLayer()`  [INFERRED]
-  src/__tests__/MMap.test.ts → src/composables/useMap.ts
+- `startTransfer()` --calls--> `begin()`  [INFERRED]
+  src/components/MFloorPlan.vue → src/components/MSeekBar.vue
 
 ## Import Cycles
 - None detected.
@@ -1478,16 +1478,16 @@ Nodes (3): neighbor(), nextIndex, prevIndex
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `vue` connect `vue` to `MKanban Board`, `MContainerTransform.vue`, `Toolbar & Bottom App Bar`, `MWindow Desktop Windows`, `MDataTable`, `MList.vue`, `MLightbox Viewer`, `MMultiAutocomplete`, `MCarousel Component`, `MTooltip & v-tooltip`, `MTransferList`, `MAutocomplete Dropdown`, `MLoadingIndicator Shapes`, `MNavigationDrawer`, `Rich Text Editor (tiptap)`, `MDragDropList`, `MFlow.vue`, `Publish Workflow`, `MImageCropper.vue`, `MListItem`, `MSlider Core`, `Code Editor (CodeMirror)`, `MScheduler`, `MShader Renderer`, `flow.ts`, `MMapLayers.vue`, `MMap Core (maplibre)`, `MGantt.vue`, `MMultiSelect`, `Layout Primitives (MBox/MText)`, `MDialog.vue`, `MSeekBar Core`, `MTree.vue`, `MFab`, `MTimeline`, `MChart & Theme Tokens`, `_MColorPanel.vue`, `MEmojiSelector.vue`, `MTimePickerModal`, `MMapFilter.vue`, `FloorPlanContext`, `MMenu`, `Locale System`, `package.json`, `Map Measure & GeoJSON Geometry`, `MNavigationRail`, `Map Identify/Marker/Popup`, `MTable`, `MDragHandle.vue`, `MVideoPlayer.vue`, `MSparkline`, `MMenuItem`, `MScrollField`, `MSelect`, `MSimpleCarousel`, `MTopAppBar`, `Progress Bars & Page Progress`, `MCircleProgressBar`, `Split Button & Popup Positioning`, `MDatePickerModal.vue`, `MContextMenu`, `MPdfViewer.vue`, `MBottomSheet`, `MMapHover.vue`, `devDependencies`, `MSwipeToDismiss`, `_MPdfPage.vue`, `MBottomSheetScaffold.vue`, `MFileUpload`, `MRating`, `MSearchBar`, `useNotification.ts`, `MDrawCanvas.vue`, `MDateRangePicker`, `map.ts`, `_MFlowNodeShell.vue`, `MProgressBar`, `MTimePicker`, `MAudioPlayer.vue`, `MNavigationSuite.vue`, `MMapControl`, `MTagInput`, `MTour`, `MFlowMinimap.vue`, `MIconButton`, `MMaskField.vue`, `_MFlowEdge.vue`, `shape-morph & v-sparkle`, `MMapSearch`, `MSignaturePad`, `_ganttTime.ts`, `MAppBarWithSearch`, `MButton`, `MButtonGroup`, `MResourceTimeline.vue`, `MColorPicker`, `MDatePicker`, `MCommandPalette.vue`, `MSpotlightSearch.vue`, `MAvatar & MChatBubble`, `MCalendar`, `MPinInput`, `MFloorPlan.vue`, `MSpinner.vue`, `MMapGeoJson`, `MToggleButton`, `MVirtualTable.vue`, `MNumberField.vue`, `MTreeTable`, `flowPaths.ts`, `Markdown (markdown-it)`, `Terminal (xterm)`, `Carousel Snap & Scroll`, `MScrollable.vue`, `_MTreeNode.vue`, `MTabs Indicator`, `v-scroll-elevation`, `gantt.ts`, `src/index.ts`, `Map Geometry Helpers`, `MQRCode`, `MSwitch`, `MTimeScroll.vue`, `MChip.vue`, `MPasswordMeter`, `useScrollReveal.test.ts`, `MSplitter`, `MRadio.vue`, `_fakeMaplibre.ts`, `MDateRangePickerModal.vue`, `drawGeometry.ts`, `MMap.test.ts`, `useColorPalette.ts`, `MBottomAppBar.vue`, `MContainerTransform.test.ts`, `MFloorPlanInspector.vue`, `useToast.ts`, `MGrid`, `useThemeTokens.ts`, `usePdf.ts`, `MSearchField.vue`, `MRelativeTime.vue`, `MEmojiButton.vue`, `media.ts`, `MHotkeys`, `MMasonry`, `MTextField.vue`, `MSlider Tests`, `MFloorPlanToolbar.vue`, `_colorUtils.ts`, `MAbsolute.vue`, `vLongPress.ts`, `vRipple.ts`, `vClickOutside.ts`, `plugin.ts`, `_MTransferPane.vue`, `ssr.test.ts`, `useMap`, `_useEscapeStack.ts`, `MStack.vue`, `MFlex.vue`, `useDevice.ts`, `MVideoPlayer.test.ts`, `useMenuNav`, `_useScrollLock.ts`, `vStateLayer.ts`, `MIcon.vue`, `_MDrawerItemList.vue`, `MFabMenu.vue`, `MCard.vue`, `useLocale`, `MColorPickerModal.vue`, `MPdfViewer.test.ts`, `_MToolbarFab.vue`, `attrsFallthrough.test.ts`, `MDrawLayers.vue`, `MGantt.test.ts`, `peerDependencies`, `MDrawToolbar.vue`, `MStepper.vue`, `_useCalendarMonth.ts`, `MCopyButton.vue`, `MKbd.vue`, `MColorPicker.test.ts`, `MPullToRefresh.test.ts`, `useThemeTokens`?**
-  _High betweenness centrality (0.490) - this node is a cross-community bridge._
+  _High betweenness centrality (0.473) - this node is a cross-community bridge._
 - **What connects `@vue/tsconfig/tsconfig.dom.json`, `@vue/tsconfig/tsconfig.dom.json`, `Color palettes` to the rest of the system?**
   _34 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `vue` be split into smaller, more focused modules?**
   _Cohesion score 0.02652272424363588 - nodes in this community are weakly interconnected._
 - **Why does `useLocale()` connect `useLocale` to `MKanban Board`, `MWindow Desktop Windows`, `MDataTable`, `MLightbox Viewer`, `MMultiAutocomplete`, `MCarousel Component`, `MTransferList`, `MAutocomplete Dropdown`, `MLoadingIndicator Shapes`, `Rich Text Editor (tiptap)`, `MDragDropList`, `MFlow.vue`, `Publish Workflow`, `MImageCropper.vue`, `MSlider Core`, `Code Editor (CodeMirror)`, `MScheduler`, `MMapLayers.vue`, `MMap Core (maplibre)`, `MGantt.vue`, `MMultiSelect`, `MDialog.vue`, `MSeekBar Core`, `MTree.vue`, `MTimeline`, `_MColorPanel.vue`, `MEmojiSelector.vue`, `MTimePickerModal`, `Locale System`, `Map Measure & GeoJSON Geometry`, `Map Identify/Marker/Popup`, `MTable`, `MVideoPlayer.vue`, `MSparkline`, `MSelect`, `MSimpleCarousel`, `MTopAppBar`, `Split Button & Popup Positioning`, `MDatePickerModal.vue`, `MPdfViewer.vue`, `MBottomSheet`, `MMapHover.vue`, `MBottomSheetScaffold.vue`, `MFileUpload`, `MSearchBar`, `MDrawCanvas.vue`, `MDateRangePicker`, `map.ts`, `_MFlowNodeShell.vue`, `MTimePicker`, `MAudioPlayer.vue`, `MTagInput`, `MTour`, `MFlowMinimap.vue`, `MMaskField.vue`, `_MFlowEdge.vue`, `MMapSearch`, `MAppBarWithSearch`, `MResourceTimeline.vue`, `MColorPicker`, `MDatePicker`, `MCommandPalette.vue`, `MSpotlightSearch.vue`, `MAvatar & MChatBubble`, `MCalendar`, `MFloorPlan.vue`, `MSpinner.vue`, `MTreeTable`, `_MTreeNode.vue`, `gantt.ts`, `src/index.ts`, `MTimeScroll.vue`, `MChip.vue`, `MDateRangePickerModal.vue`, `MFloorPlanInspector.vue`, `MSearchField.vue`, `MRelativeTime.vue`, `MTextField.vue`, `MFloorPlanToolbar.vue`, `_useEscapeStack.ts`, `MIcon.vue`, `MColorPickerModal.vue`, `MDrawLayers.vue`, `MDrawToolbar.vue`?**
-  _High betweenness centrality (0.076) - this node is a cross-community bridge._
+  _High betweenness centrality (0.079) - this node is a cross-community bridge._
 - **Should `MKanban Board` be split into smaller, more focused modules?**
   _Cohesion score 0.05300207039337474 - nodes in this community are weakly interconnected._
 - **Why does `vitest` connect `vue` to `MTreeTable`, `flowPaths.ts`, `MKanban Board`, `Terminal (xterm)`, `Carousel Snap & Scroll`, `vStateLayer.ts`, `MTooltip & v-tooltip`, `MNavigationDrawer`, `v-scroll-elevation`, `MDragDropList`, `gantt.ts`, `MSparkline.test.ts`, `MImageCropper.vue`, `MTransferList.test.ts`, `src/index.ts`, `Map Geometry Helpers`, `MScheduler`, `flow.ts`, `useScrollReveal.test.ts`, `MDialog.vue`, `viewportHints.ts`, `useLocale`, `_fakeMaplibre.ts`, `drawGeometry.ts`, `MPdfViewer.test.ts`, `attrsFallthrough.test.ts`, `ganttFormats.ts`, `useColorPalette.ts`, `MMap.test.ts`, `MGantt.test.ts`, `pdfMock.ts`, `Locale System`, `MContainerTransform.test.ts`, `package.json`, `flowFormats.ts`, `useReactions.ts`, `_useCalendarMonth.ts`, `MKbd.vue`, `MColorPicker.test.ts`, `MSearchField.vue`, `MRelativeTime.vue`, `MPullToRefresh.test.ts`, `useThemeTokens.ts`, `Progress Bars & Page Progress`, `Split Button & Popup Positioning`, `media.ts`, `useThemeTokens`, `MTextField.vue`, `MSlider Tests`, `useFireworks.ts`, `devDependencies`, `MFloorPlanToolbar.vue`, `ganttSchedule.ts`, `MFileUpload`, `useNotification.ts`, `vLongPress.ts`, `vRipple.ts`, `vClickOutside.ts`, `useConfetti.test.ts`, `MNavigationSuite.vue`, `plugin.ts`, `ssr.test.ts`, `MMaskField.vue`, `shape-morph & v-sparkle`, `MFlex.vue`, `MVideoPlayer.test.ts`, `ref_node_path`, `useMenuNav`, `MAvatar & MChatBubble`, `MSpinner.vue`?**
-  _High betweenness centrality (0.041) - this node is a cross-community bridge._
+  _High betweenness centrality (0.027) - this node is a cross-community bridge._
 - **Should `MContainerTransform.vue` be split into smaller, more focused modules?**
   _Cohesion score 0.09982174688057041 - nodes in this community are weakly interconnected._
