@@ -303,6 +303,13 @@ function restore(sn: Snap) {
   if (sn.merges !== now.merges) merges.value = sn.merges
 }
 function undo() {
+  // While drawing, the last corner placed goes (the first one, the whole drawing)
+  if (drawing.value) {
+    const pts = distinct(drawing.value)
+    drawing.value = pts.length > 1 ? pts.slice(0, -1) : null
+    if (!drawing.value) hover.value = null
+    return
+  }
   const sn = past.value[past.value.length - 1]
   if (!sn) return
   future.value = [snap0(), ...future.value]
@@ -387,8 +394,9 @@ function zoomTo(z: number, px?: number, py?: number) {
   if (!props.zoomable) return
   const next = Math.min(Math.max(z, 1), props.maxZoom)
   const { w, h } = viewSize()
-  const ax = px ?? w / 2
-  const ay = py ?? h / 2
+  // (a pointer without coordinates, as some synthetic events come, zooms about the middle)
+  const ax = Number.isFinite(px) ? px! : w / 2
+  const ay = Number.isFinite(py) ? py! : h / 2
   const ux = (ax - pan.value.x) / (base.value * panZoom)
   const uy = (ay - pan.value.y) / (base.value * panZoom)
   pan.value = clampPan({ x: ax - ux * base.value * next, y: ay - uy * base.value * next }, next)
@@ -487,11 +495,60 @@ function onFingerUp(e: PointerEvent) {
     window.removeEventListener('pointercancel', onFingerUp)
   }
 }
-/** While two fingers zoom, or a table is carried to another one, the page doesn't scroll */
+/**
+ * Fingers dragging something on the plan (a corner, a wall, a zone…). Its `touch-action: none` isn't enough: Chrome
+ * ignores it on SVG shapes (walls and corners are), so the page scrolled under the finger and the drag was cancelled
+ */
+let holding = 0
+/** While two fingers zoom, a finger drags something, or a table is carried to another one, the page doesn't scroll */
 function onTouchMove(e: TouchEvent) {
-  if (gesture || transferDrag.value || (props.zoomable && zoomed.value > 1 && e.touches.length > 1)) e.preventDefault()
+  if (holding || gesture || transferDrag.value || (props.zoomable && zoomed.value > 1 && e.touches.length > 1)) e.preventDefault()
 }
-const touchAction = computed(() => (!props.zoomable ? undefined : zoomed.value > 1 ? 'none' : 'pan-x pan-y'))
+// While drawing (walls, zones), a finger draws: the page doesn't scroll under it
+const touchAction = computed(() => (props.editable && tool.value !== 'select' ? 'none' : !props.zoomable ? undefined : zoomed.value > 1 ? 'none' : 'pan-x pan-y'))
+/**
+ * Near the view's edges while something is dragged in, the zoomed plan scrolls (as MFlow's canvas does), so a corner
+ * or a table can be taken past what's on screen. `.at(ev)` arms it with where the pointer is; `onPan` runs after each
+ * scroll, for the drag to bring what it holds along
+ */
+const EDGE_ZONE = 40
+function edgePan(onPan: () => void) {
+  let x = 0
+  let y = 0
+  let armed = false
+  let last = 0
+  let raf = 0
+  const speed = (p: number, lo: number, hi: number) =>
+    p < lo + EDGE_ZONE ? Math.min(1, 1 - (p - lo) / EDGE_ZONE) : p > hi - EDGE_ZONE ? -Math.min(1, 1 - (hi - p) / EDGE_ZONE) : 0
+  const tick = () => {
+    raf = requestAnimationFrame(tick)
+    const t = performance.now()
+    const dt = last ? Math.min((t - last) / 1000, 1 / 30) : 1 / 60
+    last = t
+    if (!armed || !props.zoomable || zoomed.value <= 1 || !root.value) return
+    // The part of the plan on screen: a plan taller than the window scrolls at the window's edge
+    const r = root.value.getBoundingClientRect()
+    const [x1, x2] = [Math.max(r.left, 0), Math.min(r.right, window.innerWidth || r.right)]
+    const [y1, y2] = [Math.max(r.top, 0), Math.min(r.bottom, window.innerHeight || r.bottom)]
+    if (x2 - x1 < EDGE_ZONE * 3 || y2 - y1 < EDGE_ZONE * 3) return
+    const vx = speed(x, x1, x2)
+    const vy = speed(y, y1, y2)
+    if (!vx && !vy) return
+    const next = clampPan({ x: pan.value.x + vx * 600 * dt, y: pan.value.y + vy * 600 * dt })
+    if (next.x === pan.value.x && next.y === pan.value.y) return
+    pan.value = next
+    onPan()
+  }
+  raf = requestAnimationFrame(tick)
+  return {
+    at(ev: { clientX: number; clientY: number }) {
+      x = ev.clientX
+      y = ev.clientY
+      armed = true
+    },
+    stop: () => cancelAnimationFrame(raf),
+  }
+}
 onBeforeUnmount(() => {
   window.removeEventListener('pointermove', onFingerMove)
   window.removeEventListener('pointerup', onFingerUp)
@@ -606,7 +663,7 @@ const mergeShapes = computed(() =>
 )
 
 // ── Dragging ────────────────────────────────────────────────────────────────────────────────────────────
-let drag: { id: number; sx: number; sy: number; start: Map<string | number, { x: number; y: number }>; moved: boolean; pick?: string | number; run: number } | null = null
+let drag: { id: number; sx: number; sy: number; start: Map<string | number, { x: number; y: number }>; moved: boolean; pick?: string | number; run: number; pan0: { x: number; y: number }; last: { clientX: number; clientY: number }; edge: ReturnType<typeof edgePan> } | null = null
 let suppressClick = false
 /** The step walls, zones and decor snap to: the grid, or a part of it (`subgrid`) */
 const step = computed(() => (props.grid ? props.grid / Math.max(1, Math.round(props.subgrid)) : 0))
@@ -664,21 +721,28 @@ function onDown(e: PointerEvent, t: FloorTable) {
   // `selectable="multiple"` the selection is the click's to change, and a drag moves only the table pressed (not the
   // rest of the selection nor its merge): to bring the tables being merged together one by one
   const ids = toggling.value ? [t.id] : withMerged(selection.value.includes(t.id) ? selection.value : [t.id])
-  drag = { id: e.pointerId, sx: e.clientX, sy: e.clientY, start: new Map(tables.value.filter((x) => ids.includes(x.id)).map((x) => [x.id, { x: x.x, y: x.y }])), moved: false, pick: touch && !toggling.value && !selection.value.includes(t.id) ? t.id : undefined, run: gestureRun }
+  drag = { id: e.pointerId, sx: e.clientX, sy: e.clientY, start: new Map(tables.value.filter((x) => ids.includes(x.id)).map((x) => [x.id, { x: x.x, y: x.y }])), moved: false, pick: touch && !toggling.value && !selection.value.includes(t.id) ? t.id : undefined, run: gestureRun, pan0: { ...pan.value }, last: e, edge: edgePan(() => drag?.moved && drag.run === gestureRun && dragTables()) }
   window.addEventListener('pointermove', onMove)
   window.addEventListener('pointerup', onUp)
   window.addEventListener('pointercancel', onUp)
 }
 function onMove(e: PointerEvent) {
   if (!drag || e.pointerId !== drag.id || drag.run !== gestureRun) return
-  const dx = (e.clientX - drag.sx) / scale.value
-  const dy = (e.clientY - drag.sy) / scale.value
   if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < (e.pointerType === 'touch' ? 8 : 4)) return
   if (!drag.moved) {
     clearTimeout(longPress)
     if (drag.pick !== undefined) selection.value = [drag.pick]
   }
   drag.moved = true
+  drag.last = e
+  drag.edge.at(e)
+  dragTables()
+}
+/** The dragged tables under the pointer (the view may have scrolled since the drag began) */
+function dragTables() {
+  if (!drag) return
+  const dx = (drag.last.clientX - drag.sx - (pan.value.x - drag.pan0.x)) / scale.value
+  const dy = (drag.last.clientY - drag.sy - (pan.value.y - drag.pan0.y)) / scale.value
   const next = new Map<string | number, { x: number; y: number }>()
   for (const [id, p] of drag.start) next.set(id, clamp(tables.value.find((x) => x.id === id)!, p.x + dx, p.y + dy))
   draft.value = next
@@ -693,6 +757,7 @@ function onUp(e: PointerEvent) {
   window.removeEventListener('pointermove', onMove)
   window.removeEventListener('pointerup', onUp)
   window.removeEventListener('pointercancel', onUp)
+  drag.edge.stop()
   const d = draft.value
   const moved = drag.moved && d && e.type !== 'pointercancel' && drag.run === gestureRun
   drag = null
@@ -933,25 +998,39 @@ const toPlan = (e: { clientX: number; clientY: number }) => {
   return { x: (e.clientX - r.left - pan.value.x) / scale.value, y: (e.clientY - r.top - pan.value.y) / scale.value }
 }
 /** A generic drag in plan units: `move` gets the offset from where it started, `end` runs once if it moved */
-function follow(e: PointerEvent, move: (dx: number, dy: number) => void, end: () => void) {
+function follow(e: PointerEvent, move: (dx: number, dy: number) => void, end: () => void, opts: { tap?: () => void; cancel?: () => void } = {}) {
   // Keys (Delete, Enter) reach the plan while something on it is being edited
   root.value?.focus({ preventScroll: true })
   const sx = e.clientX
   const sy = e.clientY
   let moved = false
   const run = gestureRun
+  // Near the edges the zoomed view scrolls, and the offset counts what it scrolled
+  const pan0 = { ...pan.value }
+  let last: { clientX: number; clientY: number } = e
+  const report = () => move((last.clientX - sx - (pan.value.x - pan0.x)) / scale.value, (last.clientY - sy - (pan.value.y - pan0.y)) / scale.value)
+  const edge = edgePan(() => moved && run === gestureRun && report())
+  const touch = e.pointerType === 'touch'
+  if (touch) holding++
   const mv = (ev: PointerEvent) => {
     if (ev.pointerId !== e.pointerId || run !== gestureRun) return
-    if (!moved && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 4) return
+    if (!moved && Math.hypot(ev.clientX - sx, ev.clientY - sy) < (ev.pointerType === 'touch' ? 6 : 4)) return
     moved = true
-    move((ev.clientX - sx) / scale.value, (ev.clientY - sy) / scale.value)
+    last = ev
+    edge.at(ev)
+    report()
   }
   const up = (ev: PointerEvent) => {
     if (ev.pointerId !== e.pointerId) return
     window.removeEventListener('pointermove', mv)
     window.removeEventListener('pointerup', up)
     window.removeEventListener('pointercancel', up)
-    if (moved && run === gestureRun && ev.type !== 'pointercancel') end()
+    edge.stop()
+    if (touch) holding = Math.max(0, holding - 1)
+    const ok = run === gestureRun && ev.type !== 'pointercancel'
+    if (moved && ok) end()
+    else if (!moved && ok) opts.tap?.()
+    else opts.cancel?.()
   }
   window.addEventListener('pointermove', mv)
   window.addEventListener('pointerup', up)
@@ -982,7 +1061,8 @@ function areaSvgLook(color?: string) {
  */
 function snapPoint(x: number, y: number, skip?: { kind: 'wall' | 'area'; id: string | number; vertex?: number }): [number, number] {
   let best: [number, number] | null = null
-  let bestD = 12 / scale.value
+  // A finger covers more than a mouse's tip: it reaches farther
+  let bestD = (coarse.value ? 24 : 12) / scale.value
   const consider = (pts: [number, number][], kind: 'wall' | 'area', id: string | number | null) =>
     pts.forEach((p, i) => {
       if (skip && skip.kind === kind && skip.id === id && (skip.vertex === undefined || skip.vertex === i)) return
@@ -996,7 +1076,26 @@ function snapPoint(x: number, y: number, skip?: { kind: 'wall' | 'area'; id: str
   for (const a of areas.value) consider(a.points ?? rectCorners(a), 'area', a.id)
   // The wall or zone being drawn closes on its own corners (but not the one just placed)
   if (drawing.value) consider(drawing.value.slice(0, -1), 'wall', null)
-  return best ? [best[0], best[1]] : [snap(x), snap(y)]
+  if (best) return [best[0], best[1]]
+  // Close to the plan's edge it lands on it (in its corner, on both), and never past it: a finger can't reach the
+  // screen's very edge, where the phone takes the swipe for itself
+  const reach = (coarse.value ? 24 : 6) / scale.value
+  const onEdge = (v: number, max: number) => (v < reach ? 0 : v > max - reach ? max : Math.min(max, Math.max(0, snap(v))))
+  return [onEdge(x, props.width), onEdge(y, props.height)]
+}
+/** A move (dx, dy) of something whose box is `b`, cut short at the plan's edges (what already sits past one may stay) */
+function keepIn(dx: number, dy: number, b: { x1: number; y1: number; x2: number; y2: number }): [number, number] {
+  return [
+    Math.min(Math.max(dx, Math.min(0, -b.x1)), Math.max(0, props.width - b.x2)),
+    Math.min(Math.max(dy, Math.min(0, -b.y1)), Math.max(0, props.height - b.y2)),
+  ]
+}
+/** A snapped coordinate kept inside the plan, unless it already sat outside */
+const inPlan = (v: number, was: number, max: number) => (was < 0 || was > max ? v : Math.min(max, Math.max(0, v)))
+const pointsBox = (pts: [number, number][]) => {
+  const xs = pts.map((p) => p[0])
+  const ys = pts.map((p) => p[1])
+  return { x1: Math.min(...xs), y1: Math.min(...ys), x2: Math.max(...xs), y2: Math.max(...ys) }
 }
 /** The segment of a line (closed: a zone's outline) nearest a point: the index to insert a corner before */
 function nearestSegment(pts: [number, number][], p: { x: number; y: number }, closed: boolean) {
@@ -1049,7 +1148,11 @@ function onAreaDown(e: PointerEvent, a: FloorArea, corner: Corner | null) {
   picked.value = { kind: 'area', id: a.id }
   selection.value = []
   if (a.points) {
-    follow(e, (dx, dy) => (areaDraft.value = shaped(a, a.points!.map(([x, y]) => [x + dx, y + dy]))), () => {
+    const box = pointsBox(a.points)
+    follow(e, (mx, my) => {
+      const [dx, dy] = keepIn(mx, my, box)
+      areaDraft.value = shaped(a, a.points!.map(([x, y]) => [x + dx, y + dy]))
+    }, () => {
       const d = areaDraft.value!
       areaDraft.value = null
       // Moved by whole steps, so its corners stay where they snapped
@@ -1060,17 +1163,20 @@ function onAreaDown(e: PointerEvent, a: FloorArea, corner: Corner | null) {
     })
     return
   }
-  follow(e, (dx, dy) => {
+  follow(e, (mx, my) => {
     if (!corner) {
+      const [dx, dy] = keepIn(mx, my, { x1: a.x, y1: a.y, x2: a.x + a.width, y2: a.y + a.height })
       areaDraft.value = { ...a, x: a.x + dx, y: a.y + dy }
       return
     }
-    // The opposite corner stays put
+    // The opposite corner stays put; the one dragged stops at the plan's edge
     const min = step.value || 20
     const left = corner.includes('w')
     const top = corner[0] === 'n'
-    const w = Math.max(min, a.width + (left ? -dx : dx))
-    const h = Math.max(min, a.height + (top ? -dy : dy))
+    const maxW = Math.max(a.width, left ? a.x + a.width : props.width - a.x)
+    const maxH = Math.max(a.height, top ? a.y + a.height : props.height - a.y)
+    const w = Math.min(maxW, Math.max(min, a.width + (left ? -mx : mx)))
+    const h = Math.min(maxH, Math.max(min, a.height + (top ? -my : my)))
     areaDraft.value = { ...a, x: left ? a.x + a.width - w : a.x, y: top ? a.y + a.height - h : a.y, width: w, height: h }
   }, () => {
     const d = areaDraft.value!
@@ -1087,7 +1193,16 @@ function onDecorDown(e: PointerEvent, d: FloorDecor, resize = false) {
   picked.value = { kind: 'decor', id: d.id }
   selection.value = []
   const s0 = decorSize(d)
-  follow(e, (dx, dy) => (decorDraft.value = resize ? resizedDecor(d, s0, dx, dy) : { ...d, x: d.x + dx, y: d.y + dy }), () => {
+  // Its turned box, so it stops at the plan's edges
+  const rad = ((d.rotation ?? 0) * Math.PI) / 180
+  const hw = (s0.w * Math.abs(Math.cos(rad)) + s0.h * Math.abs(Math.sin(rad))) / 2
+  const hh = (s0.w * Math.abs(Math.sin(rad)) + s0.h * Math.abs(Math.cos(rad))) / 2
+  const box = { x1: d.x - hw, y1: d.y - hh, x2: d.x + hw, y2: d.y + hh }
+  follow(e, (mx, my) => {
+    if (resize) return (decorDraft.value = resizedDecor(d, s0, mx, my))
+    const [dx, dy] = keepIn(mx, my, box)
+    decorDraft.value = { ...d, x: d.x + dx, y: d.y + dy }
+  }, () => {
     const n = decorDraft.value!
     decorDraft.value = null
     record()
@@ -1136,17 +1251,20 @@ function onWallDown(e: PointerEvent, w: FloorWall, vertex = -1) {
   e.stopPropagation()
   picked.value = { kind: 'wall', id: w.id, ...(vertex >= 0 && { vertex }) }
   selection.value = []
-  follow(e, (dx, dy) => {
-    // A corner lands on another wall's corner nearby (they join), or on the step
+  const box = pointsBox(w.points)
+  follow(e, (mx, my) => {
+    // A wall stops at the plan's edges; a corner lands on another wall's corner nearby (they join), on the plan's
+    // edge, or on the step
+    const [dx, dy] = keepIn(mx, my, box)
     wallDraft.value = vertex < 0
       ? { ...w, points: w.points.map(([x, y]) => [x + dx, y + dy]) }
-      : { ...w, points: w.points.map((p, i) => (i === vertex ? snapPoint(p[0] + dx, p[1] + dy, { kind: 'wall', id: w.id, vertex }) : p)) }
+      : { ...w, points: w.points.map((p, i) => (i === vertex ? snapPoint(p[0] + mx, p[1] + my, { kind: 'wall', id: w.id, vertex }) : p)) }
   }, () => {
     const n = wallDraft.value!
     wallDraft.value = null
     record()
     // A moved corner already sits where it snapped (maybe on another wall's corner); a moved wall steps
-    walls.value = walls.value.map((x) => (x.id === w.id ? (vertex >= 0 ? n : { ...n, points: n.points.map(([x, y]) => [snap(x), snap(y)] as [number, number]) }) : x))
+    walls.value = walls.value.map((x) => (x.id === w.id ? (vertex >= 0 ? n : { ...n, points: n.points.map(([x, y]) => [inPlan(snap(x), x, props.width), inPlan(snap(y), y, props.height)] as [number, number]) }) : x))
   })
 }
 // Drawing new walls and zones
@@ -1171,11 +1289,13 @@ const isFloor = (e: Event) => {
   return el === e.currentTarget || el === viewEl.value || el === svgEl.value || el === zoneSvg.value || el.hasAttribute?.('data-floor-bg')
 }
 function onPlanPointer(e: PointerEvent) {
+  // The second finger of a pinch only zooms
+  if (gesture) return
   const floor = isFloor(e)
   const onTable = !!(e.target as Element).closest?.('[data-floor-table]')
   // Panning: the middle button anywhere; on empty floor (or, outside editing, on a table) once zoomed in, outside
-  // editing or with a finger
-  if (props.zoomable && (e.button === 1 || (e.button === 0 && zoomed.value > 1 && (floor || (!props.editable && onTable && !props.transferable)) && (!props.editable || e.pointerType === 'touch')))) {
+  // editing or with a finger picking (while drawing, one finger draws and two pan)
+  if (props.zoomable && (e.button === 1 || (e.button === 0 && zoomed.value > 1 && (floor || (!props.editable && onTable && !props.transferable)) && (!props.editable || (e.pointerType === 'touch' && tool.value === 'select'))))) {
     startPan(e)
     return
   }
@@ -1209,17 +1329,22 @@ function onPlanPointer(e: PointerEvent) {
   }
   const p = toPlan(e)
   if (tool.value === 'wall' || tool.value === 'polygon') {
+    if (e.button !== 0) return
     const at = snapPoint(p.x, p.y)
-    const first = drawing.value?.[0]
-    // A zone closes when its first corner is clicked again
-    if (tool.value === 'polygon' && first && distinct(drawing.value!).length >= 3 && at[0] === first[0] && at[1] === first[1]) return finishWall()
-    drawing.value = [...(drawing.value ?? [at]), at]
+    if (e.pointerType === 'touch') return drawByFinger(e, p, at)
+    placeCorner(at)
     return
   }
-  const at: [number, number] = [snap(p.x), snap(p.y)]
+  const at = snapPoint(p.x, p.y)
   const id = newId('area')
   areaDraft.value = { id, x: at[0], y: at[1], width: 0, height: 0 }
-  follow(e, (dx, dy) => (areaDraft.value = { id, x: Math.min(at[0], at[0] + dx), y: Math.min(at[1], at[1] + dy), width: Math.abs(dx), height: Math.abs(dy) }), () => {
+  follow(e, (mx, my) => {
+    // The far corner stops at the plan's edge, and lands on it nearby
+    const [ex, ey] = snapPoint(at[0] + mx, at[1] + my)
+    const dx = ex - at[0]
+    const dy = ey - at[1]
+    areaDraft.value = { id, x: Math.min(at[0], at[0] + dx), y: Math.min(at[1], at[1] + dy), width: Math.abs(dx), height: Math.abs(dy) }
+  }, () => {
     const d = areaDraft.value!
     areaDraft.value = null
     if (d.width > 10 && d.height > 10) {
@@ -1229,8 +1354,48 @@ function onPlanPointer(e: PointerEvent) {
     }
   })
 }
+const samePoint = (a: [number, number], b: [number, number]) => a[0] === b[0] && a[1] === b[1]
+/**
+ * A corner of the wall or zone being drawn. A zone closes when its first corner is placed again; placing the last
+ * corner again ends what's drawn (a double-click does the same with a mouse, a second tap there with a finger)
+ */
+function placeCorner(at: [number, number]) {
+  const pts = drawing.value
+  if (pts) {
+    const n = distinct(pts).length
+    if (tool.value === 'polygon' && n >= 3 && samePoint(at, pts[0]!)) return finishWall()
+    if (n >= (tool.value === 'polygon' ? 3 : 2) && samePoint(at, pts[pts.length - 1]!)) return finishWall()
+  }
+  drawing.value = [...(pts ?? [at]), at]
+}
+/**
+ * A finger draws where it lifts, not where it lands: while it's down the next side follows it (snapped, as a mouse's
+ * hover shows it), so it can be put right before it counts, also on a corner the finger itself covers. A tap places a
+ * corner where it is; a second finger (a pinch) drops what this one was doing
+ */
+function drawByFinger(e: PointerEvent, p: { x: number; y: number }, at: [number, number]) {
+  const fresh = !drawing.value
+  if (fresh) drawing.value = [at]
+  hover.value = at
+  follow(e, (dx, dy) => (hover.value = snapPoint(p.x + dx, p.y + dy)), () => {
+    const h = hover.value
+    hover.value = null
+    if (drawing.value && h) placeCorner(h)
+  }, {
+    // The first tap is the first corner, already down
+    tap: () => {
+      hover.value = null
+      if (!fresh) placeCorner(at)
+    },
+    cancel: () => {
+      hover.value = null
+      if (fresh) drawing.value = null
+    },
+  })
+}
 function onPlanMove(e: PointerEvent) {
-  if (drawing.value) {
+  // A finger's preview is its drag's
+  if (drawing.value && e.pointerType !== 'touch') {
     const p = toPlan(e)
     hover.value = snapPoint(p.x, p.y)
   }
@@ -1493,7 +1658,7 @@ const context: FloorPlanContext = {
   measure: computed(() => props.measure),
   statuses: computed(() => props.statuses),
   size: computed(() => ({ width: props.width, height: props.height })),
-  canUndo: computed(() => past.value.length > 0),
+  canUndo: computed(() => past.value.length > 0 || !!drawing.value),
   canRedo: computed(() => future.value.length > 0),
   undo,
   redo,
@@ -1521,7 +1686,7 @@ defineExpose({
   /** Undo / redo the plan's own edits (also Ctrl+Z, Ctrl+Shift+Z or Ctrl+Y) */
   undo,
   redo,
-  canUndo: computed(() => past.value.length > 0),
+  canUndo: computed(() => past.value.length > 0 || !!drawing.value),
   canRedo: computed(() => future.value.length > 0),
   /** Copy the selected tables, or the picked zone or decor (also Ctrl+D) */
   duplicate,
@@ -1805,6 +1970,20 @@ const gridStyle = computed(() => {
     <!-- Walls -->
     <svg ref="svgEl" class="pointer-events-none absolute inset-0 size-full overflow-visible">
       <g v-for="w in shownWalls" :key="`w${w.id}`">
+        <!-- With a finger, a wall is a thin line: a wider, unseen band takes the touch -->
+        <path
+          v-if="coarse && editable && tool === 'select'"
+          :d="wallPath(w)"
+          fill="none"
+          stroke="transparent"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="pointer-events-auto cursor-move touch-none"
+          data-wall-hit
+          :stroke-width="Math.max((w.thickness ?? 8) * scale, 28)"
+          @pointerdown="onWallDown($event, w)"
+          @dblclick="onWallDblclick($event, w)"
+        />
         <path
           :d="wallPath(w)"
           fill="none"

@@ -563,6 +563,98 @@ describe('MFloorPlan 1.3.6', () => {
     await nextTick()
     expect((w.props('areas') as any[])[0].points).toHaveLength(4)
   })
+  it('a finger draws a wall where it lifts, a second tap on the last corner ends it, and undo takes a corner back', async () => {
+    const w = plan({ tool: 'wall', tables: [] })
+    const t = { pointerType: 'touch' }
+    const fup = (x: number, y: number) => window.dispatchEvent(new PointerEvent('pointerup', { clientX: x, clientY: y, pointerId: 7, pointerType: 'touch' }))
+    const fmove = (x: number, y: number) => window.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, pointerId: 7, pointerType: 'touch' }))
+    // Lands at the first corner, drags to the second: shown while dragging, placed on release
+    down(w.element, 20, 20, t)
+    fmove(120, 22)
+    await nextTick()
+    expect(w.find('path.stroke-primary[stroke-dasharray]').exists()).toBe(true)
+    fup(120, 22)
+    // A tap places a corner; undo takes it back
+    down(w.element, 120, 200, t)
+    fup(120, 200)
+    w.vm.undo()
+    // Tapping the last corner again ends the wall
+    down(w.element, 121, 19, t)
+    fup(121, 19)
+    await nextTick()
+    expect(w.props('walls')[0].points).toEqual([[20, 20], [120, 20]])
+    expect(w.vm.context.drawingWall.value).toBe(false)
+  })
+  it('a pinch drops the corner a finger was placing; zoomed in, one finger still draws', async () => {
+    const w = plan({ tool: 'wall', tables: [], zoomable: true })
+    down(w.element, 20, 20, { pointerType: 'touch' })
+    down(w.element, 200, 200, { pointerType: 'touch', pointerId: 8 })
+    window.dispatchEvent(new PointerEvent('pointerup', { clientX: 20, clientY: 20, pointerId: 7, pointerType: 'touch' }))
+    window.dispatchEvent(new PointerEvent('pointerup', { clientX: 200, clientY: 200, pointerId: 8, pointerType: 'touch' }))
+    expect(w.vm.context.drawingWall.value).toBe(false)
+    await w.setProps({ zoom: 2 })
+    down(w.element, 20, 20, { pointerType: 'touch' })
+    window.dispatchEvent(new PointerEvent('pointerup', { clientX: 20, clientY: 20, pointerId: 7, pointerType: 'touch' }))
+    expect(w.vm.context.drawingWall.value).toBe(true)
+  })
+  it('a finger dragging a wall\'s corner keeps the page from scrolling (SVG shapes ignore touch-action)', async () => {
+    const w = plan({ tables: [], walls: [{ id: 'w', points: [[100, 100], [200, 100]] }], picked: { kind: 'wall', id: 'w' } })
+    const tm = () => {
+      const ev = new Event('touchmove', { bubbles: true, cancelable: true }) as TouchEvent
+      Object.defineProperty(ev, 'touches', { value: [{}] })
+      w.element.dispatchEvent(ev)
+      return ev.defaultPrevented
+    }
+    expect(tm()).toBe(false)
+    down(w.findAll('circle').at(-1)!.element, 200, 100, { pointerType: 'touch' })
+    expect(tm()).toBe(true)
+    window.dispatchEvent(new PointerEvent('pointermove', { clientX: 260, clientY: 100, pointerId: 7, pointerType: 'touch' }))
+    window.dispatchEvent(new PointerEvent('pointerup', { clientX: 260, clientY: 100, pointerId: 7, pointerType: 'touch' }))
+    await nextTick()
+    expect(w.props('walls')[0].points[1]).toEqual([260, 100])
+    expect(tm()).toBe(false)
+  })
+  it('corners land on the plan\'s edges and corners, and walls, zones and decor stop there', async () => {
+    const w = plan({ tool: 'wall', tables: [], width: 400, height: 300 })
+    down(w.element, 3, 296)
+    down(w.element, 398, 297)
+    key(w, 'Enter')
+    await nextTick()
+    expect(w.props('walls')[0].points).toEqual([[0, 300], [400, 300]])
+    // A corner dragged past the edge stays on it
+    await w.setProps({ tool: 'select', walls: [{ id: 'w', points: [[100, 100], [200, 100]] }], picked: { kind: 'wall', id: 'w' } })
+    const corner = w.findAll('circle').at(-1)!.element
+    down(corner, 200, 100)
+    moveUp(520, -40)
+    await nextTick()
+    expect(w.props('walls')[0].points[1]).toEqual([400, 0])
+    // The whole wall stops at the edge
+    down(w.find('path.m3-floor-wall').element, 150, 100)
+    moveUp(150, 600)
+    await nextTick()
+    expect(w.props('walls')[0].points.map((p: number[]) => p[1])).toEqual([300, 200])
+    // Decor too
+    await w.setProps({ decor: [{ id: 'p', kind: 'plant', x: 100, y: 100 }] })
+    down(w.find('[aria-label="Plant"]').element, 0, 0)
+    moveUp(-500, 0)
+    await nextTick()
+    expect(w.props('decor')[0].x).toBe(20)
+  })
+  it('zoomed in, a drag near the view\'s edge scrolls the plan and brings what it holds along', async () => {
+    const w = plan({ tables: [], zoomable: true, width: 400, height: 300, zoom: 2, decor: [{ id: 'p', kind: 'plant', x: 100, y: 100 }] })
+    ;(w.element as HTMLElement).getBoundingClientRect = () => ({ left: 0, top: 0, right: 400, bottom: 300, width: 400, height: 300, x: 0, y: 0, toJSON() {} }) as DOMRect
+    Object.defineProperty(w.element, 'clientWidth', { value: 400 })
+    window.dispatchEvent(new Event('resize'))
+    const plant = w.find('[aria-label="Plant"]').element
+    down(plant, 200, 200)
+    move(300, 200)
+    move(395, 200)
+    await new Promise((r) => setTimeout(r, 150))
+    window.dispatchEvent(new PointerEvent('pointerup', { clientX: 395, clientY: 200, pointerId: 7 }))
+    await nextTick()
+    // Without scrolling it would have moved (395 - 200) / 2 ≈ 97.5; the view scrolled, so it went farther
+    expect(w.props('decor')[0].x).toBeGreaterThan(220)
+  })
   it('a wall being drawn joins another wall\'s corner nearby', async () => {
     const w = plan({ tool: 'wall', tables: [], walls: [{ id: 'w', points: [[33, 47], [33, 200]] }] })
     down(w.element, 35, 45)
