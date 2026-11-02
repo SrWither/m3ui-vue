@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.3.7] - Unreleased
+## [1.3.7] - 2026-11-01
 
 ### Added
 - `MFloorPlan`: while dragging a corner, a wall, a zone, decor or tables in a zoomed-in plan, the view scrolls near its edges and brings what's dragged along (as `MFlow`'s canvas does)
