@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.3.8] - Unreleased
+## [1.3.8] - 2026-11-07
 
 ### Added
 - `MFlow` `edgeSpacing`: wires from different sources that would run on top of each other in parallel (a smoothstep's middle run) are moved apart by this many pixels, longest runs first; wires from the same output still share their run. Off (`0`) by default
