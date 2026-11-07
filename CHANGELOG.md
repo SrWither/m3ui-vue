@@ -5,6 +5,24 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.3.8] - Unreleased
+
+### Added
+- `MFlow` `edgeSpacing`: wires from different sources that would run on top of each other in parallel (a smoothstep's middle run) are moved apart by this many pixels, longest runs first; wires from the same output still share their run. Off (`0`) by default
+- `MFlow`: `duplicate()` in the context (and Ctrl+D) copies the selection next to itself without touching the clipboard
+- `MFlow`: `getEdgePath(id)` in the context returns the path a wire is drawn with, to draw the same wire elsewhere (an exported picture)
+- `getSmoothStepPath()`, `getStepPath()` and `smoothStepPoints()` take `centerX`/`centerY` (`FlowStepCenter`), where the middle run goes
+- `MTour` `interactive`: the page stays usable while the tour is open (no scrim), a ring is drawn over the target instead of lifting the target itself, and the ring and the tooltip follow the target as it moves
+- `MTour` `v-model:step`: the page can drive the steps (move on when the user has done what a step asks, skip steps already done)
+- `MTour`: a step's `target` can be a function returning the element, or left out (the tooltip then sits on its `placement` side of the viewport); `content`, `indicator`, `progress` and `actions` slots
+
+### Fixed
+- `MFlow`: content inside a node marked `data-flow-nodrag` lost focus to the canvas as soon as it was clicked (a focused control inside a node, such as a game pad reading keys, let go at once)
+- `MFlow`: pasting at the pointer with `snapToGrid` put the parts off the grid
+- `MTour`: a tour mounted already open (`v-if` and `v-model` set together) didn't highlight its target or place its tooltip
+
+---
+
 ## [1.3.7] - 2026-11-01
 
 ### Added
