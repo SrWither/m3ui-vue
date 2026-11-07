@@ -17,7 +17,7 @@ const emptySelection = (): FlowSelection => ({ nodes: [], edges: [] })
  * and the lock are too. Pan by dragging the background (or the wheel, or two fingers), zoom with Ctrl + wheel, a
  * trackpad or touch pinch, or a double click. Shift + drag (or `selectionOnDrag`; on touch, a long press on the
  * background) draws a selection box; Delete
- * removes what's selected, Ctrl+Z/Ctrl+Shift+Z undo and redo, Ctrl+C/X/V/A copy, cut, paste and select all, and
+ * removes what's selected, Ctrl+Z/Ctrl+Shift+Z undo and redo, Ctrl+C/X/V/D/A copy, cut, paste, duplicate and select all, and
  * the arrows move the selected nodes. A drag from a handle to another connects them; dropped on nothing it fires
  * `connect-end` with the spot, to offer a new node there. To disconnect: the × on a selected edge, Delete, dragging
  * an edge's end (or a connected input) away and dropping it on nothing. Alignment guides show while dragging one node.
@@ -80,7 +80,7 @@ import {
   type FlowXY,
 } from '../composables/useFlow'
 import { layoutLayered, layoutTree, type FlowLayout, type FlowLayoutDirection, type FlowLayoutOptions } from '../composables/flowLayout'
-import { distanceToPoints, edgePathPoints, getBezierPath, getRoutedPath, getSmoothStepPath, getStepPath, getStraightPath, pointsToRoute, routePoints, smoothStepPoints, type FlowEdgePath } from '../composables/flowPaths'
+import { distanceToPoints, edgePathPoints, getBezierPath, getRoutedPath, getSmoothStepPath, getStepPath, getStraightPath, pointsToRoute, routePoints, smoothStepPoints, type FlowEdgePath, type FlowStepCenter } from '../composables/flowPaths'
 import { DEFAULT_SPATIAL } from '../composables/_useSpring'
 import { prefersReducedMotion } from '../composables/_springAnimation'
 import { useLocale } from '../composables/useLocale'
@@ -126,6 +126,12 @@ const props = withDefaults(defineProps<{
    * the route in `edge.route`), or drag a leg at either end to add a jog. Default off
    */
   edgesReroutable?: boolean
+  /**
+   * `smoothstep`/`step` edges from different sources whose middle runs would lie on top of each other, running the
+   * same way, are moved apart by this many px, so two wires never read as one (edges from the same output may share
+   * a run). Edges with their own `route` stay put and the others keep off them. Default 0: off
+   */
+  edgeSpacing?: number
   /** Merged into edges made by connecting (`type`, `animated`, `markerEnd`…) */
   defaultEdgeOptions?: Partial<FlowEdge>
   /** Adds an edge to `edges` when a connection is made; off, only `connect` fires */
@@ -199,6 +205,7 @@ const props = withDefaults(defineProps<{
   elementsSelectable: true,
   edgesReconnectable: true,
   edgesReroutable: false,
+  edgeSpacing: 0,
   autoConnect: true,
   connectionRadius: 24,
   deleteKeys: () => ['Delete', 'Backspace'],
@@ -631,7 +638,7 @@ function rawHandlePoint(nodeId: string, type: 'source' | 'target', handleId?: st
 // Arrowheads stop at a handle's rim instead of under it
 const HANDLE_RADIUS = 5
 
-function pathFor(type: string | undefined, p: Omit<EdgeGeometry, keyof FlowEdgePath | 'sourceInset' | 'targetInset'>): FlowEdgePath {
+function pathFor(type: string | undefined, p: Omit<EdgeGeometry, keyof FlowEdgePath | 'sourceInset' | 'targetInset'> & FlowStepCenter): FlowEdgePath {
   switch (type) {
     case 'smoothstep': return getSmoothStepPath(p)
     case 'step': return getStepPath(p)
@@ -712,7 +719,7 @@ function edgeGeometry(e: FlowEdge): EdgeGeometry | null {
   if (!at) return null
   const { s, t, ends } = at
   const route = isOrthogonal(e) ? routeOf(e) : undefined
-  const path = route ? getRoutedPath({ ...ends, route, borderRadius: edgeRoute(e) === 'step' ? 0 : 8 }) : pathFor(edgeRoute(e), ends)
+  const path = route ? getRoutedPath({ ...ends, route, borderRadius: edgeRoute(e) === 'step' ? 0 : 8 }) : pathFor(edgeRoute(e), { ...ends, ...lanes.value.get(e.id) })
   return { ...ends, ...path, sourceInset: s.inset, targetInset: t.inset }
 }
 function edgeCorners(e: FlowEdge): [number, number][] | null {
@@ -720,8 +727,73 @@ function edgeCorners(e: FlowEdge): [number, number][] | null {
   const at = edgeEnds(e)
   if (!at) return null
   const route = routeOf(e)
-  return route ? routePoints({ ...at.ends, route }) : smoothStepPoints(at.ends)
+  return route ? routePoints({ ...at.ends, route }) : smoothStepPoints({ ...at.ends, ...lanes.value.get(e.id) })
 }
+
+// ── Keeping parallel edges apart (edgeSpacing) ────────────────────────────────────────────────────────────
+// Each step edge whose ends face each other has one free run halfway between them (vertical between left/right
+// handles, horizontal between top/bottom ones). Those runs are laid out like lanes: one that would lie on another
+// edge's run (same way, overlapping, from a different source) moves a spacing to either side, nearest first,
+// staying between the legs. Everything else (legs, routed edges) is an obstacle that doesn't move.
+const STEP_OFFSET = 20
+interface Run { src: string; vertical: boolean; c: number; lo: number; hi: number }
+function freeRun(ends: { sourceX: number; sourceY: number; sourcePosition: FlowPosition; targetX: number; targetY: number; targetPosition: FlowPosition }) {
+  const n = { left: -1, right: 1, top: -1, bottom: 1 } as const
+  const sH = ends.sourcePosition === 'left' || ends.sourcePosition === 'right'
+  const tH = ends.targetPosition === 'left' || ends.targetPosition === 'right'
+  if (sH !== tH) return null
+  const ns = n[ends.sourcePosition]
+  const nt = n[ends.targetPosition]
+  const [s, t] = sH ? [ends.sourceX, ends.targetX] : [ends.sourceY, ends.targetY]
+  if (ns !== -nt || (t - s) * ns < 2 * STEP_OFFSET) return null
+  const a = s + ns * STEP_OFFSET
+  const b = t + nt * STEP_OFFSET
+  return { vertical: sH, c: (s + t) / 2, min: Math.min(a, b), max: Math.max(a, b) }
+}
+const lanes = computed(() => {
+  const out = new Map<string, FlowStepCenter>()
+  const gap = props.edgeSpacing
+  if (!gap) return out
+  const placed: Run[] = []
+  const free: (Run & { id: string; min: number; max: number })[] = []
+  for (const e of visibleEdges.value) {
+    if (!isOrthogonal(e)) continue
+    const at = edgeEnds(e)
+    if (!at) continue
+    const src = `${e.source}\u0000${e.sourceHandle ?? ''}`
+    const route = routeOf(e)
+    const run = route ? null : freeRun(at.ends)
+    const pts = route ? routePoints({ ...at.ends, route }) : smoothStepPoints(at.ends)
+    for (let i = 1; i < pts.length; i++) {
+      const [ax, ay] = pts[i - 1]!
+      const [bx, by] = pts[i]!
+      const vertical = Math.abs(ax - bx) < 0.01
+      if (!vertical && Math.abs(ay - by) >= 0.01) continue
+      const r: Run = { src, vertical, c: vertical ? ax : ay, lo: vertical ? Math.min(ay, by) : Math.min(ax, bx), hi: vertical ? Math.max(ay, by) : Math.max(ax, bx) }
+      if (run && run.vertical === vertical && Math.abs(run.c - r.c) < 0.01) free.push({ ...r, id: e.id, min: run.min, max: run.max })
+      else placed.push(r)
+    }
+  }
+  const clash = (r: Run, c: number) =>
+    placed.some((o) => o.vertical === r.vertical && o.src !== r.src && Math.abs(o.c - c) < gap / 2 && Math.min(o.hi, r.hi) - Math.max(o.lo, r.lo) > 0.5)
+  // Longer runs first: they have the most to cross, and shorter ones fit around them
+  free.sort((a, b) => b.hi - b.lo - (a.hi - a.lo) || a.c - b.c)
+  for (const r of free) {
+    let c = r.c
+    for (let k = 0; k <= 16; k++) {
+      const step = k === 0 ? 0 : Math.ceil(k / 2) * gap * (k % 2 ? 1 : -1)
+      const at = r.c + step
+      if (at < r.min - 0.01 || at > r.max + 0.01) continue
+      if (!clash(r, at)) {
+        c = at
+        break
+      }
+    }
+    if (c !== r.c) out.set(r.id, r.vertical ? { centerX: c } : { centerY: c })
+    placed.push({ ...r, c })
+  }
+  return out
+})
 const isReroutable = (e: FlowEdge) => !locked.value && isOrthogonal(e) && (e.reroutable ?? props.edgesReroutable)
 
 // What's drawn: groups under the edges, other nodes over them; children over their parents
@@ -911,11 +983,12 @@ function selectAll() {
   })
 }
 
-function copy() {
+/** The selected nodes (their children too) and the edges between them, as copy() keeps them */
+function selectionClip(): { nodes: FlowNode[]; edges: FlowEdge[] } | null {
   const ids = new Set(selLocal.value.nodes)
   for (const id of [...ids]) descendants(id).forEach((d) => ids.add(d))
-  if (!ids.size) return
-  clipboard = {
+  if (!ids.size) return null
+  return {
     nodes: nodesLocal.value.filter((n) => ids.has(n.id)).map((n) => {
       // A node copied without its group keeps its place on the canvas
       if (n.parentId && !ids.has(n.parentId)) {
@@ -926,6 +999,11 @@ function copy() {
     }),
     edges: edgesLocal.value.filter((e) => ids.has(e.source) && ids.has(e.target)),
   }
+}
+function copy() {
+  const clip = selectionClip()
+  if (!clip) return
+  clipboard = clip
   pasteCount = 0
 }
 function cut() {
@@ -936,21 +1014,33 @@ function cut() {
 function paste(at?: FlowXY) {
   if (!clipboard?.nodes.length || locked.value) return
   pasteCount++
-  const tops = clipboard.nodes.filter((n) => !n.parentId || !clipboard!.nodes.some((m) => m.id === n.parentId))
+  place(clipboard, at, props.gridSize * 2 * pasteCount)
+}
+/** Copies of the selection a grid step or two away, leaving the clipboard alone */
+function duplicate() {
+  const clip = selectionClip()
+  if (!clip || locked.value) return
+  place(clip, undefined, props.gridSize * 2)
+}
+/** Adds copies of `clip` (new ids), its top left at `at` or `step` from where it was, and selects them */
+function place(clip: { nodes: FlowNode[]; edges: FlowEdge[] }, at: FlowXY | undefined, step: number) {
+  const tops = clip.nodes.filter((n) => !n.parentId || !clip.nodes.some((m) => m.id === n.parentId))
   const minX = Math.min(...tops.map((n) => n.position.x))
   const minY = Math.min(...tops.map((n) => n.position.y))
-  const step = props.gridSize * 2 * pasteCount
-  const dx = at ? at.x - minX : step
-  const dy = at ? at.y - minY : step
-  const idMap = new Map(clipboard.nodes.map((n) => [n.id, makeId('node')]))
+  // On the grid, the same step as moving them would be, so a node that sat on it still does
+  const gs = props.gridSize
+  const onGrid = (v: number) => (props.snapToGrid && gs ? Math.round(v / gs) * gs : v)
+  const dx = onGrid(at ? at.x - minX : step)
+  const dy = onGrid(at ? at.y - minY : step)
+  const idMap = new Map(clip.nodes.map((n) => [n.id, makeId('node')]))
   const topIds = new Set(tops.map((n) => n.id))
-  const nodes = clipboard.nodes.map((n) => ({
+  const nodes = clip.nodes.map((n) => ({
     ...n,
     id: idMap.get(n.id)!,
     parentId: n.parentId ? idMap.get(n.parentId) ?? n.parentId : undefined,
     position: topIds.has(n.id) ? { x: n.position.x + dx, y: n.position.y + dy } : n.position,
   }))
-  const edges = clipboard.edges.map((e) => ({ ...e, id: makeId('edge'), source: idMap.get(e.source)!, target: idMap.get(e.target)! }))
+  const edges = clip.edges.map((e) => ({ ...e, id: makeId('edge'), source: idMap.get(e.source)!, target: idMap.get(e.target)! }))
   instantNext = true
   commit({ nodes: [...nodesLocal.value, ...nodes], edges: edges.length ? [...edgesLocal.value, ...edges] : undefined })
   setSelection({ nodes: nodes.map((n) => n.id), edges: edges.map((e) => e.id) })
@@ -1060,7 +1150,11 @@ function onPointerDown(e: PointerEvent) {
   if (gesture) return
   if (e.button === 2) return
   downTarget = t
-  root.value?.focus({ preventScroll: true })
+  // The canvas takes the keys, except from content inside a node that handles its own (a field, a game pad, a piano
+  // focusing itself on this same pointerdown would otherwise lose its focus at once). Its keys still bubble up here
+  const own = t.closest(NO_DRAG)
+  const ownerNode = own?.closest('[data-flow-node]')
+  if (!own || !ownerNode || own === ownerNode) root.value?.focus({ preventScroll: true })
 
   const handle = t.closest<HTMLElement>('[data-flow-handle]')
   const reconnect = t.closest<HTMLElement>('[data-flow-reconnect]')
@@ -2025,6 +2119,7 @@ function onKeyDown(e: KeyboardEvent) {
   if (mod && key === 'a') { e.preventDefault(); selectAll(); return }
   if (mod && key === 'c') { copy(); return }
   if (mod && key === 'x') { e.preventDefault(); cut(); return }
+  if (mod && key === 'd') { e.preventDefault(); duplicate(); return }
   if (mod && key === 'v') {
     e.preventDefault()
     paste(pointer.inside ? screenToFlow(pointer) : undefined)
@@ -2114,6 +2209,11 @@ const context: FlowInternals = {
   copy,
   cut,
   paste,
+  duplicate,
+  getEdgePath: (id: string) => {
+    const e = edgeById.value.get(id)
+    return (e && edgeGeometry(e)?.path) ?? null
+  },
   startDrag,
   registerHandle,
   measureNode: queueMeasure,

@@ -80,7 +80,16 @@ export function getBezierPath(p: FlowEdgePathParams & { curvature?: number }): F
 type Pt = [number, number]
 
 /** The corners of an orthogonal route between the ends, leaving and arriving square to the sides */
-export function smoothStepPoints(p: FlowEdgePathParams & { offset?: number }): Pt[] {
+/**
+ * Where a step edge from `sourcePosition` to `targetPosition` turns. `centerX` / `centerY` move its middle run (the
+ * one halfway between the ends) off the halfway point, e.g. to keep it off another edge's
+ */
+export interface FlowStepCenter {
+  centerX?: number
+  centerY?: number
+}
+
+export function smoothStepPoints(p: FlowEdgePathParams & FlowStepCenter & { offset?: number }): Pt[] {
   const { sourceX: sx, sourceY: sy, targetX: tx, targetY: ty } = p
   const sp = p.sourcePosition ?? 'bottom'
   const tp = p.targetPosition ?? 'top'
@@ -95,7 +104,7 @@ export function smoothStepPoints(p: FlowEdgePathParams & { offset?: number }): P
   if (sH && tH) {
     if (nsx === -ntx && (tx - sx) * nsx >= 2 * off) {
       // Facing each other with room: one vertical run halfway
-      const mx = (sx + tx) / 2
+      const mx = p.centerX ?? (sx + tx) / 2
       mid = [[mx, sy], [mx, ty]]
     } else if (nsx === ntx) {
       // Both sides look the same way: go round past the farther one
@@ -103,18 +112,18 @@ export function smoothStepPoints(p: FlowEdgePathParams & { offset?: number }): P
       mid = [[x, sy], [x, ty]]
     } else {
       // Behind: out, across halfway between the ends, and back in
-      const my = (sy + ty) / 2
+      const my = p.centerY ?? (sy + ty) / 2
       mid = [s1, [s1[0], my], [t1[0], my], t1]
     }
   } else if (!sH && !tH) {
     if (nsy === -nty && (ty - sy) * nsy >= 2 * off) {
-      const my = (sy + ty) / 2
+      const my = p.centerY ?? (sy + ty) / 2
       mid = [[sx, my], [tx, my]]
     } else if (nsy === nty) {
       const y = nsy > 0 ? Math.max(s1[1], t1[1]) : Math.min(s1[1], t1[1])
       mid = [[sx, y], [tx, y]]
     } else {
-      const mx = (sx + tx) / 2
+      const mx = p.centerX ?? (sx + tx) / 2
       mid = [s1, [mx, s1[1]], [mx, t1[1]], t1]
     }
   } else if (sH) {
@@ -223,7 +232,7 @@ export function getRoutedPath(p: FlowEdgePathParams & { route: number[]; borderR
 }
 
 /** Right-angled steps with rounded corners (`borderRadius`, default 8; 0 gives sharp steps). `offset` (default 20) is how far it leaves a node before turning */
-export function getSmoothStepPath(p: FlowEdgePathParams & { borderRadius?: number; offset?: number }): FlowEdgePath {
+export function getSmoothStepPath(p: FlowEdgePathParams & FlowStepCenter & { borderRadius?: number; offset?: number }): FlowEdgePath {
   return roundedPath(smoothStepPoints(p), p.borderRadius ?? 8)
 }
 
@@ -292,7 +301,7 @@ export function distanceToPoints(x: number, y: number, pts: [number, number][]):
 }
 
 /** `getSmoothStepPath` with sharp corners */
-export function getStepPath(p: FlowEdgePathParams & { offset?: number; route?: number[] }): FlowEdgePath {
+export function getStepPath(p: FlowEdgePathParams & FlowStepCenter & { offset?: number; route?: number[] }): FlowEdgePath {
   return p.route ? getRoutedPath({ ...p, route: p.route, borderRadius: 0 }) : getSmoothStepPath({ ...p, borderRadius: 0 })
 }
 

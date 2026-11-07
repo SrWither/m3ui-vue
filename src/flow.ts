@@ -19,7 +19,7 @@ export type {
   FlowXY,
 } from './composables/useFlow'
 export { getBezierPath, getSmoothStepPath, getStepPath, getStraightPath, smoothStepPoints, routePoints, pointsToRoute, getRoutedPath, arrowPath } from './composables/flowPaths'
-export type { FlowEdgePath, FlowEdgePathParams, FlowPosition } from './composables/flowPaths'
+export type { FlowEdgePath, FlowEdgePathParams, FlowPosition, FlowStepCenter } from './composables/flowPaths'
 export { layoutTree, layoutLayered } from './composables/flowLayout'
 export type { FlowLayout, FlowLayoutDirection, FlowLayoutOptions, FlowLayoutResult } from './composables/flowLayout'
 export type { FlowPanelPosition } from './composables/_flowPanel'

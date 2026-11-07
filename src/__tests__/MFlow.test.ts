@@ -214,6 +214,57 @@ describe('MFlow', () => {
     expect(w.emitted('update:selection')!.at(-1)![0]).toEqual({ nodes: [c!.id, d!.id], edges: [edges.at(-1)!.id] })
   })
 
+  it('pastes at the pointer on the grid with snapToGrid', async () => {
+    const w = await flow({ selection: { nodes: ['a'], edges: [] }, snapToGrid: true, gridSize: 20 })
+    await w.trigger('keydown', { key: 'c', ctrlKey: true })
+    // The pointer over the canvas at a spot off the grid: the copy lands a whole number of steps away
+    pointer(w.element, 'pointerenter', 0, 0)
+    pointer(w.element, 'pointermove', 133, 77)
+    w.vm.paste({ x: 133, y: 77 })
+    const nodes = w.emitted('update:nodes')!.at(-1)![0] as FlowNode[]
+    expect(nodes.at(-1)!.position).toEqual({ x: 140, y: 80 })
+  })
+
+  it('edgeSpacing moves overlapping parallel step runs from different sources apart, not ones from the same source', async () => {
+    const run = (w: ReturnType<typeof mount>, id: string) => {
+      const d = w.find(`[data-flow-edge="${id}"] .m3-flow-edge-line`).attributes('d')
+      // The vertical run: the x where the path turns down or up (the first corner's x)
+      return Number(d.match(/^M[\d.-]+,[\d.-]+ L([\d.-]+),/)![1])
+    }
+    const nodes = [N('a', 0, 0), N('c', 0, 100), N('b', 300, 200), N('d', 300, -100), N('e', 300, 300)]
+    const step = { type: 'smoothstep' as const, markerEnd: 'none' as const }
+    // a → b runs down x = 240 from 30 to 230, c → d up from 130 to -70: they overlap from 30 to 130
+    const edges: FlowEdge[] = [{ id: 'ab', source: 'a', target: 'b', ...step }, { id: 'cd', source: 'c', target: 'd', ...step }]
+    const off = await flow({ nodes, edges })
+    expect(run(off, 'ab') + 8).toBe(run(off, 'cd') + 8)
+    off.unmount()
+    const on = await flow({ nodes, edges, edgeSpacing: 10 })
+    const xs = [run(on, 'ab'), run(on, 'cd')].map((x) => x + 8).sort()
+    expect(xs[1]! - xs[0]!).toBe(10)
+    // getEdgePath gives what's drawn
+    expect((on.vm as unknown as { getEdgePath(id: string): string }).getEdgePath('cd')).toBe(on.find('[data-flow-edge="cd"] .m3-flow-edge-line').attributes('d'))
+    on.unmount()
+    // From the same source they may share it
+    const same = await flow({ nodes, edges: [{ id: 'ab', source: 'a', target: 'b', ...step }, { id: 'ae', source: 'a', target: 'e', ...step }], edgeSpacing: 10 })
+    expect(run(same, 'ab')).toBe(run(same, 'ae'))
+    same.unmount()
+  })
+
+  it('Ctrl+D duplicates the selection without touching the clipboard', async () => {
+    const w = await flow({ selection: { nodes: ['a'], edges: [] } })
+    await w.trigger('keydown', { key: 'c', ctrlKey: true })
+    await w.setProps({ selection: { nodes: ['a', 'b'], edges: [] } })
+    await w.trigger('keydown', { key: 'd', ctrlKey: true })
+    const nodes = w.emitted('update:nodes')!.at(-1)![0] as FlowNode[]
+    const edges = w.emitted('update:edges')!.at(-1)![0] as FlowEdge[]
+    expect(nodes).toHaveLength(4)
+    expect(nodes[2]!.position).toEqual({ x: 40, y: 40 })
+    expect(edges.at(-1)).toMatchObject({ source: nodes[2]!.id, target: nodes[3]!.id })
+    // The clipboard still holds only a
+    await w.trigger('keydown', { key: 'v', ctrlKey: true })
+    expect((w.emitted('update:nodes')!.at(-1)![0] as FlowNode[])).toHaveLength(5)
+  })
+
   it('a selected edge\'s end can be dragged to another node', async () => {
     const w = await flow({ nodes: [N('a', 0, 0), N('b', 300, 0), N('c', 300, 200)], selection: { nodes: [], edges: ['e1'] } })
     const end = w.find('[data-flow-reconnect="target"]').element
@@ -439,6 +490,24 @@ describe('MFlow', () => {
     pointer(window, 'pointerup', 300, 30)
     expect(w.emitted('update:selection')!.at(-1)![0]).toEqual({ nodes: ['b'], edges: [] })
     expect(w.emitted('update:edges')).toBeUndefined()
+  })
+  it('content in a node that focuses itself on pointerdown keeps its focus; the canvas still takes it elsewhere', async () => {
+    const w = mount(MFlow, {
+      props: { nodes: [N('a', 0, 0, { type: 'pad' })], edges: [], animate: false },
+      slots: { 'node-pad': `<template #node-pad><div class="pad" data-flow-nodrag tabindex="0"><button class="key" @pointerdown="$event.currentTarget.closest('.pad').focus()">Up</button></div></template>` },
+      attachTo: document.body,
+    })
+    await flushPromises()
+    const pad = w.find('.pad').element as HTMLElement
+    pointer(w.find('.key').element, 'pointerdown', 10, 10)
+    expect(document.activeElement).toBe(pad)
+    pointer(window, 'pointerup', 10, 10)
+    // On the node itself (not its own content) or the pane, the canvas takes the focus as before
+    pointer(node(w, 'a'), 'pointerdown', 5, 5)
+    pointer(window, 'pointerup', 5, 5)
+    expect(document.activeElement).not.toBe(pad)
+    expect(w.element.contains(document.activeElement)).toBe(true)
+    w.unmount()
   })
   it("a handle at position 'auto' leaves on the side facing the edge's other end", async () => {
     const edges: FlowEdge[] = [{ id: 'e1', source: 'a', target: 'b', type: 'step', markerEnd: 'none' }]

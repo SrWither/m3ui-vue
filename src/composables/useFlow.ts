@@ -181,6 +181,8 @@ export interface FlowContext {
    * there (as the `branch` event gives). For dropping something onto an edge, e.g. a junction
    */
   getEdgeAt(p: FlowXY, opts?: { radius?: number; ignore?: (e: FlowEdge) => boolean }): FlowEdgeHit | null
+  /** The SVG path (`d`, flow coordinates) an edge is drawn along right now, its own route and edgeSpacing included: to draw it elsewhere, e.g. an exported image */
+  getEdgePath(id: string): string | null
   /** Page (client) coordinates → flow coordinates */
   screenToFlow(p: { x: number; y: number }): FlowXY
   flowToScreen(p: FlowXY): { x: number; y: number }
@@ -210,6 +212,8 @@ export interface FlowContext {
   cut(): void
   /** Pastes what was copied, at a flow point (default a step from the originals) */
   paste(at?: FlowXY): void
+  /** Copies of the selection (with the edges between them) a step away, selected; the clipboard stays as it was */
+  duplicate(): void
   /**
    * Drags a node with a pointer that's already down, e.g. one just added from a palette outside the canvas: it
    * follows the pointer from there (guides, splicing into an edge) until it's let go. With a finger, the page
