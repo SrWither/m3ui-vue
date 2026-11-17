@@ -5,6 +5,37 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.4.0] - 2026-11-17
+
+Components for whole industries: what an app in each sector used to build by hand.
+
+### Added
+- **Food and retail**
+  - `MPosKeypad`: a large touch keypad for amounts (with currency, cash-register `entry="shift"`, quick amounts, the change or what's left against `due`), quantities and PINs; holding delete clears, and the physical keyboard works while it's focused
+  - `MOrderTicket`: a kitchen ticket with a timer that turns the header amber then red as the order ages (`warnAfter`/`lateAfter`), modifiers (+ / −), notes and lines ticked off (`v-model:done`, `complete`); every ticket on the page shares one clock
+  - `MProductConfigurator`: picks a product's variant and extras with the price updating live: single, multiple (min / max) or per-option quantity groups, as a list, chips or color swatches; `isAvailable` crosses out combinations that don't exist, and the add button waits for every group's rule
+  - `MReceipt`: a thermal-printer style receipt (58 / 80 mm) with discounts, taxes (added or already included), tips, payments and change, computed in cents; `print()` prints only the receipt
+- **Travel and events**
+  - `MSeatMap`: a seat picker for cinemas, theaters, buses and planes, drawn from rows of characters, with categories (color, price), occupied / blocked seats, theater ("F12") or plane ("12C") naming, `max` and keyboard navigation
+  - `MAvailabilityCalendar`: a booking calendar with the price of each night, booked nights, minimum / maximum stay and a check-in / check-out range that can't run over a booked night (but can check out the morning one starts)
+  - `MTicket`: a boarding pass or event ticket with a perforated tear-off stub (real cut-out notches), a from → to route and fields
+- **Finance**
+  - `MCreditCardInput`: card number, expiry, security code and name with a preview card that flips for the code, network detection (Visa, Mastercard, Amex, Naranja, Cabal…), Luhn and expiry validation and auto-advance. The helpers are exported too: `detectCardBrand`, `luhnCheck`, `formatCardNumber`, `isValidCardNumber`, `isValidExpiry`
+  - `MCandlestickChart`: an OHLC chart in plain SVG (no chart.js) with volume, moving averages, the last price and a crosshair; drag to pan, Ctrl + wheel or pinch to zoom, and it stays pinned to the latest candle when fed live
+  - `MOrderBook`: a live order book with depth bars, running totals, the spread, price grouping (`step`), flashes on changed levels and clickable levels
+- **Real estate**
+  - `MBeforeAfter`: compares two images (or any content) split by a draggable handle, horizontal or vertical, optionally following the mouse
+  - `MMortgageCalculator`: the monthly payment, principal vs interest and the yearly amortization schedule from price, down payment, rate and term, french (fixed payment) or german (fixed principal) system; the math is exported as `amortize()`
+- **Health**
+  - `MBodyMap`: a front and back body silhouette with regions to mark, cycling through severity `levels`; sides are the patient's and region names come from the locale
+  - `MOdontogram`: a dental chart with every tooth's five surfaces and whole-tooth conditions (caries, filling, sealant, crown, root canal, implant, missing, to extract), FDI or Universal numbering, permanent or primary teeth, keyboard charting
+  - `MVitalsChart`: a vitals flowsheet, one row per vital over a shared time axis, with normal-range bands, out-of-range readings flagged High / Low, blood pressure as bars, and one crosshair across every row
+- **Education**
+  - `MQuiz`: single and multiple choice, true/false, ordering and typed questions (accent and case insensitive), points, explanations, immediate or end-of-quiz feedback, a time limit, pass score, results and a review
+  - `MCertificate`: a printable certificate or diploma that keeps an A4 shape at any width (classic, modern or minimal), with signatures (images from `MSignaturePad`), a seal and a code; `print()` prints it on an A4 page
+
+---
+
 ## [1.3.8] - 2026-11-07
 
 ### Added
