@@ -453,6 +453,152 @@ export interface M3Locale {
   drawUnlockLayer: string
   drawLayerUp: string
   drawLayerDown: string
+  // MBeforeAfter
+  compareBefore: string
+  compareAfter: string
+  compareSlider: string
+  // MCreditCardInput
+  cardNumber: string
+  cardExpiry: string
+  cardCvc: string
+  cardName: string
+  cardInvalidNumber: string
+  cardInvalidExpiry: string
+  cardInvalidCvc: string
+  // MPosKeypad
+  keypadDelete: string
+  keypadClear: string
+  keypadChange: string
+  keypadRemaining: string
+  // MSeatMap ({seat} is replaced at runtime)
+  seatStage: string
+  seatAvailable: string
+  seatSelected: string
+  seatOccupied: string
+  seatLabel: string
+  // MReceipt
+  receiptSubtotal: string
+  receiptTotal: string
+  receiptPaid: string
+  receiptChange: string
+  // MProductConfigurator ({n} is replaced at runtime)
+  configRequired: string
+  configOptional: string
+  configChooseUpTo: string
+  configChooseAtLeast: string
+  configChooseExactly: string
+  configUnavailable: string
+  configQuantity: string
+  configIncrease: string
+  configDecrease: string
+  // MAvailabilityCalendar ({n} is replaced at runtime)
+  availNight: string
+  availNights: string
+  availMinNights: string
+  availCheckIn: string
+  availCheckOut: string
+  availSelectCheckIn: string
+  availSelectCheckOut: string
+  availUnavailable: string
+  // MCandlestickChart
+  chartOpen: string
+  chartHigh: string
+  chartLow: string
+  chartClose: string
+  chartVolume: string
+  // MOrderBook
+  bookPrice: string
+  bookSize: string
+  bookTotal: string
+  bookSpread: string
+  // MMortgageCalculator ({n} is replaced at runtime)
+  mortgagePrice: string
+  mortgageDown: string
+  mortgageRate: string
+  mortgageTerm: string
+  mortgageYears: string
+  mortgageLoan: string
+  mortgageMonthly: string
+  mortgageFirstPayment: string
+  mortgageLastPayment: string
+  mortgagePrincipal: string
+  mortgageInterest: string
+  mortgageTotal: string
+  mortgageSchedule: string
+  mortgageYear: string
+  mortgageBalance: string
+  // MBodyMap ({part} is replaced at runtime)
+  bodyFront: string
+  bodyBack: string
+  bodyRight: string
+  bodyLeft: string
+  bodyRear: string
+  bodyHead: string
+  bodyNeck: string
+  bodyChest: string
+  bodyAbdomen: string
+  bodyPelvis: string
+  bodyShoulder: string
+  bodyUpperArm: string
+  bodyForearm: string
+  bodyHand: string
+  bodyThigh: string
+  bodyKnee: string
+  bodyLeg: string
+  bodyFoot: string
+  bodyUpperBack: string
+  bodyLowerBack: string
+  bodyGlute: string
+  bodyCalf: string
+  // MOdontogram ({n} is replaced at runtime)
+  odontoTooth: string
+  odontoUpper: string
+  odontoLower: string
+  odontoMesial: string
+  odontoDistal: string
+  odontoBuccal: string
+  odontoLingual: string
+  odontoOcclusal: string
+  odontoCaries: string
+  odontoFilling: string
+  odontoSealant: string
+  odontoCrown: string
+  odontoRootCanal: string
+  odontoImplant: string
+  odontoMissing: string
+  odontoExtraction: string
+  odontoEraser: string
+  // MVitalsChart
+  vitalsNormal: string
+  vitalsHigh: string
+  vitalsLow: string
+  vitalsNoData: string
+  // MQuiz ({n}, {total}, {score}, {answer} are replaced at runtime)
+  quizCheck: string
+  quizNext: string
+  quizFinish: string
+  quizCorrect: string
+  quizIncorrect: string
+  quizCorrectAnswer: string
+  quizQuestionOf: string
+  quizScore: string
+  quizPassed: string
+  quizFailed: string
+  quizRetry: string
+  quizTrue: string
+  quizFalse: string
+  quizSelectAll: string
+  quizOrderHint: string
+  quizMoveUp: string
+  quizMoveDown: string
+  quizTypeAnswer: string
+  quizTimeLeft: string
+  quizReview: string
+  // MCertificate
+  certTitle: string
+  certPresentedTo: string
+  certDate: string
+  certId: string
 }
 
 export const defaultLocale: M3Locale = {
@@ -883,6 +1029,137 @@ export const defaultLocale: M3Locale = {
   drawUnlockLayer: 'Unlock layer',
   drawLayerUp: 'Move layer up',
   drawLayerDown: 'Move layer down',
+  compareBefore: 'Before',
+  compareAfter: 'After',
+  compareSlider: 'Comparison position',
+  cardNumber: 'Card number',
+  cardExpiry: 'Expiry (MM/YY)',
+  cardCvc: 'CVC',
+  cardName: 'Name on card',
+  cardInvalidNumber: 'Invalid card number',
+  cardInvalidExpiry: 'Invalid or expired date',
+  cardInvalidCvc: 'Invalid security code',
+  keypadDelete: 'Delete',
+  keypadClear: 'Clear',
+  keypadChange: 'Change',
+  keypadRemaining: 'Remaining',
+  seatStage: 'Screen',
+  seatAvailable: 'Available',
+  seatSelected: 'Selected',
+  seatOccupied: 'Occupied',
+  seatLabel: 'Seat {seat}',
+  receiptSubtotal: 'Subtotal',
+  receiptTotal: 'Total',
+  receiptPaid: 'Paid',
+  receiptChange: 'Change',
+  configRequired: 'Required',
+  configOptional: 'Optional',
+  configChooseUpTo: 'Choose up to {n}',
+  configChooseAtLeast: 'Choose at least {n}',
+  configChooseExactly: 'Choose {n}',
+  configUnavailable: 'Unavailable',
+  configQuantity: 'Quantity',
+  configIncrease: 'Add one',
+  configDecrease: 'Remove one',
+  availNight: '1 night',
+  availNights: '{n} nights',
+  availMinNights: 'Minimum stay: {n} nights',
+  availCheckIn: 'Check-in',
+  availCheckOut: 'Check-out',
+  availSelectCheckIn: 'Select the check-in date',
+  availSelectCheckOut: 'Select the check-out date',
+  availUnavailable: 'Unavailable',
+  chartOpen: 'Open',
+  chartHigh: 'High',
+  chartLow: 'Low',
+  chartClose: 'Close',
+  chartVolume: 'Volume',
+  bookPrice: 'Price',
+  bookSize: 'Size',
+  bookTotal: 'Total',
+  bookSpread: 'Spread',
+  mortgagePrice: 'Property price',
+  mortgageDown: 'Down payment',
+  mortgageRate: 'Interest rate (yearly %)',
+  mortgageTerm: 'Term',
+  mortgageYears: '{n} years',
+  mortgageLoan: 'Loan amount',
+  mortgageMonthly: 'Monthly payment',
+  mortgageFirstPayment: 'First payment',
+  mortgageLastPayment: 'Last payment',
+  mortgagePrincipal: 'Principal',
+  mortgageInterest: 'Interest',
+  mortgageTotal: 'Total paid',
+  mortgageSchedule: 'Amortization schedule',
+  mortgageYear: 'Year',
+  mortgageBalance: 'Balance',
+  bodyFront: 'Front',
+  bodyBack: 'Back',
+  bodyRight: '{part}, right',
+  bodyLeft: '{part}, left',
+  bodyRear: '{part} (back)',
+  bodyHead: 'Head',
+  bodyNeck: 'Neck',
+  bodyChest: 'Chest',
+  bodyAbdomen: 'Abdomen',
+  bodyPelvis: 'Pelvis',
+  bodyShoulder: 'Shoulder',
+  bodyUpperArm: 'Upper arm',
+  bodyForearm: 'Forearm',
+  bodyHand: 'Hand',
+  bodyThigh: 'Thigh',
+  bodyKnee: 'Knee',
+  bodyLeg: 'Lower leg',
+  bodyFoot: 'Foot',
+  bodyUpperBack: 'Upper back',
+  bodyLowerBack: 'Lower back',
+  bodyGlute: 'Buttock',
+  bodyCalf: 'Calf',
+  odontoTooth: 'Tooth {n}',
+  odontoUpper: 'Upper',
+  odontoLower: 'Lower',
+  odontoMesial: 'Mesial',
+  odontoDistal: 'Distal',
+  odontoBuccal: 'Buccal',
+  odontoLingual: 'Lingual',
+  odontoOcclusal: 'Occlusal',
+  odontoCaries: 'Caries',
+  odontoFilling: 'Filling',
+  odontoSealant: 'Sealant',
+  odontoCrown: 'Crown',
+  odontoRootCanal: 'Root canal',
+  odontoImplant: 'Implant',
+  odontoMissing: 'Missing',
+  odontoExtraction: 'To extract',
+  odontoEraser: 'Eraser',
+  vitalsNormal: 'Normal range',
+  vitalsHigh: 'High',
+  vitalsLow: 'Low',
+  vitalsNoData: 'No readings',
+  quizCheck: 'Check',
+  quizNext: 'Next',
+  quizFinish: 'Finish',
+  quizCorrect: 'Correct!',
+  quizIncorrect: 'Not quite',
+  quizCorrectAnswer: 'Correct answer: {answer}',
+  quizQuestionOf: 'Question {n} of {total}',
+  quizScore: '{score} of {total} points',
+  quizPassed: 'Passed',
+  quizFailed: 'Not passed',
+  quizRetry: 'Try again',
+  quizTrue: 'True',
+  quizFalse: 'False',
+  quizSelectAll: 'Select all that apply',
+  quizOrderHint: 'Put these in the right order',
+  quizMoveUp: 'Move up',
+  quizMoveDown: 'Move down',
+  quizTypeAnswer: 'Your answer',
+  quizTimeLeft: 'Time left',
+  quizReview: 'Review answers',
+  certTitle: 'Certificate of completion',
+  certPresentedTo: 'This certifies that',
+  certDate: 'Date',
+  certId: 'Certificate ID',
 }
 
 export const M3_LOCALE_KEY: InjectionKey<MaybeRef<Partial<M3Locale>>> = Symbol('m3-locale')
