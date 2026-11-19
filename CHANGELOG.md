@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.4.1] - 2026-11-19
+
+### Added
+- `MCountdown`: a countdown to a date with rolling digits, in boxes or one line of text; `units` picks what's shown (the rest fold into the next larger unit), `hideEmpty` drops leading zeros, unit names come from `Intl` in the app's language, a `finished` event, and slots for a custom rendering or the finished state
+
+### Fixed
+- **`MSelect` and `MAutocomplete`: the clear button sets the value to `null` instead of `undefined`**, like `MDatePicker`, `MTimePicker` and `MNumberField` (an `undefined` disappears from `JSON.stringify`, so a form sent to an API never cleared the field)
+
 ## [1.4.0] - 2026-11-17
 
 Components for whole industries: what an app in each sector used to build by hand.
