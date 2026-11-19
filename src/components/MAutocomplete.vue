@@ -2,7 +2,7 @@
 /**
  * Like MSelect but with a text input for filtering. Type to search, arrow keys to navigate, Enter to select.
  *
- * @event update:modelValue Emitted on selection — powers v-model
+ * @event update:modelValue Emitted on selection — powers v-model (`null` when the clear button empties it)
  * @event debounced Emitted debounce ms after the user stops typing the search query (only when debounce > 0)
  */
 import { computed, ref, useId, onMounted, onUnmounted, watch, nextTick } from 'vue'
@@ -393,7 +393,7 @@ const labelClasses = computed(() => {
         v-if="clearable && hasValue && !disabled"
         type="button"
         class="absolute right-9 top-1/2 -translate-y-1/2 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"
-        @click.stop="emit('update:modelValue', undefined as any); closeDropdown()"
+        @click.stop="emit('update:modelValue', null); closeDropdown()"
       >
         <MIcon name="close" :size="18" />
       </button>

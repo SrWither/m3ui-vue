@@ -2,7 +2,7 @@
 /**
  * A single-value dropdown select, docked or as a modal dialog on smaller screens.
  *
- * @event update:modelValue Emitted with the selected option's value.
+ * @event update:modelValue Emitted with the selected option's value (`null` when the clear button empties it).
  */
 import { computed, ref, useId, onMounted, onUnmounted, watch } from 'vue'
 import MIcon from './MIcon.vue'
@@ -288,7 +288,7 @@ const labelClasses = computed(() => {
         v-if="clearable && hasValue && !disabled"
         type="button"
         class="absolute right-9 top-1/2 -translate-y-1/2 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-on-surface/8 hover:text-on-surface"
-        @click.stop="emit('update:modelValue', undefined as any); open = false"
+        @click.stop="emit('update:modelValue', null); open = false"
       >
         <MIcon name="close" :size="18" />
       </button>
