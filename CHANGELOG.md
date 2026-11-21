@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.4.2] - Unreleased
+
+### Added
+- **`MDatePicker`, `MDatePickerModal`, `MDateRangePicker` and `MDateRangePickerModal`: the month's title is a button that opens a grid of years**, as in Compose's `DatePicker`: three per row, the year on view filled and the current one outlined, centered and focused on open, arrow keys to move through it. Picking a year keeps the month on view. The arrows move to the right of the title (Compose's layout) and hide while the grid is open. A new `yearRange` prop (`[from, to]`, default `[1900, 2100]`) sets the years offered; the ones `min`/`max` leave no day in are disabled
+
 ## [1.4.1] - 2026-11-19
 
 ### Added
