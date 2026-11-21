@@ -49,6 +49,20 @@ export interface M3Locale {
   dateSwitchToYear: string
   /** The same button while the year grid is open: back to the days */
   dateSwitchToDay: string
+  /** Calendar heatmap legend, low end */
+  heatmapLess: string
+  /** Calendar heatmap legend, high end */
+  heatmapMore: string
+  /** Meter group: what's left of max */
+  meterRemaining: string
+  /** Meter group header; {used} and {max} are replaced */
+  meterUsedOf: string
+  /** Phone input: the country selector */
+  phoneCountry: string
+  /** Phone input: the country search field */
+  phoneSearchCountry: string
+  /** Phone input: the number doesn't fit its country's length */
+  phoneInvalid: string
   dateInputLabel: string
   selectTime: string
   timeHourSelection: string
@@ -643,6 +657,13 @@ export const defaultLocale: M3Locale = {
   dateToggleCalendar: 'Switch to calendar',
   dateSwitchToYear: 'Switch to selecting a year',
   dateSwitchToDay: 'Switch to selecting a day',
+  heatmapLess: 'Less',
+  heatmapMore: 'More',
+  meterRemaining: 'Remaining',
+  meterUsedOf: '{used} of {max}',
+  phoneCountry: 'Country',
+  phoneSearchCountry: 'Search country',
+  phoneInvalid: 'Incomplete phone number',
   dateInputLabel: 'Date',
   selectTime: 'Select time',
   timeHourSelection: 'Select hour',
