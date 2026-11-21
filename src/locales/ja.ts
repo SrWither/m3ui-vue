@@ -42,6 +42,8 @@ export const jaLocale: M3Locale = {
   ok: 'OK',
   dateToggleInput: 'テキスト入力に切り替え',
   dateToggleCalendar: 'カレンダーに切り替え',
+  dateSwitchToYear: '年の選択に切り替え',
+  dateSwitchToDay: '日の選択に切り替え',
   dateInputLabel: '日付',
   selectTime: '時刻を選択',
   timeHourSelection: '時間を選択',

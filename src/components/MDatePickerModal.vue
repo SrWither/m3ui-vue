@@ -10,7 +10,8 @@ import { computed, ref, watch } from 'vue'
 import MButton from './MButton.vue'
 import MDialog from './MDialog.vue'
 import MIconButton from './MIconButton.vue'
-import MIcon from './MIcon.vue'
+import MMonthYearButton from './_MMonthYearButton.vue'
+import MYearGrid from './_MYearGrid.vue'
 import { useLocale } from '../composables/useLocale'
 import { isoDate as fmt, useCalendarMonth } from '../composables/_useCalendarMonth'
 
@@ -30,6 +31,11 @@ const props = withDefaults(defineProps<{
   locale?: string
   /** Dialog title */
   title?: string
+  /**
+   * First and last year the year grid (opened from the month's title) offers, as `[from, to]`; the years min/max
+   * leave no day in are disabled. Default 1900–2100, as Compose's DatePickerDefaults.YearRange
+   */
+  yearRange?: [number, number]
 }>(), {
   modelValue: null,
   show: false,
@@ -57,17 +63,32 @@ watch(() => props.show, (open) => {
     selected.value = props.modelValue ?? null
     viewDate.value = props.modelValue ? new Date(props.modelValue + 'T00:00:00') : new Date()
     inputMode.value = 'calendar'
+    yearPicker.value = false
     dateInput.value = props.modelValue ? isoToDisplay(props.modelValue) : ''
   }
 })
 
 // ── Calendar logic ─────────────────────────────────────────────────
 // Weekday names, the month's title and its six-week grid, shared with the other date pickers
-const { weekdays: WEEKDAYS, monthLabel, days: calendarDays, isOutOfRange: isOOR, prevMonth, nextMonth } = useCalendarMonth(viewDate, {
+const { weekdays: WEEKDAYS, monthLabel, days: calendarDays, isOutOfRange: isOOR, prevMonth, nextMonth, years, showYear } = useCalendarMonth(viewDate, {
   locale: () => resolvedLocale.value,
   min: () => props.min,
   max: () => props.max,
+  yearRange: () => props.yearRange,
 })
+
+// ── Year grid ──────────────────────────────────────────────────────
+// Compose's YearPicker: the month's title is a menu button that lays a 3-column grid of years over the days; a
+// year shows that year with the same month and goes back to the days.
+const yearPicker = ref(false)
+const yearToggle = ref<InstanceType<typeof MMonthYearButton>>()
+watch(inputMode, () => { yearPicker.value = false })
+
+function pickYear(year: number) {
+  showYear(year)
+  yearPicker.value = false
+  yearToggle.value?.focus()
+}
 
 const todayIso = fmt(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())
 
@@ -167,43 +188,64 @@ function onDialog(open: boolean) {
 
     <!-- Calendar mode -->
     <div v-if="inputMode === 'calendar'" class="px-4 pt-3 pb-2">
-      <!-- Month nav -->
-      <div class="mb-2 flex items-center justify-between">
-        <MIconButton icon="chevron_left" :label="locale.previousMonth" :size="36" @click="prevMonth" />
-        <span class="text-title-small font-medium capitalize text-on-surface">{{ monthLabel }}</span>
-        <MIconButton icon="chevron_right" :label="locale.nextMonth" :size="36" @click="nextMonth" />
+      <!-- Month nav: Compose's MonthsNavigation, the month/year menu button at the start and the arrows at the end
+           (hidden while the year grid is open) -->
+      <div class="mb-2 flex h-10 items-center justify-between">
+        <MMonthYearButton
+          ref="yearToggle"
+          :label="monthLabel"
+          :expanded="yearPicker"
+          :action="yearPicker ? locale.dateSwitchToDay : locale.dateSwitchToYear"
+          @toggle="yearPicker = !yearPicker"
+        />
+        <div v-if="!yearPicker" class="flex">
+          <MIconButton icon="chevron_left" :label="locale.previousMonth" :size="36" @click="prevMonth" />
+          <MIconButton icon="chevron_right" :label="locale.nextMonth" :size="36" @click="nextMonth" />
+        </div>
       </div>
 
-      <!-- Weekday headers -->
-      <div class="mb-1 grid grid-cols-7 gap-0.5 text-center">
-        <span v-for="wd in WEEKDAYS" :key="wd" class="py-1 text-body-large font-medium text-on-surface">
-          {{ wd }}
-        </span>
-      </div>
+      <div class="relative">
+        <!-- Weekday headers -->
+        <div class="mb-1 grid grid-cols-7 gap-0.5 text-center">
+          <span v-for="wd in WEEKDAYS" :key="wd" class="py-1 text-body-large font-medium text-on-surface">
+            {{ wd }}
+          </span>
+        </div>
 
-      <!-- Days grid -->
-      <div class="grid grid-cols-7 gap-0.5">
-        <button
-          v-for="(day, i) in calendarDays"
-          :key="i"
-          type="button"
-          class="flex h-10 w-full items-center justify-center rounded-full text-body-medium transition-colors duration-100"
-          :class="[
-            day.disabled
-              ? 'cursor-not-allowed text-on-surface/25'
-              : day.iso === selected
-                ? 'bg-primary text-on-primary'
-                : day.iso === todayIso
-                  ? 'border border-primary text-primary cursor-pointer hover:bg-primary/8'
-                  : day.current
-                    ? 'cursor-pointer text-on-surface hover:bg-on-surface/8'
-                    : 'cursor-pointer text-on-surface-variant/50 hover:bg-on-surface/4',
-          ]"
-          :disabled="day.disabled"
-          @click="selectDay(day)"
-        >
-          {{ day.date }}
-        </button>
+        <!-- Days grid -->
+        <div class="grid grid-cols-7 gap-0.5">
+          <button
+            v-for="(day, i) in calendarDays"
+            :key="i"
+            type="button"
+            class="flex h-10 w-full items-center justify-center rounded-full text-body-medium transition-colors duration-100"
+            :class="[
+              day.disabled
+                ? 'cursor-not-allowed text-on-surface/25'
+                : day.iso === selected
+                  ? 'bg-primary text-on-primary'
+                  : day.iso === todayIso
+                    ? 'border border-primary text-primary cursor-pointer hover:bg-primary/8'
+                    : day.current
+                      ? 'cursor-pointer text-on-surface hover:bg-on-surface/8'
+                      : 'cursor-pointer text-on-surface-variant/50 hover:bg-on-surface/4',
+            ]"
+            :disabled="day.disabled"
+            @click="selectDay(day)"
+          >
+            {{ day.date }}
+          </button>
+        </div>
+
+        <!-- Year grid, over the days and as tall as them -->
+        <MYearGrid
+          :open="yearPicker"
+          :years="years"
+          :view-year="viewDate.getFullYear()"
+          :locale="resolvedLocale"
+          :label="locale.dateSwitchToYear"
+          @pick="pickYear"
+        />
       </div>
     </div>
 
@@ -228,3 +270,4 @@ function onDialog(open: boolean) {
     </div>
   </MDialog>
 </template>
+

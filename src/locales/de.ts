@@ -42,6 +42,8 @@ export const deLocale: M3Locale = {
   ok: 'OK',
   dateToggleInput: 'Zur Texteingabe wechseln',
   dateToggleCalendar: 'Zum Kalender wechseln',
+  dateSwitchToYear: 'Zur Jahresauswahl wechseln',
+  dateSwitchToDay: 'Zur Tagesauswahl wechseln',
   dateInputLabel: 'Datum',
   selectTime: 'Uhrzeit auswählen',
   timeHourSelection: 'Stunde auswählen',

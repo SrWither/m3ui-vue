@@ -42,6 +42,8 @@ export const zhLocale: M3Locale = {
   ok: '确定',
   dateToggleInput: '切换到文本输入',
   dateToggleCalendar: '切换到日历',
+  dateSwitchToYear: '切换到年份选择',
+  dateSwitchToDay: '切换到日期选择',
   dateInputLabel: '日期',
   selectTime: '选择时间',
   timeHourSelection: '选择小时',

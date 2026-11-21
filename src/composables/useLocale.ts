@@ -45,6 +45,10 @@ export interface M3Locale {
   ok: string
   dateToggleInput: string
   dateToggleCalendar: string
+  /** The date pickers' month/year button: opens the year grid */
+  dateSwitchToYear: string
+  /** The same button while the year grid is open: back to the days */
+  dateSwitchToDay: string
   dateInputLabel: string
   selectTime: string
   timeHourSelection: string
@@ -637,6 +641,8 @@ export const defaultLocale: M3Locale = {
   ok: 'OK',
   dateToggleInput: 'Switch to text input',
   dateToggleCalendar: 'Switch to calendar',
+  dateSwitchToYear: 'Switch to selecting a year',
+  dateSwitchToDay: 'Switch to selecting a day',
   dateInputLabel: 'Date',
   selectTime: 'Select time',
   timeHourSelection: 'Select hour',

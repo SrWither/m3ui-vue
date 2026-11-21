@@ -42,6 +42,8 @@ export const esLocale: M3Locale = {
   ok: 'Aceptar',
   dateToggleInput: 'Cambiar a entrada de texto',
   dateToggleCalendar: 'Cambiar a calendario',
+  dateSwitchToYear: 'Cambiar a selección de año',
+  dateSwitchToDay: 'Cambiar a selección de día',
   dateInputLabel: 'Fecha',
   selectTime: 'Seleccionar hora',
   timeHourSelection: 'Seleccionar hora',

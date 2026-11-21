@@ -42,6 +42,8 @@ export const koLocale: M3Locale = {
   ok: '확인',
   dateToggleInput: '텍스트 입력으로 전환',
   dateToggleCalendar: '달력으로 전환',
+  dateSwitchToYear: '연도 선택으로 전환',
+  dateSwitchToDay: '날짜 선택으로 전환',
   dateInputLabel: '날짜',
   selectTime: '시간 선택',
   timeHourSelection: '시간 선택',
