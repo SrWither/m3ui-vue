@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.4.2] - Unreleased
+## [1.4.2] - 2026-11-21
 
 ### Added
 - **`MDatePicker`, `MDatePickerModal`, `MDateRangePicker` and `MDateRangePickerModal`: the month's title is a button that opens a grid of years**, as in Compose's `DatePicker`: three per row, the year on view filled and the current one outlined, centered and focused on open, arrow keys to move through it. Picking a year keeps the month on view. The arrows move to the right of the title (Compose's layout) and hide while the grid is open. A new `yearRange` prop (`[from, to]`, default `[1900, 2100]`) sets the years offered; the ones `min`/`max` leave no day in are disabled
@@ -13,6 +13,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MMeterGroup`: several values sharing one bar, like a phone's storage screen: a segment per value with M3's linear progress gap, growing in on mount and sliding on changes, a legend with values, shares (`percent`) and what's left of `max`, `unit` / `numberFormat` / `format`, three sizes, and the part under the pointer highlighted in both bar and legend
 - `MPhoneInput`: a phone number field with a searchable country selector (names from `Intl`, `preferred` pinned, `countries` to restrict), formatted as it's typed with the country's mask and bound as E.164; pasting a full international number switches the country, the country defaults to the locale's region, and an incomplete number is flagged on blur. `formatPhone`, `isValidPhone`, `parsePhone`, `phoneCountries` and `flagEmoji` are exported to show stored numbers elsewhere
 - `MTypewriter`: text that types itself out and cycles through phrases behind a blinking caret, erasing only the end that differs, counting emoji as one keystroke, starting when it scrolls into view; whole phrases swap with reduced motion and screen readers get each phrase once
+- `MListItem`: an expandable item's header takes a `#trailing` slot (before the expand icon) whose controls, a switch or a button, don't open or close the item; an `indent` prop sets the indent of the expanded `#children` (32px by default), to narrow it on small screens
+
+### Fixed
+- `MListItem`: pressing a control inside a clickable row (an `MIconButton` or `MSwitch` in `#trailing` or `#leading`) no longer presses the whole row, which darkened its background and morphed its corners: the control reacts on its own, as in M3. The hover and pressed state layer is now driven by JS instead of CSS `:hover`/`:active` (which match every ancestor of the pressed element), and ignores pointers over nested controls, in both expandable and plain rows
 
 ## [1.4.1] - 2026-11-19
 
