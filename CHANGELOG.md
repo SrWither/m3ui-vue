@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.4.4] - 2026-11-21
+
+### Fixed
+- `MTabs`: the indicator follows the tabs when they change size after mount. Tabs with an `icon` are much wider until the Material Symbols font loads (the icon is drawn as its name, like "fact_check"), and the indicator stayed where that first layout put it, off its tab. The row and each tab are now watched with a `ResizeObserver` (plus `document.fonts.ready` as a fallback): on a resize the indicator moves without animation, and with `scrollable` the active tab is centered again unless the row was scrolled by hand. The indicator also no longer widens the scrollable area when it sits past the last tab
+
 ## [1.4.3] - 2026-11-21
 
 ### Fixed
