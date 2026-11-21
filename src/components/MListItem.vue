@@ -7,7 +7,8 @@
  * @slot overline Custom overline content, replacing the overline prop
  * @slot default Custom content replacing the title/subtitle/description text block
  * @slot children Nested content revealed when expandable is set and the item is expanded
- * @slot trailing Custom trailing element, replacing the icon/text/switch/checkbox
+ * @slot trailing Custom trailing element, replacing the icon/text/switch/checkbox. On an expandable item it sits
+ *   before the expand icon, and its controls (a switch, a button) don't open or close the item
  * @event click Fires on any click, including on an expandable item (right before it toggles)
  * @event update:trailingValue Fires when a trailing switch/checkbox is toggled (trailing='switch' | 'checkbox')
  * @event update:expanded Fires when an expandable item is toggled open/closed
@@ -72,6 +73,8 @@ const props = withDefaults(
     expandable?: boolean
     /** Control the expanded state (v-model:expanded) — otherwise managed internally */
     expanded?: boolean
+    /** Indent of the expanded #children: px, or any CSS length. Narrow it on small screens */
+    indent?: number | string
   }>(),
   { active: false, disabled: false, expandable: false },
 )
@@ -190,7 +193,7 @@ const containerClasses = computed(() => [
     ? 'py-1'
     : resolvedLines.value === 3 ? 'py-3' : 'py-2',
   minHeightClass.value,
-  isClickable.value && !props.disabled && 'cursor-pointer transition-colors duration-150 hover:bg-on-surface/8 active:bg-on-surface/12',
+  isClickable.value && !props.disabled && 'cursor-pointer',
   // ListTokens: ItemSelectedContainerColor = SecondaryContainer, applies to any selected list
   // item, not just nav/segmented contexts.
   isActive.value && 'bg-secondary-container text-on-secondary-container',
@@ -247,10 +250,30 @@ const { snap } = useSpring(() => expressiveRadii.value, (v) => {
 // A change of place in the list (or of list style) isn't an interaction: jump there
 watch([segmentPosition, isNav], () => snap())
 
-function onPointerEnter(e: PointerEvent) { if (e.pointerType !== 'touch') hovered.value = true }
+// A control inside the row (a button or switch in #trailing, a checkbox in #leading) has its own interaction
+// surface, as in M3: hovering or pressing it leaves the row alone. The row's own built-in leading checkbox is
+// part of the row (data-mli-part), so it still presses it.
+const NESTED_CONTROL = 'button, a, input, select, textarea, label, [role="button"], [role="switch"], [role="checkbox"], [role="radio"], [role="link"], [tabindex]'
+function onNestedControl(e: Event) {
+  const row = e.currentTarget as Element
+  const control = (e.target as Element | null)?.closest?.(NESTED_CONTROL)
+  return !!control && control !== row && row.contains(control) && !control.closest('[data-mli-part]')
+}
+
+function onPointerMove(e: PointerEvent) { if (e.pointerType !== 'touch') hovered.value = !onNestedControl(e) }
 function onPointerLeave() { hovered.value = false; pressed.value = false }
-function onPointerDown(e: PointerEvent) { if (e.button === 0) pressed.value = true }
+function onPointerDown(e: PointerEvent) { if (e.button === 0 && !onNestedControl(e)) pressed.value = true }
 function onPointerUp() { pressed.value = false }
+
+// The state layer (ListTokens: hover 8%, pressed 12% of the content color), drawn by JS so that pressing a nested
+// control doesn't light up the row through CSS :active, which every ancestor of the pressed element matches
+const stateLayerOpacity = computed(() => {
+  if (!isClickable.value || props.disabled) return 0
+  return pressed.value ? 0.12 : hovered.value ? 0.08 : 0
+})
+const indentStyle = computed(() =>
+  props.indent === undefined ? undefined : { paddingLeft: typeof props.indent === 'number' ? `${props.indent}px` : props.indent },
+)
 function onFocus(e: FocusEvent) { focused.value = (e.currentTarget as Element).matches(':focus-visible') }
 function onBlur() { focused.value = false }
 
@@ -287,6 +310,8 @@ function toggleExpand(e: MouseEvent) {
 function handleClick(e: MouseEvent) {
   if (props.disabled) return
   if (props.expandable) {
+    // A switch or button in the header's #trailing works on its own
+    if (onNestedControl(e)) return
     toggleExpand(e)
     return
   }
@@ -316,12 +341,20 @@ function handleTrailingToggle() {
       @keydown="onHeaderKeyDown"
       @focus="onFocus"
       @blur="onBlur"
-      @pointerenter="onPointerEnter"
+      @pointerenter="onPointerMove"
+      @pointermove="onPointerMove"
       @pointerleave="onPointerLeave"
       @pointerdown="onPointerDown"
       @pointerup="onPointerUp"
       @pointercancel="onPointerUp"
     >
+      <span
+        class="mli-state-layer pointer-events-none absolute inset-0 rounded-[inherit]"
+        :class="isActive ? 'bg-on-secondary-container' : 'bg-on-surface'"
+        :style="{ opacity: stateLayerOpacity }"
+        aria-hidden="true"
+      />
+
       <!-- Leading -->
       <slot name="leading">
         <MIcon v-if="resolvedLeading === 'icon'" :name="icon!" :size="24" class="shrink-0" :class="activeIconClass" />
@@ -340,6 +373,8 @@ function handleTrailingToggle() {
         </slot>
       </div>
 
+      <slot name="trailing" />
+
       <!-- Expand icon -->
       <MIcon
         :name="isExpanded ? 'expand_less' : 'expand_more'"
@@ -352,7 +387,7 @@ function handleTrailingToggle() {
     <!-- Children with collapse animation -->
     <Transition name="mli-expand">
       <div v-if="isExpanded" :id="childrenId" class="mli-expand-grid">
-        <div class="mli-expand-body">
+        <div class="mli-expand-body" :style="indentStyle">
           <slot name="children" />
         </div>
       </div>
@@ -371,7 +406,8 @@ function handleTrailingToggle() {
       :aria-disabled="(isOption || isButton) && disabled ? 'true' : undefined"
       @click="handleClick"
       @keydown="onRowKeyDown"
-      @pointerenter="onPointerEnter"
+      @pointerenter="onPointerMove"
+      @pointermove="onPointerMove"
       @pointerleave="onPointerLeave"
       @pointerdown="onPointerDown"
       @pointerup="onPointerUp"
@@ -379,6 +415,13 @@ function handleTrailingToggle() {
       @focus="onFocus"
       @blur="onBlur"
     >
+      <span
+        class="mli-state-layer pointer-events-none absolute inset-0 rounded-[inherit]"
+        :class="isActive ? 'bg-on-secondary-container' : 'bg-on-surface'"
+        :style="{ opacity: stateLayerOpacity }"
+        aria-hidden="true"
+      />
+
       <!-- Divider -->
       <div
         v-if="hasDivider"
@@ -406,7 +449,7 @@ function handleTrailingToggle() {
           <img :src="image" alt="" class="h-14 w-14 shrink-0 rounded-md object-cover">
         </template>
         <template v-else-if="resolvedLeading === 'checkbox'">
-          <MCheckbox :model-value="isActive" class="shrink-0" />
+          <MCheckbox :model-value="isActive" class="shrink-0" data-mli-part />
         </template>
       </slot>
 
@@ -446,6 +489,9 @@ function handleTrailingToggle() {
 </template>
 
 <style>
+.mli-state-layer {
+  transition: opacity 150ms;
+}
 .mli-expand-grid {
   display: grid;
   grid-template-rows: 1fr;
