@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.4.3] - 2026-11-21
+
+### Fixed
+- `MTabs` with `scrollable`: the active tab stays visible inside the scrolling row, as in Compose's `ScrollableTabRow`. On mount the row jumps to it, and when `modelValue` changes it scrolls smoothly (instantly with `prefers-reduced-motion`) so the tab is centered, clamped to the row's ends. Before, an active tab past the visible width (the 4th or 5th on a 390px phone) stayed hidden along with its indicator. Only the row scrolls, never the page
+
 ## [1.4.2] - 2026-11-21
 
 ### Added
