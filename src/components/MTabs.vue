@@ -40,6 +40,7 @@ const leading = computed(() => (props.iconPosition ?? (props.variant === 'primar
 const emit = defineEmits<{ 'update:modelValue': [string | number] }>()
 
 const tabEls = ref<HTMLElement[]>([])
+const rowEl = ref<HTMLElement | null>(null)
 const indicatorLeft = ref(0)
 const indicatorWidth = ref(0)
 
@@ -98,11 +99,37 @@ function ensureRaf() {
   rafId = requestAnimationFrame(tick)
 }
 
-function updateIndicator(animate = true) {
+// ScrollableTabRow keeps the selected tab in view: on every selection change it
+// animates the row's scroll so the tab is centered, clamped to the row's ends
+// (Compose's `calculateTabOffset`). Only the row scrolls, never the page, so
+// no scrollIntoView.
+function scrollToTab(rect: { left: number; width: number }, smooth: boolean) {
+  const row = rowEl.value
+  if (!props.scrollable || !row) return
+  const max = row.scrollWidth - row.clientWidth
+  if (max <= 0) return
+  const left = Math.round(Math.min(Math.max(rect.left + rect.width / 2 - row.clientWidth / 2, 0), max))
+  if (Math.abs(left - row.scrollLeft) < 1) return
+  const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  const behavior: ScrollBehavior = smooth && !reduce ? 'smooth' : 'auto'
+  if (typeof row.scrollTo === 'function') row.scrollTo({ left, behavior })
+  else row.scrollLeft = left
+}
+
+// The value whose tab was last brought into view: tabs that arrive after mount
+// (loaded async) still get scrolled to once, without a later `:tabs` literal
+// re-render pulling the row back from wherever the user scrolled it.
+let shownValue: unknown = Symbol('none')
+
+function updateIndicator(animate = true, scroll: 'none' | 'instant' | 'smooth' = 'none') {
   nextTick(() => {
     const idx = props.tabs.findIndex((t) => t.value === props.modelValue)
     const rect = getTabRect(idx)
     if (!rect) return
+    if (scroll !== 'none') {
+      shownValue = props.modelValue
+      scrollToTab(rect, scroll === 'smooth')
+    }
 
     if (props.variant === 'primary') {
       const inset = Math.min(rect.width * 0.2, 16)
@@ -124,15 +151,15 @@ function updateIndicator(animate = true) {
   })
 }
 
-onMounted(() => updateIndicator(false))
+onMounted(() => updateIndicator(false, 'instant'))
 onUnmounted(() => { if (rafId) cancelAnimationFrame(rafId) })
-watch(() => props.modelValue, () => updateIndicator(true))
+watch(() => props.modelValue, () => updateIndicator(true, 'smooth'))
 // Animated (not a hard snap) here too: a consumer passing an inline `:tabs="[...]"`
 // literal gets a brand-new array reference on every unrelated parent re-render,
 // which would otherwise race with — and instantly override — an in-flight
 // modelValue-triggered animation. Re-running the same animated update is a
 // no-op when the target hasn't actually moved, so this is safe either way.
-watch(() => props.tabs, () => updateIndicator(true), { deep: true })
+watch(() => props.tabs, () => updateIndicator(true, shownValue === props.modelValue ? 'none' : 'instant'), { deep: true })
 watch(leading, () => updateIndicator(true))
 
 function select(tab: Tab) {
@@ -143,7 +170,7 @@ function select(tab: Tab) {
 <template>
   <!-- ── Primary: sliding short indicator with stretch ──────────────── -->
   <div v-if="variant === 'primary'" class="border-b border-outline-variant">
-    <div class="relative flex" :class="scrollable ? 'overflow-x-auto' : 'overflow-x-hidden'" style="scrollbar-width: none">
+    <div ref="rowEl" class="relative flex" :class="scrollable ? 'overflow-x-auto' : 'overflow-x-hidden'" style="scrollbar-width: none">
       <button
         v-for="tab in tabs"
         :key="tab.value"
@@ -175,7 +202,7 @@ function select(tab: Tab) {
 
   <!-- ── Secondary: full-width underline indicator ─────────────────── -->
   <div v-else class="border-b border-outline-variant">
-    <div class="relative flex" :class="scrollable ? 'overflow-x-auto' : 'overflow-x-hidden'" style="scrollbar-width: none">
+    <div ref="rowEl" class="relative flex" :class="scrollable ? 'overflow-x-auto' : 'overflow-x-hidden'" style="scrollbar-width: none">
       <button
         v-for="tab in tabs"
         :key="tab.value"
