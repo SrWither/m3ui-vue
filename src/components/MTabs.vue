@@ -5,7 +5,7 @@
  *
  * @event update:modelValue Emitted with the value of the tab you picked.
  */
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, onUpdated, ref, watch } from 'vue'
 import MIcon from './MIcon.vue'
 
 interface Tab {
@@ -41,6 +41,7 @@ const emit = defineEmits<{ 'update:modelValue': [string | number] }>()
 
 const tabEls = ref<HTMLElement[]>([])
 const rowEl = ref<HTMLElement | null>(null)
+const contentEl = ref<HTMLElement | null>(null)
 const indicatorLeft = ref(0)
 const indicatorWidth = ref(0)
 
@@ -121,38 +122,117 @@ function scrollToTab(rect: { left: number; width: number }, smooth: boolean) {
 // re-render pulling the row back from wherever the user scrolled it.
 let shownValue: unknown = Symbol('none')
 
+function measureTarget() {
+  const idx = props.tabs.findIndex((t) => t.value === props.modelValue)
+  const rect = getTabRect(idx)
+  if (!rect) return null
+  if (props.variant === 'primary') {
+    const inset = Math.min(rect.width * 0.2, 16)
+    return { rect, offset: rect.left + inset, width: rect.width - inset * 2 }
+  }
+  return { rect, offset: rect.left, width: rect.width }
+}
+
+function snapIndicator() {
+  offsetPos = offsetTarget; offsetVel = 0
+  widthPos = widthTarget; widthVel = 0
+  indicatorLeft.value = offsetPos
+  indicatorWidth.value = widthPos
+}
+
 function updateIndicator(animate = true, scroll: 'none' | 'instant' | 'smooth' = 'none') {
   nextTick(() => {
-    const idx = props.tabs.findIndex((t) => t.value === props.modelValue)
-    const rect = getTabRect(idx)
-    if (!rect) return
+    const m = measureTarget()
+    if (!m) return
     if (scroll !== 'none') {
       shownValue = props.modelValue
-      scrollToTab(rect, scroll === 'smooth')
+      if (scroll === 'smooth') manualScroll = false
+      scrollToTab(m.rect, scroll === 'smooth')
     }
-
-    if (props.variant === 'primary') {
-      const inset = Math.min(rect.width * 0.2, 16)
-      offsetTarget = rect.left + inset
-      widthTarget = rect.width - inset * 2
-    } else {
-      offsetTarget = rect.left
-      widthTarget = rect.width
-    }
-
-    if (animate) {
-      ensureRaf()
-    } else {
-      offsetPos = offsetTarget; offsetVel = 0
-      widthPos = widthTarget; widthVel = 0
-      indicatorLeft.value = offsetPos
-      indicatorWidth.value = widthPos
-    }
+    offsetTarget = m.offset
+    widthTarget = m.width
+    if (animate) ensureRaf()
+    else snapIndicator()
   })
 }
 
-onMounted(() => updateIndicator(false, 'instant'))
-onUnmounted(() => { if (rafId) cancelAnimationFrame(rafId) })
+// Tabs can change size after mount: a Material Symbols icon is drawn as its
+// ligature name ("fact_check") until the font loads, so the tab is far wider
+// at first. Re-measure without animation whenever the row or a tab resizes,
+// and re-center the active tab unless the user has scrolled the row by hand
+// since it was last centered for them.
+let manualScroll = false
+function markManualScroll() { manualScroll = true }
+const SCROLL_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown'])
+function onRowKeydown(e: KeyboardEvent) { if (SCROLL_KEYS.has(e.key)) manualScroll = true }
+
+function relayout() {
+  const m = measureTarget()
+  if (!m) return
+  if (Math.abs(m.offset - offsetTarget) >= 0.5 || Math.abs(m.width - widthTarget) >= 0.5) {
+    offsetTarget = m.offset
+    widthTarget = m.width
+    snapIndicator()
+  }
+  if (!manualScroll) scrollToTab(m.rect, false)
+}
+
+let ro: ResizeObserver | null = null
+const observed = new Set<Element>()
+const lastSize = new WeakMap<Element, string>()
+let listenedRow: HTMLElement | null = null
+
+function onResize(entries: ResizeObserverEntry[]) {
+  let changed = false
+  for (const e of entries) {
+    const key = `${e.contentRect.width}x${e.contentRect.height}`
+    // The first notification of every newly observed element only reports
+    // its current size: ignore it, so it can't cut short a running animation.
+    if (lastSize.has(e.target) && lastSize.get(e.target) !== key) changed = true
+    lastSize.set(e.target, key)
+  }
+  if (changed) relayout()
+}
+
+function syncObserved() {
+  const row = rowEl.value
+  if (row !== listenedRow) {
+    listenedRow?.removeEventListener('wheel', markManualScroll)
+    listenedRow?.removeEventListener('touchmove', markManualScroll)
+    listenedRow?.removeEventListener('keydown', onRowKeydown)
+    row?.addEventListener('wheel', markManualScroll, { passive: true })
+    row?.addEventListener('touchmove', markManualScroll, { passive: true })
+    row?.addEventListener('keydown', onRowKeydown)
+    listenedRow = row
+  }
+  if (!ro) return
+  const want = new Set<Element>()
+  if (row) want.add(row)
+  if (contentEl.value) for (const el of contentEl.value.querySelectorAll(':scope > button')) want.add(el)
+  for (const el of observed) if (!want.has(el)) { ro.unobserve(el); observed.delete(el) }
+  for (const el of want) if (!observed.has(el)) { ro.observe(el); observed.add(el) }
+}
+
+let mounted = false
+onMounted(() => {
+  mounted = true
+  updateIndicator(false, 'instant')
+  if (typeof ResizeObserver !== 'undefined') ro = new ResizeObserver(onResize)
+  syncObserved()
+  // Fallback for browsers or layouts where the font swap doesn't resize an
+  // observed box (and for the first paint before the observer reports).
+  document.fonts?.ready.then(() => { if (mounted) relayout() })
+})
+onUpdated(syncObserved)
+onUnmounted(() => {
+  mounted = false
+  if (rafId) cancelAnimationFrame(rafId)
+  ro?.disconnect(); ro = null; observed.clear()
+  listenedRow?.removeEventListener('wheel', markManualScroll)
+  listenedRow?.removeEventListener('touchmove', markManualScroll)
+  listenedRow?.removeEventListener('keydown', onRowKeydown)
+  listenedRow = null
+})
 watch(() => props.modelValue, () => updateIndicator(true, 'smooth'))
 // Animated (not a hard snap) here too: a consumer passing an inline `:tabs="[...]"`
 // literal gets a brand-new array reference on every unrelated parent re-render,
@@ -170,64 +250,70 @@ function select(tab: Tab) {
 <template>
   <!-- ── Primary: sliding short indicator with stretch ──────────────── -->
   <div v-if="variant === 'primary'" class="border-b border-outline-variant">
-    <div ref="rowEl" class="relative flex" :class="scrollable ? 'overflow-x-auto' : 'overflow-x-hidden'" style="scrollbar-width: none">
-      <button
-        v-for="tab in tabs"
-        :key="tab.value"
-        :ref="(el) => { if (el) tabEls[tabs.indexOf(tab)] = el as HTMLElement }"
-        type="button"
-        class="relative flex items-center justify-center pb-1.5 text-title-small transition-colors duration-150 focus-visible:outline-none"
-        :class="[
-          scrollable ? 'shrink-0' : 'flex-1 min-w-0',
-          // LeadingIconTab: 48dp row, 16dp side padding, 8dp from the icon to the label
-          leading ? 'h-12 flex-row gap-2 px-4' : ['flex-col gap-1 px-6', tab.icon ? 'h-16' : 'h-12'],
-          tab.value === modelValue
-            ? 'text-primary'
-            : tab.disabled
-              ? 'cursor-not-allowed text-on-surface/38'
-              : 'cursor-pointer text-on-surface-variant hover:text-on-surface',
-        ]"
-        :disabled="tab.disabled"
-        @click="select(tab)"
-      >
-        <MIcon v-if="tab.icon" :name="tab.icon" :size="24" />
-        <span>{{ tab.label }}</span>
-      </button>
-      <div
-        class="absolute bottom-0 h-[3px] rounded-t-full bg-primary"
-        :style="{ left: `${indicatorLeft}px`, width: `${indicatorWidth}px` }"
-      />
+    <div ref="rowEl" :class="scrollable ? 'overflow-x-auto' : 'overflow-x-hidden'" style="scrollbar-width: none">
+      <!-- Content-width box: clips the indicator so it never widens the scroll area -->
+      <div ref="contentEl" class="relative flex overflow-hidden" :class="scrollable ? 'w-max min-w-full' : 'w-full'">
+        <button
+          v-for="tab in tabs"
+          :key="tab.value"
+          :ref="(el) => { if (el) tabEls[tabs.indexOf(tab)] = el as HTMLElement }"
+          type="button"
+          class="relative flex items-center justify-center pb-1.5 text-title-small transition-colors duration-150 focus-visible:outline-none"
+          :class="[
+            scrollable ? 'shrink-0' : 'flex-1 min-w-0',
+            // LeadingIconTab: 48dp row, 16dp side padding, 8dp from the icon to the label
+            leading ? 'h-12 flex-row gap-2 px-4' : ['flex-col gap-1 px-6', tab.icon ? 'h-16' : 'h-12'],
+            tab.value === modelValue
+              ? 'text-primary'
+              : tab.disabled
+                ? 'cursor-not-allowed text-on-surface/38'
+                : 'cursor-pointer text-on-surface-variant hover:text-on-surface',
+          ]"
+          :disabled="tab.disabled"
+          @click="select(tab)"
+        >
+          <MIcon v-if="tab.icon" :name="tab.icon" :size="24" />
+          <span>{{ tab.label }}</span>
+        </button>
+        <div
+          class="absolute bottom-0 h-[3px] rounded-t-full bg-primary"
+          :style="{ left: `${indicatorLeft}px`, width: `${indicatorWidth}px` }"
+        />
+      </div>
     </div>
   </div>
 
   <!-- ── Secondary: full-width underline indicator ─────────────────── -->
   <div v-else class="border-b border-outline-variant">
-    <div ref="rowEl" class="relative flex" :class="scrollable ? 'overflow-x-auto' : 'overflow-x-hidden'" style="scrollbar-width: none">
-      <button
-        v-for="tab in tabs"
-        :key="tab.value"
-        :ref="(el) => { if (el) tabEls[tabs.indexOf(tab)] = el as HTMLElement }"
-        type="button"
-        class="relative flex items-center justify-center text-title-small transition-colors duration-150 focus-visible:outline-none"
-        :class="[
-          scrollable ? 'shrink-0' : 'flex-1 min-w-0',
-          leading ? 'h-12 flex-row gap-2 px-4' : ['flex-col gap-1 px-6', tab.icon ? 'h-16' : 'h-12'],
-          tab.value === modelValue
-            ? 'text-on-surface'
-            : tab.disabled
-              ? 'cursor-not-allowed text-on-surface/38'
-              : 'cursor-pointer text-on-surface-variant hover:text-on-surface',
-        ]"
-        :disabled="tab.disabled"
-        @click="select(tab)"
-      >
-        <MIcon v-if="tab.icon" :name="tab.icon" :size="24" />
-        <span>{{ tab.label }}</span>
-      </button>
-      <div
-        class="absolute bottom-0 h-[3px] bg-primary"
-        :style="{ left: `${indicatorLeft}px`, width: `${indicatorWidth}px` }"
-      />
+    <div ref="rowEl" :class="scrollable ? 'overflow-x-auto' : 'overflow-x-hidden'" style="scrollbar-width: none">
+      <!-- Content-width box: clips the indicator so it never widens the scroll area -->
+      <div ref="contentEl" class="relative flex overflow-hidden" :class="scrollable ? 'w-max min-w-full' : 'w-full'">
+        <button
+          v-for="tab in tabs"
+          :key="tab.value"
+          :ref="(el) => { if (el) tabEls[tabs.indexOf(tab)] = el as HTMLElement }"
+          type="button"
+          class="relative flex items-center justify-center text-title-small transition-colors duration-150 focus-visible:outline-none"
+          :class="[
+            scrollable ? 'shrink-0' : 'flex-1 min-w-0',
+            leading ? 'h-12 flex-row gap-2 px-4' : ['flex-col gap-1 px-6', tab.icon ? 'h-16' : 'h-12'],
+            tab.value === modelValue
+              ? 'text-on-surface'
+              : tab.disabled
+                ? 'cursor-not-allowed text-on-surface/38'
+                : 'cursor-pointer text-on-surface-variant hover:text-on-surface',
+          ]"
+          :disabled="tab.disabled"
+          @click="select(tab)"
+        >
+          <MIcon v-if="tab.icon" :name="tab.icon" :size="24" />
+          <span>{{ tab.label }}</span>
+        </button>
+        <div
+          class="absolute bottom-0 h-[3px] bg-primary"
+          :style="{ left: `${indicatorLeft}px`, width: `${indicatorWidth}px` }"
+        />
+      </div>
     </div>
   </div>
 </template>
