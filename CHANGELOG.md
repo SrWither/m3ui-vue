@@ -5,6 +5,25 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.5.0] - 2026-11-22
+
+### Added
+- `MGantt`: `gridCollapsed` (`v-model:grid-collapsed`) hides the task list so the timeline takes the whole width, with a show / hide button at the start of `MGanttControls` (`list` prop). The context and template ref expose `gridCollapsed`, `setGridCollapsed()` and `fit()`
+- `MGantt`: `GanttColumn.hideBelow` hides a column while the chart (its own width, not the window's) is narrower than that many px
+- `MGanttControls`: a "Fit everything" button (`fit` prop, `fit()` on the controls of `MGantt` and `MResourceTimeline`) that zooms and scrolls so every task or booking fits the timeline's width
+- `MGantt`: a tap on a bar shows its card (the `#tooltip` slot: name, dates, duration, progress), since touch has no hover; another tap, a scroll or a tap elsewhere hides it
+
+### Changed
+- **`MGantt` and `MResourceTimeline`: the divider between the list and the timeline shows a grip** centered in the view, which turns primary along with a line while it's hovered, focused or dragged; it's 24px wide for a finger, and a double click brings the list back to its `gridWidth` / `listWidth`
+- **`MGantt` on a chart narrower than 600px: the default columns show only the name** (start and duration use `hideBelow: 600`), and the hierarchy indents 12px a level instead of 20px
+- **`MGanttControls`: its icon buttons are 48px with a coarse pointer** (a finger)
+- `MGantt`: a task's name inside its bar slides to stay at the timeline's left edge while the bar is partly scrolled away
+- `MGantt` and `MResourceTimeline`: the timeline shows a grab cursor; while panning, resizing a bar or dragging the divider the cursor (grabbing, ew-resize, col-resize) holds wherever the pointer goes, and nothing gets selected
+- `MGantt` and `MResourceTimeline`: month names in the upper header row are abbreviated when their cell is narrow ("nov 2026"), and each label is clipped to its cell instead of running into the next
+
+### Fixed
+- `MGantt` and `MResourceTimeline`: dragging with a mouse started the browser's native drag and drop (a translucent ghost of the text, SVG or bar under the pointer) or a text selection instead of panning. Mouse presses that start a pan or a drag now claim the pointer, the timeline cancels `dragstart`, and a bar or booking that can't move (`readonly`, `draggable: false`) pans the view like the background, while a click on it still selects it and emits `task-click` / `event-click`
+
 ## [1.4.4] - 2026-11-21
 
 ### Fixed
