@@ -34,9 +34,11 @@ import { spanDates, taskSpan, type GanttCalendar } from '../composables/ganttSch
 import { DAY, HOUR, defaultSnap, formatDate, parseDate, snapTime } from '../composables/_ganttTime'
 import { prefersReducedMotion } from '../composables/_springAnimation'
 import { useTimeAxis } from '../composables/_useTimeAxis'
+import { holdDragCursor, releaseDragCursor } from '../composables/_dragCursor'
 import { useLocale } from '../composables/useLocale'
 import MTimeHeader from './_MTimeHeader.vue'
 import MTimeBackground from './_MTimeBackground.vue'
+import MTimeSplitter from './_MTimeSplitter.vue'
 
 const props = withDefaults(defineProps<{
   events?: TimelineEvent[]
@@ -410,10 +412,21 @@ type Gesture =
 let gesture: Gesture | null = null
 let pressTimer: ReturnType<typeof setTimeout> | undefined
 const dragging = ref<{ id: string; part: Part } | null>(null)
+const splitting = ref(false)
+const initialListW = ref(props.listWidth ?? 220)
+watch(() => props.listWidth, (w) => { if (w !== undefined) initialListW.value = w })
+function setListWidth(w: number) {
+  listW.value = w
+  emit('update:listWidth', w)
+}
 const draft = ref<{ resourceId: string; start: number; end: number } | null>(null)
 const refused = ref(false)
 const pointer = { x: 0, y: 0 }
 const isControl = (t: EventTarget | null) => t instanceof Element && !!t.closest('input, textarea, select, button, a, [contenteditable], [data-timeline-action]')
+// A mouse press that starts a pan or a drag: no native drag of what's under it, no text selection
+function claimMouse(e: PointerEvent) {
+  if (e.pointerType !== 'touch') e.preventDefault()
+}
 
 function contentPoint(clientX: number, clientY: number) {
   const r = scroller.value!.getBoundingClientRect()
@@ -431,6 +444,7 @@ function snapStep(dateOnly: boolean) {
 function onEventDown(e: PointerEvent, ev: TimelineEvent, part: Part) {
   if (e.button !== 0 || isControl(e.target)) return
   e.stopPropagation()
+  claimMouse(e)
   const s = spans.value.get(ev.id)
   if (!s) return
   const touch = e.pointerType === 'touch'
@@ -441,6 +455,7 @@ function onEventDown(e: PointerEvent, ev: TimelineEvent, part: Part) {
 }
 function onPaneDown(e: PointerEvent) {
   if (e.button !== 0 || isControl(e.target)) return
+  claimMouse(e)
   const p = contentPoint(e.clientX, e.clientY)
   const res = resourceAtY(p.y)
   const touch = e.pointerType === 'touch'
@@ -464,6 +479,8 @@ function onSplitDown(e: PointerEvent) {
   if (e.button !== 0) return
   e.preventDefault()
   gesture = { kind: 'split', id: e.pointerId, sx: e.clientX, w: listW.value }
+  splitting.value = true
+  holdDragCursor('col-resize')
   addWindow()
 }
 function addWindow() {
@@ -476,7 +493,8 @@ function removeWindow() {
   window.removeEventListener('pointerup', onUp)
   window.removeEventListener('pointercancel', onCancel)
   clearTimeout(pressTimer)
-  document.body.style.userSelect = ''
+  releaseDragCursor()
+  splitting.value = false
 }
 function activate() {
   const g = gesture
@@ -497,7 +515,7 @@ function activate() {
     draft.value = { resourceId: g.resourceId, start: s, end: s + Math.max(step, HOUR) }
   }
   if (g.touch) navigator.vibrate?.(10)
-  document.body.style.userSelect = 'none'
+  holdDragCursor(g.kind === 'event' && g.part !== 'body' ? 'ew-resize' : g.kind === 'event' ? 'grabbing' : 'crosshair')
   startAutoScroll()
 }
 function onMove(e: PointerEvent) {
@@ -506,20 +524,10 @@ function onMove(e: PointerEvent) {
   pointer.x = e.clientX
   pointer.y = e.clientY
   if (g.kind === 'split') {
-    const w = Math.round(Math.min(Math.max(0, g.w + e.clientX - g.sx), Math.max(160, view.value.width - 80)))
-    listW.value = w
-    emit('update:listWidth', w)
+    setListWidth(Math.round(Math.min(Math.max(0, g.w + e.clientX - g.sx), Math.max(160, view.value.width - 80))))
     return
   }
-  if (g.kind === 'pan') {
-    const dx = e.clientX - g.sx
-    const dy = e.clientY - g.sy
-    if (!g.moved && Math.hypot(dx, dy) < 4) return
-    g.moved = true
-    scroller.value!.scrollLeft = g.sl - dx
-    scroller.value!.scrollTop = g.st - dy
-    return
-  }
+  if (g.kind === 'pan') return pan(g, e)
   if (!g.active) {
     const d = Math.hypot(e.clientX - g.sx, e.clientY - g.sy)
     if (g.touch) {
@@ -528,9 +536,29 @@ function onMove(e: PointerEvent) {
     }
     if (d < 4) return
     activate()
-    if (!g.active) return
+    if (!g.active) {
+      // An event that can't move (readonly, draggable: false) pans the timeline like the background does
+      if (g.kind === 'event' && g.part === 'body') {
+        const p: Extract<Gesture, { kind: 'pan' }> = { kind: 'pan', id: g.id, sx: g.sx, sy: g.sy, sl: g.sl, st: g.st, moved: true }
+        gesture = p
+        holdDragCursor('grabbing')
+        pan(p, e)
+      }
+      return
+    }
   }
   dragTo(e.clientX, e.clientY)
+}
+function pan(g: Extract<Gesture, { kind: 'pan' }>, e: PointerEvent) {
+  const dx = e.clientX - g.sx
+  const dy = e.clientY - g.sy
+  if (!g.moved && Math.hypot(dx, dy) < 4) return
+  if (!g.moved) {
+    g.moved = true
+    holdDragCursor('grabbing')
+  }
+  scroller.value!.scrollLeft = g.sl - dx
+  scroller.value!.scrollTop = g.st - dy
 }
 function dragTo(clientX: number, clientY: number) {
   const g = gesture
@@ -834,6 +862,7 @@ provide(TIMELINE_CONTROLS_KEY, {
   zoomOut,
   setScale,
   scrollToDate,
+  fit: () => { if (spans.value.size) axis.fit(extent.value) },
   expandAll: () => setFolded([]),
   collapseAll: () => setFolded([...new Set(props.resources.map((r) => r.group).filter((g): g is string => !!g))]),
 })
@@ -921,20 +950,26 @@ defineExpose(context)
                 </slot>
               </div>
             </template>
-            <div
-              role="separator"
-              aria-orientation="vertical"
-              :aria-label="locale.ganttResize"
-              tabindex="0"
-              class="absolute inset-y-0 -right-1 z-30 w-2 cursor-col-resize touch-none outline-none hover:bg-primary/20 focus-visible:bg-primary/30"
+            <MTimeSplitter
+              :label="locale.ganttResize"
+              :value="listWidth"
+              :active="splitting"
+              :grip-top="view.top + Math.max(0, view.height - headerHeight) / 2"
               @pointerdown="onSplitDown"
-              @keydown.left.prevent="listW = Math.max(120, listW - 16); emit('update:listWidth', listW)"
-              @keydown.right.prevent="listW = listW + 16; emit('update:listWidth', listW)"
+              @dblclick="setListWidth(initialListW)"
+              @keydown.left.prevent="setListWidth(Math.max(120, listW - 16))"
+              @keydown.right.prevent="setListWidth(listW + 16)"
             />
           </div>
 
           <!-- Timeline -->
-          <div class="relative shrink-0" :style="{ width: `${timelineWidth}px` }" @pointerdown="onPaneDown">
+          <div
+            class="relative shrink-0 select-none [-webkit-user-drag:none]"
+            :class="creatable && !readonly ? '' : 'cursor-grab active:cursor-grabbing'"
+            :style="{ width: `${timelineWidth}px` }"
+            @pointerdown="onPaneDown"
+            @dragstart.prevent
+          >
             <MTimeBackground :off-times="offTimes" :cells="bottomCells" :today-x="todayMs === null ? null : xOf(todayMs)" />
             <div
               v-for="r in visibleRows"

@@ -175,7 +175,8 @@ export function unitLabel(ms: number, unit: TimeUnit, width: number, lang: strin
     case 'week':
       return f({ month: 'short', day: 'numeric' })
     case 'month':
-      if (top) return f({ month: 'long', year: 'numeric' })
+      // Narrow (a phone, zoomed out): "nov 2026"
+      if (top) return f({ month: width >= 160 ? 'long' : 'short', year: 'numeric' })
       return f({ month: width >= 90 ? 'long' : 'short' })
     case 'quarter':
       return quarter.replace('{n}', String(Math.floor(d.getMonth() / 3) + 1))

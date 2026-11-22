@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { nextTick } from 'vue'
+import { h } from 'vue'
 import MGantt from '../components/MGantt.vue'
+import MGanttControls from '../components/MGanttControls.vue'
 import type { GanttTask } from '../composables/ganttSchedule'
 
 // A 1200 × 600 chart at 40 px per day, the list 320 wide
@@ -126,5 +128,108 @@ describe('MGantt', () => {
     pointer(window, 'pointermove', 600)
     pointer(window, 'pointerup', 600)
     expect(w.emitted('update:tasks')).toBeUndefined()
+  })
+  it('readonly: dragging a bar with a mouse pans the chart, and presses claim the mouse (no native drag)', async () => {
+    const w = await gantt({ readonly: true })
+    const scroller = w.find('.overflow-auto').element as HTMLElement
+    scroller.scrollLeft = 300
+    scroller.scrollTop = 0
+    const down = new PointerEvent('pointerdown', { bubbles: true, cancelable: true, clientX: 500, clientY: 100, pointerId: 1, pointerType: 'mouse', button: 0, buttons: 1 })
+    bar(w, 'a').dispatchEvent(down)
+    expect(down.defaultPrevented).toBe(true)
+    pointer(window, 'pointermove', 520)
+    pointer(window, 'pointermove', 560)
+    expect(scroller.scrollLeft).toBe(240)
+    expect(document.body.style.cursor).toBe('grabbing')
+    pointer(window, 'pointerup', 560)
+    expect(document.body.style.cursor).toBe('')
+    expect(w.emitted('update:tasks')).toBeUndefined()
+    // A pan is not a click
+    expect(w.emitted('task-click')).toBeUndefined()
+
+    // The background's press too
+    const pane = w.find('.cursor-grab').element
+    const paneDown = new PointerEvent('pointerdown', { bubbles: true, cancelable: true, clientX: 700, clientY: 300, pointerId: 1, pointerType: 'mouse', button: 0, buttons: 1 })
+    pane.dispatchEvent(paneDown)
+    expect(paneDown.defaultPrevented).toBe(true)
+    pointer(window, 'pointermove', 650, 300)
+    expect(scroller.scrollLeft).toBe(290)
+    pointer(window, 'pointerup', 650, 300)
+    // And native drags never start on the timeline
+    const drag = new Event('dragstart', { bubbles: true, cancelable: true })
+    bar(w, 'b').dispatchEvent(drag)
+    expect(drag.defaultPrevented).toBe(true)
+  })
+
+  it('a bar with draggable: false pans; a click on it is still a click', async () => {
+    const w = await gantt({ tasks: tasks().map((t) => (t.id === 'a' ? { ...t, draggable: false } : t)) })
+    const scroller = w.find('.overflow-auto').element as HTMLElement
+    scroller.scrollLeft = 300
+    pointer(bar(w, 'a'), 'pointerdown', 500)
+    pointer(window, 'pointermove', 540)
+    pointer(window, 'pointerup', 540)
+    expect(scroller.scrollLeft).toBe(260)
+    expect(w.emitted('update:tasks')).toBeUndefined()
+    pointer(bar(w, 'a'), 'pointerdown', 500)
+    pointer(window, 'pointerup', 500)
+    expect(w.emitted('task-click')).toHaveLength(1)
+  })
+
+  it('keeps the col-resize cursor while the divider is dragged; double-click restores the width', async () => {
+    const w = await gantt({ gridWidth: 320 })
+    const sep = w.find('[role="separator"]')
+    pointer(sep.element, 'pointerdown', 320)
+    expect(document.body.style.cursor).toBe('col-resize')
+    expect(document.body.classList.contains('m3-drag-cursor')).toBe(true)
+    pointer(window, 'pointermove', 400)
+    expect(w.emitted('update:gridWidth')!.at(-1)![0]).toBe(400)
+    pointer(window, 'pointerup', 400)
+    expect(document.body.style.cursor).toBe('')
+    expect(document.body.classList.contains('m3-drag-cursor')).toBe(false)
+    await sep.trigger('dblclick')
+    expect(w.emitted('update:gridWidth')!.at(-1)![0]).toBe(320)
+  })
+
+  it('collapses and expands the task list (gridCollapsed, and the controls button)', async () => {
+    const w = await gantt({ gridCollapsed: true })
+    expect(w.find('[role="treegrid"]').exists()).toBe(false)
+    await w.setProps({ gridCollapsed: false })
+    expect(w.find('[role="treegrid"]').exists()).toBe(true)
+
+    const c = mount(MGantt, { props: { tasks: tasks(), today: null }, slots: { default: () => h(MGanttControls) }, attachTo: document.body })
+    await flushPromises()
+    await c.find('[aria-label="Hide task list"]').trigger('click')
+    expect(c.emitted('update:gridCollapsed')![0]![0]).toBe(true)
+    expect(c.find('[role="treegrid"]').exists()).toBe(false)
+    await c.find('[aria-label="Show task list"]').trigger('click')
+    expect(c.emitted('update:gridCollapsed')![1]![0]).toBe(false)
+    expect(c.find('[role="treegrid"]').exists()).toBe(true)
+  })
+
+  it('hides columns with hideBelow on a narrow chart', async () => {
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(400)
+    const w = await gantt()
+    expect(w.findAll('[role="columnheader"]').map((c) => c.text())).toEqual(['Task'])
+  })
+
+  it('a tap on a bar shows its card', async () => {
+    const w = await gantt({ readonly: true })
+    pointer(bar(w, 'a'), 'pointerdown', 500, 100, { pointerType: 'touch' })
+    pointer(window, 'pointerup', 500, 100, { pointerType: 'touch' })
+    await nextTick()
+    expect(document.body.querySelector('[role="tooltip"]')?.textContent).toContain('Design')
+    // Tapping elsewhere hides it
+    pointer(w.find('.cursor-grab').element, 'pointerdown', 900, 400, { pointerType: 'touch' })
+    await nextTick()
+    expect(document.body.querySelector('[role="tooltip"]')).toBeNull()
+    w.unmount()
+  })
+
+  it('fits every task in the width', async () => {
+    const w = await gantt()
+    ;(w.vm as unknown as { fit(): void }).fit()
+    await nextTick()
+    // 7 days (Mar 2 → the milestone at the start of Mar 9) in 1200 − 320 − 48 px
+    expect((w.vm as unknown as { pxPerDay: number }).pxPerDay).toBeCloseTo(832 / 7, 0)
   })
 })

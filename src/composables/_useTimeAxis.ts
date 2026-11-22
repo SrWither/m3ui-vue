@@ -80,10 +80,11 @@ export function useTimeAxis(o: TimeAxisOptions) {
   // Zoom around a point of the view (px from the timeline's left edge), sprung on a log scale
   let zoomRaf = 0
   let zoomState: { z: number; v: number; target: number; anchor: number; at: number } | null = null
-  function zoomTo(target: number, anchor?: number, animate = true) {
+  /** `at`: the time that ends up at `anchor` (default the one there now) */
+  function zoomTo(target: number, anchor?: number, animate = true, atTime?: number) {
     target = clamp(target)
     const a = anchor ?? timelineView.value / 2
-    const at = timeAt(view.value.left + a)
+    const at = atTime ?? timeAt(view.value.left + a)
     if (!animate || prefersReducedMotion() || !o.scroller.value) {
       cancelAnimationFrame(zoomRaf)
       zoomRaf = 0
@@ -124,6 +125,12 @@ export function useTimeAxis(o: TimeAxisOptions) {
   const zoomIn = () => zoomTo(zoomTarget() * 1.6)
   const zoomOut = () => zoomTo(zoomTarget() / 1.6)
   const setScale = (s: TimeUnit) => zoomTo(SCALE_PX_PER_DAY[s])
+  /** Zooms so a span fills the timeline's width (a margin each side), centered */
+  function fit(range: { min: number; max: number }, margin = 24) {
+    const days = Math.max((range.max - range.min) / DAY, 1 / 24)
+    const room = Math.max(40, timelineView.value - 2 * margin)
+    zoomTo(room / days, timelineView.value / 2, false, (range.min + range.max) / 2)
+  }
   function scrollToDate(date?: string, opts: { align?: 'start' | 'center'; animate?: boolean } = {}) {
     const ms = date ? parseDate(date) : Date.now()
     const x = xOf(ms) - (opts.align === 'start' ? 24 : timelineView.value / 2)
@@ -218,7 +225,7 @@ export function useTimeAxis(o: TimeAxisOptions) {
 
   return {
     ppd, scaleNow, view, timelineView, origin, timelineWidth, todayMs, xOf, timeAt,
-    zoomTo, zoomIn, zoomOut, setScale, scrollToDate, units, topCells, bottomCells, offTimes,
+    zoomTo, zoomIn, zoomOut, setScale, fit, scrollToDate, units, topCells, bottomCells, offTimes,
     onTouchStart, pinchMove, onTouchEnd, pinching, readView,
   }
 }

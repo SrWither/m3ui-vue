@@ -12,8 +12,9 @@ defineProps<{
 <template>
   <div class="relative shrink-0 border-b border-outline-variant bg-surface-container-low" :style="{ width: `${width}px` }" aria-hidden="true">
     <div class="absolute inset-x-0 top-0 h-7">
-      <div v-for="c in topCells" :key="c.key" class="absolute inset-y-0 border-l border-outline-variant/60" :style="{ left: `${c.x}px`, width: `${c.w}px` }">
-        <span class="absolute top-1.5 truncate pl-2 text-label-medium whitespace-nowrap text-on-surface" :style="{ left: `${c.labelX}px` }">{{ c.label }}</span>
+      <div v-for="c in topCells" :key="c.key" class="absolute inset-y-0 overflow-hidden border-l border-outline-variant/60" :style="{ left: `${c.x}px`, width: `${c.w}px` }">
+        <!-- Clipped to its cell, so a label pushed to its cell's end never runs into the next one -->
+        <span class="absolute top-1.5 truncate pl-2 text-label-medium whitespace-nowrap text-on-surface" :style="{ left: `${c.labelX}px`, maxWidth: `${Math.max(0, c.w - c.labelX)}px` }">{{ c.label }}</span>
       </div>
     </div>
     <div class="absolute inset-x-0 bottom-0 h-7">

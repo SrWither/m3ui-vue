@@ -9,6 +9,10 @@
  * start-to-finish, with a lag), milestones and a baseline. The zoom runs from hours to years (`v-model:scale`,
  * Ctrl + wheel, a pinch); the timeline scrolls both ways, rows and columns rendered only near the view.
  *
+ * Dragging the timeline with a mouse pans it (bars that can't move too, e.g. `readonly`); a finger scrolls, and a tap
+ * on a bar shows its card. The divider beside the list resizes it (double-click: back to `gridWidth`); the list hides
+ * with `v-model:grid-collapsed`, and columns with `hideBelow` drop out on a narrow chart.
+ *
  * Editing: drag a bar to move it (with a mouse, or a short press with a finger), its ends to resize it, the
  * triangle under it to set the progress, the dots at its ends onto another bar to make a dependency (which end you
  * leave and reach picks the type); click or tap a dependency for its × to remove it (or Delete). A summary moves
@@ -23,7 +27,7 @@
  * @slot default Above the chart: MGanttControls, filters of yours. Props: `{ gantt }`
  * @slot bar A bar's content instead of its label. Props: `{ task, selected, critical }`
  * @slot cell-<key> A cell of that column. Props: `{ task, value }`
- * @slot tooltip The card shown over a hovered or dragged bar. Props: `{ task, slack }`
+ * @slot tooltip The card shown over a hovered, dragged or tapped bar. Props: `{ task, slack }`
  * @slot empty Shown while there are no tasks
  * @event task-click / task-dblclick / task-contextmenu `(task, event)`
  * @event link A dependency was drawn: `{ from, to, type }` (it's also added to the task)
@@ -53,8 +57,10 @@ import { arrowPath } from '../composables/flowPaths'
 import { playSamples, prefersReducedMotion, sampleSpring } from '../composables/_springAnimation'
 import { useLocale } from '../composables/useLocale'
 import { useTimeAxis } from '../composables/_useTimeAxis'
+import { holdDragCursor, releaseDragCursor } from '../composables/_dragCursor'
 import MTimeHeader from './_MTimeHeader.vue'
 import MTimeBackground from './_MTimeBackground.vue'
+import MTimeSplitter from './_MTimeSplitter.vue'
 
 const props = withDefaults(defineProps<{
   tasks?: GanttTask[]
@@ -68,8 +74,11 @@ const props = withDefaults(defineProps<{
   collapsed?: string[]
   /** The task list's columns (default name, start and duration); `[]` hides the list */
   columns?: GanttColumn[]
-  /** The task list's width, px (`v-model:grid-width`; drag its edge) */
+  /** The task list's width, px (`v-model:grid-width`; drag its edge, double-click it to restore this width) */
   gridWidth?: number
+  /** Hides the task list, leaving the timeline the whole width (`v-model:grid-collapsed`; MGanttControls has a button) */
+  gridCollapsed?: boolean
+  /** Row height, px. Fingers get on fine with the default; raise it (e.g. 48) for roomier touch targets */
   rowHeight?: number
   /** No editing: drag, resize, link, reorder, rename and delete off */
   readonly?: boolean
@@ -114,6 +123,7 @@ const emit = defineEmits<{
   'update:selection': [string[]]
   'update:collapsed': [string[]]
   'update:gridWidth': [number]
+  'update:gridCollapsed': [boolean]
   'task-click': [GanttTask, MouseEvent]
   'task-dblclick': [GanttTask, MouseEvent | KeyboardEvent]
   'task-contextmenu': [GanttTask, MouseEvent]
@@ -226,15 +236,29 @@ const rowIndex = computed(() => new Map(rows.value.map((r, i) => [r.task.id, i])
 // ── Zoom and time ↔ px ────────────────────────────────────────────────────────────────────────────────────
 const scroller = ref<HTMLElement>()
 const headerHeight = 56
+// On a chart narrower than 600 px only the name is listed
 const defaultColumns = computed<GanttColumn[]>(() => [
   { key: 'name', label: locale.ganttTask },
-  { key: 'start', label: locale.ganttStart, width: 96 },
-  { key: 'duration', label: locale.ganttDuration, width: 80, align: 'end' },
+  { key: 'start', label: locale.ganttStart, width: 96, hideBelow: 600 },
+  { key: 'duration', label: locale.ganttDuration, width: 80, align: 'end', hideBelow: 600 },
 ])
-const columnList = computed(() => props.columns ?? defaultColumns.value)
-const showGrid = computed(() => columnList.value.length > 0)
-const gridW = ref(props.gridWidth ?? 320)
-watch(() => props.gridWidth, (w) => { if (w !== undefined) gridW.value = w })
+const allColumns = computed(() => props.columns ?? defaultColumns.value)
+const gridHidden = ref(props.gridCollapsed ?? false)
+watch(() => props.gridCollapsed, (c) => { if (c !== undefined) gridHidden.value = c })
+function setGridCollapsed(c: boolean) {
+  if (c === gridHidden.value) return
+  gridHidden.value = c
+  emit('update:gridCollapsed', c)
+}
+const showGrid = computed(() => allColumns.value.length > 0 && !gridHidden.value)
+// The width double-clicking the divider goes back to
+let initialW = props.gridWidth ?? 320
+const gridW = ref(initialW)
+watch(() => props.gridWidth, (w) => { if (w !== undefined) { gridW.value = w; initialW = w } })
+function setGridWidth(w: number) {
+  gridW.value = w
+  emit('update:gridWidth', w)
+}
 const listWidth = computed(() => (showGrid.value ? gridW.value : 0))
 
 const extent = computed(() => {
@@ -272,6 +296,15 @@ const axis = useTimeAxis({
 })
 const { ppd, view, timelineView, origin, timelineWidth, todayMs, xOf, timeAt, zoomIn, zoomOut, setScale, scrollToDate, topCells, bottomCells, offTimes } = axis
 const scaleNow = axis.scaleNow
+/** Zooms and scrolls so every task fits the timeline's width */
+function fit() {
+  if (shown.value.length) axis.fit(extent.value)
+}
+
+// The chart's own width (not the window's) decides what's compact
+const narrow = computed(() => view.value.width > 0 && view.value.width < 600)
+const indent = computed(() => (narrow.value ? 12 : 20))
+const columnList = computed(() => allColumns.value.filter((c) => !c.hideBelow || !view.value.width || view.value.width >= c.hideBelow))
 
 function scrollToTask(id: string) {
   let t = byId.value.get(id)
@@ -376,11 +409,16 @@ function writeBar(id: string, el: HTMLElement) {
   if (!s) return
   el.style.transform = `translateX(${s.x}px)`
   el.style.width = `${s.w}px`
+  // A label inside a bar scrolled partly away slides along to stay at the timeline's left edge
+  const name = byId.value.get(id)?.name ?? ''
+  const shift = Math.max(0, Math.min(view.value.left - s.x, s.w - (name.length * 7 + 24)))
+  el.style.setProperty('--m3-gantt-label-x', `${shift}px`)
 }
 function writeAll() {
   for (const [id, el] of barEls) writeBar(id, el)
   for (const [key, el] of linkEls) writeLink(key, el)
 }
+watch(() => view.value.left, () => { for (const [id, el] of barEls) writeBar(id, el) })
 function bindBar(id: string, el: unknown) {
   if (el instanceof HTMLElement) {
     barEls.set(id, el)
@@ -582,13 +620,14 @@ function dateAt(clientX: number) {
 // ── Pointer gestures on the timeline ──────────────────────────────────────────────────────────────────────
 type Part = 'body' | 'start' | 'end' | 'progress' | 'link-start' | 'link-end'
 type Gesture =
-  | { kind: 'bar'; part: Part; id: number; taskId: string; sx: number; sy: number; sl: number; touch: boolean; active: boolean; spans: Map<string, { start: number; end: number }>; moving: string[] }
+  | { kind: 'bar'; part: Part; id: number; taskId: string; sx: number; sy: number; sl: number; st: number; touch: boolean; active: boolean; spans: Map<string, { start: number; end: number }>; moving: string[] }
   | { kind: 'pan'; id: number; sx: number; sy: number; sl: number; st: number; moved: boolean }
   | { kind: 'row'; id: number; taskId: string; sx: number; sy: number; st: number; touch: boolean; active: boolean }
   | { kind: 'split'; id: number; sx: number; w: number }
 let gesture: Gesture | null = null
 let pressTimer: ReturnType<typeof setTimeout> | undefined
 const dragging = ref<{ taskId: string; part: Part } | null>(null)
+const splitting = ref(false)
 const linkDraft = ref<{ from: string; fromEnd: boolean; x: number; y: number; target: string | null; targetEnd: boolean; valid: boolean } | null>(null)
 const rowDrop = ref<{ taskId: string; target: string; where: 'before' | 'after' | 'inside' } | null>(null)
 const pointer = { x: 0, y: 0 }
@@ -598,20 +637,32 @@ function contentPoint(clientX: number, clientY: number) {
   return { x: clientX - r.left - listWidth.value + scroller.value!.scrollLeft, y: clientY - r.top - headerHeight + scroller.value!.scrollTop }
 }
 const isControl = (t: EventTarget | null) => t instanceof Element && !!t.closest('input, textarea, select, button, a, [contenteditable], [data-gantt-action]')
+// A mouse press that starts a pan or a drag: no native drag of the text or SVG under it, no text selection. That
+// also keeps the focus where it was, so a rename in progress is ended by hand
+function claimMouse(e: PointerEvent) {
+  if (e.pointerType === 'touch') return
+  e.preventDefault()
+  const a = document.activeElement
+  if (a instanceof HTMLElement && a.matches('[data-gantt-rename]')) a.blur()
+}
 
 function onBarDown(e: PointerEvent, task: GanttTask, part: Part) {
   if (e.button !== 0 || isControl(e.target)) return
   if (props.readonly && part !== 'body') return
   e.stopPropagation()
+  claimMouse(e)
+  if (tapped.value?.id !== task.id) tapped.value = null
   const touch = e.pointerType === 'touch'
-  gesture = { kind: 'bar', part, id: e.pointerId, taskId: task.id, sx: e.clientX, sy: e.clientY, sl: scroller.value!.scrollLeft, touch, active: false, spans: new Map(), moving: [] }
+  gesture = { kind: 'bar', part, id: e.pointerId, taskId: task.id, sx: e.clientX, sy: e.clientY, sl: scroller.value!.scrollLeft, st: scroller.value!.scrollTop, touch, active: false, spans: new Map(), moving: [] }
   addWindow()
   // A finger scrolls unless it holds still a moment first; handles take it at once
   if (touch && part === 'body') pressTimer = setTimeout(() => activate(e), 250)
   else if (touch) activate(e)
 }
 function onPaneDown(e: PointerEvent) {
+  tapped.value = null
   if (e.button !== 0 || e.pointerType === 'touch' || isControl(e.target)) return
+  claimMouse(e)
   gesture = { kind: 'pan', id: e.pointerId, sx: e.clientX, sy: e.clientY, sl: scroller.value!.scrollLeft, st: scroller.value!.scrollTop, moved: false }
   addWindow()
 }
@@ -626,6 +677,8 @@ function onSplitDown(e: PointerEvent) {
   if (e.button !== 0) return
   e.preventDefault()
   gesture = { kind: 'split', id: e.pointerId, sx: e.clientX, w: gridW.value }
+  splitting.value = true
+  holdDragCursor('col-resize')
   addWindow()
 }
 function addWindow() {
@@ -638,7 +691,8 @@ function removeWindow() {
   window.removeEventListener('pointerup', onUp)
   window.removeEventListener('pointercancel', onCancel)
   clearTimeout(pressTimer)
-  document.body.style.userSelect = ''
+  releaseDragCursor()
+  splitting.value = false
 }
 
 function activate(e: PointerEvent) {
@@ -676,7 +730,8 @@ function activate(e: PointerEvent) {
     dragging.value = { taskId: t.id, part: 'body' }
   }
   if (g.touch) navigator.vibrate?.(10)
-  document.body.style.userSelect = 'none'
+  const part = dragging.value!.part
+  holdDragCursor(part === 'body' ? 'grabbing' : part.startsWith('link') ? 'crosshair' : 'ew-resize')
   startAutoScroll()
 }
 
@@ -686,20 +741,10 @@ function onMove(e: PointerEvent) {
   pointer.x = e.clientX
   pointer.y = e.clientY
   if (g.kind === 'split') {
-    const w = Math.round(Math.min(Math.max(120, g.w + e.clientX - g.sx), Math.max(160, view.value.width - 80)))
-    gridW.value = w
-    emit('update:gridWidth', w)
+    setGridWidth(Math.round(Math.min(Math.max(120, g.w + e.clientX - g.sx), Math.max(160, view.value.width - 80))))
     return
   }
-  if (g.kind === 'pan') {
-    const dx = e.clientX - g.sx
-    const dy = e.clientY - g.sy
-    if (!g.moved && Math.hypot(dx, dy) < 4) return
-    g.moved = true
-    scroller.value!.scrollLeft = g.sl - dx
-    scroller.value!.scrollTop = g.st - dy
-    return
-  }
+  if (g.kind === 'pan') return pan(g, e)
   if (!g.active) {
     const d = Math.hypot(e.clientX - g.sx, e.clientY - g.sy)
     if (g.touch) {
@@ -709,9 +754,29 @@ function onMove(e: PointerEvent) {
     }
     if (d < 4) return
     activate(e)
-    if (!g.active) return
+    if (!g.active) {
+      // A bar that can't move (readonly, draggable: false) pans the chart like the background does
+      if (g.kind === 'bar' && g.part === 'body') {
+        const p: Extract<Gesture, { kind: 'pan' }> = { kind: 'pan', id: g.id, sx: g.sx, sy: g.sy, sl: g.sl, st: g.st, moved: false }
+        gesture = p
+        pan(p, e)
+      }
+      return
+    }
   }
   dragTo(e.clientX, e.clientY)
+}
+function pan(g: Extract<Gesture, { kind: 'pan' }>, e: PointerEvent) {
+  const dx = e.clientX - g.sx
+  const dy = e.clientY - g.sy
+  if (!g.moved && Math.hypot(dx, dy) < 4) return
+  if (!g.moved) {
+    g.moved = true
+    hovered.value = null
+    holdDragCursor('grabbing')
+  }
+  scroller.value!.scrollLeft = g.sl - dx
+  scroller.value!.scrollTop = g.st - dy
 }
 
 function snapStep(t: GanttTask) {
@@ -841,6 +906,8 @@ function onUp(e: PointerEvent) {
     const t = byId.value.get(g.taskId)
     if (!t) return
     selectFromClick(t, e)
+    // No hover on a finger: a tap shows the bar's card (another tap, a scroll or a tap elsewhere hides it)
+    if (e.pointerType === 'touch') showTip(t.id)
     emit('task-click', t, e)
     return
   }
@@ -923,13 +990,15 @@ function onTouchMove(e: TouchEvent) {
 function onScroll() {
   axis.readView()
   hovered.value = null
+  if (!gesture) tapped.value = null
 }
 
 // ── Tooltip ───────────────────────────────────────────────────────────────────────────────────────────────
 const hovered = ref<{ id: string; x: number; y: number } | null>(null)
+const tapped = ref<{ id: string; x: number; y: number } | null>(null)
 let hoverTimer: ReturnType<typeof setTimeout> | undefined
 function onBarEnter(e: PointerEvent, t: GanttTask) {
-  if (e.pointerType === 'touch') return
+  if (e.pointerType === 'touch' || gesture) return
   clearTimeout(hoverTimer)
   const el = e.currentTarget as HTMLElement
   hoverTimer = setTimeout(() => {
@@ -941,23 +1010,36 @@ function onBarLeave() {
   clearTimeout(hoverTimer)
   hovered.value = null
 }
+function showTip(id: string) {
+  if (tapped.value?.id === id) { tapped.value = null; return }
+  const el = barEls.get(id)?.querySelector('[data-gantt-task]') ?? barEls.get(id)
+  const r = el?.getBoundingClientRect()
+  const s = scroller.value?.getBoundingClientRect()
+  if (!r) return
+  // The part of the bar that's in view
+  const left = Math.max(r.left, (s?.left ?? 0) + listWidth.value)
+  const right = Math.min(r.right, s?.right ?? window.innerWidth)
+  tapped.value = { id, x: right > left ? (left + right) / 2 : r.left + r.width / 2, y: r.top }
+}
+const tipAt = computed(() => hovered.value ?? tapped.value)
 const tooltipTask = computed(() => {
-  const id = dragging.value?.taskId ?? hovered.value?.id
+  const id = dragging.value?.taskId ?? tipAt.value?.id
   return id ? byId.value.get(id) : undefined
 })
 const tooltipPos = ref({ x: 0, y: 0 })
-watch(tooltipTask, () => {
+const clampTipX = (x: number) => Math.min(Math.max(x, 120), window.innerWidth - 120)
+watch([tooltipTask, tipAt], () => {
   if (dragging.value) {
     const el = barEls.get(dragging.value.taskId)
     const r = el?.getBoundingClientRect()
     if (r) tooltipPos.value = { x: r.left + r.width / 2, y: r.top }
-  } else if (hovered.value) tooltipPos.value = { x: hovered.value.x, y: hovered.value.y }
+  } else if (tipAt.value) tooltipPos.value = { x: clampTipX(tipAt.value.x), y: tipAt.value.y }
 }, { flush: 'post' })
 watch(preview, () => {
   if (!dragging.value) return
   nextTick(() => {
     const r = barEls.get(dragging.value?.taskId ?? '')?.getBoundingClientRect()
-    if (r) tooltipPos.value = { x: Math.min(Math.max(r.left + r.width / 2, 120), window.innerWidth - 120), y: r.top }
+    if (r) tooltipPos.value = { x: clampTipX(r.left + r.width / 2), y: r.top }
   })
 })
 
@@ -1207,12 +1289,16 @@ const context: GanttContext = {
   schedule: runSchedule,
   criticalPath: criticalPathInfo,
   dateAt,
+  gridCollapsed: computed(() => gridHidden.value),
+  setGridCollapsed,
+  fit,
 }
 provide(GANTT_KEY, context)
 provide(TIMELINE_CONTROLS_KEY, {
   ...context,
   foldable: computed(() => childrenOf.value.size > 1),
   folded: computed(() => folded.value.length > 0),
+  hasList: computed(() => allColumns.value.length > 0),
 })
 
 onMounted(() => {
@@ -1313,7 +1399,7 @@ defineExpose(context)
                 role="gridcell"
                 class="flex h-full min-w-0 items-center px-3"
                 :class="[c.align === 'end' ? 'justify-end' : c.align === 'center' ? 'justify-center' : '', c.key === 'name' ? 'gap-1' : 'text-on-surface-variant']"
-                :style="{ width: `${columnWidths[ci]}px`, paddingLeft: c.key === 'name' ? `${8 + r.depth * 20}px` : undefined }"
+                :style="{ width: `${columnWidths[ci]}px`, paddingLeft: c.key === 'name' ? `${8 + r.depth * indent}px` : undefined }"
               >
                 <template v-if="c.key === 'name'">
                   <button
@@ -1356,23 +1442,28 @@ defineExpose(context)
               :class="rowDrop.where === 'inside' ? 'rounded-sm border-2 border-primary' : 'h-0.5 rounded-full bg-primary'"
               :style="rowDrop.where === 'inside'
                 ? { top: `${(rowIndex.get(rowDrop.target) ?? 0) * rowHeight + 2}px`, height: `${rowHeight - 4}px`, left: '8px' }
-                : { top: `${((rowIndex.get(rowDrop.target) ?? 0) + (rowDrop.where === 'after' ? 1 : 0)) * rowHeight - 1}px`, left: `${8 + ((rows[rowIndex.get(rowDrop.target) ?? 0]?.depth ?? 0)) * 20}px` }"
+                : { top: `${((rowIndex.get(rowDrop.target) ?? 0) + (rowDrop.where === 'after' ? 1 : 0)) * rowHeight - 1}px`, left: `${8 + ((rows[rowIndex.get(rowDrop.target) ?? 0]?.depth ?? 0)) * indent}px` }"
             />
-            <div
-              role="separator"
-              aria-orientation="vertical"
-              :aria-label="locale.ganttResize"
-              :aria-valuenow="listWidth"
-              tabindex="0"
-              class="absolute inset-y-0 -right-1 z-30 w-2 cursor-col-resize touch-none outline-none hover:bg-primary/20 focus-visible:bg-primary/30"
+            <MTimeSplitter
+              :label="locale.ganttResize"
+              :value="listWidth"
+              :active="splitting"
+              :grip-top="view.top + Math.max(0, view.height - headerHeight) / 2"
               @pointerdown="onSplitDown"
-              @keydown.left.prevent="gridW = Math.max(120, gridW - 16); emit('update:gridWidth', gridW)"
-              @keydown.right.prevent="gridW = gridW + 16; emit('update:gridWidth', gridW)"
+              @dblclick="setGridWidth(initialW)"
+              @keydown.left.prevent="setGridWidth(Math.max(120, gridW - 16))"
+              @keydown.right.prevent="setGridWidth(gridW + 16)"
             />
           </div>
 
           <!-- Timeline -->
-          <div class="relative shrink-0" :style="{ width: `${timelineWidth}px` }" aria-hidden="true" @pointerdown="onPaneDown">
+          <div
+            class="relative shrink-0 cursor-grab select-none [-webkit-user-drag:none] active:cursor-grabbing"
+            :style="{ width: `${timelineWidth}px` }"
+            aria-hidden="true"
+            @pointerdown="onPaneDown"
+            @dragstart.prevent
+          >
             <MTimeBackground :off-times="offTimes" :cells="bottomCells" :today-x="todayMs === null ? null : xOf(todayMs)" />
             <div
               v-for="r in visibleRows"
@@ -1491,7 +1582,7 @@ defineExpose(context)
                 <div class="pointer-events-none absolute inset-y-0 left-0" :class="toneOf(r.task).fill" :style="{ width: `${r.task.progress ?? 0}%` }" />
                 <div class="pointer-events-none relative flex h-full items-center px-2 text-label-medium whitespace-nowrap">
                   <slot name="bar" :task="r.task" :selected="selectedSet.has(r.task.id)" :critical="criticalSet.has(r.task.id)">
-                    <span v-if="showLabelInside(r.task)" class="truncate">{{ r.task.name }}</span>
+                    <span v-if="showLabelInside(r.task)" class="truncate" style="transform: translateX(var(--m3-gantt-label-x, 0px))">{{ r.task.name }}</span>
                   </slot>
                 </div>
               </div>
@@ -1587,6 +1678,10 @@ defineExpose(context)
 </template>
 
 <style>
+/* A drag's cursor (_dragCursor.ts, set inline on <body>) wins over every element it passes */
+.m3-drag-cursor * {
+  cursor: inherit !important;
+}
 /* The summary bracket's ends point down at its first and last tasks */
 .m3-gantt-summary::before,
 .m3-gantt-summary::after {

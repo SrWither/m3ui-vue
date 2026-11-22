@@ -375,6 +375,9 @@ export interface M3Locale {
   ganttBaseline: string
   ganttEmpty: string
   ganttResize: string
+  ganttFit: string
+  ganttShowList: string
+  ganttHideList: string
   timelineResource: string
   timelineConflict: string
   timelineMoved: string
@@ -961,6 +964,9 @@ export const defaultLocale: M3Locale = {
   ganttBaseline: 'Baseline',
   ganttEmpty: 'No tasks yet',
   ganttResize: 'Resize the task list',
+  ganttFit: 'Fit everything',
+  ganttShowList: 'Show task list',
+  ganttHideList: 'Hide task list',
   timelineResource: 'Resource',
   timelineConflict: 'Overlaps another booking',
   timelineMoved: '{title}: {resource}, {start} to {end}',

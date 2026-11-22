@@ -99,4 +99,20 @@ describe('MResourceTimeline', () => {
     expect(w.emitted('update:collapsed')![0]![0]).toEqual(['Kitchen'])
     expect(w.findAll('[data-timeline-event]')).toHaveLength(2)
   })
+  it('readonly: dragging an event with a mouse pans, and the press claims the mouse (no native drag)', async () => {
+    const w = await timeline({ readonly: true })
+    const scroller = w.find('.overflow-auto').element as HTMLElement
+    scroller.scrollLeft = 300
+    const down = new PointerEvent('pointerdown', { bubbles: true, cancelable: true, clientX: 500, clientY: 100, pointerId: 1, pointerType: 'mouse', button: 0, buttons: 1 })
+    block(w, 'Morning').element.dispatchEvent(down)
+    expect(down.defaultPrevented).toBe(true)
+    pointer(window, 'pointermove', 520, 100)
+    pointer(window, 'pointermove', 560, 100)
+    expect(scroller.scrollLeft).toBe(240)
+    expect(document.body.style.cursor).toBe('grabbing')
+    pointer(window, 'pointerup', 560, 100)
+    expect(document.body.style.cursor).toBe('')
+    expect(w.emitted('update:events')).toBeUndefined()
+    expect(w.emitted('event-click')).toBeUndefined()
+  })
 })

@@ -15,6 +15,8 @@ export interface GanttColumn {
   align?: 'start' | 'center' | 'end'
   /** Text for a cell */
   format?: (task: GanttTask) => string
+  /** Hidden while the chart (its own width, not the window's) is narrower than this, px */
+  hideBelow?: number
 }
 
 /** What MGantt provides to everything inside it (MGanttControls, panels of yours), and its template ref exposes */
@@ -57,6 +59,11 @@ export interface GanttContext {
   criticalPath: ComputedRef<GanttCriticalPath>
   /** The date (snapped) under a page x */
   dateAt(clientX: number): string
+  /** Whether the task list is hidden (`v-model:grid-collapsed`) */
+  gridCollapsed: ComputedRef<boolean>
+  setGridCollapsed(collapsed: boolean): void
+  /** Zooms and scrolls so every task fits the timeline's width */
+  fit(): void
 }
 
 export const GANTT_KEY: InjectionKey<GanttContext> = Symbol('m3-gantt')
@@ -78,6 +85,12 @@ export interface TimelineControls {
   scrollToDate(date?: string): void
   expandAll(): void
   collapseAll(): void
+  /** Zooms and scrolls so everything fits the timeline's width */
+  fit(): void
+  /** Hosts with a list that can hide (MGantt) */
+  hasList?: ComputedRef<boolean>
+  gridCollapsed?: ComputedRef<boolean>
+  setGridCollapsed?(collapsed: boolean): void
 }
 export const TIMELINE_CONTROLS_KEY: InjectionKey<TimelineControls> = Symbol('m3-timeline-controls')
 
