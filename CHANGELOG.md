@@ -5,6 +5,15 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.6.0] - 2026-11-23
+
+### Added
+- `maplibre-gl` 6 support: the peer range is now `^5.0.0 || ^6.0.0`
+- `setMapWorker(url)` (`/map`) gives every `MMap` the URL of MapLibre's worker, handed to maplibre's `setWorkerUrl()` when the first map loads it (so maplibre-gl still loads only when a map needs it); `MMap`'s new `workerUrl` prop does the same for one map. **With maplibre-gl 6 under a bundler a map stays blank without it**: v6 runs its worker from a file of its own. With Vite: `import mapWorker from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'` and `setMapWorker(mapWorker)`. maplibre-gl 5 doesn't need it
+
+### Changed
+- Dependencies updated (dev: Vue 3.5.46, Vite 8.3.8, vitest 5.1, happy-dom 21, tiptap 3.35, pdfjs-dist 6.5, maplibre-gl 6.19, codemirror, chart.js 4.6…)
+
 ## [1.5.1] - 2026-11-22
 
 ### Fixed
