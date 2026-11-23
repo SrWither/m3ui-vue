@@ -12,6 +12,7 @@ import MCheckbox from './MCheckbox.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 import { useLocale } from '../composables/useLocale'
 import { useScrollLock } from '../composables/_useScrollLock'
+import { FIELD_PADDING_RIGHT, FIELD_VALUE, fieldLabelClasses, vOverflowTitle, type FieldRightInset } from '../composables/_fieldLayout'
 
 const locale = useLocale()
 
@@ -223,12 +224,16 @@ onUnmounted(() => {
   window.removeEventListener('scroll', onScroll, true)
 })
 
+// Chips wrap before the trailing controls; the label stops there too
+const rightInset = computed<FieldRightInset>(() => (props.clearable ? 'right-16' : 'right-10'))
+
 const triggerClasses = computed(() => {
   const base = [
-    'flex min-h-[56px] w-full items-center gap-1.5 flex-wrap outline-none',
+    'flex min-h-[56px] w-full min-w-0 items-center gap-1.5 flex-wrap outline-none',
     'transition-[border-color,border-width] duration-150',
     props.disabled ? 'cursor-not-allowed' : 'cursor-pointer',
-    props.leadingIcon ? 'pl-12 pr-10' : 'pl-4 pr-10',
+    props.leadingIcon ? 'pl-12' : 'pl-4',
+    FIELD_PADDING_RIGHT[rightInset.value],
   ]
 
   if (props.variant === 'outlined') {
@@ -257,31 +262,19 @@ const triggerClasses = computed(() => {
   ].join(' ')
 })
 
-const labelClasses = computed(() => {
-  const left = props.leadingIcon
-    ? (props.variant === 'outlined' ? 'left-11' : 'left-12')
-    : (props.variant === 'outlined' ? 'left-3' : 'left-4')
-
-  const floated = props.variant === 'outlined'
-    ? '-top-2.5 translate-y-0 text-label-small bg-[var(--field-bg)] px-1 right-auto max-w-[calc(100%-1.5rem)]'
-    : 'top-2 translate-y-0 text-label-small'
-
-  const unFloated = props.variant === 'filled'
-    ? 'top-[53%] -translate-y-1/2 text-body-large'
-    : 'top-1/2 -translate-y-1/2 text-body-large'
-  const active = highlighted.value || hasValue.value
-
-  return [
-    'pointer-events-none absolute right-10 truncate transition-all duration-200',
-    left,
-    active ? floated : unFloated,
-    props.disabled
+const labelClasses = computed(() =>
+  fieldLabelClasses({
+    variant: props.variant,
+    leading: !!props.leadingIcon,
+    right: rightInset.value,
+    floated: highlighted.value || hasValue.value,
+    color: props.disabled
       ? 'text-on-surface/38'
       : highlighted.value
         ? (props.error ? 'text-error' : 'text-primary')
         : (props.error ? 'text-error' : 'text-on-surface-variant'),
-  ].join(' ')
-})
+  }),
+)
 </script>
 
 <template>
@@ -324,15 +317,15 @@ const labelClasses = computed(() => {
           <span
             v-for="(chip, i) in displayChips"
             :key="i"
-            class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-label-small"
+            class="inline-flex max-w-full min-w-0 items-center gap-1 rounded-full px-2 py-0.5 text-label-small"
             :class="disabled ? 'bg-on-surface/12 text-on-surface/38' : 'bg-secondary-container text-on-secondary-container'"
           >
-            {{ chip.label }}
+            <span v-overflow-title class="min-w-0 truncate">{{ chip.label }}</span>
             <button
               :aria-label="`${locale.remove} ${chip.label}`"
               v-if="!disabled"
               type="button"
-              class="flex h-4 w-4 items-center justify-center rounded-full hover:bg-on-secondary-container/20"
+              class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full hover:bg-on-secondary-container/20"
               @click="removeChip(chip.value, $event)"
             >
               <MIcon name="close" :size="12" />
@@ -354,7 +347,7 @@ const labelClasses = computed(() => {
             <MIcon name="unfold_less" :size="14" />
           </span>
         </template>
-        <span v-else-if="!open" class="text-body-large text-on-surface-variant opacity-0">
+        <span v-else-if="!open" :class="[FIELD_VALUE, 'text-body-large text-on-surface-variant opacity-0']">
           {{ placeholder }}
         </span>
       </div>

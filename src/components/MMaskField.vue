@@ -10,6 +10,7 @@ import MIcon from './MIcon.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 import { useDebounce } from '../composables/useDebounce'
 import { useLocale } from '../composables/useLocale'
+import { FIELD_PADDING_RIGHT, fieldLabelClasses, vOverflowTitle, type FieldRightInset } from '../composables/_fieldLayout'
 
 export type MaskPreset = 'credit-card' | 'phone' | 'date' | 'time' | 'cpf' | 'cnpj' | 'zip'
 
@@ -128,9 +129,12 @@ function onKeydown(e: KeyboardEvent) {
 
 const hasTrailing = computed(() => props.clearable)
 
+// The label and the text both stop before the trailing controls
+const rightInset = computed<FieldRightInset>(() => (hasTrailing.value ? 'right-12' : 'right-4'))
+
 const inputClasses = computed(() => {
   const pl = props.leadingIcon ? 'pl-12' : 'pl-4'
-  const pr = hasTrailing.value ? 'pr-12' : 'pr-4'
+  const pr = FIELD_PADDING_RIGHT[rightInset.value]
   const base = [
     'peer block w-full text-body-large text-on-surface outline-none placeholder:text-transparent',
     'transition-[border-color,border-width] duration-150',
@@ -156,31 +160,18 @@ const inputClasses = computed(() => {
   ].join(' ')
 })
 
-const labelClasses = computed(() => {
-  const left = props.leadingIcon
-    ? (props.variant === 'outlined' ? 'left-11' : 'left-12')
-    : (props.variant === 'outlined' ? 'left-3' : 'left-4')
-  const unfloatedTop = props.variant === 'filled' ? 'top-[53%]' : 'top-1/2'
-  const base = [
-    'pointer-events-none absolute truncate transition-all duration-200',
-    left, 'right-4', `${unfloatedTop} -translate-y-1/2 text-body-large`,
-  ]
-  if (props.variant === 'outlined') {
-    return [...base,
-      'peer-focus:-top-2.5 peer-focus:translate-y-0 peer-focus:text-label-small peer-focus:right-auto peer-focus:max-w-[calc(100%-1.5rem)] peer-focus:bg-[var(--field-bg)] peer-focus:px-1',
-      'peer-[&:not(:placeholder-shown)]:-top-2.5 peer-[&:not(:placeholder-shown)]:translate-y-0 peer-[&:not(:placeholder-shown)]:right-auto peer-[&:not(:placeholder-shown)]:max-w-[calc(100%-1.5rem)]',
-      'peer-[&:not(:placeholder-shown)]:text-label-small peer-[&:not(:placeholder-shown)]:bg-[var(--field-bg)] peer-[&:not(:placeholder-shown)]:px-1',
+const labelClasses = computed(() =>
+  fieldLabelClasses({
+    variant: props.variant,
+    leading: !!props.leadingIcon,
+    right: rightInset.value,
+    floated: 'peer',
+    color: [
       props.error ? 'text-error peer-focus:text-error' : 'text-on-surface-variant peer-focus:text-primary',
       'peer-disabled:text-on-surface/38',
-    ].join(' ')
-  }
-  return [...base,
-    'peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-label-small',
-    'peer-[&:not(:placeholder-shown)]:top-2 peer-[&:not(:placeholder-shown)]:translate-y-0 peer-[&:not(:placeholder-shown)]:text-label-small',
-    props.error ? 'text-error peer-focus:text-error' : 'text-on-surface-variant peer-focus:text-primary',
-    'peer-disabled:text-on-surface/38',
-  ].join(' ')
-})
+    ].join(' '),
+  }),
+)
 
 defineExpose({
   /** The `<input>` (or `<textarea>`) element */
@@ -225,6 +216,7 @@ defineExpose({
         :required="required"
         placeholder=" "
         :class="inputClasses"
+        v-overflow-title
         @input="onInput"
         @keydown="onKeydown"
       />

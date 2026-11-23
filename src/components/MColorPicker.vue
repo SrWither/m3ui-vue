@@ -12,6 +12,7 @@ import MColorPanel from './_MColorPanel.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 import { useLocale } from '../composables/useLocale'
 import { defaultColorPresets, normalizeHex, pushRecentColor } from '../composables/_colorUtils'
+import { OUTLINED_FLOATED_LABEL, vOverflowTitle } from '../composables/_fieldLayout'
 
 const props = withDefaults(defineProps<{
   /** Selected color in hex format (v-model). `#rrggbb`, or `#rrggbbaa` when `alpha` is on and the color isn't opaque. */
@@ -156,7 +157,7 @@ onUnmounted(() => {
           :class="disabled ? 'opacity-38' : ''"
           :style="{ background: `linear-gradient(${modelValue}, ${modelValue}), repeating-conic-gradient(#d4d4d4 0 25%, #fff 0 50%) 0 0 / 8px 8px` }"
         />
-        <span class="flex-1 font-mono" :class="disabled ? 'text-on-surface/38' : 'text-on-surface'">{{ modelValue }}</span>
+        <span v-overflow-title class="min-w-0 truncate flex-1 font-mono" :class="disabled ? 'text-on-surface/38' : 'text-on-surface'">{{ modelValue }}</span>
         <MIcon
           name="palette"
           :size="24"
@@ -166,8 +167,7 @@ onUnmounted(() => {
       </button>
       <label
         v-if="label"
-        class="pointer-events-none absolute -top-2.5 left-3 bg-(--field-bg) px-1 text-label-small transition-colors"
-        :class="disabled ? 'text-on-surface/38' : open ? (error ? 'text-error' : 'text-primary') : error ? 'text-error' : 'text-on-surface-variant'"
+        :class="[OUTLINED_FLOATED_LABEL, 'transition-colors', disabled ? 'text-on-surface/38' : open ? (error ? 'text-error' : 'text-primary') : error ? 'text-error' : 'text-on-surface-variant']"
       >
         {{ label }}
       </label>

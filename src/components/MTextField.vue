@@ -13,6 +13,7 @@ import { useAutoGrow } from "../composables/useAutoGrow";
 import { useFieldBg } from "../composables/useFieldBg";
 import { useDebounce } from "../composables/useDebounce";
 import { useLocale } from '../composables/useLocale'
+import { FIELD_PADDING_RIGHT, fieldLabelClasses, vOverflowTitle, type FieldRightInset } from '../composables/_fieldLayout'
 
 const locale = useLocale()
 const props = withDefaults(
@@ -86,10 +87,12 @@ useAutoGrow(() => (props.multiline && props.autoGrow ? textareaEl.value : null),
 
 const showClear = computed(() => props.clearable && String(props.modelValue).length > 0 && !props.disabled)
 
+// The label and the text both stop before a trailing button (the #trailing slot or the clear button)
+const rightInset = computed<FieldRightInset>(() => (slots.trailing || props.clearable ? "right-12" : "right-4"));
+
 const inputClasses = computed(() => {
-  const hasTrailing = !!slots.trailing || props.clearable;
   const pl = props.leadingIcon ? "pl-12" : "pl-4";
-  const pr = hasTrailing ? "pr-12" : "pr-4";
+  const pr = FIELD_PADDING_RIGHT[rightInset.value];
   const size = props.multiline ? (props.autoGrow ? "resize-none min-h-[56px]" : "resize-y min-h-[56px]") : "h-14";
   const base = [
     "peer block w-full text-body-large text-on-surface outline-none placeholder:text-transparent",
@@ -126,50 +129,18 @@ const inputClasses = computed(() => {
   ].join(" ");
 });
 
-const labelClasses = computed(() => {
-  const left = props.leadingIcon
-    ? props.variant === "outlined"
-      ? "left-11"
-      : "left-12"
-    : props.variant === "outlined"
-      ? "left-3"
-      : "left-4";
-
-  const unfloatedTop = props.variant === 'filled' ? 'top-[53%]' : 'top-1/2'
-  const base = [
-    "pointer-events-none absolute truncate transition-all duration-200",
-    left,
-    "right-4",
-    `${unfloatedTop} -translate-y-1/2 text-body-large`,
-  ];
-
-  if (props.variant === "outlined") {
-    // When floated: drop right-4 (right-auto) and cap max-width so the label
-    // shrinks to its own text width. The bg then only covers the glyphs + px-1,
-    // cutting the border just where the text sits instead of a long strip.
-    return [
-      ...base,
-      "peer-focus:-top-2.5 peer-focus:translate-y-0 peer-focus:text-label-small peer-focus:right-auto peer-focus:max-w-[calc(100%-1.5rem)] peer-focus:bg-[var(--field-bg)] peer-focus:px-1",
-      "peer-[&:not(:placeholder-shown)]:-top-2.5 peer-[&:not(:placeholder-shown)]:translate-y-0 peer-[&:not(:placeholder-shown)]:right-auto peer-[&:not(:placeholder-shown)]:max-w-[calc(100%-1.5rem)]",
-      "peer-[&:not(:placeholder-shown)]:text-label-small peer-[&:not(:placeholder-shown)]:bg-[var(--field-bg)] peer-[&:not(:placeholder-shown)]:px-1",
-      props.error
-        ? "text-error peer-focus:text-error"
-        : "text-on-surface-variant peer-focus:text-primary",
-      "peer-disabled:text-on-surface/38",
-    ].join(" ");
-  }
-
-  // Filled: label floats to top-2 (slightly higher than before)
-  return [
-    ...base,
-    "peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-label-small",
-    "peer-[&:not(:placeholder-shown)]:top-2 peer-[&:not(:placeholder-shown)]:translate-y-0 peer-[&:not(:placeholder-shown)]:text-label-small",
-    props.error
-      ? "text-error peer-focus:text-error"
-      : "text-on-surface-variant peer-focus:text-primary",
-    "peer-disabled:text-on-surface/38",
-  ].join(" ");
-});
+const labelClasses = computed(() =>
+  fieldLabelClasses({
+    variant: props.variant,
+    leading: !!props.leadingIcon,
+    right: rightInset.value,
+    floated: 'peer',
+    color: [
+      props.error ? 'text-error peer-focus:text-error' : 'text-on-surface-variant peer-focus:text-primary',
+      'peer-disabled:text-on-surface/38',
+    ].join(' '),
+  }),
+);
 
 function onInput(event: Event) {
   const target = event.target as HTMLInputElement | HTMLTextAreaElement;
@@ -238,6 +209,7 @@ defineExpose({
         :autocomplete="autocomplete"
         placeholder=" "
         :class="inputClasses"
+        v-overflow-title
         @input="onInput"
       />
 

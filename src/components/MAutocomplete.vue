@@ -14,6 +14,7 @@ import { useDebounce } from '../composables/useDebounce'
 import type { SelectOption } from './MSelect.vue'
 import { useScrollLock } from '../composables/_useScrollLock'
 import { useEscapeStack } from '../composables/_useEscapeStack'
+import { FIELD_PADDING_RIGHT, fieldLabelClasses, vOverflowTitle, type FieldRightInset } from '../composables/_fieldLayout'
 
 // Root is a fragment (field div + a sibling Teleport for the dropdown panel), so Vue can't
 // auto-apply a consumer's class/attrs to either one — forward them onto the field div below.
@@ -279,11 +280,15 @@ const displayValue = computed(() => {
   return selectedLabel.value
 })
 
+// The text and the label stop before the clear button and the arrow
+const rightInset = computed<FieldRightInset>(() => (props.clearable ? 'right-16' : 'right-10'))
+
 const triggerClasses = computed(() => {
   const pl = props.leadingIcon ? 'pl-12' : 'pl-4'
   const base = [
-    'flex w-full items-center pr-10 text-body-large transition-[border-color,border-width] duration-150',
+    'flex w-full min-w-0 items-center text-body-large transition-[border-color,border-width] duration-150',
     pl,
+    FIELD_PADDING_RIGHT[rightInset.value],
   ]
 
   if (props.variant === 'outlined') {
@@ -308,29 +313,20 @@ const triggerClasses = computed(() => {
 
 const isFloated = computed(() => hasValue.value || open.value)
 
-const labelClasses = computed(() => {
-  const left = props.leadingIcon
-    ? (props.variant === 'outlined' ? 'left-11' : 'left-12')
-    : (props.variant === 'outlined' ? 'left-3' : 'left-4')
-
-  const floated = props.variant === 'outlined'
-    ? '-top-2.5 translate-y-0 text-label-small bg-[var(--field-bg)] px-1 right-auto max-w-[calc(100%-1.5rem)]'
-    : 'top-2 translate-y-0 text-label-small'
-
-  const unFloated = props.variant === 'filled'
-    ? 'top-[53%] -translate-y-1/2 text-body-large'
-    : 'top-1/2 -translate-y-1/2 text-body-large'
-
-  return [
-    'pointer-events-none absolute right-10 truncate transition-all duration-200',
-    left,
-    isFloated.value ? floated : unFloated,
-    open.value
-      ? (props.error ? 'text-error' : 'text-primary')
-      : (props.error ? 'text-error' : 'text-on-surface-variant'),
-    'peer-disabled:text-on-surface/38',
-  ].join(' ')
-})
+const labelClasses = computed(() =>
+  fieldLabelClasses({
+    variant: props.variant,
+    leading: !!props.leadingIcon,
+    right: rightInset.value,
+    floated: isFloated.value,
+    color: [
+      open.value
+        ? (props.error ? 'text-error' : 'text-primary')
+        : (props.error ? 'text-error' : 'text-on-surface-variant'),
+      'peer-disabled:text-on-surface/38',
+    ].join(' '),
+  }),
+)
 </script>
 
 <template>
@@ -370,6 +366,7 @@ const labelClasses = computed(() => {
         :aria-required="required || undefined"
         :aria-invalid="error || undefined"
         :aria-disabled="disabled"
+        v-overflow-title
         :class="[
           triggerClasses,
           'peer outline-none text-on-surface cursor-text',

@@ -13,6 +13,7 @@ import { useFieldBg } from '../composables/useFieldBg'
 import { useLocale } from '../composables/useLocale'
 import { POPUP_MARGIN, dropdownX, fitPopup } from '../composables/_popupPosition'
 import { useCalendarMonth } from '../composables/_useCalendarMonth'
+import { OUTLINED_FLOATED_LABEL, vOverflowTitle } from '../composables/_fieldLayout'
 
 const props = defineProps<{
   /** Selected date (YYYY-MM-DD, v-model) */
@@ -179,8 +180,8 @@ onUnmounted(() => {
         @click="!disabled && (open = !open)"
       >
         <MIcon name="calendar_today" :size="24" class="shrink-0" :class="disabled ? 'text-on-surface/38' : 'text-on-surface-variant'" />
-        <span v-if="displayValue" class="flex-1" :class="disabled ? 'text-on-surface/38' : 'text-on-surface'">{{ displayValue }}</span>
-        <span v-else class="flex-1" :class="disabled ? 'text-on-surface/38' : 'text-on-surface-variant'">{{ placeholder || label || localeStrings.selectDate }}</span>
+        <span v-overflow-title v-if="displayValue" class="min-w-0 truncate flex-1" :class="disabled ? 'text-on-surface/38' : 'text-on-surface'">{{ displayValue }}</span>
+        <span v-overflow-title v-else class="min-w-0 truncate flex-1" :class="disabled ? 'text-on-surface/38' : 'text-on-surface-variant'">{{ placeholder || label || localeStrings.selectDate }}</span>
         <MIcon
           v-if="modelValue"
           name="close"
@@ -191,8 +192,7 @@ onUnmounted(() => {
       </button>
       <label
         v-if="label"
-        class="pointer-events-none absolute -top-2.5 left-3 bg-(--field-bg) px-1 text-label-small transition-colors"
-        :class="disabled ? 'text-on-surface/38' : open ? (error ? 'text-error' : 'text-primary') : error ? 'text-error' : 'text-on-surface-variant'"
+        :class="[OUTLINED_FLOATED_LABEL, 'transition-colors', disabled ? 'text-on-surface/38' : open ? (error ? 'text-error' : 'text-primary') : error ? 'text-error' : 'text-on-surface-variant']"
       >
         {{ label }}
       </label>

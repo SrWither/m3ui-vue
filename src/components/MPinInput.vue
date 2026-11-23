@@ -167,7 +167,8 @@ watch(
 
 const boxClasses = computed(() => {
   const base = [
-    'h-14 w-12 text-center text-title-large outline-none',
+    // Shrinks below 48px when the row is narrower than all the boxes (flex: 0 1 3rem)
+    'h-14 w-12 min-w-0 shrink text-center text-title-large outline-none',
     'transition-[border-color,border-width] duration-150',
     'disabled:cursor-not-allowed disabled:text-on-surface/38',
     props.error ? 'caret-error' : 'caret-primary',
@@ -193,7 +194,7 @@ const boxClasses = computed(() => {
 
 <template>
   <div class="flex flex-col gap-1">
-    <div role="group" :aria-label="label" class="flex items-center gap-2">
+    <div role="group" :aria-label="label" class="flex min-w-0 items-center gap-2">
       <template v-for="(digit, i) in digits" :key="i">
         <input
           :ref="(el) => setInputEl(el, i)"
