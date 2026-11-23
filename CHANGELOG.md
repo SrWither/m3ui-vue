@@ -5,6 +5,21 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.5.1] - 2026-11-22
+
+### Fixed
+- **Long content in narrow form fields no longer runs over the label, the border or the icons.** A value in a fixed-height field stays on one line and ends in "…", with the whole value in a tooltip when it's cut (screen readers always get all of it); the label stops before the trailing buttons and, floated on an outlined border, before the far corner even with a leading icon. Fixed in:
+  - `MSelect`: a long option wrapped to 2–3 lines over the floating label and below the field; with `clearable`, the clear button sat on top of the end of the text
+  - `MAutocomplete`: the clear button sat on top of the end of the text
+  - `MMultiSelect`, `MMultiAutocomplete`, `MTagInput`: a chip longer than the field ran out of it (now cut with "…"); in `MMultiSelect` / `MMultiAutocomplete` the label ran under the clear button, and a long `placeholder` of `MMultiSelect` could make the field grow
+  - `MTextField`, `MMaskField`: the label ran under the clear button or the `#trailing` slot
+  - `MNumberField`: the label ran under the stepper buttons
+  - `MTextField`, `MNumberField`, `MMaskField`, `MSelect`, `MAutocomplete`, `MMultiSelect`, `MMultiAutocomplete`, `MTagInput` (outlined, with `leadingIcon`): the floated label ran past the right border
+  - `MDatePicker`, `MDateRangePicker`, `MTimePicker`, `MColorPicker`: a long value or placeholder wrapped over the label, and a long label ran past the border
+  - `MSearchBar`: in a narrow bar the input didn't shrink and pushed the clear button and `#trailing` out of the pill
+  - `MPinInput`: the boxes didn't shrink in a row narrower than all of them (they keep 48px when there's room)
+  - `MCreditCardInput` gets the `MTextField` fix
+
 ## [1.5.0] - 2026-11-22
 
 ### Added
