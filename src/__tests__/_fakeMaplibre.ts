@@ -160,4 +160,6 @@ export const fakeModule = {
   FullscreenControl: class FullscreenControl extends Control {},
   ScaleControl: class ScaleControl extends Control {},
   AttributionControl: class AttributionControl extends Control {},
+  workerUrl: undefined as string | undefined,
+  setWorkerUrl(url: string) { fakeModule.workerUrl = url },
 }

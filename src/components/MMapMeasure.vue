@@ -166,11 +166,13 @@ function ensureLayers() {
   add({ id: VERTEX, type: 'circle', source: SRC.handles, filter: ['==', ['get', 'handle'], 'vertex'], paint: { ...p.vertices, 'circle-radius': 7, 'circle-stroke-width': 2.5 } })
 }
 
+type SetPaint = Parameters<Maplibre.Map['setPaintProperty']>
+
 watch(theme, () => {
   if (!map) return
   const p = paints()
   const set = (layer: string, paint: Record<string, unknown>) => {
-    if (map!.getLayer(layer)) for (const [k, v] of Object.entries(paint)) map!.setPaintProperty(layer, k, v)
+    if (map!.getLayer(layer)) for (const [k, v] of Object.entries(paint)) map!.setPaintProperty(layer, k as SetPaint[1], v as SetPaint[2])
   }
   for (const source of [SRC.done, SRC.draft]) {
     set(`${source}-fill`, p.fill)

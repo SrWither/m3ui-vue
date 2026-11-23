@@ -6,7 +6,8 @@
  * MapLibre map itself is the `ready` event's argument and the `map` of `useMap()` in components placed inside.
  * Available from the `/map` entry point; needs `maplibre-gl` installed and its CSS imported
  * (`maplibre-gl/dist/maplibre-gl.css`). Give it a height. Server-side rendering renders the empty container: MapLibre
- * loads in the browser.
+ * loads in the browser. With maplibre-gl 6 and a bundler, give it MapLibre's worker URL (`setMapWorker()` once
+ * at startup, or the `workerUrl` prop), or the map stays blank.
  *
  * @slot default Map components (`MMapMarker`, `MMapPopup`, `MMapGeoJson`, `MMapControl`) and anything to show over
  * the map, rendered once the map exists
@@ -21,7 +22,7 @@ import { markRaw, onBeforeUnmount, onMounted, onUnmounted, provide, ref, shallow
 import type * as Maplibre from 'maplibre-gl'
 import MMapAttribution from './_MMapAttribution.vue'
 import { useLocale } from '../composables/useLocale'
-import { MAP_KEY, type MapContext, type MaplibreModule } from '../composables/useMap'
+import { MAP_KEY, mapWorkerUrl, type MapContext, type MaplibreModule } from '../composables/useMap'
 import { createLayerState, readLayerState } from '../composables/useMapLayers'
 import { storageKey } from '../composables/_storageKeys'
 import type { MapAdapter, MapLayerModel } from '../composables/mapAdapters'
@@ -60,6 +61,12 @@ const props = withDefaults(
      * under `m3-map-view` (after `createM3UI`'s `storagePrefix`, if any), or your own key (one per map)
      */
     persist?: boolean | string
+    /**
+     * The URL of MapLibre's worker, handed to maplibre's `setWorkerUrl()` before the map is created. maplibre-gl 6
+     * needs it under a bundler; with Vite: `import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'`.
+     * Overrides `setMapWorker()`; the setting is global to maplibre, so the last one applied wins
+     */
+    workerUrl?: string
     /** Zoom and compass buttons: `false`, or a corner (`true` is top-right) */
     navigation?: boolean | MapControlPosition
     /** A button that centers the map on the user's location and follows it: `false`, or a corner (`true` is top-right) */
@@ -273,10 +280,12 @@ onBeforeUnmount(() => {
 let destroyed = false
 
 onMounted(async () => {
-  // maplibre-gl ships a UMD build: depending on the bundler its classes are on the namespace or on `default`
+  // maplibre-gl 5 ships a UMD build: depending on the bundler its classes are on the namespace or on `default`
   const mod = await import('maplibre-gl')
   const ml = ('Map' in mod ? mod : (mod as { default: MaplibreModule }).default) as MaplibreModule
   if (destroyed || !container.value) return
+  const workerUrl = props.workerUrl ?? mapWorkerUrl()
+  if (workerUrl) ml.setWorkerUrl(workerUrl)
   const saved = readView()
   const view = {
     center: saved.center ?? props.center,

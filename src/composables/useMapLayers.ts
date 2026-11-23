@@ -3,8 +3,11 @@ import type * as Maplibre from 'maplibre-gl'
 import { resolveMapContext, type MapSource } from './useMap'
 import type { MapLayerInfo, MapLayerModel } from './mapAdapters'
 
+/** A paint property's name (`string` in maplibre-gl 5, a typed union in 6). */
+type PaintProp = Parameters<Maplibre.Map['setPaintProperty']>[1]
+
 /** The paint properties that make each layer type transparent. */
-const OPACITY: Record<string, string[]> = {
+const OPACITY: Record<string, PaintProp[]> = {
   fill: ['fill-opacity'],
   line: ['line-opacity'],
   circle: ['circle-opacity', 'circle-stroke-opacity'],

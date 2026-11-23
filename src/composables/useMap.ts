@@ -6,6 +6,23 @@ import type { MapLayerState } from './useMapLayers'
 /** The `maplibre-gl` module (its classes: `Map`, `Marker`, `Popup`…) */
 export type MaplibreModule = typeof import('maplibre-gl')
 
+let defaultWorkerUrl: string | undefined
+
+/**
+ * The URL of MapLibre's worker for every `MMap` (its `workerUrl` prop wins), handed to maplibre's `setWorkerUrl()`
+ * when the first map loads maplibre-gl. maplibre-gl 6 needs it under a bundler, or maps stay blank; call it once at
+ * startup. With Vite: `import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'`. Unlike calling
+ * maplibre's own `setWorkerUrl()`, it doesn't load maplibre-gl before a map needs it.
+ */
+export function setMapWorker(url: string | undefined) {
+  defaultWorkerUrl = url
+}
+
+// Internal: MMap reads it after loading maplibre-gl
+export function mapWorkerUrl() {
+  return defaultWorkerUrl
+}
+
 /** What `MMap` provides to everything inside it. */
 export interface MapContext {
   /** The MapLibre map, once created (never on the server) */

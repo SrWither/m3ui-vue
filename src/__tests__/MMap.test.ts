@@ -6,7 +6,7 @@ import { defineComponent, h, nextTick } from 'vue'
 import { created, FakeMap } from './_fakeMaplibre'
 vi.mock('maplibre-gl', async () => (await import('./_fakeMaplibre')).fakeModule)
 
-const { MMap, MMapMarker, MMapPopup, MMapGeoJson, MMapControl, useMap } = await import('../map')
+const { MMap, MMapMarker, MMapPopup, MMapGeoJson, MMapControl, useMap, setMapWorker } = await import('../map')
 
 beforeEach(() => {
   created.maps = []
@@ -42,6 +42,21 @@ describe('MMap', () => {
     expect(map.options.attributionControl).toBe(false)
     expect((map.options.locale as Record<string, string>)['NavigationControl.ZoomIn']).toBe('Zoom in')
     expect(wrapper.emitted('ready')?.[0]?.[0]).toBe(map)
+  })
+
+  it('hands workerUrl (or setMapWorker) to setWorkerUrl before creating the map (maplibre-gl 6 under a bundler)', async () => {
+    const { fakeModule } = await import('./_fakeMaplibre')
+    fakeModule.workerUrl = undefined
+    await mountMap()
+    expect(fakeModule.workerUrl).toBeUndefined()
+    await mountMap({ workerUrl: '/assets/maplibre-gl-worker.js' })
+    expect(fakeModule.workerUrl).toBe('/assets/maplibre-gl-worker.js')
+    setMapWorker('/assets/global-worker.js')
+    await mountMap()
+    expect(fakeModule.workerUrl).toBe('/assets/global-worker.js')
+    await mountMap({ workerUrl: '/assets/own-worker.js' })
+    expect(fakeModule.workerUrl).toBe('/assets/own-worker.js')
+    setMapWorker(undefined)
   })
 
   it('leaves the view to the style when none is given', async () => {

@@ -60,8 +60,16 @@ describe('MFab', () => {
 
   it('hydrates collapsed without mismatches, and still expands', async () => {
     const container = document.createElement('div')
-    container.innerHTML = await renderToString(createSSRApp({ render: () => h(MFab, { icon: 'edit', label: 'Compose', expanded: false }) }))
+    // Hydration claims <body> as the teleport target, so leftovers of earlier tests can't be in it
+    document.body.innerHTML = ''
+    // Like a real SSR page: the teleported markup (the content panel's placeholders) ends up in <body>
+    const ctx: { teleports?: Record<string, string> } = {}
+    container.innerHTML = await renderToString(createSSRApp({ render: () => h(MFab, { icon: 'edit', label: 'Compose', expanded: false }) }), ctx)
     document.body.appendChild(container)
+    const teleported = document.createElement('template')
+    teleported.innerHTML = ctx.teleports?.body ?? ''
+    const teleportedNodes = [...teleported.content.childNodes]
+    document.body.append(...teleportedNodes)
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const expanded = { value: false }
     const app = createSSRApp({ render: () => h(MFab, { icon: 'edit', label: 'Compose', expanded: expanded.value }) })
@@ -78,5 +86,6 @@ describe('MFab', () => {
       expect((container.querySelector('button') as HTMLElement).style.width).toBe('')
     })
     container.remove()
+    for (const node of teleportedNodes) node.remove()
   })
 })
