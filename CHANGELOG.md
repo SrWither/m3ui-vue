@@ -5,6 +5,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.6.2] - 2026-11-26
+
+### Fixed
+- `MAudioRecorder`: the waveform no longer runs over the timer in narrow spaces; its bars shrink to fit and spread across the room, and the timer keeps a fixed width while counting
+- `MMapBaseLayers`: the thumbnails show the library's tooltip (`MTooltip`) instead of the browser's
+- `MMapMeasure`: the area button has its own icon (a set square), no longer the polygon `MMapDraw` uses
+
 ## [1.6.1] - 2026-11-26
 
 ### Added
