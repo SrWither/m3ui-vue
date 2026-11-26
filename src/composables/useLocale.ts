@@ -342,6 +342,11 @@ export interface M3Locale {
   micDenied: string
   micUnavailable: string
   micUnsupported: string
+  dashGrabbed: string
+  dashPlaced: string
+  dashDropped: string
+  dashCancelled: string
+  dashResize: string
   /** MTimeline's button past `limit`; `{count}` is how many entries are hidden */
   timelineShowMore: string
   timelineShowLess: string
@@ -1022,6 +1027,11 @@ export const defaultLocale: M3Locale = {
   micDenied: 'Microphone access was denied. Allow it in the browser to continue.',
   micUnavailable: 'No microphone available',
   micUnsupported: "This browser can't record audio",
+  dashGrabbed: 'Picked up {name}. Arrows move it, Shift and arrows resize it, Space drops it, Escape cancels.',
+  dashPlaced: '{name}: column {x}, row {y}, {w} by {h}',
+  dashDropped: '{name} dropped',
+  dashCancelled: 'Move cancelled',
+  dashResize: 'Resize',
   timelineShowMore: 'Show {count} more',
   timelineShowLess: 'Show less',
   mediaPlayer: 'Media player',
