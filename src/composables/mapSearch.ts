@@ -54,3 +54,13 @@ export function nominatimProvider(options: NominatimOptions = {}): MapSearchProv
     })
   }
 }
+
+// Internal (not exported from the entry): the icon for a result's `type`, shared by MMapSearch and MAddressField
+const ICONS: Record<string, string> = {
+  city: 'location_city', town: 'location_city', village: 'holiday_village', hamlet: 'cottage', suburb: 'apartment',
+  neighbourhood: 'maps_home_work', road: 'road', residential: 'home', house: 'home', building: 'domain',
+  shop: 'storefront', park: 'park', water: 'water', river: 'water', lake: 'water', school: 'school',
+  university: 'school', hospital: 'local_hospital', restaurant: 'restaurant', cafe: 'local_cafe', hotel: 'hotel',
+  station: 'train', bus_stop: 'directions_bus', administrative: 'map', country: 'public', state: 'map',
+}
+export const placeIcon = (type?: string) => (type && ICONS[type]) || 'location_on'

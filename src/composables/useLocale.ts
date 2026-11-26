@@ -259,6 +259,10 @@ export interface M3Locale {
   mapDeleteFeature: string
   mapTotal: string
   mapSearchPlaces: string
+  mapAddress: string
+  mapPressEnterToSearch: string
+  mapSearching: string
+  mapNoPlaces: string
   /** MTimeline's button past `limit`; `{count}` is how many entries are hidden */
   timelineShowMore: string
   timelineShowLess: string
@@ -856,6 +860,10 @@ export const defaultLocale: M3Locale = {
   mapDeleteFeature: 'Delete the selected shape',
   mapTotal: 'Total',
   mapSearchPlaces: 'Search places',
+  mapAddress: 'Address',
+  mapPressEnterToSearch: 'Press Enter to search',
+  mapSearching: 'Searching…',
+  mapNoPlaces: 'No places found',
   timelineShowMore: 'Show {count} more',
   timelineShowLess: 'Show less',
   mediaPlayer: 'Media player',

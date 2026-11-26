@@ -18,7 +18,7 @@ import MMapControl from './MMapControl.vue'
 import MMapMarker from './MMapMarker.vue'
 import { useLocale } from '../composables/useLocale'
 import { useMap } from '../composables/useMap'
-import { nominatimProvider, type MapSearchProvider, type MapSearchResult } from '../composables/mapSearch'
+import { nominatimProvider, placeIcon as iconOf, type MapSearchProvider, type MapSearchResult } from '../composables/mapSearch'
 import type { MapControlPosition } from './MMap.vue'
 
 const props = withDefaults(
@@ -109,14 +109,6 @@ onBeforeUnmount(() => {
   clearTimeout(debounce)
 })
 
-const ICONS: Record<string, string> = {
-  city: 'location_city', town: 'location_city', village: 'holiday_village', hamlet: 'cottage', suburb: 'apartment',
-  neighbourhood: 'maps_home_work', road: 'road', residential: 'home', house: 'home', building: 'domain',
-  shop: 'storefront', park: 'park', water: 'water', river: 'water', lake: 'water', school: 'school',
-  university: 'school', hospital: 'local_hospital', restaurant: 'restaurant', cafe: 'local_cafe', hotel: 'hotel',
-  station: 'train', bus_stop: 'directions_bus', administrative: 'map', country: 'public', state: 'map',
-}
-const iconOf = (type?: string) => (type && ICONS[type]) || 'location_on'
 </script>
 
 <template>

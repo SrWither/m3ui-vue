@@ -32,5 +32,6 @@ export type { MapDrawMode, MapDrawFeature, MapDrawCollection } from './component
 export { default as MMapFilter } from './components/MMapFilter.vue'
 export { useMapFilter } from './composables/useMapFilter'
 export { default as MMapSearch } from './components/MMapSearch.vue'
+export { default as MAddressField } from './components/MAddressField.vue'
 export { nominatimProvider } from './composables/mapSearch'
 export type { MapSearchProvider, MapSearchResult, NominatimOptions } from './composables/mapSearch'
