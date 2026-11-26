@@ -6,11 +6,12 @@
  *
  * @event update:modelValue Emitted with the picked color, live while dragging or typing.
  */
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { nextTick, onUnmounted, ref, watch } from 'vue'
 import MIcon from './MIcon.vue'
 import MColorPanel from './_MColorPanel.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 import { useLocale } from '../composables/useLocale'
+import { useFollowAnchor } from '../composables/_useFollowAnchor'
 import { defaultColorPresets, normalizeHex, pushRecentColor } from '../composables/_colorUtils'
 import { OUTLINED_FLOATED_LABEL, vOverflowTitle } from '../composables/_fieldLayout'
 
@@ -90,11 +91,8 @@ function onOut(e: MouseEvent) {
   close()
 }
 
-function onScroll(e: Event) {
-  if (!open.value) return
-  if (panelEl.value?.contains(e.target as Node)) return
-  close()
-}
+// Stays on its field while the page or a container scrolls, the window/zoom changes or the field resizes
+useFollowAnchor({ open: () => open.value, anchor: triggerEl, popup: panelEl, place: computeDropPos, close: () => close() })
 
 function onPanelKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') {
@@ -125,9 +123,7 @@ watch(open, async (v) => {
   }
 })
 
-onMounted(() => window.addEventListener('scroll', onScroll, true))
 onUnmounted(() => {
-  window.removeEventListener('scroll', onScroll, true)
   document.removeEventListener('mousedown', onOut)
 })
 </script>

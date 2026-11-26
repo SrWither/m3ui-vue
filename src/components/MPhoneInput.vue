@@ -16,6 +16,7 @@ import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from 'vue'
 import MIcon from './MIcon.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 import { useLocale } from '../composables/useLocale'
+import { useFollowAnchor } from '../composables/_useFollowAnchor'
 import { POPUP_MARGIN, dropdownX, fitPopup } from '../composables/_popupPosition'
 import { useEscapeStack } from '../composables/_useEscapeStack'
 import {
@@ -306,25 +307,17 @@ function onDocDown(e: MouseEvent) {
   if (panelEl.value?.contains(target) || buttonEl.value?.contains(target)) return
   closeList(false)
 }
-function onScroll(e: Event) {
-  if (panelEl.value?.contains(e.target as Node)) return
-  place()
-}
+// Stays on its field while the page or a container scrolls, the window/zoom changes or the field resizes
+useFollowAnchor({ open: () => open.value, anchor: fieldEl, popup: panelEl, place: place, close: () => closeList(false) })
 watch(open, (v) => {
   if (v) {
     document.addEventListener('mousedown', onDocDown)
-    window.addEventListener('scroll', onScroll, true)
-    window.addEventListener('resize', place)
   } else {
     document.removeEventListener('mousedown', onDocDown)
-    window.removeEventListener('scroll', onScroll, true)
-    window.removeEventListener('resize', place)
   }
 })
 onBeforeUnmount(() => {
   document.removeEventListener('mousedown', onDocDown)
-  window.removeEventListener('scroll', onScroll, true)
-  window.removeEventListener('resize', place)
 })
 
 defineExpose({

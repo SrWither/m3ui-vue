@@ -4,10 +4,11 @@
  *
  * @event update:modelValue Emitted with the picked time.
  */
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import MIcon from './MIcon.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 import { useLocale } from '../composables/useLocale'
+import { useFollowAnchor } from '../composables/_useFollowAnchor'
 import { POPUP_MARGIN, dropdownX, fitPopup } from '../composables/_popupPosition'
 import { OUTLINED_FLOATED_LABEL, vOverflowTitle } from '../composables/_fieldLayout'
 
@@ -123,11 +124,15 @@ function onOut(e: MouseEvent) {
   open.value = false
 }
 
-function onScroll(e: Event) {
-  if (!open.value) return
-  if (panelEl.value?.contains(e.target as Node)) return
-  open.value = false
+// Following the field: re-measure it and re-run placeDrop() from an unconstrained left edge (see above)
+function followAnchor() {
+  if (!triggerEl.value || !panelEl.value) return
+  anchorRect = triggerEl.value.getBoundingClientRect()
+  panelEl.value.style.left = '0px'
+  placeDrop(panelEl.value)
 }
+// Stays on its field while the page or a container scrolls, the window/zoom changes or the field resizes
+useFollowAnchor({ open: () => open.value, anchor: triggerEl, popup: panelEl, place: followAnchor, close: () => (open.value = false) })
 
 watch(open, (v) => {
   if (v) {
@@ -141,9 +146,7 @@ watch(open, (v) => {
   }
 })
 
-onMounted(() => window.addEventListener('scroll', onScroll, true))
 onUnmounted(() => {
-  window.removeEventListener('scroll', onScroll, true)
   document.removeEventListener('mousedown', onOut)
 })
 </script>

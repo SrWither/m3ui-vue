@@ -9,6 +9,7 @@ import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 import { useLocale } from '../composables/useLocale'
+import { useFollowAnchor } from '../composables/_useFollowAnchor'
 import { useScrollLock } from '../composables/_useScrollLock'
 import { useEscapeStack } from '../composables/_useEscapeStack'
 import { FIELD_PADDING_RIGHT, FIELD_VALUE, fieldLabelClasses, vOverflowTitle, type FieldRightInset } from '../composables/_fieldLayout'
@@ -135,11 +136,8 @@ function onOutsideClick(e: MouseEvent) {
   if (!fieldEl.value?.contains(t) && !dropdownEl.value?.contains(t)) open.value = false
 }
 
-function onScroll(e: Event) {
-  if (!open.value) return
-  if (dropdownEl.value?.contains(e.target as Node)) return
-  open.value = false
-}
+// Stays on its field while the page or a container scrolls, the window/zoom changes or the field resizes
+useFollowAnchor({ open: () => open.value, anchor: fieldEl, popup: dropdownEl, place: computeDropPos, close: () => (open.value = false) })
 
 function onKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') {
@@ -173,11 +171,9 @@ function closeModal() { modalOpen.value = false }
 
 onMounted(() => {
   document.addEventListener('mousedown', onOutsideClick)
-  window.addEventListener('scroll', onScroll, true)
 })
 onUnmounted(() => {
   document.removeEventListener('mousedown', onOutsideClick)
-  window.removeEventListener('scroll', onScroll, true)
 })
 
 // The value and the label stop before the clear button and the arrow

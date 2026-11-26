@@ -11,6 +11,7 @@ import MIconButton from './MIconButton.vue'
 import MCheckbox from './MCheckbox.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 import { useLocale } from '../composables/useLocale'
+import { useFollowAnchor } from '../composables/_useFollowAnchor'
 import { useScrollLock } from '../composables/_useScrollLock'
 import { FIELD_PADDING_RIGHT, FIELD_VALUE, fieldLabelClasses, vOverflowTitle, type FieldRightInset } from '../composables/_fieldLayout'
 
@@ -209,19 +210,14 @@ function onOutsideClick(e: MouseEvent) {
   if (!fieldEl.value?.contains(t) && !dropdownEl.value?.contains(t)) close()
 }
 
-function onScroll(e: Event) {
-  if (!open.value) return
-  if (dropdownEl.value?.contains(e.target as Node)) return
-  close()
-}
+// Stays on its field while the page or a container scrolls, the window/zoom changes or the field resizes
+useFollowAnchor({ open: () => open.value, anchor: fieldEl, popup: dropdownEl, place: computeDropPos, close: close })
 
 onMounted(() => {
   document.addEventListener('mousedown', onOutsideClick)
-  window.addEventListener('scroll', onScroll, true)
 })
 onUnmounted(() => {
   document.removeEventListener('mousedown', onOutsideClick)
-  window.removeEventListener('scroll', onScroll, true)
 })
 
 // Chips wrap before the trailing controls; the label stops there too
