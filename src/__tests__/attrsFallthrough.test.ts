@@ -19,6 +19,7 @@ import MContainerTransform from '../components/MContainerTransform.vue'
 import MDialog from '../components/MDialog.vue'
 import MOverlay from '../components/MOverlay.vue'
 import MAddressField from '../components/MAddressField.vue'
+import MMentionField from '../components/MMentionField.vue'
 
 // These components render more than one root node (an element plus a Teleport, a v-if/v-show
 // pair, a comment before the root...), which makes Vue drop a consumer's class/attrs silently.
@@ -26,6 +27,7 @@ import MAddressField from '../components/MAddressField.vue'
 const cases: [name: string, component: Component, props: Record<string, unknown>, tag: string][] = [
   ['MMenu', MMenu, {}, 'DIV'],
   ['MAddressField', MAddressField, {}, 'DIV'],
+  ['MMentionField', MMentionField, { modelValue: '', label: 'L', sources: [] }, 'DIV'],
   ['MContextMenu', MContextMenu, {}, 'DIV'],
   ['MTooltip', MTooltip, { text: 'Tip' }, 'SPAN'],
   ['MFab', MFab, { icon: 'add' }, 'DIV'],
