@@ -253,6 +253,10 @@ export interface M3Locale {
   mapMeasureArea: string
   mapClearMeasurements: string
   mapDeleteMeasurement: string
+  mapDrawPoint: string
+  mapDrawLine: string
+  mapDrawPolygon: string
+  mapDeleteFeature: string
   mapTotal: string
   mapSearchPlaces: string
   /** MTimeline's button past `limit`; `{count}` is how many entries are hidden */
@@ -846,6 +850,10 @@ export const defaultLocale: M3Locale = {
   mapMeasureArea: 'Measure area',
   mapClearMeasurements: 'Clear measurements',
   mapDeleteMeasurement: 'Delete measurement',
+  mapDrawPoint: 'Draw a point',
+  mapDrawLine: 'Draw a line',
+  mapDrawPolygon: 'Draw a polygon',
+  mapDeleteFeature: 'Delete the selected shape',
   mapTotal: 'Total',
   mapSearchPlaces: 'Search places',
   timelineShowMore: 'Show {count} more',

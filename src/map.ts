@@ -27,6 +27,8 @@ export type {
   OrvianAdapterOptions,
 } from './composables/mapAdapters'
 export { default as MMapMeasure } from './components/MMapMeasure.vue'
+export { default as MMapDraw } from './components/MMapDraw.vue'
+export type { MapDrawMode, MapDrawFeature, MapDrawCollection } from './components/MMapDraw.vue'
 export { default as MMapFilter } from './components/MMapFilter.vue'
 export { useMapFilter } from './composables/useMapFilter'
 export { default as MMapSearch } from './components/MMapSearch.vue'
