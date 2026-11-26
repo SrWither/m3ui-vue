@@ -330,6 +330,18 @@ export interface M3Locale {
   cameraFailed: string
   qrHint: string
   qrUnsupported: string
+  recorderStart: string
+  recorderStop: string
+  recorderPause: string
+  recorderResume: string
+  recorderDiscard: string
+  recorderUse: string
+  recorderPlay: string
+  recorderPausePlayback: string
+  recorderRecording: string
+  micDenied: string
+  micUnavailable: string
+  micUnsupported: string
   /** MTimeline's button past `limit`; `{count}` is how many entries are hidden */
   timelineShowMore: string
   timelineShowLess: string
@@ -998,6 +1010,18 @@ export const defaultLocale: M3Locale = {
   cameraFailed: "The camera couldn't start",
   qrHint: 'Point the camera at a code',
   qrUnsupported: "This browser can't read codes",
+  recorderStart: 'Record',
+  recorderStop: 'Stop',
+  recorderPause: 'Pause',
+  recorderResume: 'Resume',
+  recorderDiscard: 'Discard',
+  recorderUse: 'Use recording',
+  recorderPlay: 'Play',
+  recorderPausePlayback: 'Pause',
+  recorderRecording: 'Recording',
+  micDenied: 'Microphone access was denied. Allow it in the browser to continue.',
+  micUnavailable: 'No microphone available',
+  micUnsupported: "This browser can't record audio",
   timelineShowMore: 'Show {count} more',
   timelineShowLess: 'Show less',
   mediaPlayer: 'Media player',
