@@ -48,6 +48,7 @@ const props: Record<string, Record<string, unknown>> = {
   MShape: { shape: 'Circle' },
   MSparkline: { data: [3, 1, 4, 1, 5] },
   MTour: { steps: [{ target: '#x', title: 't' }] },
+  MDiffViewer: { original: 'a\nb\nc', modified: 'a\nB\nc\nd' },
   MDashboardGrid: { modelValue: [{ id: 'a', x: 0, y: 0, w: 6, h: 2 }] },
   MFilterBuilder: { fields: [{ key: 'name', label: 'Name' }, { key: 'n', label: 'N', type: 'number' }], modelValue: { id: 'g', combinator: 'and', rules: [{ id: 'r', field: 'n', operator: 'between', value: [1, 2] }] } },
 }

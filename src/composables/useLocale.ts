@@ -347,6 +347,10 @@ export interface M3Locale {
   dashDropped: string
   dashCancelled: string
   dashResize: string
+  diffUnchanged: string
+  diffSplit: string
+  diffUnified: string
+  diffNoChanges: string
   /** MTimeline's button past `limit`; `{count}` is how many entries are hidden */
   timelineShowMore: string
   timelineShowLess: string
@@ -1032,6 +1036,10 @@ export const defaultLocale: M3Locale = {
   dashDropped: '{name} dropped',
   dashCancelled: 'Move cancelled',
   dashResize: 'Resize',
+  diffUnchanged: 'Show {n} unchanged lines',
+  diffSplit: 'Side by side',
+  diffUnified: 'Unified',
+  diffNoChanges: 'No changes',
   timelineShowMore: 'Show {count} more',
   timelineShowLess: 'Show less',
   mediaPlayer: 'Media player',
