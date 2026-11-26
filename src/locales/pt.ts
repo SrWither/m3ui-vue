@@ -225,6 +225,7 @@ export const ptLocale: M3Locale = {
   mapShowLayer: 'Mostrar camada',
   mapHideLayer: 'Ocultar camada',
   mapOpacity: 'Opacidade',
+  mapClusterZoom: '{count} lugares, aproximar',
   mapDownload: 'Baixar',
   mapNoBaseLayer: 'Sem camada base',
   mapHoverInfo: 'Informações ao passar o cursor',

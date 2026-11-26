@@ -225,6 +225,7 @@ export const deLocale: M3Locale = {
   mapShowLayer: 'Ebene einblenden',
   mapHideLayer: 'Ebene ausblenden',
   mapOpacity: 'Deckkraft',
+  mapClusterZoom: '{count} Orte, vergrößern',
   mapDownload: 'Herunterladen',
   mapNoBaseLayer: 'Keine Grundkarte',
   mapHoverInfo: 'Infos beim Überfahren',

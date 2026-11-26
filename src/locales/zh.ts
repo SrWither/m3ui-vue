@@ -225,6 +225,7 @@ export const zhLocale: M3Locale = {
   mapShowLayer: '显示图层',
   mapHideLayer: '隐藏图层',
   mapOpacity: '不透明度',
+  mapClusterZoom: '{count} 个地点，放大',
   mapDownload: '下载',
   mapNoBaseLayer: '无底图',
   mapHoverInfo: '悬停显示信息',

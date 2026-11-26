@@ -225,6 +225,7 @@ export const koLocale: M3Locale = {
   mapShowLayer: '레이어 표시',
   mapHideLayer: '레이어 숨기기',
   mapOpacity: '불투명도',
+  mapClusterZoom: '{count}곳, 확대',
   mapDownload: '다운로드',
   mapNoBaseLayer: '기본 레이어 없음',
   mapHoverInfo: '마우스오버 시 정보 표시',

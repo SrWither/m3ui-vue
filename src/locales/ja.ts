@@ -225,6 +225,7 @@ export const jaLocale: M3Locale = {
   mapShowLayer: 'レイヤーを表示',
   mapHideLayer: 'レイヤーを非表示',
   mapOpacity: '不透明度',
+  mapClusterZoom: '{count} か所、拡大',
   mapDownload: 'ダウンロード',
   mapNoBaseLayer: 'ベースレイヤーなし',
   mapHoverInfo: 'ホバーで情報を表示',

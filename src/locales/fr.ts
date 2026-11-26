@@ -225,6 +225,7 @@ export const frLocale: M3Locale = {
   mapShowLayer: 'Afficher le calque',
   mapHideLayer: 'Masquer le calque',
   mapOpacity: 'Opacité',
+  mapClusterZoom: '{count} lieux, zoomer',
   mapDownload: 'Télécharger',
   mapNoBaseLayer: 'Aucun fond de carte',
   mapHoverInfo: 'Infos au survol',

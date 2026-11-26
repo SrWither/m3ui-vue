@@ -243,6 +243,8 @@ export interface M3Locale {
   mapShowLayer: string
   mapHideLayer: string
   mapOpacity: string
+  /** MMapCluster's bubble: `{count}` points under it; a click zooms in */
+  mapClusterZoom: string
   mapDownload: string
   mapNoBaseLayer: string
   mapHoverInfo: string
@@ -835,6 +837,7 @@ export const defaultLocale: M3Locale = {
   mapShowLayer: 'Show layer',
   mapHideLayer: 'Hide layer',
   mapOpacity: 'Opacity',
+  mapClusterZoom: '{count} places, zoom in',
   mapDownload: 'Download',
   mapNoBaseLayer: 'No base layer',
   mapHoverInfo: 'Info on hover',

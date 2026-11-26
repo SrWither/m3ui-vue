@@ -225,6 +225,7 @@ export const esLocale: M3Locale = {
   mapShowLayer: 'Mostrar capa',
   mapHideLayer: 'Ocultar capa',
   mapOpacity: 'Opacidad',
+  mapClusterZoom: '{count} lugares, acercar',
   mapDownload: 'Descargar',
   mapNoBaseLayer: 'Sin capa base',
   mapHoverInfo: 'Información al pasar el cursor',

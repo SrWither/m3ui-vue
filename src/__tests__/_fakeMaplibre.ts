@@ -28,7 +28,7 @@ export class FakeMap extends Evented {
   bearing = 0
   pitch = 0
   controls: { control: { onAdd?: (m: unknown) => HTMLElement }; position: string }[] = []
-  sources = new Map<string, { data: unknown; setData: (d: unknown) => void }>()
+  sources = new Map<string, { spec: unknown; data: unknown; setData: (d: unknown) => void; expansionZoom: number; leaves: unknown[]; getClusterExpansionZoom: (id: number) => Promise<number>; getClusterLeaves: (id: number, limit: number) => Promise<unknown[]> }>()
   layers: { id: string; [k: string]: unknown }[] = []
   canvas = document.createElement('canvas')
   styles: unknown[] = []
@@ -64,7 +64,16 @@ export class FakeMap extends Evented {
     this.layers = []
   }
   addSource(id: string, spec: { data: unknown }) {
-    const source = { data: spec.data, setData: (d: unknown) => { source.data = d } }
+    const source = {
+      spec,
+      data: spec.data,
+      setData: (d: unknown) => { source.data = d },
+      // Clustered sources: a fixed expansion zoom and leaves, set by tests
+      expansionZoom: 9,
+      leaves: [] as unknown[],
+      getClusterExpansionZoom: async () => source.expansionZoom,
+      getClusterLeaves: async (_id: number, limit: number) => source.leaves.slice(0, limit),
+    }
     this.sources.set(id, source)
   }
   getSource(id: string) {
@@ -98,10 +107,12 @@ export class FakeMap extends Evented {
   getFilter(id: string) { return this.filters.get(id) ?? (this.styleLayer(id) as { filter?: unknown } | undefined)?.filter }
   setFilter(id: string, filter: unknown) { this.filters.set(id, filter) }
   /** A source's loaded features, set by tests */
-  sourceFeatures: { properties: Record<string, unknown> }[] = []
+  sourceFeatures: { properties: Record<string, unknown>; geometry?: unknown }[] = []
   querySourceFeatures() { return this.sourceFeatures }
   flights: unknown[] = []
   flyTo(o: unknown) { this.flights.push(['flyTo', o]) }
+  easeTo(o: unknown) { this.flights.push(['easeTo', o]) }
+  getMaxZoom() { return 22 }
   fitBounds(b: unknown, o?: unknown) { this.flights.push(['fitBounds', b, o]) }
   /** Features "under the pointer", set by tests */
   rendered: { layer: { id: string }; properties: Record<string, unknown> }[] = []
