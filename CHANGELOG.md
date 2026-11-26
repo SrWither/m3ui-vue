@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.6.1] - Unreleased
+
+### Fixed
+- **Field popups stay on their field instead of closing as soon as anything scrolls.** The list or panel follows the page and any scroll container around the field, window resizes (browser zoom), visual viewport changes (pinch zoom, the on-screen keyboard) and the field itself resizing (chips wrapping onto a new line); scrolls inside the popup are still ignored. Once the field is scrolled out of sight (off screen or clipped by its container) the popup closes and the field loses focus, so it doesn't keep looking open. `MSelect`, `MMultiSelect`, `MAutocomplete`, `MMultiAutocomplete`, `MDatePicker`, `MDateRangePicker`, `MTimePicker`, `MColorPicker`; `MPhoneInput` already followed scrolls and now also closes when its field is out of sight
+
 ## [1.6.0] - 2026-11-23
 
 ### Added
