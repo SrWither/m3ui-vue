@@ -351,6 +351,16 @@ export interface M3Locale {
   diffSplit: string
   diffUnified: string
   diffNoChanges: string
+  notifTitle: string
+  notifMarkAllRead: string
+  notifAll: string
+  notifUnread: string
+  notifEmpty: string
+  notifToday: string
+  notifYesterday: string
+  notifDismiss: string
+  notifMarkRead: string
+  notifMarkUnread: string
   /** MTimeline's button past `limit`; `{count}` is how many entries are hidden */
   timelineShowMore: string
   timelineShowLess: string
@@ -1040,6 +1050,16 @@ export const defaultLocale: M3Locale = {
   diffSplit: 'Side by side',
   diffUnified: 'Unified',
   diffNoChanges: 'No changes',
+  notifTitle: 'Notifications',
+  notifMarkAllRead: 'Mark all as read',
+  notifAll: 'All',
+  notifUnread: 'Unread',
+  notifEmpty: "You're all caught up",
+  notifToday: 'Today',
+  notifYesterday: 'Yesterday',
+  notifDismiss: 'Dismiss',
+  notifMarkRead: 'Mark as read',
+  notifMarkUnread: 'Mark as unread',
   timelineShowMore: 'Show {count} more',
   timelineShowLess: 'Show less',
   mediaPlayer: 'Media player',
