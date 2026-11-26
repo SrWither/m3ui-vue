@@ -7,6 +7,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [1.6.1] - Unreleased
 
+### Added
+- `genericAdapter` reads a few neutral keys from each layer's `metadata`, so `MMapBaseLayers` works with any style, not just the Orvian conventions: `base: true` (or `base: { image }`) plus `image` makes it a base layer with its thumbnail (kept out of `MMapLayers`' list), `children` lists layer ids shown, hidden and faded along with it (a vector base map's many layers under one entry; the children of a base layer aren't listed) and `listed: false` leaves it out of the list
+
 ### Fixed
 - **Field popups stay on their field instead of closing as soon as anything scrolls.** The list or panel follows the page and any scroll container around the field, window resizes (browser zoom), visual viewport changes (pinch zoom, the on-screen keyboard) and the field itself resizing (chips wrapping onto a new line); scrolls inside the popup are still ignored. Once the field is scrolled out of sight (off screen or clipped by its container) the popup closes and the field loses focus, so it doesn't keep looking open. `MSelect`, `MMultiSelect`, `MAutocomplete`, `MMultiAutocomplete`, `MDatePicker`, `MDateRangePicker`, `MTimePicker`, `MColorPicker`; `MPhoneInput` already followed scrolls and now also closes when its field is out of sight
 
