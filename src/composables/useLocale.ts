@@ -318,6 +318,18 @@ export interface M3Locale {
   cronRange: string
   country: string
   timeZone: string
+  cameraStart: string
+  cameraStarting: string
+  cameraCapture: string
+  cameraRetake: string
+  cameraUsePhoto: string
+  cameraSwitch: string
+  cameraDenied: string
+  cameraUnavailable: string
+  cameraUnsupported: string
+  cameraFailed: string
+  qrHint: string
+  qrUnsupported: string
   /** MTimeline's button past `limit`; `{count}` is how many entries are hidden */
   timelineShowMore: string
   timelineShowLess: string
@@ -974,6 +986,18 @@ export const defaultLocale: M3Locale = {
   cronRange: '{from} to {to}',
   country: 'Country',
   timeZone: 'Time zone',
+  cameraStart: 'Turn on camera',
+  cameraStarting: 'Starting camera…',
+  cameraCapture: 'Take photo',
+  cameraRetake: 'Retake',
+  cameraUsePhoto: 'Use photo',
+  cameraSwitch: 'Switch camera',
+  cameraDenied: 'Camera access was denied. Allow it in the browser to continue.',
+  cameraUnavailable: 'No camera available',
+  cameraUnsupported: "This browser can't use the camera",
+  cameraFailed: "The camera couldn't start",
+  qrHint: 'Point the camera at a code',
+  qrUnsupported: "This browser can't read codes",
   timelineShowMore: 'Show {count} more',
   timelineShowLess: 'Show less',
   mediaPlayer: 'Media player',
