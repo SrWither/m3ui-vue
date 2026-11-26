@@ -6,6 +6,7 @@
  * from the `/map` entry point.
  */
 import MIcon from './MIcon.vue'
+import MTooltip from './MTooltip.vue'
 import { useLocale } from '../composables/useLocale'
 import { useMapLayers } from '../composables/useMapLayers'
 import type { MapSource } from '../composables/useMap'
@@ -32,34 +33,34 @@ const src = (image: string, base: string) => (/^(https?:|data:|\/\/)/.test(image
 
 <template>
   <div class="flex gap-2" :class="vertical ? 'flex-col' : 'flex-row flex-wrap'" role="radiogroup">
-    <button
-      v-for="layer in baseLayers"
-      :key="layer.id"
-      type="button"
-      role="radio"
-      class="m3-map-base grid size-12 shrink-0 cursor-pointer place-items-center overflow-hidden rounded-full border-2 bg-surface-variant transition-[border-color,transform] duration-150 hover:scale-110"
-      :class="baseLayer === layer.id ? 'm3-map-base--active border-primary' : 'border-transparent'"
-      :title="layer.title"
-      :aria-label="layer.title"
-      :aria-checked="baseLayer === layer.id"
-      @click="setBaseLayer(layer.id)"
-    >
-      <img v-if="layer.base?.image" :src="src(layer.base.image, imageBase)" alt="" class="size-full object-cover">
-      <MIcon v-else name="map" :size="22" class="text-on-surface-variant" />
-    </button>
-    <button
-      v-if="none"
-      type="button"
-      role="radio"
-      class="m3-map-base grid size-12 shrink-0 cursor-pointer place-items-center rounded-full border-2 bg-surface-variant transition-[border-color,transform] duration-150 hover:scale-110"
-      :class="baseLayer === null ? 'm3-map-base--active border-primary' : 'border-transparent'"
-      :title="t.mapNoBaseLayer"
-      :aria-label="t.mapNoBaseLayer"
-      :aria-checked="baseLayer === null"
-      @click="setBaseLayer(null)"
-    >
-      <MIcon name="layers_clear" :size="22" class="text-on-surface-variant" />
-    </button>
+    <!-- The library's tooltip, not the browser's title -->
+    <MTooltip v-for="layer in baseLayers" :key="layer.id" :text="layer.title" :placement="vertical ? 'right' : 'top'">
+      <button
+        type="button"
+        role="radio"
+        class="m3-map-base grid size-12 shrink-0 cursor-pointer place-items-center overflow-hidden rounded-full border-2 bg-surface-variant transition-[border-color,transform] duration-150 hover:scale-110"
+        :class="baseLayer === layer.id ? 'm3-map-base--active border-primary' : 'border-transparent'"
+        :aria-label="layer.title"
+        :aria-checked="baseLayer === layer.id"
+        @click="setBaseLayer(layer.id)"
+      >
+        <img v-if="layer.base?.image" :src="src(layer.base.image, imageBase)" alt="" class="size-full object-cover">
+        <MIcon v-else name="map" :size="22" class="text-on-surface-variant" />
+      </button>
+    </MTooltip>
+    <MTooltip v-if="none" :text="t.mapNoBaseLayer" :placement="vertical ? 'right' : 'top'">
+      <button
+        type="button"
+        role="radio"
+        class="m3-map-base grid size-12 shrink-0 cursor-pointer place-items-center rounded-full border-2 bg-surface-variant transition-[border-color,transform] duration-150 hover:scale-110"
+        :class="baseLayer === null ? 'm3-map-base--active border-primary' : 'border-transparent'"
+        :aria-label="t.mapNoBaseLayer"
+        :aria-checked="baseLayer === null"
+        @click="setBaseLayer(null)"
+      >
+        <MIcon name="layers_clear" :size="22" class="text-on-surface-variant" />
+      </button>
+    </MTooltip>
   </div>
 </template>
 

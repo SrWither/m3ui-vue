@@ -413,7 +413,7 @@ defineExpose({ start, finish, clear, remove })
         <MIcon name="straighten" :size="20" />
       </button>
       <button type="button" class="grid place-items-center" :title="t.mapMeasureArea" :aria-pressed="mode === 'area'" @click="start('area')">
-        <MIcon name="pentagon" :size="20" />
+        <MIcon name="square_foot" :size="20" />
       </button>
       <button type="button" class="grid place-items-center" :title="t.mapClearMeasurements" :disabled="!count && !mode" @click="clear">
         <MIcon name="delete" :size="20" />

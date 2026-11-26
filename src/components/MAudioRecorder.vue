@@ -285,16 +285,16 @@ defineExpose({ start, stop, pause, resume, discard })
       </template>
       <template v-else-if="modelValue">
         <MIconButton :icon="playing ? 'pause' : 'play_arrow'" :label="playing ? t.recorderPausePlayback : t.recorderPlay" @click="togglePlay" />
-        <span class="flex h-8 min-w-0 flex-1 items-center gap-[2px]" aria-hidden="true">
+        <span class="mr-1 flex h-8 min-w-0 flex-1 items-center justify-between gap-px overflow-hidden" aria-hidden="true">
           <span
             v-for="(p, i) in modelValue.peaks"
             :key="i"
-            class="w-[3px] min-w-[2px] flex-1 rounded-full"
+            class="min-w-px max-w-[3px] flex-1 rounded-full"
             :class="i / modelValue.peaks.length < played ? 'bg-primary' : 'bg-on-surface-variant/50'"
             :style="{ height: `${Math.max(12, p * 100)}%` }"
           />
         </span>
-        <span class="shrink-0 font-mono text-label-medium text-on-surface-variant">{{ fmt(modelValue.duration) }}</span>
+        <span class="shrink-0 pl-1 font-mono text-label-medium tabular-nums text-on-surface-variant">{{ fmt(modelValue.duration) }}</span>
         <MIconButton icon="delete" :label="t.recorderDiscard" @click="discard" />
       </template>
       <span v-else class="flex-1 text-body-medium text-on-surface-variant">{{ t.recorderStart }}</span>
@@ -305,10 +305,10 @@ defineExpose({ start, stop, pause, resume, discard })
       <MIconButton icon="delete" :label="t.recorderDiscard" @click="discard" />
       <span class="size-2.5 shrink-0 rounded-full bg-error" :class="status === 'recording' ? 'animate-pulse' : 'opacity-40'" />
       <span class="sr-only" role="status">{{ t.recorderRecording }}</span>
-      <span class="flex h-8 min-w-0 flex-1 items-center gap-[2px]" aria-hidden="true">
-        <span v-for="(l, i) in liveBars" :key="i" class="w-[3px] min-w-[2px] flex-1 rounded-full bg-primary transition-[height] duration-75" :style="{ height: `${Math.max(8, l * 100)}%` }" />
+      <span class="mr-1 flex h-8 min-w-0 flex-1 items-center justify-between gap-px overflow-hidden" aria-hidden="true">
+        <span v-for="(l, i) in liveBars" :key="i" class="min-w-px max-w-[3px] flex-1 rounded-full bg-primary transition-[height] duration-75" :style="{ height: `${Math.max(8, l * 100)}%` }" />
       </span>
-      <span class="shrink-0 font-mono text-label-medium text-on-surface" aria-live="off">{{ fmt(elapsed) }}<template v-if="maxDuration"> / {{ fmt(maxDuration) }}</template></span>
+      <span class="shrink-0 pl-1 font-mono text-label-medium tabular-nums text-on-surface" aria-live="off">{{ fmt(elapsed) }}<template v-if="maxDuration"> / {{ fmt(maxDuration) }}</template></span>
       <MIconButton v-if="status === 'recording'" icon="pause" :label="t.recorderPause" @click="pause" />
       <MIconButton v-else icon="mic" :label="t.recorderResume" @click="resume" />
       <MIconButton icon="stop" :label="t.recorderStop" variant="filled" @click="stop" />
@@ -318,16 +318,16 @@ defineExpose({ start, stop, pause, resume, discard })
     <template v-else-if="status === 'review' && result">
       <MIconButton icon="delete" :label="t.recorderDiscard" @click="discard" />
       <MIconButton :icon="playing ? 'pause' : 'play_arrow'" :label="playing ? t.recorderPausePlayback : t.recorderPlay" @click="togglePlay" />
-      <span class="flex h-8 min-w-0 flex-1 items-center gap-[2px]" aria-hidden="true">
+      <span class="mr-1 flex h-8 min-w-0 flex-1 items-center justify-between gap-px overflow-hidden" aria-hidden="true">
         <span
           v-for="(p, i) in result.peaks"
           :key="i"
-          class="w-[3px] min-w-[2px] flex-1 rounded-full"
+          class="min-w-px max-w-[3px] flex-1 rounded-full"
           :class="i / result.peaks.length < played ? 'bg-primary' : 'bg-on-surface-variant/50'"
           :style="{ height: `${Math.max(12, p * 100)}%` }"
         />
       </span>
-      <span class="shrink-0 font-mono text-label-medium text-on-surface-variant">{{ fmt(result.duration) }}</span>
+      <span class="shrink-0 pl-1 font-mono text-label-medium tabular-nums text-on-surface-variant">{{ fmt(result.duration) }}</span>
       <MIconButton icon="send" :label="t.recorderUse" variant="filled" @click="use" />
     </template>
   </div>
