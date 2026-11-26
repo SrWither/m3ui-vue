@@ -8,6 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [1.6.1] - Unreleased
 
 ### Added
+- `MMapCluster` (`/map`): many GeoJSON points grouped by MapLibre's clustering into M3 count bubbles that grow with their count and split as you zoom in. The bubbles are HTML buttons in the theme's colors and type scale (so a style without fonts works too, and they can be reached with Tab), with compact labels (1.5K); a click or Enter zooms in until one splits. `cluster-click` gives `{ id, count, lngLat, zoomIn, leaves }` (`zoomOnClick: false` to do something else, like listing its points), `#cluster` draws your own bubble, and `color`, `radius`, `maxZoom`, `pointLayers` and `sourceOptions` (`clusterProperties`…) tune it. New locale key `mapClusterZoom`
 - `genericAdapter` reads a few neutral keys from each layer's `metadata`, so `MMapBaseLayers` works with any style, not just the Orvian conventions: `base: true` (or `base: { image }`) plus `image` makes it a base layer with its thumbnail (kept out of `MMapLayers`' list), `children` lists layer ids shown, hidden and faded along with it (a vector base map's many layers under one entry; the children of a base layer aren't listed) and `listed: false` leaves it out of the list
 
 ### Fixed
