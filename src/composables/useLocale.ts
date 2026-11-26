@@ -263,6 +263,37 @@ export interface M3Locale {
   mapPressEnterToSearch: string
   mapSearching: string
   mapNoPlaces: string
+  filterMatchAll: string
+  filterMatchAny: string
+  filterAddCondition: string
+  filterAddGroup: string
+  filterRemoveCondition: string
+  filterRemoveGroup: string
+  filterField: string
+  filterOperator: string
+  filterValue: string
+  filterFrom: string
+  filterTo: string
+  filterNoConditions: string
+  filterOpContains: string
+  filterOpNotContains: string
+  filterOpEquals: string
+  filterOpNotEquals: string
+  filterOpStartsWith: string
+  filterOpEndsWith: string
+  filterOpGt: string
+  filterOpGte: string
+  filterOpLt: string
+  filterOpLte: string
+  filterOpBetween: string
+  filterOpIn: string
+  filterOpNotIn: string
+  filterOpIsTrue: string
+  filterOpIsFalse: string
+  filterOpIsEmpty: string
+  filterOpIsNotEmpty: string
+  filterOpAfter: string
+  filterOpBefore: string
   /** MTimeline's button past `limit`; `{count}` is how many entries are hidden */
   timelineShowMore: string
   timelineShowLess: string
@@ -864,6 +895,37 @@ export const defaultLocale: M3Locale = {
   mapPressEnterToSearch: 'Press Enter to search',
   mapSearching: 'Searching…',
   mapNoPlaces: 'No places found',
+  filterMatchAll: 'All',
+  filterMatchAny: 'Any',
+  filterAddCondition: 'Add condition',
+  filterAddGroup: 'Add group',
+  filterRemoveCondition: 'Remove condition',
+  filterRemoveGroup: 'Remove group',
+  filterField: 'Field',
+  filterOperator: 'Operator',
+  filterValue: 'Value',
+  filterFrom: 'From',
+  filterTo: 'To',
+  filterNoConditions: 'No conditions: every row matches',
+  filterOpContains: 'contains',
+  filterOpNotContains: "doesn't contain",
+  filterOpEquals: 'is',
+  filterOpNotEquals: 'is not',
+  filterOpStartsWith: 'starts with',
+  filterOpEndsWith: 'ends with',
+  filterOpGt: 'greater than',
+  filterOpGte: 'at least',
+  filterOpLt: 'less than',
+  filterOpLte: 'at most',
+  filterOpBetween: 'between',
+  filterOpIn: 'is any of',
+  filterOpNotIn: 'is none of',
+  filterOpIsTrue: 'is yes',
+  filterOpIsFalse: 'is no',
+  filterOpIsEmpty: 'is empty',
+  filterOpIsNotEmpty: 'is not empty',
+  filterOpAfter: 'is after',
+  filterOpBefore: 'is before',
   timelineShowMore: 'Show {count} more',
   timelineShowLess: 'Show less',
   mediaPlayer: 'Media player',
