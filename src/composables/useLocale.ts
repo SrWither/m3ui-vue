@@ -316,6 +316,8 @@ export interface M3Locale {
   cronOnDaysOfMonth: string
   cronInMonths: string
   cronRange: string
+  country: string
+  timeZone: string
   /** MTimeline's button past `limit`; `{count}` is how many entries are hidden */
   timelineShowMore: string
   timelineShowLess: string
@@ -970,6 +972,8 @@ export const defaultLocale: M3Locale = {
   cronOnDaysOfMonth: 'on day {days} of the month',
   cronInMonths: 'in {months}',
   cronRange: '{from} to {to}',
+  country: 'Country',
+  timeZone: 'Time zone',
   timelineShowMore: 'Show {count} more',
   timelineShowLess: 'Show less',
   mediaPlayer: 'Media player',

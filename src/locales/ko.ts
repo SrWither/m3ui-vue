@@ -297,6 +297,8 @@ export const koLocale: M3Locale = {
   cronOnDaysOfMonth: '매월 {days}일',
   cronInMonths: '{months}에',
   cronRange: '{from}~{to}',
+  country: '국가',
+  timeZone: '시간대',
   timelineShowMore: '{count}개 더 보기',
   timelineShowLess: '간략히 보기',
   mediaPlayer: '미디어 플레이어',

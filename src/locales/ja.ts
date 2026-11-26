@@ -297,6 +297,8 @@ export const jaLocale: M3Locale = {
   cronOnDaysOfMonth: '毎月 {days} 日',
   cronInMonths: '{months}',
   cronRange: '{from}〜{to}',
+  country: '国',
+  timeZone: 'タイムゾーン',
   timelineShowMore: 'さらに {count} 件を表示',
   timelineShowLess: '表示を減らす',
   mediaPlayer: 'メディアプレーヤー',

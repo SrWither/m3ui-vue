@@ -297,6 +297,8 @@ export const frLocale: M3Locale = {
   cronOnDaysOfMonth: 'le {days} du mois',
   cronInMonths: 'en {months}',
   cronRange: '{from} à {to}',
+  country: 'Pays',
+  timeZone: 'Fuseau horaire',
   timelineShowMore: 'Afficher {count} de plus',
   timelineShowLess: 'Afficher moins',
   mediaPlayer: 'Lecteur multimédia',

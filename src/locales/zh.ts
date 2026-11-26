@@ -297,6 +297,8 @@ export const zhLocale: M3Locale = {
   cronOnDaysOfMonth: '每月 {days} 日',
   cronInMonths: '在 {months}',
   cronRange: '{from}至{to}',
+  country: '国家/地区',
+  timeZone: '时区',
   timelineShowMore: '再显示 {count} 项',
   timelineShowLess: '收起',
   mediaPlayer: '媒体播放器',
