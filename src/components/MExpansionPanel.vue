@@ -1,18 +1,27 @@
 <script setup lang="ts">
 /**
- * A collapsible section with a smooth height animation. Works controlled via v-model, or uncontrolled by simply
- * omitting modelValue.
+ * A collapsible section with a smooth height animation (`MCollapse`). Works controlled via v-model, or uncontrolled by
+ * simply omitting modelValue. The header takes text props or slots of your own (a colored icon, a title with
+ * highlighted parts, a badge before the chevron); `expandable: false` makes it a plain row with nothing to open, and
+ * `flush` lets the body run edge to edge (a list).
  *
  * @slot default Panel body content, revealed with a height animation when open
+ * @slot leading The header's start, instead of `icon` (an avatar, a colored icon)
+ * @slot title The title, instead of the `title` text (highlighted parts, a chip)
+ * @slot subtitle The line below the title, instead of the `subtitle` text
+ * @slot trailing Content before the chevron (a count, a status, a button)
  * @event update:modelValue Emitted when the panel is toggled — only meaningful when modelValue is passed
  *   (controlled usage); powers v-model
+ * @event after-open The open animation finished
+ * @event after-close The close animation finished
  */
-import { computed, ref } from 'vue'
+import { computed, ref, useId } from 'vue'
+import MCollapse from './MCollapse.vue'
 import MIcon from './MIcon.vue'
 
 const props = withDefaults(defineProps<{
-  /** Panel header text */
-  title: string
+  /** Panel header text (or the `#title` slot) */
+  title?: string
   /** Secondary text in the header, below the title */
   subtitle?: string
   /** Leading Material Symbol icon in the header */
@@ -22,21 +31,28 @@ const props = withDefaults(defineProps<{
    * (uncontrolled).
    */
   modelValue?: boolean
-  /** Disables toggling */
+  /** Disables toggling (dimmed) */
   disabled?: boolean
+  /** Whether it opens at all: false shows a plain header row, no chevron, not a button (not dimmed, unlike `disabled`) */
+  expandable?: boolean
+  /** The body with no padding or divider, for edge-to-edge content such as a list */
+  flush?: boolean
+  /** Unmount the body while closed */
+  unmountOnClose?: boolean
   /** Visual style of the panel container */
   variant?: 'outlined' | 'filled' | 'elevated'
-}>(), { modelValue: undefined, disabled: false, variant: 'outlined' })
+}>(), { modelValue: undefined, disabled: false, expandable: true, flush: false, unmountOnClose: false, variant: 'outlined' })
 
-const emit = defineEmits<{ 'update:modelValue': [boolean] }>()
+const emit = defineEmits<{ 'update:modelValue': [boolean]; 'after-open': []; 'after-close': [] }>()
 
+const bodyId = useId()
 const internal = ref(false)
 const isOpen = computed(() =>
-  props.modelValue !== undefined ? props.modelValue : internal.value,
+  props.expandable && (props.modelValue !== undefined ? props.modelValue : internal.value),
 )
 
 function toggle() {
-  if (props.disabled) return
+  if (props.disabled || !props.expandable) return
   const next = !isOpen.value
   if (props.modelValue !== undefined) emit('update:modelValue', next)
   else internal.value = next
@@ -51,57 +67,49 @@ const wrapperClass = computed(() => {
 
 <template>
   <div :class="wrapperClass" class="overflow-hidden">
-    <!-- Header / trigger -->
-    <button
-      type="button"
-      class="flex w-full items-center gap-4 px-5 py-4 text-left transition-colors duration-150 focus-visible:outline-none"
-      :class="[
+    <!-- Header: a button when it opens, a plain row when it doesn't -->
+    <component
+      :is="expandable ? 'button' : 'div'"
+      :type="expandable ? 'button' : undefined"
+      class="flex w-full items-center gap-4 px-5 py-4 text-left transition-colors duration-150 focus-visible:outline-none focus-visible:bg-on-surface/10"
+      :class="expandable ? [
         disabled ? 'cursor-not-allowed opacity-[0.38]' : 'cursor-pointer hover:bg-on-surface/4',
         isOpen ? 'bg-on-surface/4' : '',
-      ]"
-      :aria-expanded="isOpen"
-      :disabled="disabled"
+      ] : ''"
+      :aria-expanded="expandable ? isOpen : undefined"
+      :aria-controls="expandable ? bodyId : undefined"
+      :disabled="expandable ? disabled : undefined"
       @click="toggle"
     >
-      <MIcon v-if="icon" :name="icon" :size="22" class="shrink-0 text-on-surface-variant" />
+      <slot name="leading">
+        <MIcon v-if="icon" :name="icon" :size="22" class="shrink-0 text-on-surface-variant" />
+      </slot>
       <div class="flex-1 min-w-0">
-        <p class="text-body-large font-medium text-on-surface">{{ title }}</p>
-        <p v-if="subtitle" class="text-body-small text-on-surface-variant">{{ subtitle }}</p>
+        <div class="text-body-large font-medium text-on-surface"><slot name="title">{{ title }}</slot></div>
+        <div v-if="subtitle || $slots.subtitle" class="text-body-small text-on-surface-variant"><slot name="subtitle">{{ subtitle }}</slot></div>
       </div>
+      <slot name="trailing" />
       <MIcon
+        v-if="expandable"
         name="expand_more"
         :size="22"
         class="shrink-0 text-on-surface-variant transition-transform duration-200"
         :class="isOpen ? 'rotate-180' : ''"
       />
-    </button>
+    </component>
 
-    <!-- Content with height animation -->
-    <div class="expand-grid" :class="isOpen ? 'expand-open' : ''">
-      <div class="expand-body">
-        <div class="border-t border-outline-variant/60 px-5 py-4">
-          <slot />
-        </div>
+    <MCollapse
+      v-if="expandable"
+      :id="bodyId"
+      :open="isOpen"
+      :unmount-on-close="unmountOnClose"
+      @after-open="emit('after-open')"
+      @after-close="emit('after-close')"
+    >
+      <div v-if="flush" class="border-t border-outline-variant/60"><slot /></div>
+      <div v-else class="border-t border-outline-variant/60 px-5 py-4">
+        <slot />
       </div>
-    </div>
+    </MCollapse>
   </div>
 </template>
-
-<style scoped>
-/*
-  grid-template-rows: 0fr → 1fr expands to the exact content height,
-  so the animation is always proportional — no max-height overshoot.
-*/
-.expand-grid {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 300ms ease-in-out;
-}
-.expand-grid.expand-open {
-  grid-template-rows: 1fr;
-}
-.expand-body {
-  min-height: 0;
-  overflow: hidden;
-}
-</style>
