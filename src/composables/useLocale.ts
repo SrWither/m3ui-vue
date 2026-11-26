@@ -294,6 +294,28 @@ export interface M3Locale {
   filterOpIsNotEmpty: string
   filterOpAfter: string
   filterOpBefore: string
+  cronExpression: string
+  cronInvalid: string
+  cronNextRuns: string
+  cronFreqMinutes: string
+  cronFreqHourly: string
+  cronFreqDaily: string
+  cronFreqWeekly: string
+  cronFreqMonthly: string
+  cronFreqCustom: string
+  cronEvery: string
+  cronMinute: string
+  cronTime: string
+  cronDayOfMonth: string
+  cronEveryMinute: string
+  cronEveryNMinutes: string
+  cronHourlyAt: string
+  cronAt: string
+  cronEveryNHoursAt: string
+  cronMinutesOfHours: string
+  cronOnDaysOfMonth: string
+  cronInMonths: string
+  cronRange: string
   /** MTimeline's button past `limit`; `{count}` is how many entries are hidden */
   timelineShowMore: string
   timelineShowLess: string
@@ -926,6 +948,28 @@ export const defaultLocale: M3Locale = {
   filterOpIsNotEmpty: 'is not empty',
   filterOpAfter: 'is after',
   filterOpBefore: 'is before',
+  cronExpression: 'Cron expression',
+  cronInvalid: 'Not a valid cron expression',
+  cronNextRuns: 'Next runs',
+  cronFreqMinutes: 'Every few minutes',
+  cronFreqHourly: 'Hourly',
+  cronFreqDaily: 'Daily',
+  cronFreqWeekly: 'Weekly',
+  cronFreqMonthly: 'Monthly',
+  cronFreqCustom: 'Custom',
+  cronEvery: 'Every (minutes)',
+  cronMinute: 'Minute',
+  cronTime: 'Time',
+  cronDayOfMonth: 'Day of the month',
+  cronEveryMinute: 'Every minute',
+  cronEveryNMinutes: 'Every {n} minutes',
+  cronHourlyAt: 'At minute {m} of every hour',
+  cronAt: 'At {time}',
+  cronEveryNHoursAt: 'Every {n} hours, at minute {m}',
+  cronMinutesOfHours: 'At minutes {minutes} of hours {hours}',
+  cronOnDaysOfMonth: 'on day {days} of the month',
+  cronInMonths: 'in {months}',
+  cronRange: '{from} to {to}',
   timelineShowMore: 'Show {count} more',
   timelineShowLess: 'Show less',
   mediaPlayer: 'Media player',
