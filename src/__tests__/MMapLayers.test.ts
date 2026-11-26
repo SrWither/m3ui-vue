@@ -90,6 +90,62 @@ describe('genericAdapter', () => {
     const model = genericAdapter(orvianStyle() as unknown as StyleSpecification, {})
     expect(model.layers.find((l) => l.id === 'roads')).toMatchObject({ title: 'roads', listed: true, identify: { format: {}, exclude: [] }, hover: false })
     expect(model.layers.find((l) => l.id === 'osm')!.identify).toBe(false)
+    // Orvian's own keys mean nothing here
+    expect(model.layers.find((l) => l.id === 'osm')).toMatchObject({ listed: true, base: undefined })
+  })
+
+  it('reads base layers, thumbnails, children and listed from neutral metadata', () => {
+    const style = {
+      version: 8,
+      sources: {},
+      layers: [
+        { id: 'osm', type: 'raster', metadata: { base: true, image: 'osm.png', title: 'Streets' } },
+        { id: 'sat', type: 'raster', metadata: { base: { image: 'sat.png' } } },
+        { id: 'vector-base', type: 'fill', metadata: { base: true, children: ['vb-roads', 'vb-labels'] } },
+        { id: 'vb-roads', type: 'line' },
+        { id: 'vb-labels', type: 'symbol' },
+        { id: 'parcels', type: 'fill', metadata: { children: ['parcels-line'] } },
+        { id: 'parcels-line', type: 'line', metadata: { listed: false } },
+      ],
+    }
+    const model = genericAdapter(style as unknown as StyleSpecification, {})
+    const layer = (id: string) => model.layers.find((l) => l.id === id)!
+    expect(layer('osm')).toMatchObject({ title: 'Streets', listed: false, base: { image: 'osm.png' }, identify: false })
+    expect(layer('sat')).toMatchObject({ listed: false, base: { image: 'sat.png' } })
+    expect(layer('vector-base')).toMatchObject({ listed: false, base: { image: undefined }, children: ['vb-roads', 'vb-labels'], identify: false })
+    expect(layer('vb-roads')).toMatchObject({ listed: false, identify: false, base: undefined })
+    expect(layer('parcels')).toMatchObject({ listed: true, children: ['parcels-line'] })
+    expect(layer('parcels-line').listed).toBe(false)
+  })
+
+  it('drives MMapBaseLayers without the Orvian conventions', async () => {
+    const style = {
+      version: 8,
+      sources: {},
+      layers: [
+        { id: 'osm', type: 'raster', metadata: { base: true, image: 'osm.png', title: 'Streets' } },
+        { id: 'sat', type: 'raster', layout: { visibility: 'none' }, metadata: { base: true, image: 'sat.png', title: 'Satellite' } },
+      ],
+    }
+    const wrapper = mount(MMap, {
+      props: { mapStyle: 'https://x.test/style.json', adapter: genericAdapter },
+      slots: { default: () => h(MMapBaseLayers, { imageBase: '/img/' }) },
+      attachTo: document.body,
+    })
+    await flushPromises()
+    const map = created.maps.at(-1)! as FakeMap
+    map.style = style as never
+    map.load()
+    await nextTick()
+    await nextTick()
+    const radios = wrapper.findAll('[role="radio"]')
+    expect(radios.length).toBe(3) // two base layers + none
+    expect(radios[0]!.find('img').attributes('src')).toBe('/img/osm.png')
+    expect(radios[0]!.attributes('aria-checked')).toBe('true')
+    await radios[1]!.trigger('click')
+    expect(radios[1]!.attributes('aria-checked')).toBe('true')
+    expect(map.getLayoutProperty('osm', 'visibility')).toBe('none')
+    wrapper.unmount()
   })
 })
 

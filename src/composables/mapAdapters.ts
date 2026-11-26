@@ -64,22 +64,36 @@ const VECTOR = new Set(['fill', 'line', 'circle', 'symbol', 'fill-extrusion', 'h
 
 /**
  * Any style: every layer but the background is listed under its id (or `metadata.title`), vector layers identify all
- * their properties, and nothing is a base layer or shows on hover.
+ * their properties, and nothing shows on hover. A few neutral keys in a layer's `metadata` refine it:
+ * - `base: true` (or `base: { image }`) makes it a base layer for `MMapBaseLayers`, with `image` (here or in
+ *   `metadata.image`) as its thumbnail; base layers aren't listed in `MMapLayers`
+ * - `children`: layer ids shown, hidden and faded along with it (a vector base map's many layers under one entry);
+ *   the children of a base layer aren't listed either
+ * - `listed: false` leaves it out of `MMapLayers`
  */
-export const genericAdapter: MapAdapter = (style) => ({
-  title: style.name,
-  groups: [],
-  layers: style.layers
-    .filter((l) => l.type !== 'background')
-    .map((l) => ({
-      id: l.id,
-      title: (meta(l)?.title as string | undefined) ?? l.id,
-      listed: true,
-      children: [],
-      identify: VECTOR.has(l.type) ? { format: {}, exclude: [] } : false,
-      hover: false,
-    })),
-})
+export const genericAdapter: MapAdapter = (style) => {
+  const layers = style.layers.filter((l) => l.type !== 'background')
+  const baseOf = (m: Metadata) => (m?.base === true || (typeof m?.base === 'object' && m.base !== null) ? m : undefined)
+  const childrenOf = (m: Metadata) => (Array.isArray(m?.children) ? (m!.children as string[]) : [])
+  const underBase = new Set(layers.flatMap((l) => (baseOf(meta(l)) ? childrenOf(meta(l)) : [])))
+  return {
+    title: style.name,
+    groups: [],
+    layers: layers.map((l) => {
+      const m = meta(l)
+      const base = baseOf(m)
+      return {
+        id: l.id,
+        title: (m?.title as string | undefined) ?? l.id,
+        listed: !base && !underBase.has(l.id) && m?.listed !== false,
+        base: base ? { image: ((m!.base as { image?: string }).image ?? m!.image) as string | undefined } : undefined,
+        children: childrenOf(m),
+        identify: VECTOR.has(l.type) && !base && !underBase.has(l.id) ? { format: {}, exclude: [] } : false,
+        hover: false,
+      }
+    }),
+  }
+}
 
 export interface OrvianAdapterOptions {
   /**
