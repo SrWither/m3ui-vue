@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.6.1] - Unreleased
+## [1.6.1] - 2026-11-26
 
 ### Added
 - `MNotificationCenter`: an inbox of notifications grouped by day (Today, Yesterday, a date) with relative times in the app's language, unread ones marked, an All / Unread filter and Mark all as read. A click (or Enter) opens one and marks it read; a sideways swipe (finger or mouse), its dismiss button or Delete dismisses it. The list is the `v-model`; `#item` and `#empty` slots. New `notif*` locale keys
