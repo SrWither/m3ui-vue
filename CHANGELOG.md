@@ -5,6 +5,26 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.7.0] - Unreleased
+
+### Added
+- Form validation. `MForm` is a `<form>` that validates the fields inside it: each field registers by its `name`, on submit everything is checked and shown, `submit` fires only when it all passes (with the values by name, dotted names nested: `address.city` → `{ address: { city } }`), otherwise `invalid` fires with the messages and the first field in error takes the focus. `errors` shows errors from outside by field name (a server's 422, vee-validate's `errors`) over the fields' own rules, without blocking the next submit; `schema` validates the whole form with any Standard Schema (zod, valibot, arktype, yup 1.7+), and `submit` then gets the schema's output; `validateOn` (`blur` by default, `input`, `submit`); `disabled` disables every control inside and skips validation. A template ref exposes `validate()`, `reset()` (back to the first values), `resetValidation()`, `valid` (checked silently, shown or not), `pending`, `errors` and `values`. No dependencies: the Standard Schema types are copied in
+- Every form field takes `rules`, `name` and `validateOn`, emits `blur` and exposes `validate()` / `resetValidation()`: `MTextField`, `MNumberField`, `MMaskField`, `MPinInput`, `MTagInput`, `MMentionField`, `MSelect`, `MMultiSelect`, `MAutocomplete`, `MMultiAutocomplete`, `MCountrySelect`, `MTimezoneSelect`, `MPhoneInput`, `MAddressField`, `MDatePicker`, `MDateRangePicker`, `MTimePicker`, `MColorPicker`, `MCheckbox`, `MSwitch`, `MRadioGroup`, `MSlider`, `MRating`, `MSegmentedButton`, `MCronField`, `MFileUpload`, `MSignaturePad`, `MCreditCardInput`, `MRichTextEditor`, `MCodeEditor` and `MJsonEditor`. A rule is a function `(value, ctx) => true | 'message'` (async allowed; only the latest check counts; `ctx` has the locale and the form's other values, and reading one re-checks the rule when it changes) or a Standard Schema. Errors show once the field is left and update live after that; "leaving" a field made of several parts (stepper buttons, a picker's popup, a group of radios) means focus leaving all of it. `required` validates inside an `MForm` or next to `rules`; on its own it still only adds the asterisk. What "empty" means follows the field: a date range needs both ends, a PIN every digit, a rating more than 0, a rich text some text or an image, a signature a stroke
+- `error` takes a string too, which is also the message, so a validation library plugs straight in (`:error="errors.email"`, vee-validate's `defineField` props, Vuelidate's `$errors[0]?.$message`). Messages get `role="alert"`, and the control `aria-invalid` and `aria-describedby`
+- Built-in rules `required()`, `email()`, `url()`, `minLength()`, `maxLength()` (characters, or items for arrays: tags, files, multi-selects), `min()`, `max()`, `pattern()` and `sameAs()` (another field of the form, re-checked when it changes), plus `isEmpty()`. All but `required` pass on an empty value, so optional fields stay optional; messages come from the locale (new `validation*` keys in all 7 languages) or a custom one as the last argument
+- `MCheckbox` shows M3's error state (`CheckboxTokens`: Error container and OnError check when ticked, Error outline when not). `MSwitch`, `MRadioGroup`, `MSlider`, `MRating` and `MSegmentedButton` show only the message, since M3 defines no error look for them
+- `required` (with the asterisk) on `MDatePicker`, `MDateRangePicker`, `MTimePicker`, `MColorPicker`, `MPinInput`, `MCheckbox`, `MSwitch` and `MRadioGroup`
+- `MPhoneInput`'s own length check and `MJsonEditor`'s parse error block an `MForm`'s submit; `MCreditCardInput` counts as one field (Luhn, expiry and code checks included; an optional empty card passes, a half-typed one doesn't) and validating it shows every sub-field's error. `MSignaturePad` validates as a field whose value is the PNG data: URL; `MAddressField` validates the picked place, not the text
+
+### Changed
+- **`MFileUpload`'s drop zone is a button for the keyboard: it's a Tab stop, Enter or Space open the file picker, and it has a focus ring**
+- `MRadioGroup` is a `role="radiogroup"`
+- `MRating`, `MSegmentedButton`, `MSignaturePad`, `MRichTextEditor` and `MCodeEditor` render their validation message next to themselves; a class or attribute you pass still lands on the control
+- `MPhoneInput` shows an incomplete number once focus leaves the whole field (number and country list), not only the number input
+
+### Fixed
+- `@blur` on `MTextField` (and the fields built on it) never fired: the listener landed on its wrapper, where blur doesn't bubble. Every form field now emits `blur`, which is what vee-validate's `handleBlur` and Vuelidate's `$touch` need
+
 ## [1.6.2] - 2026-11-26
 
 ### Fixed
