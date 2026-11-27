@@ -15,6 +15,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `MCheckbox` shows M3's error state (`CheckboxTokens`: Error container and OnError check when ticked, Error outline when not). `MSwitch`, `MRadioGroup`, `MSlider`, `MRating` and `MSegmentedButton` show only the message, since M3 defines no error look for them
 - `required` (with the asterisk) on `MDatePicker`, `MDateRangePicker`, `MTimePicker`, `MColorPicker`, `MPinInput`, `MCheckbox`, `MSwitch` and `MRadioGroup`
 - `MPhoneInput`'s own length check and `MJsonEditor`'s parse error block an `MForm`'s submit; `MCreditCardInput` counts as one field (Luhn, expiry and code checks included; an optional empty card passes, a half-typed one doesn't) and validating it shows every sub-field's error. `MSignaturePad` validates as a field whose value is the PNG data: URL; `MAddressField` validates the picked place, not the text
+- `validateDebounce` (ms) on every field and as an `MForm` default: while the value keeps changing, the re-check waits until it stops (`pending` meanwhile), so an async rule makes one request instead of one per key; `validate()` and a submit don't wait. Fields re-check when their value, `required` or `disabled` changes, not on every render of the parent, so an inline `:rules="[...]"` array doesn't re-run every field's rules on each keystroke elsewhere
+- `MForm`'s `errors` hide as soon as the user edits their field (a server's "email already registered" goes away while it's being fixed) and show again with the next `errors` object; `keepErrors` keeps them until you clear them
+- `MForm`'s `validate(names?, { focus? })` checks only the named fields (a wizard's step; `'address'` includes `'address.city'`), and `focus: true` moves the focus to the first one in error; `resetValidation(names?)` likewise
+- A `required()` in a field's `rules` replaces the check its `required` prop adds (kept for the asterisk), so the rule's own message is the one shown; on a field with its own "empty" (a date range), the rule uses it
 
 ### Changed
 - **`MFileUpload`'s drop zone is a button for the keyboard: it's a Tab stop, Enter or Space open the file picker, and it has a focus ring**
