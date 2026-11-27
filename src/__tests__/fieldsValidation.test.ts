@@ -146,7 +146,7 @@ import MSignaturePad from '../components/MSignaturePad.vue'
 import MCreditCardInput from '../components/MCreditCardInput.vue'
 import MJsonEditor from '../components/MJsonEditor.vue'
 import MSlider from '../components/MSlider.vue'
-import { min } from '../composables/validation'
+import { min, required } from '../composables/validation'
 
 const blankCard = { number: '', expiry: '', cvc: '' }
 /** [name, component, empty props, can it take focus] */
@@ -217,5 +217,13 @@ describe('group B fields in an MForm', () => {
     const w = mount(() => h(MForm, { disabled: true }, () => h(MSelect, { label: 'Room', modelValue: undefined, options })))
     await flushPromises()
     expect(w.find('[role="combobox"]').attributes('tabindex')).toBe('-1')
+  })
+})
+
+describe('required() in rules on a field with its own "empty"', () => {
+  it("MDateRangePicker: half a range fails with the rule's message", async () => {
+    const { onInvalid, w } = await submit(MDateRangePicker, { modelValue: { start: '2026-01-01', end: null }, required: true, rules: [required('Pick both dates')] })
+    expect(onInvalid).toHaveBeenCalledWith({ f: 'Pick both dates' })
+    w.unmount()
   })
 })

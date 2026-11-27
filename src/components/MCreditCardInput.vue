@@ -67,6 +67,8 @@ const props = withDefaults(
     rules?: ValidationRule | ValidationRule[]
     /** When the rules are checked and shown: on leaving the card fields (default), while typing, or only on submit */
     validateOn?: ValidateOn
+    /** Wait this long (ms) after the value stops changing before re-checking (one request for an async rule, not one per key). Defaults to its `MForm`'s */
+    validateDebounce?: number
     /** The key of the card value in its `MForm` */
     name?: string
   }>(),
@@ -134,6 +136,7 @@ const validation = useFieldValidation({
   errorLabel: () => props.errorLabel,
   name: () => props.name,
   validateOn: () => props.validateOn,
+  validateDebounce: () => props.validateDebounce,
   disabled: () => props.disabled,
   focus: () => {
     const bad = (['number', 'name', 'expiry', 'cvc'] as const).find((f) => !!errorFor(f)) ?? 'number'

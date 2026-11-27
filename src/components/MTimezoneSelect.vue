@@ -38,6 +38,8 @@ const props = withDefaults(
     rules?: ValidationRule | ValidationRule[]
     /** When the rules are checked and shown: on leaving the field (default), while typing, or only on submit */
     validateOn?: ValidateOn
+    /** Wait this long (ms) after the value stops changing before re-checking (one request for an async rule, not one per key). Defaults to its `MForm`'s */
+    validateDebounce?: number
     /** The key of this field in its `MForm` */
     name?: string
     /** Marks it as required */
@@ -117,6 +119,7 @@ onMounted(() => {
     :error-label="errorLabel"
     :rules="rules"
     :validate-on="validateOn"
+    :validate-debounce="validateDebounce"
     :name="name"
     @blur="emit('blur')"
     :required="required"

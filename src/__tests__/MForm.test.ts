@@ -222,3 +222,104 @@ describe('MForm', () => {
     w.unmount()
   })
 })
+
+describe('MForm extras (1.7.0)', () => {
+  const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+  it('validateDebounce: one check after typing stops, pending meanwhile', async () => {
+    const rule = vi.fn(async () => true)
+    const { w } = formWith((m) => [field(m, 'user', { rules: [rule] })], { validateDebounce: 40 })
+    const form = (w.vm as any).form
+    await flushPromises()
+    rule.mockClear()
+    const input = w.find('input')
+    await input.setValue('a')
+    await input.setValue('ab')
+    await input.setValue('abc')
+    expect(form.pending).toBe(true)
+    expect(rule).not.toHaveBeenCalled()
+    await wait(60)
+    await flushPromises()
+    expect(rule).toHaveBeenCalledTimes(1)
+    expect(rule.mock.calls[0][0]).toBe('abc')
+    expect(form.pending).toBe(false)
+    w.unmount()
+  })
+
+  it('validate() skips the wait', async () => {
+    const { w } = formWith((m) => [field(m, 'user', { rules: [() => 'Bad'], validateDebounce: 10_000 })])
+    await w.find('input').setValue('x')
+    expect(await (w.vm as any).form.validate()).toBe(false)
+    await flushPromises()
+    expect(errorText(w)).toEqual(['Bad'])
+    w.unmount()
+  })
+
+  it("an inline rules array doesn't re-check every field on each render of the parent", async () => {
+    const rule = vi.fn(() => true)
+    const { w } = formWith((m) => [field(m, 'a'), field(m, 'b', { rules: [rule] })])
+    await flushPromises()
+    rule.mockClear()
+    await w.findAll('input')[0].setValue('typing in a') // the parent re-renders: b gets a new rules array
+    await flushPromises()
+    expect(rule).not.toHaveBeenCalled()
+    w.unmount()
+  })
+
+  it('an outside error hides once its field changes, and a new errors object shows it again', async () => {
+    const errors = ref<Record<string, string>>({ email: 'Taken' })
+    const C = defineComponent({
+      setup() {
+        const v = ref('')
+        return () => h(MForm, { errors: errors.value }, () => h(MTextField, { name: 'email', label: 'Email', modelValue: v.value, 'onUpdate:modelValue': (x: string) => (v.value = x) }))
+      },
+    })
+    const w = mount(C)
+    await flushPromises()
+    expect(errorText(w)).toEqual(['Taken'])
+    await w.find('input').setValue('other@m3ui.dev')
+    await flushPromises()
+    expect(errorText(w)).toEqual([])
+    errors.value = { email: 'Taken' } // the next response
+    await flushPromises()
+    expect(errorText(w)).toEqual(['Taken'])
+  })
+
+  it('keepErrors keeps an outside error while its field changes', async () => {
+    const { w } = formWith((m) => [field(m, 'email')], { errors: { email: 'Taken' }, keepErrors: true })
+    await w.find('input').setValue('x')
+    await flushPromises()
+    expect(errorText(w)).toEqual(['Taken'])
+    w.unmount()
+  })
+
+  it('validate(names) checks only those fields (dotted ones included), and can focus the first error', async () => {
+    const { w } = formWith((m) => [
+      field(m, 'name', { required: true }),
+      field(m, 'address.city', { required: true }),
+      field(m, 'card', { required: true }),
+    ])
+    const form = (w.vm as any).form
+    await flushPromises()
+    expect(await form.validate(['name', 'address'], { focus: true })).toBe(false)
+    await flushPromises()
+    expect(errorText(w)).toHaveLength(2) // name and address.city, not card
+    expect(document.activeElement).toBe(w.findAll('input')[0].element)
+    await w.findAll('input')[0].setValue('Ana')
+    await w.findAll('input')[1].setValue('Rosario')
+    expect(await form.validate(['name', 'address'])).toBe(true)
+    form.resetValidation(['card'])
+    expect(await form.validate()).toBe(false) // the whole form still checks card
+    w.unmount()
+  })
+})
+
+describe('required prop + required() in rules', () => {
+  it("shows the rules' own message, not the generic one", async () => {
+    const { w } = formWith((m) => [field(m, 'name', { required: true, rules: [required('Enter your name')] })])
+    await w.find('form').trigger('submit')
+    await flushPromises()
+    expect(errorText(w)).toEqual(['Enter your name'])
+    w.unmount()
+  })
+})

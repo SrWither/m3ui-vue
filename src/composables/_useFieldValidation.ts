@@ -1,6 +1,6 @@
 import { computed, inject, nextTick, onBeforeUnmount, onMounted, ref, useId, watch, type InjectionKey } from 'vue'
 import { useLocale } from './useLocale'
-import { isEmpty, runRules, type ValidateOn, type ValidationRule } from './validation'
+import { REQUIRED_RULE, isEmpty, runRules, type ValidateOn, type ValidationRule } from './validation'
 
 /** @internal What a field registers with its `MForm` */
 export interface FormField {
@@ -30,6 +30,12 @@ export interface FormContext {
   /** The form schema's first issue for this field */
   schemaError: (name: string) => Promise<string | null>
   validateOn: () => ValidateOn | undefined
+  /** Default debounce (ms) for re-checks while the value changes */
+  validateDebounce: () => number | undefined
+  /** The `errors` object itself: a new one (a new server response) shows its errors again */
+  externalErrorsKey: () => unknown
+  /** Keep an outside error after its field changes, instead of hiding it */
+  keepErrors: () => boolean
   disabled: () => boolean
 }
 
@@ -63,6 +69,8 @@ export interface FieldValidationOptions {
   errorLabel: () => string | undefined
   name: () => string | undefined
   validateOn: () => ValidateOn | undefined
+  /** Wait this long (ms) after the value stops changing before re-checking (async rules: one request, not one per key) */
+  validateDebounce?: () => number | undefined
   disabled: () => boolean | undefined
   focus: () => void
   el: () => Element | null | undefined
@@ -94,10 +102,19 @@ export function useFieldValidation(opts: FieldValidationOptions) {
     const list = r ? (Array.isArray(r) ? r : [r]) : []
     // `required` only validates where validation is in use, so a plain field keeps today's behavior
     // (just the asterisk and the native attribute)
-    if (!(opts.required() && (form || list.length))) return list
     const empty = opts.isEmpty ?? isEmpty
+    // A `required()` in the rules: use the field's own "empty" with its message, instead of a second check
+    const own = list.map((r) => {
+      const mark = (r as any)?.[REQUIRED_RULE]
+      if (mark === undefined || !opts.isEmpty) return r
+      const fieldRequired: ValidationRule = (value, { locale }) => !empty(value) || (typeof mark === 'string' ? mark : locale.validationRequired)
+      ;(fieldRequired as any)[REQUIRED_RULE] = mark
+      return fieldRequired
+    })
+    if (!(opts.required() && (form || own.length))) return own
+    if (own.some((r) => (r as any)?.[REQUIRED_RULE] !== undefined)) return own
     const required: ValidationRule = (value, { locale }) => !empty(value) || locale.validationRequired
-    return [required, ...list]
+    return [required, ...own]
   })
   const active = computed(() => ruleList.value.length > 0 || (!!form && !!opts.name() && form.hasSchema()))
 
@@ -145,12 +162,32 @@ export function useFieldValidation(opts: FieldValidationOptions) {
 
   const mode = () => opts.validateOn() ?? form?.validateOn() ?? 'blur'
   let resetting = false
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const debounceMs = () => opts.validateDebounce?.() ?? form?.validateDebounce() ?? 0
+  /** Re-checks now, or after the debounce while the value keeps changing (pending meanwhile) */
+  function schedule() {
+    clearTimeout(timer)
+    const ms = debounceMs()
+    if (ms <= 0 || !active.value || disabled.value) return run()
+    pending.value = true
+    token++ // a check already running is stale now
+    timer = setTimeout(run, ms)
+  }
+  onBeforeUnmount(() => clearTimeout(timer))
+
+  /** An outside error (MForm `errors`) hides once its field changes, until a new `errors` object comes */
+  const dismissed = ref(false)
+  if (form) watch(() => form.externalErrorsKey(), () => (dismissed.value = false))
 
   watch(opts.value, () => {
     if (mode() === 'input' && !resetting) shown.value = true
-    run()
+    if (form && !form.keepErrors() && !resetting) dismissed.value = true
+    schedule()
   }, { deep: true })
-  watch([ruleList, disabled], () => run())
+  // Not the rules array itself: an inline `:rules="[...]"` is a new array on every render of the parent, and
+  // re-checking then would re-run every field's (async) rules on any keystroke anywhere. Its length changes when
+  // rules are really swapped (`:rules="company ? [required()] : []"`); `required` and `disabled` are watched too
+  watch([() => ruleList.value.length, () => !!opts.required(), disabled], () => run())
   // Cross-field rules: re-check when a field they read changes, but only once this one is on display
   // (compared value by value: the getter returns a new array whenever any field of the form changes)
   watch(
@@ -167,12 +204,14 @@ export function useFieldValidation(opts: FieldValidationOptions) {
   }
 
   async function validate(): Promise<boolean> {
+    clearTimeout(timer)
     shown.value = true
     opts.onValidate?.()
     return !(await run())
   }
 
   function resetValidation() {
+    clearTimeout(timer)
     token++
     shown.value = false
     pending.value = false
@@ -196,7 +235,7 @@ export function useFieldValidation(opts: FieldValidationOptions) {
 
   const external = computed(() => {
     const name = opts.name()
-    return form && name ? form.externalError(name) : null
+    return form && name && !dismissed.value ? form.externalError(name) : null
   })
   const own = computed(() => (shown.value ? result.value : null))
 

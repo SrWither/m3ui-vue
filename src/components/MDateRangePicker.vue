@@ -54,6 +54,8 @@ const props = defineProps<{
   rules?: ValidationRule | ValidationRule[]
   /** When the rules are checked and shown: on leaving the field (default; live after that), while typing, or only on submit (`MForm`) */
   validateOn?: ValidateOn
+  /** Wait this long (ms) after the value stops changing before re-checking (one request for an async rule, not one per key). Defaults to its `MForm`'s */
+  validateDebounce?: number
   /** The key of this field in its `MForm`'s values, errors and schema */
   name?: string
   /** Hint text below the field */
@@ -93,6 +95,7 @@ const validation = useFieldValidation({
   errorLabel: () => props.errorLabel,
   name: () => props.name,
   validateOn: () => props.validateOn,
+  validateDebounce: () => props.validateDebounce,
   disabled: () => props.disabled,
   focus: () => { triggerEl.value?.querySelector('button')?.focus() },
   el: () => triggerEl.value,

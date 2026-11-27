@@ -22,6 +22,10 @@ const props = defineProps<{
   schema?: StandardSchemaV1
   /** When the fields check and show their rules, unless a field sets its own: on leaving it (default), while typing, or only on submit */
   validateOn?: ValidateOn
+  /** Default for every field: wait this long (ms) after a value stops changing before re-checking it, so an async rule makes one request, not one per key */
+  validateDebounce?: number
+  /** Keep an `errors` message after its field changes. By default it hides as soon as the user edits that field, until a new `errors` object comes */
+  keepErrors?: boolean
   /** Disables every control inside (through a native `<fieldset disabled>`) and skips their validation */
   disabled?: boolean
 }>()
@@ -85,6 +89,9 @@ provide(FORM_KEY, {
     return result.issues?.find((i) => belongsTo(issuePath(i), name))?.message ?? null
   },
   validateOn: () => props.validateOn,
+  validateDebounce: () => props.validateDebounce,
+  externalErrorsKey: () => props.errors,
+  keepErrors: () => !!props.keepErrors,
   disabled: () => !!props.disabled,
 })
 
@@ -121,10 +128,26 @@ function ordered() {
 }
 
 /** Validates every field (showing their errors); resolves to whether all pass */
-async function validate(): Promise<boolean> {
-  const results = await Promise.all([...fields].map((f) => f.validate()))
-  const orphans = await orphanIssues()
-  return results.every(Boolean) && Object.keys(orphans).length === 0
+/** The fields a list of names picks (a name also picks its nested ones: 'address' → 'address.city'), or all */
+function pick(names?: string[]) {
+  if (!names) return [...fields]
+  return [...fields].filter((f) => {
+    const name = f.name()
+    return !!name && names.some((n) => belongsTo(name, n))
+  })
+}
+
+/**
+ * Validates every field, or only the ones named (a step of a wizard), showing their errors; resolves to whether
+ * they all pass. `focus` moves the focus to the first one in error, as a submit does.
+ */
+async function validate(names?: string[], options: { focus?: boolean } = {}): Promise<boolean> {
+  const picked = pick(names)
+  const results = await Promise.all(picked.map((f) => f.validate()))
+  const orphans = Object.keys(await orphanIssues()).filter((path) => !names || names.some((n) => belongsTo(path, n)))
+  const ok = results.every(Boolean) && orphans.length === 0
+  if (!ok && options.focus) ordered().find((f) => picked.includes(f) && f.error() !== null)?.focus()
+  return ok
 }
 
 async function onSubmit(event: SubmitEvent) {
@@ -155,9 +178,9 @@ function onReset(event: Event) {
   reset()
 }
 
-/** Hides every error without touching the values */
-function resetValidation() {
-  fields.forEach((f) => f.resetValidation())
+/** Hides every error (or the named fields' ones) without touching the values */
+function resetValidation(names?: string[]) {
+  pick(names).forEach((f) => f.resetValidation())
 }
 
 defineExpose({

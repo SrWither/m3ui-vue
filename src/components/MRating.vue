@@ -46,6 +46,8 @@ const props = withDefaults(defineProps<{
   rules?: ValidationRule | ValidationRule[]
   /** When the rules are checked and shown: on leaving it (default), on change, or only on submit */
   validateOn?: ValidateOn
+  /** Wait this long (ms) after the value stops changing before re-checking (one request for an async rule, not one per key). Defaults to its `MForm`'s */
+  validateDebounce?: number
   /** The key of this field in its `MForm` */
   name?: string
 }>(), { max: 5, size: 28, color: 'primary', icon: 'star', halfIncrements: false })
@@ -78,6 +80,7 @@ const validation = useFieldValidation({
   errorLabel: () => props.errorLabel,
   name: () => props.name,
   validateOn: () => props.validateOn,
+  validateDebounce: () => props.validateDebounce,
   disabled: () => props.disabled || props.readonly,
   focus: () => { rootEl.value?.focus() },
   el: () => rootEl.value,

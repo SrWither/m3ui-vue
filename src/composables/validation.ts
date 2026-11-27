@@ -98,9 +98,18 @@ function toNumber(value: unknown): number {
 // Built-in rules. Every one but `required` passes on an empty value, so an optional field stays optional:
 // `[email()]` accepts '' and `[required(), email()]` doesn't.
 
-/** The value must be filled in (see `isEmpty`) */
+/** Marks the rules `required()` makes, so a field's `required` prop doesn't add a second one in front */
+export const REQUIRED_RULE = Symbol('m3-required-rule')
+
+/**
+ * The value must be filled in (see `isEmpty`; a field may define its own "empty", e.g. a date range needs both
+ * ends). Given in `rules`, it replaces the check the field's `required` prop adds, so its message is the one shown
+ */
 export function required(message?: string): ValidationRule {
-  return (value, { locale }) => !isEmpty(value) || message || locale.validationRequired
+  const rule: ValidationRule = (value, { locale }) => !isEmpty(value) || message || locale.validationRequired
+  // Its message (or true): a field with its own "empty" test rebuilds the check with it
+  ;(rule as any)[REQUIRED_RULE] = message ?? true
+  return rule
 }
 
 // Same pattern as the browser's own <input type="email"> check (WHATWG), which is what users expect
