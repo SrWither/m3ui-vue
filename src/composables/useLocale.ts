@@ -263,6 +263,18 @@ export interface M3Locale {
   mapPressEnterToSearch: string
   mapSearching: string
   mapNoPlaces: string
+  /** MMapRoute: a stop's name when it has no label (followed by its number) */
+  mapRouteStop: string
+  /** MMapRoute: the vehicle marker's accessible name */
+  mapRouteVehicle: string
+  // MTrackingTimeline ({time} is a clock time)
+  trackingArrives: string
+  trackingArrivingNow: string
+  trackingDelivered: string
+  trackingDelayed: string
+  trackingCanceled: string
+  trackingShowDetails: string
+  trackingHideDetails: string
   filterMatchAll: string
   filterMatchAny: string
   filterAddCondition: string
@@ -975,6 +987,15 @@ export const defaultLocale: M3Locale = {
   mapPressEnterToSearch: 'Press Enter to search',
   mapSearching: 'Searching…',
   mapNoPlaces: 'No places found',
+  mapRouteStop: 'Stop',
+  mapRouteVehicle: 'Vehicle',
+  trackingArrives: 'Arrives {time}',
+  trackingArrivingNow: 'Arriving now',
+  trackingDelivered: 'Delivered',
+  trackingDelayed: 'Delayed',
+  trackingCanceled: 'Canceled',
+  trackingShowDetails: 'Show details',
+  trackingHideDetails: 'Hide details',
   filterMatchAll: 'All',
   filterMatchAny: 'Any',
   filterAddCondition: 'Add condition',

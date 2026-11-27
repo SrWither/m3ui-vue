@@ -26,6 +26,7 @@ const props: Record<string, Record<string, unknown>> = {
   MVirtualTable: { columns: [{ key: 'a', label: 'A' }], rows: [{ a: 1 }] },
   MTreeTable: { columns: [{ key: 'a', label: 'A' }], rows: [] },
   MTree: { nodes: [{ id: 1, label: 'a' }] },
+  MTrackingTimeline: { steps: [{ label: 'Placed' }, { label: 'Delivered' }], current: 0, eta: 0 },
   MKbd: { keys: 'Ctrl+K' },
   MOrderTicket: { number: 1, createdAt: 0, items: [{ id: 1, name: 'Pizza' }] },
   MSeatMap: { layout: ['ss_ss', 'ss_ss'], modelValue: ['A1'] },

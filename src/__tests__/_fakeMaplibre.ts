@@ -141,7 +141,10 @@ export class FakeMarker extends Evented {
   setPopup(p: FakePopup) { this.popup = p; return this }
   getPopup() { return this.popup }
   setDraggable() { return this }
-  setRotation() { return this }
+  rotation = 0
+  rotationAlignment: unknown
+  setRotation(r = 0) { this.rotation = r; return this }
+  setRotationAlignment(a: unknown) { this.rotationAlignment = a; return this }
   setOffset() { return this }
   remove() { this.map = undefined; return this }
 }
