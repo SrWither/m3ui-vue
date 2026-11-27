@@ -8,6 +8,8 @@
  *   auto-submit
  */
 import { computed, nextTick, ref, watch } from 'vue'
+import { useFieldValidation, useFocusLeave } from '../composables/_useFieldValidation'
+import type { ValidateOn, ValidationRule } from '../composables/validation'
 
 const props = withDefaults(
   defineProps<{
@@ -25,10 +27,21 @@ const props = withDefaults(
     masked?: boolean
     /** Visual style */
     variant?: 'filled' | 'outlined'
-    /** Error state */
-    error?: boolean
+    /** Error state. A string is also the message (`:error="errors.x"`) */
+    error?: boolean | string
     /** Error message shown when error is true */
     errorLabel?: string
+    /** Marks as required — adds a red asterisk after the label; inside an `MForm` or with `rules`, also validates it */
+    required?: boolean
+    /**
+     * Validation rules: functions `(value, ctx) => true | 'message'` (may be async; see the built-in `required`,
+     * `email`, `minLength`…) or a Standard Schema (zod, valibot…). Checked in order; the first failure is shown
+     */
+    rules?: ValidationRule | ValidationRule[]
+    /** When the rules are checked and shown: on leaving the field (default; live after that), while typing, or only on submit (`MForm`) */
+    validateOn?: ValidateOn
+    /** The key of this field in its `MForm`'s values, errors and schema */
+    name?: string
     /** Hint text below the boxes */
     hint?: string
     /** Disables every box */
@@ -65,7 +78,30 @@ const groupBoundaries = computed(() => {
   return boundaries
 })
 
-const emit = defineEmits<{ 'update:modelValue': [string]; complete: [string] }>()
+const emit = defineEmits<{ blur: []; 'update:modelValue': [string]; complete: [string] }>()
+
+const rootEl = ref<HTMLElement | null>(null)
+const validation = useFieldValidation({
+  value: () => props.modelValue,
+  rules: () => props.rules,
+  required: () => props.required,
+  error: () => props.error,
+  errorLabel: () => props.errorLabel,
+  name: () => props.name,
+  validateOn: () => props.validateOn,
+  disabled: () => props.disabled,
+  focus: () => { inputEls.value[0]?.focus() },
+  el: () => inputEls.value[0],
+  setValue: (v) => emit('update:modelValue', v as string),
+  isEmpty: (v) => String(v ?? '').length < props.length,
+})
+/** Its own `disabled` or its MForm's */
+const isDisabled = validation.disabled
+const { hasError, message: errorMessage, messageId } = validation
+const onFocusOut = useFocusLeave(() => rootEl.value, () => {
+  validation.onBlur()
+  emit('blur')
+})
 
 const inputEls = ref<(HTMLInputElement | null)[]>([])
 
@@ -171,12 +207,12 @@ const boxClasses = computed(() => {
     'h-14 w-12 min-w-0 shrink text-center text-title-large outline-none',
     'transition-[border-color,border-width] duration-150',
     'disabled:cursor-not-allowed disabled:text-on-surface/38',
-    props.error ? 'caret-error' : 'caret-primary',
+    hasError.value ? 'caret-error' : 'caret-primary',
   ]
   if (props.variant === 'outlined') {
     return [...base,
       'rounded-xs border bg-transparent text-on-surface',
-      props.error
+      hasError.value
         ? 'border-error focus:border-2 focus:border-error'
         : 'border-outline hover:border-on-surface focus:border-2 focus:border-primary',
       'disabled:border-on-surface/12',
@@ -184,16 +220,23 @@ const boxClasses = computed(() => {
   }
   return [...base,
     'rounded-t-xs bg-surface-container-highest border-b text-on-surface',
-    props.error
+    hasError.value
       ? 'border-error focus:border-b-2 focus:border-error'
       : 'border-on-surface-variant hover:border-on-surface focus:border-b-2 focus:border-primary',
     'disabled:border-on-surface/38 disabled:bg-[color-mix(in_srgb,var(--color-on-surface)_4%,var(--color-surface-container-highest))]',
   ].join(' ')
 })
+
+defineExpose({
+  /** Checks its rules and shows the result; resolves to whether they pass */
+  validate: validation.validate,
+  /** Hides its validation error (until the next check) */
+  resetValidation: validation.resetValidation,
+})
 </script>
 
 <template>
-  <div class="flex flex-col gap-1">
+  <div ref="rootEl" class="flex flex-col gap-1" @focusout="onFocusOut">
     <div role="group" :aria-label="label" class="flex min-w-0 items-center gap-2">
       <template v-for="(digit, i) in digits" :key="i">
         <input
@@ -203,8 +246,10 @@ const boxClasses = computed(() => {
           :inputmode="type === 'numeric' ? 'numeric' : 'text'"
           autocomplete="one-time-code"
           maxlength="1"
-          :disabled="disabled"
+          :disabled="isDisabled"
           :aria-label="`Digit ${i + 1} of ${totalLength}`"
+          :aria-invalid="hasError || undefined"
+          :aria-describedby="errorMessage || hint ? messageId : undefined"
           :class="boxClasses"
           @input="onInput(i, $event)"
           @keydown="onKeydown(i, $event)"
@@ -219,7 +264,7 @@ const boxClasses = computed(() => {
       </template>
     </div>
 
-    <p v-if="error && errorLabel" class="px-1 text-body-small text-error">{{ errorLabel }}</p>
-    <p v-else-if="hint" class="px-1 text-body-small text-on-surface-variant">{{ hint }}</p>
+    <p v-if="errorMessage" :id="messageId" role="alert" class="px-1 text-body-small text-error">{{ errorMessage }}</p>
+    <p v-else-if="hint" :id="messageId" class="px-1 text-body-small text-on-surface-variant">{{ hint }}</p>
   </div>
 </template>

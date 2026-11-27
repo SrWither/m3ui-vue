@@ -9,8 +9,11 @@
  *
  * @event update:modelValue A place was picked, or the text changed after picking one (null)
  * @event select A place was picked
+ * @event blur Focus left the field and its list
  */
-import { computed, nextTick, onBeforeUnmount, ref, shallowRef, useId, watch, watchEffect } from 'vue'
+import { computed, nextTick, onBeforeUnmount, provide, ref, shallowRef, useId, watch, watchEffect } from 'vue'
+import { FORM_KEY, useFieldValidation, type FormContext } from '../composables/_useFieldValidation'
+import type { ValidateOn, ValidationRule } from '../composables/validation'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
 import MSpinner from './MSpinner.vue'
@@ -44,11 +47,17 @@ const props = withDefaults(
     minLength?: number
     /** Helper text below the field */
     hint?: string
-    /** Error state */
-    error?: boolean
+    /** Error state. A string is also the message */
+    error?: boolean | string
     /** Error message shown when `error` is true */
     errorLabel?: string
-    /** Marks it as required */
+    /** Validation rules (functions or a Standard Schema), run on the picked place (null until one is picked); see `MForm` */
+    rules?: ValidationRule | ValidationRule[]
+    /** When the rules are checked and shown: on leaving the field (default), while typing, or only on submit */
+    validateOn?: ValidateOn
+    /** The key of this field in its `MForm` */
+    name?: string
+    /** Marks it as required; inside an `MForm` or with `rules`, a place must be picked (typed text alone isn't enough) */
     required?: boolean
     /** Disables the field */
     disabled?: boolean
@@ -59,6 +68,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   'update:modelValue': [place: MapSearchResult | null]
   select: [place: MapSearchResult]
+  blur: []
 }>()
 
 const t = useLocale()
@@ -78,6 +88,25 @@ let controller: AbortController | undefined
 let timer: ReturnType<typeof setTimeout> | undefined
 
 const field = ref<InstanceType<typeof MTextField>>()
+
+// Validates the picked place, not the text: the inner MTextField is kept out of the MForm
+const validation = useFieldValidation({
+  value: () => props.modelValue,
+  rules: () => props.rules,
+  required: () => props.required,
+  error: () => props.error,
+  errorLabel: () => props.errorLabel,
+  name: () => props.name,
+  validateOn: () => props.validateOn,
+  disabled: () => props.disabled,
+  focus: () => field.value?.focus(),
+  el: () => wrapEl.value,
+  setValue: (v) => emit('update:modelValue', (v as MapSearchResult | null) ?? null),
+})
+/** Its own `disabled` or its MForm's */
+const isDisabled = validation.disabled
+const fieldError = computed(() => validation.message.value || validation.hasError.value)
+provide(FORM_KEY, null as unknown as FormContext)
 const wrapEl = ref<HTMLElement>()
 const listEl = ref<HTMLElement>()
 // The field's box (MTextField's first child), without its hint
@@ -181,6 +210,8 @@ function onFocusOut(e: FocusEvent) {
   if (next && (wrapEl.value?.contains(next) || listEl.value?.contains(next))) return
   focused.value = false
   open.value = false
+  validation.onBlur()
+  emit('blur')
 }
 
 // Escape closes the list (and only that, inside a dialog)
@@ -231,6 +262,10 @@ defineExpose({
   clear,
   /** Focuses the field */
   focus: () => field.value?.focus(),
+  /** Checks its rules and shows the result; resolves to whether they pass */
+  validate: validation.validate,
+  /** Hides its validation error (until the next check) */
+  resetValidation: validation.resetValidation,
 })
 </script>
 
@@ -243,17 +278,16 @@ defineExpose({
       :variant="variant"
       :leading-icon="leadingIcon"
       :hint="hint"
-      :error="error"
-      :error-label="errorLabel"
+      :error="fieldError"
       :required="required"
-      :disabled="disabled"
+      :disabled="isDisabled"
       autocomplete="street-address"
       @update:model-value="onText"
     >
       <!-- Always passed: MTextField reserves the room for #trailing only when the slot exists from the start -->
       <template #trailing>
         <MSpinner v-if="loading" :size="20" class="m-2" />
-        <MIconButton v-else-if="text" icon="close" :label="t.clearSearch" size="sm" :disabled="disabled" @click="clear" />
+        <MIconButton v-else-if="text" icon="close" :label="t.clearSearch" size="sm" :disabled="isDisabled" @click="clear" />
       </template>
     </MTextField>
   </div>

@@ -14,6 +14,7 @@
  * @event mention An item was picked: `(item, trigger)`
  */
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, useId, watch, watchEffect } from 'vue'
+import type { ValidateOn, ValidationRule } from '../composables/validation'
 import MAvatar from './MAvatar.vue'
 import MIcon from './MIcon.vue'
 import MSpinner from './MSpinner.vue'
@@ -85,10 +86,16 @@ const props = withDefaults(
     leadingIcon?: string
     /** Helper text below the field */
     hint?: string
-    /** Error state */
-    error?: boolean
+    /** Error state. A string is also the message */
+    error?: boolean | string
     /** Error message shown when `error` is true */
     errorLabel?: string
+    /** Validation rules (functions or a Standard Schema); see `MForm` */
+    rules?: ValidationRule | ValidationRule[]
+    /** When the rules are checked and shown: on leaving the field (default), while typing, or only on submit */
+    validateOn?: ValidateOn
+    /** The key of this field in its `MForm` */
+    name?: string
     /** Marks it as required */
     required?: boolean
     /** Disables the field */
@@ -98,6 +105,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
+  blur: []
   'update:modelValue': [text: string]
   'update:mentions': [mentions: MentionRef[]]
   mention: [item: MentionItem, trigger: string]
@@ -325,6 +333,10 @@ defineExpose({
       :hint="hint"
       :error="error"
       :error-label="errorLabel"
+      :rules="rules"
+      :validate-on="validateOn"
+      :name="name"
+      @blur="emit('blur')"
       :required="required"
       :disabled="disabled"
       @update:model-value="onText"

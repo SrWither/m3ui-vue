@@ -9,8 +9,11 @@
  * @event update:modelValue Emitted with the new list whenever files are added, removed or cleared (v-model)
  * @event select Emitted with the newly accepted files whenever files are added (drop or picker)
  * @event remove Emitted when a file is removed from the list with its remove button
+ * @event blur Emitted when focus leaves the drop zone
  */
 import { ref, computed, reactive, watch, onBeforeUnmount } from 'vue'
+import { useFieldValidation, useFocusLeave } from '../composables/_useFieldValidation'
+import type { ValidateOn, ValidationRule } from '../composables/validation'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
 import MSpinner from './MSpinner.vue'
@@ -46,6 +49,18 @@ const props = withDefaults(
     removeLabel?: string
     /** Optional v-model. Bind it to own the list: clear it, or update each entry's status/progress. Unbound, the component keeps the list itself. */
     modelValue?: UploadFile[]
+    /** Error state. A string is also the message */
+    error?: boolean | string
+    /** Error message shown when `error` is true */
+    errorLabel?: string
+    /** Inside an `MForm` or with `rules`, at least one file must be chosen */
+    required?: boolean
+    /** Validation rules on the file list (functions or a Standard Schema); `minLength`/`maxLength` count files. See `MForm` */
+    rules?: ValidationRule | ValidationRule[]
+    /** When the rules are checked and shown: on leaving it (default), on change, or only on submit */
+    validateOn?: ValidateOn
+    /** The key of this field in its `MForm` */
+    name?: string
   }>(),
   {
     multiple: false,
@@ -57,6 +72,7 @@ const emit = defineEmits<{
   select: [UploadFile[]]
   remove: [UploadFile]
   'update:modelValue': [UploadFile[]]
+  blur: []
 }>()
 
 defineSlots<{
@@ -91,6 +107,28 @@ onBeforeUnmount(() => {
 })
 const dragging = ref(false)
 const inputRef = ref<HTMLInputElement | null>(null)
+const zoneEl = ref<HTMLElement | null>(null)
+
+const validation = useFieldValidation({
+  value: () => files.value,
+  rules: () => props.rules,
+  required: () => props.required,
+  error: () => props.error,
+  errorLabel: () => props.errorLabel,
+  name: () => props.name,
+  validateOn: () => props.validateOn,
+  disabled: () => props.disabled,
+  focus: () => { zoneEl.value?.focus() },
+  el: () => zoneEl.value,
+  setValue: (v) => setFiles((v as UploadFile[] | undefined) ?? []),
+})
+/** Its own `disabled` or its MForm's */
+const isDisabled = validation.disabled
+const { hasError, message: errorMessage, messageId } = validation
+const onFocusOut = useFocusLeave(() => zoneEl.value, () => {
+  validation.onBlur()
+  emit('blur')
+})
 
 const acceptList = computed(() =>
   props.accept ? props.accept.split(',').map((s) => s.trim()) : null,
@@ -139,7 +177,7 @@ function processFiles(fileList: FileList | File[]) {
 
 function onDrop(e: DragEvent) {
   dragging.value = false
-  if (props.disabled || !e.dataTransfer?.files.length) return
+  if (isDisabled.value || !e.dataTransfer?.files.length) return
   processFiles(e.dataTransfer.files)
 }
 
@@ -158,26 +196,45 @@ function clear() {
   if (files.value.length) setFiles([])
 }
 
-defineExpose({ clear, files })
-
 function openPicker() {
-  if (!props.disabled) inputRef.value?.click()
+  if (!isDisabled.value) inputRef.value?.click()
 }
+
+defineExpose({
+  clear,
+  files,
+  /** Checks its rules and shows the result; resolves to whether they pass */
+  validate: validation.validate,
+  /** Hides its validation error (until the next check) */
+  resetValidation: validation.resetValidation,
+})
 </script>
 
 <template>
   <div class="flex flex-col gap-3">
     <!-- Drop zone -->
+    <!-- A button for the keyboard too: Enter/Space open the picker, and a form can focus it on an error -->
     <div
-      class="relative flex min-h-[160px] cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-6 transition-colors duration-150"
+      ref="zoneEl"
+      role="button"
+      :tabindex="isDisabled ? -1 : 0"
+      :aria-disabled="isDisabled || undefined"
+      :aria-invalid="hasError || undefined"
+      :aria-describedby="errorMessage ? messageId : undefined"
+      class="relative flex min-h-[160px] cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-6 outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-secondary"
       :class="[
-        disabled
+        isDisabled
           ? 'cursor-not-allowed border-outline-variant/50 bg-surface-container/30 opacity-60'
           : dragging
             ? 'border-primary bg-primary-container/20'
-            : 'border-outline-variant bg-surface-container-lowest hover:border-primary/60 hover:bg-surface-container',
+            : hasError
+              ? 'border-error bg-surface-container-lowest hover:bg-surface-container'
+              : 'border-outline-variant bg-surface-container-lowest hover:border-primary/60 hover:bg-surface-container',
       ]"
       @click="openPicker"
+      @keydown.enter.prevent="openPicker"
+      @keydown.space.prevent="openPicker"
+      @focusout="onFocusOut"
       @dragenter.prevent="dragging = true"
       @dragover.prevent="dragging = true"
       @dragleave.prevent="dragging = false"
@@ -208,9 +265,12 @@ function openPicker() {
       class="hidden"
       :accept="accept"
       :multiple="multiple"
-      :disabled="disabled"
+      :disabled="isDisabled"
+      :name="name"
       @change="onFileInput"
     />
+
+    <p v-if="errorMessage" :id="messageId" role="alert" class="-mt-1 px-1 text-body-small text-error">{{ errorMessage }}</p>
 
     <!-- File list -->
     <TransitionGroup

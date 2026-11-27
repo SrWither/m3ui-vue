@@ -3,8 +3,11 @@
  * A JSON-aware editor built on top of MCodeEditor — validates as you type and adds format/minify shortcuts.
  *
  * @event update:modelValue Emitted with the parsed value whenever the text is valid JSON — powers v-model
+ * @event blur Emitted when focus leaves the editor
  */
-import { ref, computed, watch } from 'vue'
+import { ref, computed, inject, provide, watch } from 'vue'
+import { FORM_KEY, useFieldValidation, useFocusLeave, type FormContext } from '../composables/_useFieldValidation'
+import type { ValidateOn, ValidationRule } from '../composables/validation'
 import MCodeEditor from './MCodeEditor.vue'
 import MIcon from './MIcon.vue'
 import { useLocale } from '../composables/useLocale'
@@ -17,6 +20,8 @@ export interface JsonEditorLabels {
 }
 
 const locale = useLocale()
+// jsonRule is always there: `required` alone (no MForm, no rules) keeps today's behavior
+const inForm = !!inject(FORM_KEY, null)
 
 const props = withDefaults(
   defineProps<{
@@ -24,6 +29,18 @@ const props = withDefaults(
     modelValue: unknown
     /** Read-only mode */
     readonly?: boolean
+    /** Error state. A string is also the message */
+    error?: boolean | string
+    /** Error message shown when `error` is true */
+    errorLabel?: string
+    /** Inside an `MForm` or with `rules`, it can't be empty (null) */
+    required?: boolean
+    /** Validation rules (functions or a Standard Schema); see `MForm` */
+    rules?: ValidationRule | ValidationRule[]
+    /** When the rules are checked and shown: on leaving it (default), on change, or only on submit */
+    validateOn?: ValidateOn
+    /** The key of this field in its `MForm` */
+    name?: string
     /** Min height */
     minHeight?: string
     /** Max height */
@@ -49,12 +66,36 @@ const l = computed<Required<JsonEditorLabels>>(() => ({
   ...props.labels,
 }))
 
-const emit = defineEmits<{ 'update:modelValue': [unknown] }>()
+const emit = defineEmits<{ 'update:modelValue': [unknown]; blur: [] }>()
 
 const rawText = ref(JSON.stringify(props.modelValue, null, 2))
 const parseError = ref<string | null>(null)
 
 const isValid = computed(() => !parseError.value)
+
+// Text that doesn't parse is one more rule: it blocks an MForm submit
+const jsonRule: ValidationRule = () => !parseError.value || l.value.invalid
+const rootEl = ref<HTMLElement | null>(null)
+const validation = useFieldValidation({
+  value: () => props.modelValue,
+  rules: () => [...(props.rules ? (Array.isArray(props.rules) ? props.rules : [props.rules]) : []), jsonRule],
+  required: () => props.required && (inForm || !!props.rules),
+  error: () => props.error,
+  errorLabel: () => props.errorLabel,
+  name: () => props.name,
+  validateOn: () => props.validateOn,
+  disabled: () => props.readonly,
+  focus: () => { rootEl.value?.querySelector<HTMLElement>('.cm-content')?.focus() },
+  el: () => rootEl.value,
+  setValue: (v) => emit('update:modelValue', v),
+})
+const { hasError, message: errorMessage, messageId } = validation
+const onFocusOut = useFocusLeave(() => rootEl.value, () => {
+  validation.onBlur()
+  emit('blur')
+})
+// The inner MCodeEditor edits text, not this value: keep it out of the form
+provide(FORM_KEY, null as unknown as FormContext)
 
 watch(() => props.modelValue, (val) => {
   let current: unknown
@@ -103,13 +144,21 @@ function minifyJson() {
     // keep error state
   }
 }
+
+defineExpose({
+  /** Checks its rules and shows the result; resolves to whether they pass */
+  validate: validation.validate,
+  /** Hides its validation error (until the next check) */
+  resetValidation: validation.resetValidation,
+})
 </script>
 
 <template>
-  <div class="flex flex-col gap-0">
+  <div ref="rootEl" class="flex flex-col gap-0" @focusout="onFocusOut">
     <MCodeEditor
       :model-value="rawText"
       language="json"
+      :error="hasError && !parseError"
       :readonly="readonly"
       :min-height="minHeight"
       :max-height="maxHeight"
@@ -153,5 +202,7 @@ function minifyJson() {
     <p v-if="parseError" class="px-3 py-1.5 text-body-small text-error">
       {{ parseError }}
     </p>
+    <!-- The parse error above already says what's wrong with the text -->
+    <p v-else-if="errorMessage" :id="messageId" role="alert" class="px-3 py-1.5 text-body-small text-error">{{ errorMessage }}</p>
   </div>
 </template>

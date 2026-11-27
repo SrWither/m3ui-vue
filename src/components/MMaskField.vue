@@ -6,6 +6,8 @@
  * @event debounced Emitted debounce ms after the user stops typing (only when debounce > 0)
  */
 import { computed, ref, useId, watch } from 'vue'
+import { useFieldValidation, useFocusLeave } from '../composables/_useFieldValidation'
+import type { ValidateOn, ValidationRule } from '../composables/validation'
 import MIcon from './MIcon.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 import { useDebounce } from '../composables/useDebounce'
@@ -35,10 +37,19 @@ const props = withDefaults(
     mask: string | MaskPreset
     /** Visual style */
     variant?: 'filled' | 'outlined'
-    /** Error state */
-    error?: boolean
+    /** Error state. A string is also the message (`:error="errors.x"`) */
+    error?: boolean | string
     /** Error message shown when error is true */
     errorLabel?: string
+    /**
+     * Validation rules: functions `(value, ctx) => true | 'message'` (may be async; see the built-in `required`,
+     * `email`, `minLength`…) or a Standard Schema (zod, valibot…). Checked in order; the first failure is shown
+     */
+    rules?: ValidationRule | ValidationRule[]
+    /** When the rules are checked and shown: on leaving the field (default; live after that), while typing, or only on submit (`MForm`) */
+    validateOn?: ValidateOn
+    /** The key of this field in its `MForm`'s values, errors and schema */
+    name?: string
     /** Hint text */
     hint?: string
     /** Disables the field */
@@ -63,7 +74,29 @@ const props = withDefaults(
   },
 )
 
-const emit = defineEmits<{ 'update:modelValue': [string]; debounced: [string] }>()
+const emit = defineEmits<{ blur: []; 'update:modelValue': [string]; debounced: [string] }>()
+
+const rootEl = ref<HTMLElement | null>(null)
+const validation = useFieldValidation({
+  value: () => props.modelValue,
+  rules: () => props.rules,
+  required: () => props.required,
+  error: () => props.error,
+  errorLabel: () => props.errorLabel,
+  name: () => props.name,
+  validateOn: () => props.validateOn,
+  disabled: () => props.disabled,
+  focus: () => { inputEl.value?.focus() },
+  el: () => inputEl.value,
+  setValue: (v) => emit('update:modelValue', v as string),
+})
+/** Its own `disabled` or its MForm's */
+const isDisabled = validation.disabled
+const { hasError, message: errorMessage, messageId } = validation
+const onFocusOut = useFocusLeave(() => rootEl.value, () => {
+  validation.onBlur()
+  emit('blur')
+})
 
 const id = useId()
 const fieldBgEl = ref<HTMLElement | null>(null)
@@ -74,7 +107,7 @@ const resolvedMask = computed(() => PRESETS[props.mask as MaskPreset] ?? props.m
 
 const { debounced: emitDebounced, cancel: cancelDebounce } = useDebounce((v: string) => emit('debounced', v), props.debounce)
 
-const showClear = computed(() => props.clearable && props.modelValue.length > 0 && !props.disabled)
+const showClear = computed(() => props.clearable && props.modelValue.length > 0 && !isDisabled.value)
 
 function rawToMasked(raw: string, mask: string): string {
   let result = ''
@@ -139,13 +172,13 @@ const inputClasses = computed(() => {
     'peer block w-full text-body-large text-on-surface outline-none placeholder:text-transparent',
     'transition-[border-color,border-width] duration-150',
     'disabled:cursor-not-allowed disabled:text-on-surface/38',
-    props.error ? 'caret-error' : 'caret-primary',
+    hasError.value ? 'caret-error' : 'caret-primary',
     'h-14', pl, pr,
   ]
   if (props.variant === 'outlined') {
     return [...base,
       'rounded-xs border bg-transparent py-4',
-      props.error
+      hasError.value
         ? 'border-error focus:border-2 focus:border-error'
         : 'border-outline hover:border-on-surface focus:border-2 focus:border-primary',
       'disabled:border-on-surface/12',
@@ -153,7 +186,7 @@ const inputClasses = computed(() => {
   }
   return [...base,
     'rounded-t-xs bg-surface-container-highest border-b pt-6 pb-2',
-    props.error
+    hasError.value
       ? 'border-error focus:border-b-2 focus:border-error'
       : 'border-on-surface-variant hover:border-on-surface focus:border-b-2 focus:border-primary',
     'disabled:border-on-surface/38 disabled:bg-[color-mix(in_srgb,var(--color-on-surface)_4%,var(--color-surface-container-highest))]',
@@ -167,13 +200,17 @@ const labelClasses = computed(() =>
     right: rightInset.value,
     floated: 'peer',
     color: [
-      props.error ? 'text-error peer-focus:text-error' : 'text-on-surface-variant peer-focus:text-primary',
+      hasError.value ? 'text-error peer-focus:text-error' : 'text-on-surface-variant peer-focus:text-primary',
       'peer-disabled:text-on-surface/38',
     ].join(' '),
   }),
 )
 
 defineExpose({
+  /** Checks its rules and shows the result; resolves to whether they pass */
+  validate: validation.validate,
+  /** Hides its validation error (until the next check) */
+  resetValidation: validation.resetValidation,
   /** The `<input>` (or `<textarea>`) element */
   inputEl: inputEl,
   /** Focuses the field */
@@ -188,7 +225,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="flex flex-col gap-1">
+  <div ref="rootEl" class="flex flex-col gap-1" @focusout="onFocusOut">
     <div
       ref="fieldBgEl"
       class="relative"
@@ -200,7 +237,7 @@ defineExpose({
         class="pointer-events-none absolute left-3.5"
         :class="[
           variant === 'filled' ? 'top-4.5' : 'top-4',
-          disabled ? 'text-on-surface/38' : 'text-on-surface-variant',
+          isDisabled ? 'text-on-surface/38' : 'text-on-surface-variant',
         ]"
       >
         <MIcon :name="leadingIcon" :size="24" />
@@ -209,10 +246,12 @@ defineExpose({
       <input
         :id="id"
         ref="inputEl"
+        :aria-invalid="hasError || undefined"
+        :aria-describedby="errorMessage || hint ? messageId : undefined"
         type="text"
         inputmode="numeric"
         :value="modelValue"
-        :disabled="disabled"
+        :disabled="isDisabled"
         :required="required"
         placeholder=" "
         :class="inputClasses"
@@ -236,7 +275,7 @@ defineExpose({
       </button>
     </div>
 
-    <p v-if="error && errorLabel" class="px-4 text-body-small text-error">{{ errorLabel }}</p>
-    <p v-else-if="hint" class="px-4 text-body-small text-on-surface-variant">{{ hint }}</p>
+    <p v-if="errorMessage" :id="messageId" role="alert" class="px-4 text-body-small text-error">{{ errorMessage }}</p>
+    <p v-else-if="hint" :id="messageId" class="px-4 text-body-small text-on-surface-variant">{{ hint }}</p>
   </div>
 </template>

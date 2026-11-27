@@ -5,8 +5,11 @@
  *
  * @event update:modelValue Emitted while dragging and on key presses, with the new value (a `[low, high]` pair
  *   for the range variant).
+ * @event blur Emitted when focus leaves the slider (both thumbs, for a range)
  */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useFieldValidation, useFocusLeave } from '../composables/_useFieldValidation'
+import type { ValidateOn, ValidationRule } from '../composables/validation'
 import MIcon from './MIcon.vue'
 import { useLocale } from '../composables/useLocale'
 
@@ -24,6 +27,18 @@ const props = withDefaults(
     disabled?: boolean
     /** Label text */
     label?: string
+    /** Error state. A string is also the message */
+    error?: boolean | string
+    /** Error message shown when `error` is true */
+    errorLabel?: string
+    /** Marks it as required (asterisk); a slider always has a value, so use `rules` (e.g. `min(1)`) for limits */
+    required?: boolean
+    /** Validation rules (functions or a Standard Schema); see `MForm` */
+    rules?: ValidationRule | ValidationRule[]
+    /** When the rules are checked and shown: on leaving it (default), on change, or only on submit */
+    validateOn?: ValidateOn
+    /** The key of this field in its `MForm` */
+    name?: string
     /** Show current value beside label */
     showValue?: boolean
     /** Show value tooltip while dragging */
@@ -62,11 +77,33 @@ const props = withDefaults(
   },
 )
 
-const emit = defineEmits<{ 'update:modelValue': [number | [number, number]] }>()
+const emit = defineEmits<{ 'update:modelValue': [number | [number, number]]; blur: [] }>()
 
 const t = useLocale()
 const trackEl = ref<HTMLElement>()
 const thumbEls = ref<HTMLElement[]>([])
+const rootEl = ref<HTMLElement | null>(null)
+
+const validation = useFieldValidation({
+  value: () => props.modelValue,
+  rules: () => props.rules,
+  required: () => props.required,
+  error: () => props.error,
+  errorLabel: () => props.errorLabel,
+  name: () => props.name,
+  validateOn: () => props.validateOn,
+  disabled: () => props.disabled,
+  focus: () => { (isRange.value ? thumbEls.value[0] : trackEl.value)?.focus() },
+  el: () => rootEl.value,
+  setValue: (v) => emit('update:modelValue', v as number | [number, number]),
+})
+/** Its own `disabled` or its MForm's */
+const isDisabled = validation.disabled
+const { hasError, message: errorMessage, messageId } = validation
+const onFocusOut = useFocusLeave(() => rootEl.value, () => {
+  validation.onBlur()
+  emit('blur')
+})
 // Range: 0 = the start (low) thumb, 1 = the end (high) one
 const dragging = ref<false | 'single' | 0 | 1>(false)
 const focused = ref(false)
@@ -229,10 +266,10 @@ const DISABLED_INACTIVE = 'color-mix(in srgb, var(--color-on-surface) 12%, trans
 
 // `ct` (fill + corner dot) and `thumbCt` (thumb bar/icon) each fall back to the
 // base `color` prop, but can be overridden independently via `fillColor`/`thumbColor`.
-const ct = computed(() => props.disabled
+const ct = computed(() => isDisabled.value
   ? { active: DISABLED_ACTIVE, inactive: DISABLED_INACTIVE }
   : { active: resolveActive(props.fillColor, props.color), inactive: 'var(--color-secondary-container)' })
-const thumbCt = computed(() => props.disabled
+const thumbCt = computed(() => isDisabled.value
   ? { active: DISABLED_ACTIVE, inactive: DISABLED_INACTIVE }
   : { active: resolveActive(props.thumbColor, props.color), inactive: 'var(--color-secondary-container)' })
 
@@ -262,7 +299,7 @@ function rangeValue(idx: 0 | 1, v: number): [number, number] {
 }
 
 function onPointerDown(e: PointerEvent) {
-  if (props.disabled) return
+  if (isDisabled.value) return
   e.preventDefault()
   const v = valueFromEvent(e)
   if (isRange.value) {
@@ -320,7 +357,7 @@ function onPointerUp() {
 const KEY_DELTA: Record<string, number> = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }
 
 function onKeyDown(e: KeyboardEvent) {
-  if (props.disabled) return
+  if (isDisabled.value) return
   const delta = KEY_DELTA[e.key]
   if (delta !== undefined) {
     e.preventDefault()
@@ -332,7 +369,7 @@ function onKeyDown(e: KeyboardEvent) {
 
 // Range: each thumb is a slider of its own, moved by its keys within the other thumb
 function onThumbKeyDown(idx: 0 | 1, e: KeyboardEvent) {
-  if (props.disabled) return
+  if (isDisabled.value) return
   const { lo, hi } = val.value
   const cur = idx === 0 ? lo : hi
   const delta = KEY_DELTA[e.key]
@@ -550,12 +587,19 @@ const tooltipPct = computed(() => {
     return dragging.value === 0 ? pctLo.value : pctHi.value
   return pctLo.value
 })
+
+defineExpose({
+  /** Checks its rules and shows the result; resolves to whether they pass */
+  validate: validation.validate,
+  /** Hides its validation error (until the next check) */
+  resetValidation: validation.resetValidation,
+})
 </script>
 
 <template>
-  <div class="flex select-none" :class="isVertical ? 'h-full flex-col items-center' : 'flex-col gap-1'">
+  <div ref="rootEl" class="flex select-none" :class="isVertical ? 'h-full flex-col items-center' : 'flex-col gap-1'" @focusout="onFocusOut">
     <div v-if="label || showValue" class="flex items-center justify-between">
-      <span v-if="label" class="text-label-large text-on-surface">{{ label }}</span>
+      <span v-if="label" class="text-label-large" :class="hasError ? 'text-error' : 'text-on-surface'">{{ label }}<span v-if="required" class="text-error">&nbsp;*</span></span>
       <span v-if="showValue" class="tabular-nums text-label-large text-on-surface-variant">{{ displayValue }}</span>
     </div>
 
@@ -569,10 +613,12 @@ const tooltipPct = computed(() => {
         :aria-valuenow="isRange ? undefined : (modelValue as number)"
         :aria-valuemin="isRange ? undefined : min"
         :aria-valuemax="isRange ? undefined : max"
-        :aria-disabled="disabled || undefined"
+        :aria-disabled="isDisabled || undefined"
+        :aria-invalid="hasError || undefined"
+        :aria-describedby="errorMessage ? messageId : undefined"
         :aria-orientation="isRange ? undefined : orientation"
         class="group relative touch-none cursor-pointer outline-none"
-        :class="disabled && 'cursor-not-allowed'"
+        :class="isDisabled && 'cursor-not-allowed'"
         :style="isVertical
           ? { width: `${s.hitArea}px`, minHeight: '160px', height: '100%' }
           : { height: `${s.hitArea}px`, width: '100%' }
@@ -772,5 +818,7 @@ const tooltipPct = computed(() => {
         </Transition>
       </div>
     </div>
+    <!-- M3's slider has no error state: only the message says so -->
+    <p v-if="errorMessage" :id="messageId" role="alert" class="text-body-small text-error">{{ errorMessage }}</p>
   </div>
 </template>

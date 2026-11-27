@@ -24,8 +24,11 @@ export type CreditCardField = 'number' | 'expiry' | 'cvc' | 'name'
  * @event update:modelValue Emitted on every change — powers v-model
  * @event complete Emitted when every field becomes valid, with the value
  * @event brand Emitted when the detected network changes
+ * @event blur Emitted when focus leaves the card fields
  */
-import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, provide, reactive, ref, watch } from 'vue'
+import { FORM_KEY, useFieldValidation, useFocusLeave, type FormContext } from '../composables/_useFieldValidation'
+import type { ValidateOn, ValidationRule } from '../composables/validation'
 import MTextField from './MTextField.vue'
 import { useLocale } from '../composables/useLocale'
 import {
@@ -54,6 +57,18 @@ const props = withDefaults(
     errors?: Partial<Record<CreditCardField, string>>
     /** Disables every field */
     disabled?: boolean
+    /** Error state for the whole card (e.g. a decline). A string is also the message */
+    error?: boolean | string
+    /** Error message shown when `error` is true */
+    errorLabel?: string
+    /** Inside an `MForm` or with `rules`, an empty card fails (an empty optional card passes; a half-typed one never does) */
+    required?: boolean
+    /** More validation rules on the whole value (functions or a Standard Schema); see `MForm` */
+    rules?: ValidationRule | ValidationRule[]
+    /** When the rules are checked and shown: on leaving the card fields (default), while typing, or only on submit */
+    validateOn?: ValidateOn
+    /** The key of the card value in its `MForm` */
+    name?: string
   }>(),
   {
     preview: true,
@@ -68,6 +83,7 @@ const emit = defineEmits<{
   'update:modelValue': [CreditCardValue]
   complete: [CreditCardValue]
   brand: [CardBrand]
+  blur: []
 }>()
 
 const numberField = ref<InstanceType<typeof MTextField> | null>(null)
@@ -100,6 +116,49 @@ const messages: Record<CreditCardField, () => string> = {
   cvc: () => locale.cardInvalidCvc,
   name: () => '',
 }
+
+const isBlank = (v: CreditCardValue) => !v.number && !v.expiry && !v.cvc && !v.name?.trim()
+// The card's own checks are one more rule: an empty card passes unless required, anything typed must be valid
+const cardRule: ValidationRule<CreditCardValue> = (v) => {
+  if (isBlank(v ?? ({} as CreditCardValue)) || valid.value) return true
+  const bad = (['number', 'expiry', 'cvc', 'name'] as const).find((f) => !validity.value[f])!
+  return messages[bad]() || locale.validationRequired
+}
+const rootEl = ref<HTMLElement | null>(null)
+const touchAll = () => { touched.number = touched.expiry = touched.cvc = touched.name = true }
+const validation = useFieldValidation({
+  value: () => props.modelValue,
+  rules: () => [...(props.rules ? (Array.isArray(props.rules) ? props.rules : [props.rules]) : []), cardRule],
+  required: () => props.required,
+  error: () => props.error,
+  errorLabel: () => props.errorLabel,
+  name: () => props.name,
+  validateOn: () => props.validateOn,
+  disabled: () => props.disabled,
+  focus: () => {
+    const bad = (['number', 'name', 'expiry', 'cvc'] as const).find((f) => !!errorFor(f)) ?? 'number'
+    ;({ number: numberField, expiry: expiryField, cvc: cvcField, name: nameField })[bad].value?.focus()
+  },
+  el: () => rootEl.value,
+  setValue: (v) => emit('update:modelValue', v as CreditCardValue),
+  isEmpty: (v) => isBlank(v as CreditCardValue),
+  onValidate: touchAll,
+})
+/** Its own `disabled` or its MForm's */
+const isDisabled = validation.disabled
+const { message: cardMessage, messageId } = validation
+// Leaving the card (not moving between its fields) shows every field's error, like a submit
+const onCardLeave = useFocusLeave(() => rootEl.value, () => {
+  touchAll()
+  validation.onBlur()
+  emit('blur')
+})
+// Its MTextFields are its own: the form sees one field, the card
+provide(FORM_KEY, null as unknown as FormContext)
+/** A message for the whole card (from outside or the consumer's rules), when no field already shows one */
+const cardError = computed(() =>
+  cardMessage.value && !(['number', 'expiry', 'cvc', 'name'] as const).some((f) => errorFor(f)) ? cardMessage.value : null,
+)
 
 function errorFor(field: CreditCardField): string | undefined {
   if (props.errors?.[field]) return props.errors[field]
@@ -222,8 +281,14 @@ defineExpose({
   valid,
   /** Shows the errors of every field (as if each had been visited) and returns whether all are valid */
   validate: () => {
-    touched.number = touched.expiry = touched.cvc = touched.name = true
+    touchAll()
+    void validation.validate()
     return valid.value
+  },
+  /** Hides every error until the fields are left again */
+  resetValidation: () => {
+    touched.number = touched.expiry = touched.cvc = touched.name = false
+    validation.resetValidation()
   },
   /** Focuses a field (the number by default) */
   focus: (field: CreditCardField = 'number') =>
@@ -232,7 +297,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
+  <div ref="rootEl" class="flex flex-col gap-4" @focusout="onCardLeave">
     <div v-if="preview" class="m3-cc-preview mx-auto w-full max-w-[340px]" aria-hidden="true">
       <div class="m3-cc-preview__inner relative aspect-[1.586]" :class="{ 'is-flipped': cvcFocused }">
         <!-- Front -->
@@ -269,7 +334,7 @@ defineExpose({
           :model-value="formattedNumber"
           :label="locale.cardNumber"
           :variant="variant"
-          :disabled="disabled"
+          :disabled="isDisabled"
           autocomplete="cc-number"
           leading-icon="credit_card"
           :error="!!errorFor('number')"
@@ -283,7 +348,7 @@ defineExpose({
           :model-value="modelValue.name ?? ''"
           :label="locale.cardName"
           :variant="variant"
-          :disabled="disabled"
+          :disabled="isDisabled"
           autocomplete="cc-name"
           :error="!!errors?.name"
           :error-label="errors?.name"
@@ -297,7 +362,7 @@ defineExpose({
             :model-value="modelValue.expiry ?? ''"
             :label="locale.cardExpiry"
             :variant="variant"
-            :disabled="disabled"
+            :disabled="isDisabled"
             autocomplete="cc-exp"
             :error="!!errorFor('expiry')"
             :error-label="errorFor('expiry')"
@@ -310,7 +375,7 @@ defineExpose({
             :model-value="modelValue.cvc ?? ''"
             :label="locale.cardCvc"
             :variant="variant"
-            :disabled="disabled"
+            :disabled="isDisabled"
             autocomplete="cc-csc"
             :error="!!errorFor('cvc')"
             :error-label="errorFor('cvc')"
@@ -319,6 +384,7 @@ defineExpose({
         </div>
       </div>
     </div>
+    <p v-if="cardError" :id="messageId" role="alert" class="px-4 text-body-small text-error">{{ cardError }}</p>
   </div>
 </template>
 

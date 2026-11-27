@@ -6,8 +6,11 @@
  * Anything else stays editable as text (Custom). Invalid text shows an error and isn't emitted until it's valid.
  *
  * @event update:modelValue The expression changed (only valid ones)
+ * @event blur Emitted when focus leaves the whole field
  */
-import { computed, ref, watch } from 'vue'
+import { computed, provide, ref, watch } from 'vue'
+import { FORM_KEY, useFieldValidation, useFocusLeave, type FormContext } from '../composables/_useFieldValidation'
+import type { ValidateOn, ValidationRule } from '../composables/validation'
 import MChip from './MChip.vue'
 import MIcon from './MIcon.vue'
 import MNumberField from './MNumberField.vue'
@@ -32,11 +35,48 @@ const props = withDefaults(
     variant?: 'filled' | 'outlined'
     /** Disables it */
     disabled?: boolean
+    /** Error state. A string is also the message */
+    error?: boolean | string
+    /** Error message shown when `error` is true */
+    errorLabel?: string
+    /** Marks it as required; inside an `MForm` or with `rules`, an expression must be set */
+    required?: boolean
+    /** Validation rules (functions or a Standard Schema); see `MForm` */
+    rules?: ValidationRule | ValidationRule[]
+    /** When the rules are checked and shown: on leaving it (default), on change, or only on submit */
+    validateOn?: ValidateOn
+    /** The key of this field in its `MForm` */
+    name?: string
   }>(),
   { builder: true, nextRuns: 3, variant: 'filled', disabled: false },
 )
 
-const emit = defineEmits<{ 'update:modelValue': [expression: string] }>()
+const emit = defineEmits<{ 'update:modelValue': [expression: string]; blur: [] }>()
+
+const rootEl = ref<HTMLElement | null>(null)
+
+const validation = useFieldValidation({
+  value: () => props.modelValue,
+  rules: () => props.rules,
+  required: () => props.required,
+  error: () => props.error,
+  errorLabel: () => props.errorLabel,
+  name: () => props.name,
+  validateOn: () => props.validateOn,
+  disabled: () => props.disabled,
+  focus: () => { rootEl.value?.querySelector<HTMLElement>('input, button')?.focus() },
+  el: () => rootEl.value,
+  setValue: (v) => emit('update:modelValue', v as string),
+})
+/** Its own `disabled` or its MForm's */
+const isDisabled = validation.disabled
+const { hasError, message: errorMessage } = validation
+const onFocusOut = useFocusLeave(() => rootEl.value, () => {
+  validation.onBlur()
+  emit('blur')
+})
+// Its inner fields (every, time, the expression) are its own business, not the form's
+provide(FORM_KEY, null as unknown as FormContext)
 
 const t = useLocale()
 const lang = computed(() => t.lang || undefined)
@@ -146,10 +186,17 @@ const FREQS = computed<{ value: Frequency; label: string }[]>(() => [
 // Monday first, as most calendars outside the US
 const WEEK = [1, 2, 3, 4, 5, 6, 0]
 const dayName = (d: number) => new Intl.DateTimeFormat(lang.value, { weekday: 'short' }).format(new Date(2024, 0, 7 + d))
+
+defineExpose({
+  /** Checks its rules and shows the result; resolves to whether they pass */
+  validate: validation.validate,
+  /** Hides its validation error (until the next check) */
+  resetValidation: validation.resetValidation,
+})
 </script>
 
 <template>
-  <div class="m3-cron-field flex flex-col gap-3">
+  <div ref="rootEl" class="m3-cron-field flex flex-col gap-3" @focusout="onFocusOut">
     <template v-if="builder">
       <div class="flex flex-wrap gap-2" role="group" :aria-label="label ?? t.cronExpression">
         <MChip
@@ -157,7 +204,7 @@ const dayName = (d: number) => new Intl.DateTimeFormat(lang.value, { weekday: 's
           :key="f.value"
           type="filter"
           :selected="shown === f.value"
-          :disabled="disabled"
+          :disabled="isDisabled"
           @click="pick(f.value)"
         >
           {{ f.label }}
@@ -172,7 +219,7 @@ const dayName = (d: number) => new Intl.DateTimeFormat(lang.value, { weekday: 's
           :min="1"
           :max="59"
           :variant="variant"
-          :disabled="disabled"
+          :disabled="isDisabled"
           class="w-44"
           @update:model-value="setEvery"
         />
@@ -183,12 +230,12 @@ const dayName = (d: number) => new Intl.DateTimeFormat(lang.value, { weekday: 's
           :min="0"
           :max="59"
           :variant="variant"
-          :disabled="disabled"
+          :disabled="isDisabled"
           class="w-44"
           @update:model-value="setMinute"
         />
         <template v-else>
-          <MTimePicker :model-value="time" :label="t.cronTime" :minute-step="1" :disabled="disabled" class="w-44" @update:model-value="setTime" />
+          <MTimePicker :model-value="time" :label="t.cronTime" :minute-step="1" :disabled="isDisabled" class="w-44" @update:model-value="setTime" />
           <MNumberField
             v-if="shown === 'monthly'"
             :model-value="dayOfMonth"
@@ -196,7 +243,7 @@ const dayName = (d: number) => new Intl.DateTimeFormat(lang.value, { weekday: 's
             :min="1"
             :max="31"
             :variant="variant"
-            :disabled="disabled"
+            :disabled="isDisabled"
             class="w-44"
             @update:model-value="setDay"
           />
@@ -222,8 +269,8 @@ const dayName = (d: number) => new Intl.DateTimeFormat(lang.value, { weekday: 's
       :label="label ?? t.cronExpression"
       :variant="variant"
       :disabled="disabled"
-      :error="invalid"
-      :error-label="t.cronInvalid"
+      :error="invalid ? t.cronInvalid : (errorMessage || hasError)"
+      :required="required"
       autocomplete="off"
       class="m3-cron-field__input"
       @update:model-value="onText"

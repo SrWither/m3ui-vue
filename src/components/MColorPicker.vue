@@ -7,6 +7,8 @@
  * @event update:modelValue Emitted with the picked color, live while dragging or typing.
  */
 import { nextTick, onUnmounted, ref, watch } from 'vue'
+import { useFieldValidation, useFocusLeave } from '../composables/_useFieldValidation'
+import type { ValidateOn, ValidationRule } from '../composables/validation'
 import MIcon from './MIcon.vue'
 import MColorPanel from './_MColorPanel.vue'
 import { useFieldBg } from '../composables/useFieldBg'
@@ -32,10 +34,21 @@ const props = withDefaults(defineProps<{
   eyedropper?: boolean
   /** Disables the picker */
   disabled?: boolean
-  /** Error state */
-  error?: boolean
+  /** Error state. A string is also the message (`:error="errors.x"`) */
+  error?: boolean | string
   /** Error message shown when error is true */
   errorLabel?: string
+  /** Marks as required — adds a red asterisk after the label; inside an `MForm` or with `rules`, also validates it */
+  required?: boolean
+  /**
+   * Validation rules: functions `(value, ctx) => true | 'message'` (may be async; see the built-in `required`,
+   * `email`, `minLength`…) or a Standard Schema (zod, valibot…). Checked in order; the first failure is shown
+   */
+  rules?: ValidationRule | ValidationRule[]
+  /** When the rules are checked and shown: on leaving the field (default; live after that), while typing, or only on submit (`MForm`) */
+  validateOn?: ValidateOn
+  /** The key of this field in its `MForm`'s values, errors and schema */
+  name?: string
   /** Hint text below the field */
   hint?: string
   /** Overrides the auto-detected background color used to cut the floating label out of the border */
@@ -48,7 +61,25 @@ const props = withDefaults(defineProps<{
   eyedropper: true,
 })
 
-const emit = defineEmits<{ 'update:modelValue': [string] }>()
+const emit = defineEmits<{ blur: []; 'update:modelValue': [string] }>()
+
+const rootEl = ref<HTMLElement | null>(null)
+const validation = useFieldValidation({
+  value: () => props.modelValue,
+  rules: () => props.rules,
+  required: () => props.required,
+  error: () => props.error,
+  errorLabel: () => props.errorLabel,
+  name: () => props.name,
+  validateOn: () => props.validateOn,
+  disabled: () => props.disabled,
+  focus: () => { buttonEl.value?.focus() },
+  el: () => buttonEl.value,
+  setValue: (v) => emit('update:modelValue', v as string),
+})
+/** Its own `disabled` or its MForm's */
+const isDisabled = validation.disabled
+const { hasError, message: errorMessage, messageId } = validation
 const t = useLocale()
 
 const open = ref(false)
@@ -126,23 +157,38 @@ watch(open, async (v) => {
 onUnmounted(() => {
   document.removeEventListener('mousedown', onOut)
 })
+
+defineExpose({
+  /** Checks its rules and shows the result; resolves to whether they pass */
+  validate: validation.validate,
+  /** Hides its validation error (until the next check) */
+  resetValidation: validation.resetValidation,
+})
+
+// Last: it watches `open`, declared above
+const onFocusOut = useFocusLeave(() => rootEl.value, () => {
+  validation.onBlur()
+  emit('blur')
+}, () => open.value)
 </script>
 
 <template>
-  <div class="flex flex-col gap-1">
+  <div ref="rootEl" class="flex flex-col gap-1" @focusout="onFocusOut">
     <div ref="triggerEl" class="relative mt-2" :style="{ '--field-bg': resolvedFieldBg }">
       <button
         ref="buttonEl"
+        :aria-invalid="hasError || undefined"
+        :aria-describedby="errorMessage || hint ? messageId : undefined"
         type="button"
         aria-haspopup="dialog"
         :aria-expanded="open"
-        :disabled="disabled"
+        :disabled="isDisabled"
         class="flex h-14 w-full items-center gap-3 rounded-xs border bg-transparent px-4 text-left text-body-large outline-none transition-[border-color,border-width] duration-150"
         :class="[
-          disabled ? 'cursor-not-allowed border-on-surface/12' : 'cursor-pointer',
-          !disabled && (open
-            ? error ? 'border-2 border-error' : 'border-2 border-primary'
-            : error
+          isDisabled ? 'cursor-not-allowed border-on-surface/12' : 'cursor-pointer',
+          !isDisabled && (open
+            ? hasError ? 'border-2 border-error' : 'border-2 border-primary'
+            : hasError
               ? 'border-error focus-visible:border-2'
               : 'border-outline hover:border-on-surface focus-visible:border-2 focus-visible:border-primary'),
         ]"
@@ -150,27 +196,27 @@ onUnmounted(() => {
       >
         <span
           class="m3-cp-swatch h-6 w-6 shrink-0 rounded-full"
-          :class="disabled ? 'opacity-38' : ''"
+          :class="isDisabled ? 'opacity-38' : ''"
           :style="{ background: `linear-gradient(${modelValue}, ${modelValue}), repeating-conic-gradient(#d4d4d4 0 25%, #fff 0 50%) 0 0 / 8px 8px` }"
         />
-        <span v-overflow-title class="min-w-0 truncate flex-1 font-mono" :class="disabled ? 'text-on-surface/38' : 'text-on-surface'">{{ modelValue }}</span>
+        <span v-overflow-title class="min-w-0 truncate flex-1 font-mono" :class="isDisabled ? 'text-on-surface/38' : 'text-on-surface'">{{ modelValue }}</span>
         <MIcon
           name="palette"
           :size="24"
           class="shrink-0 transition-colors"
-          :class="disabled ? 'text-on-surface/38' : open ? (error ? 'text-error' : 'text-primary') : 'text-on-surface-variant'"
+          :class="isDisabled ? 'text-on-surface/38' : open ? (hasError ? 'text-error' : 'text-primary') : 'text-on-surface-variant'"
         />
       </button>
       <label
         v-if="label"
-        :class="[OUTLINED_FLOATED_LABEL, 'transition-colors', disabled ? 'text-on-surface/38' : open ? (error ? 'text-error' : 'text-primary') : error ? 'text-error' : 'text-on-surface-variant']"
+        :class="[OUTLINED_FLOATED_LABEL, 'transition-colors', isDisabled ? 'text-on-surface/38' : open ? (hasError ? 'text-error' : 'text-primary') : hasError ? 'text-error' : 'text-on-surface-variant']"
       >
-        {{ label }}
+        {{ label }}<span v-if="required" class="text-error">&nbsp;*</span>
       </label>
     </div>
 
-    <p v-if="error && errorLabel" class="px-4 text-body-small text-error">{{ errorLabel }}</p>
-    <p v-else-if="hint" class="px-4 text-body-small text-on-surface-variant">{{ hint }}</p>
+    <p v-if="errorMessage" :id="messageId" role="alert" class="px-4 text-body-small text-error">{{ errorMessage }}</p>
+    <p v-else-if="hint" :id="messageId" class="px-4 text-body-small text-on-surface-variant">{{ hint }}</p>
 
     <Teleport to="body">
       <Transition name="m3-cp-drop">

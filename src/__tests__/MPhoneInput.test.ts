@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { nextTick } from 'vue'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import MPhoneInput from '../components/MPhoneInput.vue'
 import { formatPhone, isValidPhone, parsePhone } from '../composables/phoneNumber'
 
@@ -69,7 +69,10 @@ describe('MPhoneInput', () => {
   it('flags an incomplete number after leaving the field', async () => {
     const w = mount(MPhoneInput, { props: { label: 'Phone', country: 'AR', modelValue: '+54112', locale: 'en' } })
     expect(w.text()).not.toContain('Incomplete')
-    await input(w).trigger('blur')
+    // Leaving the field (focusout, which a real blur always brings) shows it once focus has settled elsewhere
+    await input(w).trigger('focusout')
+    await new Promise((r) => setTimeout(r))
+    await flushPromises()
     expect(w.text()).toContain('Incomplete phone number')
   })
 

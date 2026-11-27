@@ -4,8 +4,11 @@
  * and images.
  *
  * @event update:modelValue Emitted with the editor HTML on every content change — powers v-model
+ * @event blur Emitted when focus leaves the editor (toolbar and dialogs included)
  */
 import { ref, watch, onMounted, onBeforeUnmount, shallowRef, computed } from 'vue'
+import { useFieldValidation, useFocusLeave } from '../composables/_useFieldValidation'
+import type { ValidateOn, ValidationRule } from '../composables/validation'
 import MIcon from './MIcon.vue'
 import MMenu from './MMenu.vue'
 import MMenuItem from './MMenuItem.vue'
@@ -52,6 +55,18 @@ const props = withDefaults(
     placeholder?: string
     /** Disables editing */
     disabled?: boolean
+    /** Error state. A string is also the message */
+    error?: boolean | string
+    /** Error message shown when `error` is true */
+    errorLabel?: string
+    /** Inside an `MForm` or with `rules`, the document must have some text (or an image) */
+    required?: boolean
+    /** Validation rules (functions or a Standard Schema); see `MForm` */
+    rules?: ValidationRule | ValidationRule[]
+    /** When the rules are checked and shown: on leaving it (default), on change, or only on submit */
+    validateOn?: ValidateOn
+    /** The key of this field in its `MForm` */
+    name?: string
     /** Minimum height of the text area (not used with `fill`) */
     minHeight?: string
     /**
@@ -97,11 +112,40 @@ const l = computed<Required<RichTextEditorLabels>>(() => ({
   ...props.labels,
 }))
 
-const emit = defineEmits<{ 'update:modelValue': [string] }>()
+// Editor + its message: attributes go on the editor
+defineOptions({ inheritAttrs: false })
+
+const emit = defineEmits<{ 'update:modelValue': [string]; blur: [] }>()
+
+/** An empty document is still HTML (`<p></p>`): empty means no text and no image */
+const isBlankHtml = (v: unknown) => !/<(img|hr|iframe|video)\b/i.test(String(v ?? '')) && !String(v ?? '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()
+const rootEl = ref<HTMLElement | null>(null)
 
 const ready = ref(false)
 const editorRef = shallowRef<any>(null)
 const editorContainer = ref<HTMLElement | null>(null)
+
+const validation = useFieldValidation({
+  value: () => props.modelValue,
+  rules: () => props.rules,
+  required: () => props.required,
+  error: () => props.error,
+  errorLabel: () => props.errorLabel,
+  name: () => props.name,
+  validateOn: () => props.validateOn,
+  disabled: () => props.disabled,
+  focus: () => { editorRef.value?.commands.focus() },
+  el: () => rootEl.value,
+  setValue: (v) => emit('update:modelValue', v as string),
+  isEmpty: isBlankHtml
+})
+/** Its own `disabled` or its MForm's */
+const isDisabled = validation.disabled
+const { hasError, message: errorMessage, messageId } = validation
+const onFocusOut = useFocusLeave(() => rootEl.value, () => {
+  validation.onBlur()
+  emit('blur')
+})
 
 interface ToolBtn {
   icon: string
@@ -140,7 +184,7 @@ onMounted(async () => {
   const editor = new Editor({
     element: editorContainer.value!,
     content: props.modelValue,
-    editable: !props.disabled,
+    editable: !isDisabled.value,
     extensions: [
       StarterKit,
       Underline,
@@ -188,7 +232,7 @@ onMounted(async () => {
     if (editor.getHTML() !== val) editor.commands.setContent(val)
   })
 
-  watch(() => props.disabled, (v) => editor.setEditable(!v))
+  watch(() => isDisabled.value, (v) => editor.setEditable(!v))
 
   ready.value = true
 })
@@ -231,13 +275,25 @@ function confirmImage() {
   if (imageUrl.value) editorRef.value?.chain().focus().setImage({ src: imageUrl.value }).run()
   imageDialogOpen.value = false
 }
+
+defineExpose({
+  /** Checks its rules and shows the result; resolves to whether they pass */
+  validate: validation.validate,
+  /** Hides its validation error (until the next check) */
+  resetValidation: validation.resetValidation,
+})
 </script>
 
 <template>
   <div
+    ref="rootEl"
+    v-bind="$attrs"
     class="overflow-hidden rounded-lg border transition-colors duration-150"
+    :aria-invalid="hasError || undefined"
+    :aria-describedby="errorMessage ? messageId : undefined"
+    @focusout="onFocusOut"
     :class="[
-      disabled ? 'border-outline-variant/50 opacity-60' : 'border-outline-variant focus-within:border-primary',
+      isDisabled ? 'border-outline-variant/50 opacity-60' : hasError ? 'border-error' : 'border-outline-variant focus-within:border-primary',
       { 'flex flex-col': fill },
     ]"
   >
@@ -323,6 +379,7 @@ function confirmImage() {
       </template>
     </MDialog>
   </div>
+  <p v-if="errorMessage" :id="messageId" role="alert" class="mt-1 px-4 text-body-small text-error">{{ errorMessage }}</p>
 </template>
 
 <style scoped>

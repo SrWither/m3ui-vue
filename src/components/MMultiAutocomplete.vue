@@ -6,6 +6,8 @@
  * @event debounced Emitted debounce ms after the user stops typing the search query (only when debounce > 0)
  */
 import { computed, ref, useId, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { useFieldValidation, useFocusLeave } from '../composables/_useFieldValidation'
+import type { ValidateOn, ValidationRule } from '../composables/validation'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
 import MCheckbox from './MCheckbox.vue'
@@ -38,10 +40,19 @@ const props = withDefaults(
     mode?: 'docked' | 'modal'
     /** Disables the field */
     disabled?: boolean
-    /** Error state */
-    error?: boolean
+    /** Error state. A string is also the message (`:error="errors.x"`) */
+    error?: boolean | string
     /** Error message shown when error is true */
     errorLabel?: string
+    /**
+     * Validation rules: functions `(value, ctx) => true | 'message'` (may be async; see the built-in `required`,
+     * `email`, `minLength`…) or a Standard Schema (zod, valibot…). Checked in order; the first failure is shown
+     */
+    rules?: ValidationRule | ValidationRule[]
+    /** When the rules are checked and shown: on leaving the field (default; live after that), while typing, or only on submit (`MForm`) */
+    validateOn?: ValidateOn
+    /** The key of this field in its `MForm`'s values, errors and schema */
+    name?: string
     /** Helper text below field */
     hint?: string
     /** Marks as required — adds a red asterisk after the label */
@@ -76,7 +87,25 @@ const props = withDefaults(
   },
 )
 
-const emit = defineEmits<{ 'update:modelValue': [unknown[]]; debounced: [string] }>()
+const emit = defineEmits<{ blur: []; 'update:modelValue': [unknown[]]; debounced: [string] }>()
+
+const rootEl = ref<HTMLElement | null>(null)
+const validation = useFieldValidation({
+  value: () => props.modelValue,
+  rules: () => props.rules,
+  required: () => props.required,
+  error: () => props.error,
+  errorLabel: () => props.errorLabel,
+  name: () => props.name,
+  validateOn: () => props.validateOn,
+  disabled: () => props.disabled,
+  focus: () => { inputEl.value?.focus() },
+  el: () => inputEl.value,
+  setValue: (v) => emit('update:modelValue', v as unknown[]),
+})
+/** Its own `disabled` or its MForm's */
+const isDisabled = validation.disabled
+const { hasError, message: errorMessage, messageId } = validation
 
 const locale = useLocale()
 const id = useId()
@@ -169,7 +198,7 @@ function toggle(value: unknown) {
 
 function removeChip(value: unknown, e: Event) {
   e.stopPropagation()
-  if (props.disabled) return
+  if (isDisabled.value) return
   emit('update:modelValue', props.modelValue.filter((v) => !eq(v, value)))
   nextTick(() => inputEl.value?.focus())
 }
@@ -198,7 +227,7 @@ const modalFilteredOptions = computed(() => {
 })
 
 function openDropdown() {
-  if (props.disabled || open.value) return
+  if (isDisabled.value || open.value) return
   if (props.mode === 'modal') {
     modalOpen.value = true
     modalSearch.value = ''
@@ -332,20 +361,20 @@ const triggerClasses = computed(() => {
   ]
 
   if (props.variant === 'outlined') {
-    const border = props.disabled
+    const border = isDisabled.value
       ? 'border-on-surface/12'
       : open.value
-        ? (props.error ? 'border-2 border-error' : 'border-2 border-primary')
-        : (props.error ? 'border-error' : 'border-outline hover:border-on-surface')
+        ? (hasError.value ? 'border-2 border-error' : 'border-2 border-primary')
+        : (hasError.value ? 'border-error' : 'border-outline hover:border-on-surface')
     return [...base, 'rounded-xs border bg-transparent py-2', border].join(' ')
   }
 
-  const border = props.disabled
+  const border = isDisabled.value
     ? 'border-on-surface/38'
     : open.value
-      ? (props.error ? 'border-b-2 border-error' : 'border-b-2 border-primary')
-      : (props.error ? 'border-error' : 'border-on-surface-variant hover:border-on-surface')
-  const bg = props.disabled
+      ? (hasError.value ? 'border-b-2 border-error' : 'border-b-2 border-primary')
+      : (hasError.value ? 'border-error' : 'border-on-surface-variant hover:border-on-surface')
+  const bg = isDisabled.value
     ? 'bg-[color-mix(in_srgb,var(--color-on-surface)_4%,var(--color-surface-container-highest))]'
     : 'bg-surface-container-highest'
   return [...base, 'rounded-t-xs border-b pb-2', isFloated.value ? 'pt-7' : 'pt-4', bg, border].join(' ')
@@ -357,17 +386,30 @@ const labelClasses = computed(() =>
     leading: !!props.leadingIcon,
     right: rightInset.value,
     floated: isFloated.value,
-    color: props.disabled
+    color: isDisabled.value
       ? 'text-on-surface/38'
       : open.value
-        ? (props.error ? 'text-error' : 'text-primary')
-        : (props.error ? 'text-error' : 'text-on-surface-variant'),
+        ? (hasError.value ? 'text-error' : 'text-primary')
+        : (hasError.value ? 'text-error' : 'text-on-surface-variant'),
   }),
 )
+
+defineExpose({
+  /** Checks its rules and shows the result; resolves to whether they pass */
+  validate: validation.validate,
+  /** Hides its validation error (until the next check) */
+  resetValidation: validation.resetValidation,
+})
+
+// Last: it watches `open`, declared above
+const onFocusOut = useFocusLeave(() => rootEl.value, () => {
+  validation.onBlur()
+  emit('blur')
+}, () => open.value)
 </script>
 
 <template>
-  <div class="flex flex-col gap-1" v-bind="$attrs">
+  <div ref="rootEl" class="flex flex-col gap-1" v-bind="$attrs" @focusout="onFocusOut">
     <div
       ref="fieldEl"
       class="relative"
@@ -380,7 +422,7 @@ const labelClasses = computed(() =>
         class="pointer-events-none absolute left-3.5"
         :class="[
           variant === 'filled' ? 'top-4.5' : 'top-4',
-          disabled ? 'text-on-surface/38' : 'text-on-surface-variant',
+          isDisabled ? 'text-on-surface/38' : 'text-on-surface-variant',
         ]"
       >
         <MIcon :name="leadingIcon" :size="24" />
@@ -390,7 +432,7 @@ const labelClasses = computed(() =>
       <div
         :class="[
           triggerClasses,
-          disabled ? 'pointer-events-none' : 'cursor-text',
+          isDisabled ? 'pointer-events-none' : 'cursor-text',
         ]"
         @click="inputEl?.focus()"
       >
@@ -399,12 +441,12 @@ const labelClasses = computed(() =>
             v-for="(chip, i) in displayChips"
             :key="i"
             class="inline-flex max-w-full min-w-0 items-center gap-1 rounded-full px-2 py-0.5 text-label-small"
-            :class="disabled ? 'bg-on-surface/12 text-on-surface/38' : 'bg-secondary-container text-on-secondary-container'"
+            :class="isDisabled ? 'bg-on-surface/12 text-on-surface/38' : 'bg-secondary-container text-on-secondary-container'"
           >
             <span v-overflow-title class="min-w-0 truncate">{{ chip.label }}</span>
             <button
               :aria-label="`${locale.remove} ${chip.label}`"
-              v-if="!disabled"
+              v-if="!isDisabled"
               type="button"
               class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full hover:bg-on-secondary-container/20"
               @click="removeChip(chip.value, $event)"
@@ -432,6 +474,8 @@ const labelClasses = computed(() =>
         <input
           :id="id"
           ref="inputEl"
+        :aria-invalid="hasError || undefined"
+        :aria-describedby="errorMessage || hint ? messageId : undefined"
           type="text"
           :value="search"
           :placeholder="!label && !hasValue ? placeholder : undefined"
@@ -444,7 +488,7 @@ const labelClasses = computed(() =>
           :aria-disabled="disabled"
           :class="[
             'flex-1 min-w-[60px] bg-transparent text-body-large outline-none placeholder:text-on-surface-variant',
-            error ? 'caret-error' : 'caret-primary',
+            hasError ? 'caret-error' : 'caret-primary',
             disabled ? 'text-on-surface/38' : 'text-on-surface',
           ]"
           @focus="onInputFocus"
@@ -484,8 +528,8 @@ const labelClasses = computed(() =>
       </div>
     </div>
 
-    <p v-if="error && errorLabel" class="px-4 text-body-small text-error">{{ errorLabel }}</p>
-    <p v-else-if="hint" class="px-4 text-body-small text-on-surface-variant">{{ hint }}</p>
+    <p v-if="errorMessage" :id="messageId" role="alert" class="px-4 text-body-small text-error">{{ errorMessage }}</p>
+    <p v-else-if="hint" :id="messageId" class="px-4 text-body-small text-on-surface-variant">{{ hint }}</p>
   </div>
 
   <!-- Docked dropdown -->

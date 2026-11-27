@@ -6,6 +6,8 @@
  *   present
  * @event update:modelValue Emitted on every keystroke — powers v-model
  * @event debounced Emitted debounce ms after the user stops typing (only when debounce > 0)
+ * @event blur Emitted when the field loses focus (wire vee-validate's `handleBlur` / Vuelidate's `$touch` here)
+ * @event focus Emitted when the field gains focus
  */
 import { computed, ref, useId, useSlots } from "vue";
 import MIcon from "./MIcon.vue";
@@ -13,6 +15,8 @@ import { useAutoGrow } from "../composables/useAutoGrow";
 import { useFieldBg } from "../composables/useFieldBg";
 import { useDebounce } from "../composables/useDebounce";
 import { useLocale } from '../composables/useLocale'
+import { useFieldValidation } from '../composables/_useFieldValidation'
+import type { ValidateOn, ValidationRule } from '../composables/validation'
 import { FIELD_PADDING_RIGHT, fieldLabelClasses, vOverflowTitle, type FieldRightInset } from '../composables/_fieldLayout'
 
 const locale = useLocale()
@@ -26,15 +30,27 @@ const props = withDefaults(
     type?: string;
     /** Visual style */
     variant?: "filled" | "outlined";
-    /** Puts the field in error state (red border and label) */
-    error?: boolean;
+    /**
+     * Puts the field in error state (red border and label). A string is also the message, so a validation
+     * library's error plugs straight in: `:error="errors.email"`
+     */
+    error?: boolean | string;
     /** Error message shown below the field (only visible when error is true) */
     errorLabel?: string;
+    /**
+     * Validation rules: functions `(value, ctx) => true | 'message'` (may be async; see the built-in `required`,
+     * `email`, `minLength`…) or a Standard Schema (zod, valibot…). Checked in order; the first failure is shown
+     */
+    rules?: ValidationRule | ValidationRule[];
+    /** When the rules are checked and shown: on leaving the field (default; live after that), while typing, or only on submit (`MForm`) */
+    validateOn?: ValidateOn;
+    /** Native `name`; also the key of this field in its `MForm`'s values, errors and schema */
+    name?: string;
     /** Hint text shown below the field */
     hint?: string;
     /** Disables the field */
     disabled?: boolean;
-    /** Marks as required — adds a red asterisk after the label */
+    /** Marks as required — adds a red asterisk after the label; inside an `MForm` or with `rules`, also validates it */
     required?: boolean;
     /** Renders a textarea instead of an input */
     multiline?: boolean;
@@ -66,7 +82,7 @@ const props = withDefaults(
   },
 );
 
-const emit = defineEmits<{ "update:modelValue": [string]; debounced: [string] }>();
+const emit = defineEmits<{ "update:modelValue": [string]; debounced: [string]; blur: [FocusEvent]; focus: [FocusEvent] }>();
 
 const id = useId();
 const slots = useSlots();
@@ -79,13 +95,34 @@ const { debounced: emitDebounced, cancel: cancelDebounce } = useDebounce((v: str
 const textareaEl = ref<HTMLTextAreaElement | null>(null);
 const inputOnlyEl = ref<HTMLInputElement | null>(null);
 const fieldEl = computed(() => textareaEl.value ?? inputOnlyEl.value);
+
+const validation = useFieldValidation({
+  value: () => props.modelValue,
+  rules: () => props.rules,
+  required: () => props.required,
+  error: () => props.error,
+  errorLabel: () => props.errorLabel,
+  name: () => props.name,
+  validateOn: () => props.validateOn,
+  disabled: () => props.disabled,
+  focus: () => fieldEl.value?.focus(),
+  el: () => fieldEl.value,
+  setValue: (v) => emit("update:modelValue", v as string),
+});
+const { hasError, message: errorMessage, messageId } = validation;
+const isDisabled = validation.disabled;
+
+function onBlur(event: FocusEvent) {
+  validation.onBlur();
+  emit("blur", event);
+}
 useAutoGrow(() => (props.multiline && props.autoGrow ? textareaEl.value : null), {
   minRows: () => props.rows,
   maxRows: () => props.maxRows,
   value: () => props.modelValue,
 });
 
-const showClear = computed(() => props.clearable && String(props.modelValue).length > 0 && !props.disabled)
+const showClear = computed(() => props.clearable && String(props.modelValue).length > 0 && !isDisabled.value)
 
 // The label and the text both stop before a trailing button (the #trailing slot or the clear button)
 const rightInset = computed<FieldRightInset>(() => (slots.trailing || props.clearable ? "right-12" : "right-4"));
@@ -98,7 +135,7 @@ const inputClasses = computed(() => {
     "peer block w-full text-body-large text-on-surface outline-none placeholder:text-transparent",
     "transition-[border-color,border-width] duration-150",
     "disabled:cursor-not-allowed disabled:text-on-surface/38",
-    props.error ? "caret-error" : "caret-primary",
+    hasError.value ? "caret-error" : "caret-primary",
     size,
     pl,
     pr,
@@ -108,7 +145,7 @@ const inputClasses = computed(() => {
     return [
       ...base,
       "rounded-xs border bg-transparent py-4",
-      props.error
+      hasError.value
         ? "border-error focus:border-2 focus:border-error"
         : "border-outline hover:border-on-surface focus:border-2 focus:border-primary",
       "disabled:border-on-surface/12",
@@ -122,7 +159,7 @@ const inputClasses = computed(() => {
     props.multiline
       ? "rounded-t-xs bg-surface-container-highest border-b border-t-24 border-t-transparent pb-2"
       : "rounded-t-xs bg-surface-container-highest border-b pt-6 pb-2",
-    props.error
+    hasError.value
       ? "border-b-error focus:border-b-2 focus:border-b-error"
       : "border-b-on-surface-variant hover:border-b-on-surface focus:border-b-2 focus:border-b-primary",
     "disabled:border-b-on-surface/38 disabled:bg-[color-mix(in_srgb,var(--color-on-surface)_4%,var(--color-surface-container-highest))]",
@@ -136,7 +173,7 @@ const labelClasses = computed(() =>
     right: rightInset.value,
     floated: 'peer',
     color: [
-      props.error ? 'text-error peer-focus:text-error' : 'text-on-surface-variant peer-focus:text-primary',
+      hasError.value ? 'text-error peer-focus:text-error' : 'text-on-surface-variant peer-focus:text-primary',
       'peer-disabled:text-on-surface/38',
     ].join(' '),
   }),
@@ -157,6 +194,10 @@ defineExpose({
   blur: () => fieldEl.value?.blur(),
   /** Selects all its text */
   select: () => fieldEl.value?.select(),
+  /** Checks its rules and shows the result; resolves to whether they pass */
+  validate: validation.validate,
+  /** Hides its validation error (until the next check) */
+  resetValidation: validation.resetValidation,
   /** Selects part of its text (e.g. a file name without its extension) */
   setSelectionRange: (start: number, end: number, direction?: 'forward' | 'backward' | 'none') => fieldEl.value?.setSelectionRange(start, end, direction),
 })
@@ -180,7 +221,7 @@ defineExpose({
         class="pointer-events-none absolute left-3.5"
         :class="[
           multiline ? 'top-[55%] -translate-y-1/2' : variant === 'filled' ? 'top-4.5' : 'top-4',
-          disabled ? 'text-on-surface/38' : 'text-on-surface-variant',
+          isDisabled ? 'text-on-surface/38' : 'text-on-surface-variant',
         ]"
       >
         <MIcon :name="leadingIcon" :size="24" />
@@ -192,11 +233,16 @@ defineExpose({
         :id="id"
         :value="String(modelValue)"
         :rows="rows"
-        :disabled="disabled"
+        :name="name"
+        :disabled="isDisabled"
         :required="required"
+        :aria-invalid="hasError || undefined"
+        :aria-describedby="errorMessage || hint ? messageId : undefined"
         placeholder=" "
         :class="inputClasses"
         @input="onInput"
+        @blur="onBlur"
+        @focus="emit('focus', $event)"
       />
       <input
         v-else
@@ -204,13 +250,18 @@ defineExpose({
         :id="id"
         :type="type"
         :value="modelValue"
-        :disabled="disabled"
+        :name="name"
+        :disabled="isDisabled"
         :required="required"
+        :aria-invalid="hasError || undefined"
+        :aria-describedby="errorMessage || hint ? messageId : undefined"
         :autocomplete="autocomplete"
         placeholder=" "
         :class="inputClasses"
         v-overflow-title
         @input="onInput"
+        @blur="onBlur"
+        @focus="emit('focus', $event)"
       />
 
       <label :for="id" :class="labelClasses">
@@ -231,7 +282,7 @@ defineExpose({
       </button>
     </div>
 
-    <p v-if="error && errorLabel" class="px-4 text-body-small text-error">{{ errorLabel }}</p>
-    <p v-else-if="hint" class="px-4 text-body-small text-on-surface-variant">{{ hint }}</p>
+    <p v-if="errorMessage" :id="messageId" role="alert" class="px-4 text-body-small text-error">{{ errorMessage }}</p>
+    <p v-else-if="hint" :id="messageId" class="px-4 text-body-small text-on-surface-variant">{{ hint }}</p>
   </div>
 </template>

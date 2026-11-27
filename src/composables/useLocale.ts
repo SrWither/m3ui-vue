@@ -594,6 +594,19 @@ export interface M3Locale {
   cardInvalidNumber: string
   cardInvalidExpiry: string
   cardInvalidCvc: string
+  // Form validation (MForm, field `rules`)
+  validationRequired: string
+  validationInvalid: string
+  validationEmail: string
+  validationUrl: string
+  validationMinLength: string
+  validationMaxLength: string
+  validationMinItems: string
+  validationMaxItems: string
+  validationMin: string
+  validationMax: string
+  validationPattern: string
+  validationSameAs: string
   // MPosKeypad
   keypadDelete: string
   keypadClear: string
@@ -1287,6 +1300,18 @@ export const defaultLocale: M3Locale = {
   cardInvalidNumber: 'Invalid card number',
   cardInvalidExpiry: 'Invalid or expired date',
   cardInvalidCvc: 'Invalid security code',
+  validationRequired: 'This field is required',
+  validationInvalid: 'Invalid value',
+  validationEmail: 'Enter a valid email address',
+  validationUrl: 'Enter a valid URL',
+  validationMinLength: 'Enter at least {min} characters',
+  validationMaxLength: 'Enter at most {max} characters',
+  validationMinItems: 'Choose at least {min}',
+  validationMaxItems: 'Choose at most {max}',
+  validationMin: 'Must be at least {min}',
+  validationMax: 'Must be at most {max}',
+  validationPattern: 'Invalid format',
+  validationSameAs: 'Values don\'t match',
   keypadDelete: 'Delete',
   keypadClear: 'Clear',
   keypadChange: 'Change',

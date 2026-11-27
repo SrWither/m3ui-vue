@@ -6,8 +6,11 @@
  *
  * @event update:modelValue Emitted when the user rates by click, drag or keyboard (v-model). Dragging past the
  *   first icon emits 0
+ * @event blur Emitted when the rating loses focus
  */
 import { computed, ref } from 'vue'
+import { useFieldValidation, useFocusLeave } from '../composables/_useFieldValidation'
+import type { ValidateOn, ValidationRule } from '../composables/validation'
 import MIcon from './MIcon.vue'
 
 // Not part of the official M3 spec — built from M3 primitives instead: filled/outlined
@@ -33,9 +36,24 @@ const props = withDefaults(defineProps<{
    * without this prop
    */
   halfIncrements?: boolean
+  /** Error state. A string is also the message */
+  error?: boolean | string
+  /** Error message shown when `error` is true */
+  errorLabel?: string
+  /** Inside an `MForm` or with `rules`, 0 (not rated) fails */
+  required?: boolean
+  /** Validation rules (functions or a Standard Schema); see `MForm` */
+  rules?: ValidationRule | ValidationRule[]
+  /** When the rules are checked and shown: on leaving it (default), on change, or only on submit */
+  validateOn?: ValidateOn
+  /** The key of this field in its `MForm` */
+  name?: string
 }>(), { max: 5, size: 28, color: 'primary', icon: 'star', halfIncrements: false })
 
-const emit = defineEmits<{ 'update:modelValue': [number] }>()
+// Rating + its message: attributes go on the rating
+defineOptions({ inheritAttrs: false })
+
+const emit = defineEmits<{ 'update:modelValue': [number]; blur: [] }>()
 
 const ROLE_COLORS: Record<string, string> = {
   primary: 'text-primary',
@@ -47,10 +65,32 @@ const ROLE_COLORS: Record<string, string> = {
 const colorClass = computed(() => ROLE_COLORS[props.color] ?? '')
 const customStyle = computed(() => (props.color in ROLE_COLORS ? undefined : { color: props.color }))
 
-const interactive = computed(() => !props.readonly && !props.disabled)
+const interactive = computed(() => !props.readonly && !isDisabled.value)
 const step = computed(() => (props.halfIncrements ? 0.5 : 1))
 
 const rootEl = ref<HTMLElement | null>(null)
+
+const validation = useFieldValidation({
+  value: () => props.modelValue,
+  rules: () => props.rules,
+  required: () => props.required,
+  error: () => props.error,
+  errorLabel: () => props.errorLabel,
+  name: () => props.name,
+  validateOn: () => props.validateOn,
+  disabled: () => props.disabled || props.readonly,
+  focus: () => { rootEl.value?.focus() },
+  el: () => rootEl.value,
+  setValue: (v) => emit('update:modelValue', v as number),
+  isEmpty: (v) => !v
+})
+/** Its own `disabled` or its MForm's */
+const isDisabled = validation.disabled
+const { hasError, message: errorMessage, messageId } = validation
+const onFocusOut = useFocusLeave(() => rootEl.value, () => {
+  validation.onBlur()
+  emit('blur')
+})
 const itemEls: HTMLElement[] = []
 
 // Pointer preview: `value` is what the rating would become, `index` is the item under the
@@ -160,11 +200,19 @@ function stateLayerClass(i: number) {
 }
 
 const valueText = computed(() => `${clamp(props.modelValue || 0)} / ${props.max}`)
+
+defineExpose({
+  /** Checks its rules and shows the result; resolves to whether they pass */
+  validate: validation.validate,
+  /** Hides its validation error (until the next check) */
+  resetValidation: validation.resetValidation,
+})
 </script>
 
 <template>
   <div
     ref="rootEl"
+    v-bind="$attrs"
     class="inline-flex select-none items-center gap-0.5 rounded-full outline-none ring-secondary focus-visible:ring-2"
     :class="interactive ? 'cursor-pointer touch-pan-y' : 'cursor-default'"
     :role="readonly ? 'img' : 'slider'"
@@ -174,7 +222,10 @@ const valueText = computed(() => `${clamp(props.modelValue || 0)} / ${props.max}
     :aria-valuemax="readonly ? undefined : max"
     :aria-valuenow="readonly ? undefined : clamp(modelValue || 0)"
     :aria-valuetext="readonly ? undefined : valueText"
-    :aria-disabled="disabled || undefined"
+    :aria-disabled="isDisabled || undefined"
+    :aria-invalid="hasError || undefined"
+    :aria-describedby="errorMessage ? messageId : undefined"
+    @focusout="onFocusOut"
     @pointerdown="onPointerDown"
     @pointermove="onPointerMove"
     @pointerup="onPointerUp"
@@ -203,7 +254,7 @@ const valueText = computed(() => `${clamp(props.modelValue || 0)} / ${props.max}
             :name="icon"
             :size="size"
             class="absolute end-0 top-0"
-            :class="disabled ? 'text-on-surface/38' : 'text-on-surface-variant'"
+            :class="isDisabled ? 'text-on-surface/38' : 'text-on-surface-variant'"
           />
         </span>
         <!-- Filled part (FILL 1 glyph), clipped from the start side — this is what renders
@@ -213,11 +264,13 @@ const valueText = computed(() => `${clamp(props.modelValue || 0)} / ${props.max}
             :name="icon"
             :size="size"
             class="absolute start-0 top-0"
-            :class="disabled ? 'text-on-surface/38' : colorClass"
-            :style="[disabled ? undefined : customStyle, { fontVariationSettings: `'FILL' 1` }]"
+            :class="isDisabled ? 'text-on-surface/38' : colorClass"
+            :style="[isDisabled ? undefined : customStyle, { fontVariationSettings: `'FILL' 1` }]"
           />
         </span>
       </span>
     </span>
   </div>
+  <!-- Not an M3 component, and M3 has no rating error: the message says so -->
+  <p v-if="errorMessage" :id="messageId" role="alert" class="mt-1 text-body-small text-error">{{ errorMessage }}</p>
 </template>

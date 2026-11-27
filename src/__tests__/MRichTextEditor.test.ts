@@ -13,7 +13,8 @@ describe('MRichTextEditor fill', () => {
 
   it('fills its height and scrolls the text inside with fill', () => {
     const w = mount(MRichTextEditor, { props: { modelValue: '', fill: true } })
-    expect(w.classes()).toContain('flex-col')
+    // The editor box (the root is the box plus its validation message)
+    expect(w.find('div.rounded-lg').classes()).toContain('flex-col')
     const content = w.find('.rte-content')
     expect(content.classes()).toEqual(expect.arrayContaining(['flex-1', 'min-h-0', 'overflow-y-auto']))
     expect((content.element as HTMLElement).style.minHeight).toBe('')

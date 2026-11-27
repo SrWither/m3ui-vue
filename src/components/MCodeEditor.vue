@@ -4,8 +4,11 @@
  *
  * @slot actions Extra controls rendered in the header bar, before the built-in copy button
  * @event update:modelValue Emitted on every document change — powers v-model
+ * @event blur Emitted when focus leaves the editor
  */
 import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue'
+import { useFieldValidation, useFocusLeave } from '../composables/_useFieldValidation'
+import type { ValidateOn, ValidationRule } from '../composables/validation'
 import MIcon from './MIcon.vue'
 
 type Language = 'javascript' | 'typescript' | 'json' | 'html' | 'css' | 'python' | 'vue' | 'c' | 'cpp' | 'rust' | 'asm' | 'plain'
@@ -28,6 +31,18 @@ const props = withDefaults(
     maxHeight?: string
     /** Placeholder text shown via CodeMirror when the editor is empty */
     placeholder?: string
+    /** Error state. A string is also the message */
+    error?: boolean | string
+    /** Error message shown when `error` is true */
+    errorLabel?: string
+    /** Inside an `MForm` or with `rules`, the code can't be blank */
+    required?: boolean
+    /** Validation rules (functions or a Standard Schema); see `MForm` */
+    rules?: ValidationRule | ValidationRule[]
+    /** When the rules are checked and shown: on leaving it (default), on change, or only on submit */
+    validateOn?: ValidateOn
+    /** The key of this field in its `MForm` */
+    name?: string
     /** Word wrap */
     wrap?: boolean
   }>(),
@@ -42,10 +57,33 @@ const props = withDefaults(
   },
 )
 
-const emit = defineEmits<{ 'update:modelValue': [string] }>()
+// Editor + its message: attributes go on the editor
+defineOptions({ inheritAttrs: false })
+
+const emit = defineEmits<{ 'update:modelValue': [string]; blur: [] }>()
 
 const containerRef = ref<HTMLElement | null>(null)
 let view: any = null
+const rootEl = ref<HTMLElement | null>(null)
+
+const validation = useFieldValidation({
+  value: () => props.modelValue,
+  rules: () => props.rules,
+  required: () => props.required,
+  error: () => props.error,
+  errorLabel: () => props.errorLabel,
+  name: () => props.name,
+  validateOn: () => props.validateOn,
+  disabled: () => props.readonly,
+  focus: () => { view?.focus() },
+  el: () => rootEl.value,
+  setValue: (v) => emit('update:modelValue', v as string),
+})
+const { hasError, message: errorMessage, messageId } = validation
+const onFocusOut = useFocusLeave(() => rootEl.value, () => {
+  validation.onBlur()
+  emit('blur')
+})
 let cmModules: any = null
 const copied = ref(false)
 
@@ -218,10 +256,25 @@ watch(() => props.modelValue, (val) => {
 watch([() => props.language, () => props.theme, () => props.readonly, () => props.lineNumbers, () => props.wrap, () => props.placeholder], createEditor)
 
 onBeforeUnmount(() => view?.destroy())
+
+defineExpose({
+  /** Checks its rules and shows the result; resolves to whether they pass */
+  validate: validation.validate,
+  /** Hides its validation error (until the next check) */
+  resetValidation: validation.resetValidation,
+})
 </script>
 
 <template>
-  <div class="flex flex-col overflow-hidden rounded-lg border border-outline-variant">
+  <div
+    ref="rootEl"
+    v-bind="$attrs"
+    class="flex flex-col overflow-hidden rounded-lg border"
+    :class="hasError ? 'border-error' : 'border-outline-variant'"
+    :aria-invalid="hasError || undefined"
+    :aria-describedby="errorMessage ? messageId : undefined"
+    @focusout="onFocusOut"
+  >
     <!-- Header bar -->
     <div class="flex items-center justify-between border-b border-outline-variant bg-surface-container px-4 py-2">
       <span class="text-label-medium text-on-surface-variant">{{ langLabel }}</span>
@@ -246,6 +299,7 @@ onBeforeUnmount(() => view?.destroy())
       :style="{ minHeight, maxHeight }"
     />
   </div>
+  <p v-if="errorMessage" :id="messageId" role="alert" class="mt-1 px-4 text-body-small text-error">{{ errorMessage }}</p>
 </template>
 
 <style scoped>

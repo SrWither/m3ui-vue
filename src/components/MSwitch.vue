@@ -3,9 +3,12 @@
  * A toggle switch with an optional label, 4 semantic colors, and both M3 icon variants.
  *
  * @event update:modelValue Emitted with the new on/off state.
+ * @event blur Emitted when the switch loses focus
  */
 import { computed, ref } from 'vue'
 import MIcon from './MIcon.vue'
+import { useFieldValidation } from '../composables/_useFieldValidation'
+import type { ValidateOn, ValidationRule } from '../composables/validation'
 
 const props = withDefaults(
   defineProps<{
@@ -23,11 +26,42 @@ const props = withDefaults(
     // defaults to `null`). Defaults to `true` here to keep this component's existing look;
     // pass `false` for the plain/no-icon variant.
     icon?: boolean
+    /** Error state. A string is also the message */
+    error?: boolean | string
+    /** Error message shown when `error` is true */
+    errorLabel?: string
+    /** Must be on, inside an `MForm` or with `rules` */
+    required?: boolean
+    /** Validation rules (functions or a Standard Schema); see `MForm` */
+    rules?: ValidationRule | ValidationRule[]
+    /** When the rules are checked and shown: on leaving it (default), on change, or only on submit */
+    validateOn?: ValidateOn
+    /** The key of this field in its `MForm` */
+    name?: string
   }>(),
   { disabled: false, color: 'primary', icon: true },
 )
 
-const emit = defineEmits<{ 'update:modelValue': [boolean] }>()
+const emit = defineEmits<{ 'update:modelValue': [boolean]; blur: [FocusEvent] }>()
+
+const inputEl = ref<HTMLInputElement | null>(null)
+
+const validation = useFieldValidation({
+  value: () => props.modelValue,
+  rules: () => props.rules,
+  required: () => props.required,
+  error: () => props.error,
+  errorLabel: () => props.errorLabel,
+  name: () => props.name,
+  validateOn: () => props.validateOn,
+  disabled: () => props.disabled,
+  focus: () => { inputEl.value?.focus() },
+  el: () => inputEl.value,
+  setValue: (v) => emit('update:modelValue', v as boolean),
+})
+/** Its own `disabled` or its MForm's */
+const isDisabled = validation.disabled
+const { hasError, message: errorMessage, messageId } = validation
 
 // Same 4 named colors as MRadio/MCheckbox's color prop.
 const trackClasses: Record<string, string> = {
@@ -82,7 +116,7 @@ const stateLayerBg: Record<string, string> = {
 // is computed in JS, not a plain class, so CSS pseudo-classes can't reach into it.
 const isPressed = ref(false)
 function onPointerDown() {
-  if (!props.disabled) isPressed.value = true
+  if (!isDisabled.value) isPressed.value = true
 }
 function onPointerEnd() {
   isPressed.value = false
@@ -115,12 +149,19 @@ const stateLayerStyle = computed(() => ({
     ? 'transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1)'
     : 'transform 240ms cubic-bezier(0.2, 0, 0, 1)',
 }))
+
+defineExpose({
+  /** Checks its rules and shows the result; resolves to whether they pass */
+  validate: validation.validate,
+  /** Hides its validation error (until the next check) */
+  resetValidation: validation.resetValidation,
+})
 </script>
 
 <template>
   <label
-    class="group inline-flex items-center gap-3 select-none"
-    :class="disabled ? 'cursor-not-allowed opacity-[0.38]' : 'cursor-pointer'"
+    class="group inline-flex gap-3 select-none"
+    :class="[isDisabled ? 'cursor-not-allowed opacity-[0.38]' : 'cursor-pointer', errorMessage ? 'items-start' : 'items-center']"
     @pointerdown="onPointerDown"
     @pointerup="onPointerEnd"
     @pointerleave="onPointerEnd"
@@ -135,19 +176,26 @@ const stateLayerStyle = computed(() => ({
           type="checkbox"
           class="peer sr-only"
           :checked="modelValue"
-          :disabled="disabled"
+          :disabled="isDisabled"
+          ref="inputEl"
+          role="switch"
+          :name="name"
+          :required="required"
+          :aria-invalid="hasError || undefined"
+          :aria-describedby="errorMessage ? messageId : undefined"
           @change="emit('update:modelValue', !modelValue)"
+          @blur="validation.onBlur(); emit('blur', $event)"
         />
 
         <!-- Hover/press/focus state layer + focus ring, both tracking the thumb's position (see stateLayerStyle doc above) -->
         <span
-          v-if="!disabled"
+          v-if="!isDisabled"
           class="pointer-events-none absolute top-1/2 -left-1 h-10 w-10 -translate-y-1/2 rounded-full opacity-0 transition-opacity duration-150 group-hover:opacity-[0.08] group-active:opacity-[0.12] peer-focus-visible:opacity-[0.08]"
           :class="modelValue ? stateLayerBg[color] : 'bg-on-surface-variant'"
           :style="stateLayerStyle"
         />
         <span
-          v-if="!disabled"
+          v-if="!isDisabled"
           class="pointer-events-none absolute top-1/2 -left-1 h-10 w-10 -translate-y-1/2 rounded-full ring-0 ring-secondary transition-[box-shadow] duration-150 peer-focus-visible:ring-2"
           :style="stateLayerStyle"
         />
@@ -171,6 +219,10 @@ const stateLayerStyle = computed(() => ({
         </span>
       </span>
     </span>
-    <span v-if="label" class="text-body-large text-on-surface">{{ label }}</span>
+    <span v-if="label || errorMessage" class="flex flex-col" :class="errorMessage && 'pt-1'">
+      <span v-if="label" class="text-body-large text-on-surface">{{ label }}<span v-if="required" class="text-error">&nbsp;*</span></span>
+      <!-- M3's switch has no error state: only the message says so -->
+      <span v-if="errorMessage" :id="messageId" role="alert" class="text-body-small text-error">{{ errorMessage }}</span>
+    </span>
   </label>
 </template>

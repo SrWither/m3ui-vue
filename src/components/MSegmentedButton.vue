@@ -12,10 +12,14 @@ export interface SegmentedOption<V extends string | number = string | number> {
  * A row of joined segments for choosing between a small set of related options — single or multi select.
  *
  * @event update:modelValue Emitted on selection change — powers v-model
+ * @event blur Emitted when focus leaves the segments
  */
+import { ref } from 'vue'
 import MIcon from './MIcon.vue'
+import { useFieldValidation, useFocusLeave } from '../composables/_useFieldValidation'
+import type { ValidateOn, ValidationRule } from '../composables/validation'
 
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   /** Selected value, or values with `multiSelect` (v-model); typed after the options' values */
   modelValue: M
   /** The options to choose from; see `SegmentedOption`. */
@@ -26,9 +30,52 @@ withDefaults(defineProps<{
   density?: 'default' | 'comfortable' | 'compact'
   /** Selected segment color */
   color?: 'primary' | 'secondary' | 'tertiary'
+  /** Error state. A string is also the message */
+  error?: boolean | string
+  /** Error message shown when `error` is true */
+  errorLabel?: string
+  /** Inside an `MForm` or with `rules`, a segment must be selected */
+  required?: boolean
+  /** Validation rules (functions or a Standard Schema); see `MForm` */
+  rules?: ValidationRule | ValidationRule[]
+  /** When the rules are checked and shown: on leaving it (default), on change, or only on submit */
+  validateOn?: ValidateOn
+  /** The key of this field in its `MForm` */
+  name?: string
 }>(), { multiSelect: false, density: 'default', color: 'primary' })
 
-const emit = defineEmits<{ 'update:modelValue': [M] }>()
+// Segments + their message: attributes go on the segments
+defineOptions({ inheritAttrs: false })
+
+const emit = defineEmits<{ 'update:modelValue': [M]; blur: [] }>()
+
+const rootEl = ref<HTMLElement | null>(null)
+
+const validation = useFieldValidation({
+  value: () => props.modelValue,
+  rules: () => props.rules,
+  required: () => props.required,
+  error: () => props.error,
+  errorLabel: () => props.errorLabel,
+  name: () => props.name,
+  validateOn: () => props.validateOn,
+  disabled: () => false,
+  focus: () => { rootEl.value?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus() },
+  el: () => rootEl.value,
+  setValue: (v) => emit('update:modelValue', v as M),
+})
+const { hasError, message: errorMessage, messageId } = validation
+const onFocusOut = useFocusLeave(() => rootEl.value, () => {
+  validation.onBlur()
+  emit('blur')
+})
+
+defineExpose({
+  /** Checks its rules and shows the result; resolves to whether they pass */
+  validate: validation.validate,
+  /** Hides its validation error (until the next check) */
+  resetValidation: validation.resetValidation,
+})
 
 function isSelected(value: V, modelValue: M) {
   return Array.isArray(modelValue) ? modelValue.includes(value) : modelValue === value
@@ -50,8 +97,13 @@ function toggle(opt: SegmentedOption<V>, modelValue: M, multi: boolean) {
 
 <template>
   <div
+    ref="rootEl"
+    v-bind="$attrs"
     class="inline-flex overflow-hidden rounded-full border border-outline"
     role="group"
+    :aria-invalid="hasError || undefined"
+    :aria-describedby="errorMessage ? messageId : undefined"
+    @focusout="onFocusOut"
   >
     <button
       v-for="(opt, i) in options"
@@ -89,4 +141,6 @@ function toggle(opt: SegmentedOption<V>, modelValue: M, multi: boolean) {
       <span>{{ opt.label }}</span>
     </button>
   </div>
+  <!-- M3's segmented button has no error state: the message says so -->
+  <p v-if="errorMessage" :id="messageId" role="alert" class="mt-1 text-body-small text-error">{{ errorMessage }}</p>
 </template>

@@ -5,6 +5,8 @@
  * @event update:modelValue Emitted with the picked date.
  */
 import { computed, onUnmounted, ref, watch } from 'vue'
+import { useFieldValidation, useFocusLeave } from '../composables/_useFieldValidation'
+import type { ValidateOn, ValidationRule } from '../composables/validation'
 import MIcon from './MIcon.vue'
 import MIconButton from './MIconButton.vue'
 import MMonthYearButton from './_MMonthYearButton.vue'
@@ -34,10 +36,21 @@ const props = defineProps<{
   yearRange?: [number, number]
   /** Disables the picker */
   disabled?: boolean
-  /** Error state */
-  error?: boolean
+  /** Error state. A string is also the message (`:error="errors.x"`) */
+  error?: boolean | string
   /** Error message shown when error is true */
   errorLabel?: string
+  /** Marks as required — adds a red asterisk after the label; inside an `MForm` or with `rules`, also validates it */
+  required?: boolean
+  /**
+   * Validation rules: functions `(value, ctx) => true | 'message'` (may be async; see the built-in `required`,
+   * `email`, `minLength`…) or a Standard Schema (zod, valibot…). Checked in order; the first failure is shown
+   */
+  rules?: ValidationRule | ValidationRule[]
+  /** When the rules are checked and shown: on leaving the field (default; live after that), while typing, or only on submit (`MForm`) */
+  validateOn?: ValidateOn
+  /** The key of this field in its `MForm`'s values, errors and schema */
+  name?: string
   /** Hint text below the field */
   hint?: string
   /**
@@ -60,7 +73,25 @@ const localeStrings = useLocale()
 // to a hardcoded 'es-ES' regardless of what locale the app actually provided.
 const resolvedLocale = computed(() => props.locale ?? localeStrings.lang)
 
-const emit = defineEmits<{ 'update:modelValue': [string | null] }>()
+const emit = defineEmits<{ blur: []; 'update:modelValue': [string | null] }>()
+
+const rootEl = ref<HTMLElement | null>(null)
+const validation = useFieldValidation({
+  value: () => props.modelValue,
+  rules: () => props.rules,
+  required: () => props.required,
+  error: () => props.error,
+  errorLabel: () => props.errorLabel,
+  name: () => props.name,
+  validateOn: () => props.validateOn,
+  disabled: () => props.disabled,
+  focus: () => { triggerEl.value?.querySelector('button')?.focus() },
+  el: () => triggerEl.value,
+  setValue: (v) => emit('update:modelValue', v as string | null),
+})
+/** Its own `disabled` or its MForm's */
+const isDisabled = validation.disabled
+const { hasError, message: errorMessage, messageId } = validation
 
 const open = ref(false)
 const triggerEl = ref<HTMLElement | null>(null)
@@ -165,26 +196,41 @@ watch(open, (v) => {
 onUnmounted(() => {
   document.removeEventListener('mousedown', onClickOutside)
 })
+
+defineExpose({
+  /** Checks its rules and shows the result; resolves to whether they pass */
+  validate: validation.validate,
+  /** Hides its validation error (until the next check) */
+  resetValidation: validation.resetValidation,
+})
+
+// Last: it watches `open`, declared above
+const onFocusOut = useFocusLeave(() => rootEl.value, () => {
+  validation.onBlur()
+  emit('blur')
+}, () => open.value)
 </script>
 
 <template>
-  <div class="flex flex-col gap-1">
+  <div ref="rootEl" class="flex flex-col gap-1" @focusout="onFocusOut">
     <!-- Trigger -->
     <div ref="triggerEl" class="relative mt-2" :style="{ '--field-bg': resolvedFieldBg }">
       <button
+        :aria-invalid="hasError || undefined"
+        :aria-describedby="errorMessage || hint ? messageId : undefined"
         type="button"
         class="flex h-14 w-full items-center gap-2 rounded-xs border bg-transparent px-4 text-left text-body-large transition-[border-color,border-width] duration-150"
         :class="[
-          disabled ? 'pointer-events-none cursor-not-allowed border-on-surface/12' : 'cursor-pointer',
-          !disabled && (open
-            ? error ? 'border-2 border-error' : 'border-2 border-primary'
-            : error ? 'border-error' : 'border-outline hover:border-on-surface'),
+          isDisabled ? 'pointer-events-none cursor-not-allowed border-on-surface/12' : 'cursor-pointer',
+          !isDisabled && (open
+            ? hasError ? 'border-2 border-error' : 'border-2 border-primary'
+            : hasError ? 'border-error' : 'border-outline hover:border-on-surface'),
         ]"
-        @click="!disabled && (open = !open)"
+        @click="!isDisabled && (open = !open)"
       >
-        <MIcon name="calendar_today" :size="24" class="shrink-0" :class="disabled ? 'text-on-surface/38' : 'text-on-surface-variant'" />
-        <span v-overflow-title v-if="displayValue" class="min-w-0 truncate flex-1" :class="disabled ? 'text-on-surface/38' : 'text-on-surface'">{{ displayValue }}</span>
-        <span v-overflow-title v-else class="min-w-0 truncate flex-1" :class="disabled ? 'text-on-surface/38' : 'text-on-surface-variant'">{{ placeholder || label || localeStrings.selectDate }}</span>
+        <MIcon name="calendar_today" :size="24" class="shrink-0" :class="isDisabled ? 'text-on-surface/38' : 'text-on-surface-variant'" />
+        <span v-overflow-title v-if="displayValue" class="min-w-0 truncate flex-1" :class="isDisabled ? 'text-on-surface/38' : 'text-on-surface'">{{ displayValue }}</span>
+        <span v-overflow-title v-else class="min-w-0 truncate flex-1" :class="isDisabled ? 'text-on-surface/38' : 'text-on-surface-variant'">{{ placeholder || label || localeStrings.selectDate }}</span>
         <MIcon
           v-if="modelValue"
           name="close"
@@ -195,14 +241,14 @@ onUnmounted(() => {
       </button>
       <label
         v-if="label"
-        :class="[OUTLINED_FLOATED_LABEL, 'transition-colors', disabled ? 'text-on-surface/38' : open ? (error ? 'text-error' : 'text-primary') : error ? 'text-error' : 'text-on-surface-variant']"
+        :class="[OUTLINED_FLOATED_LABEL, 'transition-colors', isDisabled ? 'text-on-surface/38' : open ? (hasError ? 'text-error' : 'text-primary') : hasError ? 'text-error' : 'text-on-surface-variant']"
       >
-        {{ label }}
+        {{ label }}<span v-if="required" class="text-error">&nbsp;*</span>
       </label>
     </div>
 
-    <p v-if="error && errorLabel" class="px-4 text-body-small text-error">{{ errorLabel }}</p>
-    <p v-else-if="hint" class="px-4 text-body-small text-on-surface-variant">{{ hint }}</p>
+    <p v-if="errorMessage" :id="messageId" role="alert" class="px-4 text-body-small text-error">{{ errorMessage }}</p>
+    <p v-else-if="hint" :id="messageId" class="px-4 text-body-small text-on-surface-variant">{{ hint }}</p>
 
     <!-- Calendar dropdown -->
     <Teleport to="body">

@@ -11,8 +11,11 @@
  * @event update:modelValue Emitted with the number in E.164, or null when empty — powers v-model
  * @event update:country Emitted with the ISO code when the country changes — powers v-model:country
  * @event update:valid Emitted when the number becomes (in)valid for its country — powers v-model:valid
+ * @event blur Focus left the field and its country list
  */
-import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from 'vue'
+import { computed, inject, nextTick, onBeforeUnmount, ref, useId, watch } from 'vue'
+import { FORM_KEY, useFieldValidation, useFocusLeave } from '../composables/_useFieldValidation'
+import type { ValidateOn, ValidationRule } from '../composables/validation'
 import MIcon from './MIcon.vue'
 import { useFieldBg } from '../composables/useFieldBg'
 import { useLocale } from '../composables/useLocale'
@@ -47,17 +50,23 @@ const props = withDefaults(
     preferred?: string[]
     /** Visual style */
     variant?: 'filled' | 'outlined'
-    /** Puts the field in error state */
-    error?: boolean
+    /** Puts the field in error state. A string is also the message */
+    error?: boolean | string
     /** Error message below the field (when `error`, or when `validate` finds the number incomplete) */
     errorLabel?: string
+    /** More validation rules (functions or a Standard Schema), run on the E.164 value; see `MForm` */
+    rules?: ValidationRule | ValidationRule[]
+    /** When the rules are checked and shown: on leaving the field (default), while typing, or only on submit */
+    validateOn?: ValidateOn
+    /** The key of this field in its `MForm` */
+    name?: string
     /** Hint text below the field */
     hint?: string
     /** Disables the field */
     disabled?: boolean
     /** Marks as required — adds a red asterisk after the label */
     required?: boolean
-    /** After leaving the field, show an error when the number doesn't fit its country's length */
+    /** After leaving the field, show an error when the number doesn't fit its country's length (and block an `MForm`'s submit) */
     validate?: boolean
     /** Placeholder; defaults to an example in the country's format */
     placeholder?: string
@@ -75,6 +84,7 @@ const emit = defineEmits<{
   'update:modelValue': [string | null]
   'update:country': [string]
   'update:valid': [boolean]
+  blur: []
 }>()
 
 const t = useLocale()
@@ -132,7 +142,6 @@ const examplePlaceholder = computed(() => {
 
 // ── Typing ────────────────────────────────────────────────────────
 const inputEl = ref<HTMLInputElement>()
-const touched = ref(false)
 
 // Puts the caret after the n-th digit of the formatted text, so reformatting doesn't throw it to the end
 function caretAfterDigits(text: string, n: number) {
@@ -188,9 +197,29 @@ function onKeydown(e: KeyboardEvent) {
   commit(digits.slice(0, digitsBefore - 1) + digits.slice(digitsBefore), digitsBefore - 1)
 }
 
-const showInvalid = computed(() => props.validate && touched.value && !!national.value && !valid.value)
-const isError = computed(() => props.error || showInvalid.value)
-const errorText = computed(() => props.errorLabel ?? (showInvalid.value ? t.phoneInvalid : undefined))
+// The number's own check (`validate`) is one more rule, after the consumer's
+const phoneRule: ValidationRule = () => !props.validate || !national.value || valid.value || props.errorLabel || t.phoneInvalid
+const inForm = !!inject(FORM_KEY, null)
+const rootEl = ref<HTMLElement | null>(null)
+const validation = useFieldValidation({
+  value: () => props.modelValue,
+  rules: () => [...(props.rules ? (Array.isArray(props.rules) ? props.rules : [props.rules]) : []), phoneRule],
+  // phoneRule is always there: `required` alone (no MForm, no rules) still only shows the asterisk
+  required: () => props.required && (inForm || !!props.rules),
+  error: () => props.error,
+  errorLabel: () => props.errorLabel,
+  name: () => props.name,
+  validateOn: () => props.validateOn,
+  disabled: () => props.disabled,
+  focus: () => inputEl.value?.focus(),
+  el: () => inputEl.value,
+  setValue: (v) => emit('update:modelValue', (v as string | null) ?? null),
+})
+/** Its own `disabled` or its MForm's */
+const isDisabled = validation.disabled
+const isError = validation.hasError
+const errorText = validation.message
+const messageId = validation.messageId
 
 // ── Country list ──────────────────────────────────────────────────
 const open = ref(false)
@@ -258,7 +287,7 @@ function place() {
 }
 
 async function openList() {
-  if (props.disabled) return
+  if (isDisabled.value) return
   open.value = true
   search.value = ''
   await nextTick()
@@ -320,15 +349,25 @@ onBeforeUnmount(() => {
   document.removeEventListener('mousedown', onDocDown)
 })
 
+// Last: it watches `open`, declared above
+const onFocusOut = useFocusLeave(() => rootEl.value, () => {
+  validation.onBlur()
+  emit('blur')
+}, () => open.value)
+
 defineExpose({
   focus: (options?: FocusOptions) => inputEl.value?.focus(options),
+  /** Checks its rules (and the number's length) and shows the result; resolves to whether they pass */
+  validate: validation.validate,
+  /** Hides its validation error (until the next check) */
+  resetValidation: validation.resetValidation,
   /** Whether the number fits its country's length */
   valid,
 })
 </script>
 
 <template>
-  <div class="m3-phone-input flex flex-col gap-1">
+  <div ref="rootEl" class="m3-phone-input flex flex-col gap-1" @focusout="onFocusOut">
     <div
       ref="fieldEl"
       class="group relative flex h-14 transition-[border-color,border-width] duration-150"
@@ -336,7 +375,7 @@ defineExpose({
         variant === 'outlined'
           ? [
               'mt-2 items-center rounded-xs border',
-              disabled
+              isDisabled
                 ? 'border-on-surface/12'
                 : isError
                   ? 'border-error focus-within:border-2 focus-within:border-error'
@@ -344,7 +383,7 @@ defineExpose({
             ]
           : [
               'items-end rounded-t-xs border-b bg-surface-container-highest pb-2',
-              disabled
+              isDisabled
                 ? 'border-b-on-surface/38 bg-[color-mix(in_srgb,var(--color-on-surface)_4%,var(--color-surface-container-highest))]'
                 : isError
                   ? 'border-b-error focus-within:border-b-2 focus-within:border-b-error'
@@ -359,7 +398,7 @@ defineExpose({
         class="pointer-events-none absolute truncate text-label-small"
         :class="[
           variant === 'outlined' ? 'left-3 -top-2.5 max-w-[calc(100%-1.5rem)] bg-[var(--field-bg)] px-1' : 'left-4 top-2 right-4',
-          disabled ? 'text-on-surface/38' : isError ? 'text-error' : 'text-on-surface-variant group-focus-within:text-primary',
+          isDisabled ? 'text-on-surface/38' : isError ? 'text-error' : 'text-on-surface-variant group-focus-within:text-primary',
         ]"
       >
         {{ label }}<span v-if="required" class="text-error">&nbsp;*</span>
@@ -371,7 +410,7 @@ defineExpose({
         type="button"
         class="m3-phone-country ml-1 flex h-8 shrink-0 cursor-pointer items-center gap-1 rounded-full pr-1 pl-3 text-body-large text-on-surface outline-none transition-colors hover:bg-on-surface/8 focus-visible:ring-2 focus-visible:ring-secondary disabled:cursor-not-allowed disabled:text-on-surface/38"
         :class="variant === 'filled' && '-mb-1'"
-        :disabled="disabled"
+        :disabled="isDisabled"
         :aria-label="`${t.phoneCountry}: ${nameOf(country.iso2)} +${country.dial}`"
         aria-haspopup="listbox"
         :aria-expanded="open"
@@ -392,20 +431,20 @@ defineExpose({
         inputmode="tel"
         autocomplete="tel"
         :value="display"
-        :disabled="disabled"
+        :disabled="isDisabled"
         :required="required"
         :placeholder="placeholder ?? examplePlaceholder"
         :aria-invalid="isError || undefined"
+        :aria-describedby="errorText || hint ? messageId : undefined"
         class="min-w-0 flex-1 bg-transparent pr-4 pl-1 text-body-large text-on-surface outline-none placeholder:text-on-surface-variant/60 disabled:cursor-not-allowed disabled:text-on-surface/38"
         :class="isError ? 'caret-error' : 'caret-primary'"
         @input="onInput"
         @keydown="onKeydown"
-        @blur="touched = true"
       />
     </div>
 
-    <p v-if="isError && errorText" class="px-4 text-body-small text-error">{{ errorText }}</p>
-    <p v-else-if="hint" class="px-4 text-body-small text-on-surface-variant">{{ hint }}</p>
+    <p v-if="errorText" :id="messageId" role="alert" class="px-4 text-body-small text-error">{{ errorText }}</p>
+    <p v-else-if="hint" :id="messageId" class="px-4 text-body-small text-on-surface-variant">{{ hint }}</p>
 
     <!-- Country list: a menu surface (surface-container, elevation 2) with a search field on top -->
     <Teleport to="body">

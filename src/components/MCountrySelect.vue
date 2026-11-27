@@ -7,6 +7,7 @@
  * @event update:modelValue A country was picked (its code), or cleared (null)
  */
 import { computed } from 'vue'
+import type { ValidateOn, ValidationRule } from '../composables/validation'
 import MAutocomplete from './MAutocomplete.vue'
 import { useLocale } from '../composables/useLocale'
 import { flagEmoji } from '../composables/phoneNumber'
@@ -32,10 +33,16 @@ const props = withDefaults(
     clearable?: boolean
     /** Helper text below the field */
     hint?: string
-    /** Error state */
-    error?: boolean
+    /** Error state. A string is also the message */
+    error?: boolean | string
     /** Error message shown when `error` is true */
     errorLabel?: string
+    /** Validation rules (functions or a Standard Schema); see `MForm` */
+    rules?: ValidationRule | ValidationRule[]
+    /** When the rules are checked and shown: on leaving the field (default), while typing, or only on submit */
+    validateOn?: ValidateOn
+    /** The key of this field in its `MForm` */
+    name?: string
     /** Marks it as required */
     required?: boolean
     /** Disables the field */
@@ -44,7 +51,7 @@ const props = withDefaults(
   { modelValue: null, flags: true, variant: 'filled', mode: 'docked', clearable: false },
 )
 
-const emit = defineEmits<{ 'update:modelValue': [code: string | null] }>()
+const emit = defineEmits<{ blur: []; 'update:modelValue': [code: string | null] }>()
 
 const t = useLocale()
 
@@ -81,6 +88,10 @@ const options = computed(() => {
     :hint="hint"
     :error="error"
     :error-label="errorLabel"
+    :rules="rules"
+    :validate-on="validateOn"
+    :name="name"
+    @blur="emit('blur')"
     :required="required"
     :disabled="disabled"
     leading-icon="public"

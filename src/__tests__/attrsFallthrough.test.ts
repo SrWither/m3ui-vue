@@ -20,6 +20,11 @@ import MDialog from '../components/MDialog.vue'
 import MOverlay from '../components/MOverlay.vue'
 import MAddressField from '../components/MAddressField.vue'
 import MMentionField from '../components/MMentionField.vue'
+import MRating from '../components/MRating.vue'
+import MSegmentedButton from '../components/MSegmentedButton.vue'
+import MSignaturePad from '../components/MSignaturePad.vue'
+import MRichTextEditor from '../components/MRichTextEditor.vue'
+import MCodeEditor from '../components/MCodeEditor.vue'
 
 // These components render more than one root node (an element plus a Teleport, a v-if/v-show
 // pair, a comment before the root...), which makes Vue drop a consumer's class/attrs silently.
@@ -54,6 +59,12 @@ const cases: [name: string, component: Component, props: Record<string, unknown>
   ['MDialog (fullscreen)', MDialog, { modelValue: true, title: 'T', fullscreen: true }, 'DIV'],
   // A Teleport root: the attrs go on the content layer, over the scrim
   ['MOverlay', MOverlay, { modelValue: true }, 'DIV'],
+  // The control plus its validation message: the attrs go on the control
+  ['MRating', MRating, { modelValue: 3, error: 'E' }, 'DIV'],
+  ['MSegmentedButton', MSegmentedButton, { modelValue: 'a', options: [{ value: 'a', label: 'A' }], error: 'E' }, 'DIV'],
+  ['MSignaturePad', MSignaturePad, { error: 'E' }, 'DIV'],
+  ['MRichTextEditor', MRichTextEditor, { modelValue: '', error: 'E' }, 'DIV'],
+  ['MCodeEditor', MCodeEditor, { modelValue: '', error: 'E' }, 'DIV'],
 ]
 
 describe('consumer attrs reach multi-root components', () => {

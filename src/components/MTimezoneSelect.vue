@@ -8,6 +8,7 @@
  * @event update:modelValue A time zone was picked (its IANA name), or cleared (null)
  */
 import { computed, onMounted } from 'vue'
+import type { ValidateOn, ValidationRule } from '../composables/validation'
 import MAutocomplete from './MAutocomplete.vue'
 import { useLocale } from '../composables/useLocale'
 
@@ -29,10 +30,16 @@ const props = withDefaults(
     clearable?: boolean
     /** Helper text below the field */
     hint?: string
-    /** Error state */
-    error?: boolean
+    /** Error state. A string is also the message */
+    error?: boolean | string
     /** Error message shown when `error` is true */
     errorLabel?: string
+    /** Validation rules (functions or a Standard Schema); see `MForm` */
+    rules?: ValidationRule | ValidationRule[]
+    /** When the rules are checked and shown: on leaving the field (default), while typing, or only on submit */
+    validateOn?: ValidateOn
+    /** The key of this field in its `MForm` */
+    name?: string
     /** Marks it as required */
     required?: boolean
     /** Disables the field */
@@ -41,7 +48,7 @@ const props = withDefaults(
   { modelValue: null, detect: false, variant: 'filled', mode: 'docked', clearable: false },
 )
 
-const emit = defineEmits<{ 'update:modelValue': [zone: string | null] }>()
+const emit = defineEmits<{ blur: []; 'update:modelValue': [zone: string | null] }>()
 
 const t = useLocale()
 
@@ -108,6 +115,10 @@ onMounted(() => {
     :hint="hint"
     :error="error"
     :error-label="errorLabel"
+    :rules="rules"
+    :validate-on="validateOn"
+    :name="name"
+    @blur="emit('blur')"
     :required="required"
     :disabled="disabled"
     leading-icon="schedule"
