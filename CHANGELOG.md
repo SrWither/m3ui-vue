@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.8.1] - 2026-11-28
+
+### Fixed
+- **`MPdfSigner`, `signPdf()`, `shownToUser()`, `fieldMissing()` and the `PdfSignField`/`SignPdfOptions` types move to their own entry point, `@m3ui-vue/m3ui-vue/pdf-sign`** (they were in `/pdf` in 1.8.0): an app using `/pdf` (`MPdfViewer`, `usePdf`) without `pdf-lib` installed failed to build on 1.8.0, since bundlers resolve even a dynamic import. `/pdf` needs only `pdfjs-dist` again; `/pdf-sign` needs `pdfjs-dist` and `pdf-lib`
+
 ## [1.8.0] - 2026-11-28
 
 ### Added
