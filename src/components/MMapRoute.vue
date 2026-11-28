@@ -233,12 +233,34 @@ function add() {
   }
 }
 
-/** Puts the vehicle and the split of the line at `d` meters (one frame) */
-function place(d: number) {
+/** Where the line's split was last sent to MapLibre (meters), and the vehicle's point then */
+let lineAt = -1
+let linePoint: LngLat | null = null
+/**
+ * Re-sending the line goes through MapLibre's worker and re-tiles it: every frame, that cost Firefox a frame in
+ * ten (the vehicle stuttered). The split sits under the vehicle, so it's only re-sent once the vehicle has moved
+ * 2px on screen, and always at the end of a move (`exact`)
+ */
+function lineNeedsUpdate(d: number, lngLat: LngLat, exact: boolean) {
+  if (exact || !map || lineAt < 0 || !linePoint) return d !== lineAt || lineAt < 0
+  const a = map.project(lngLat)
+  const b = map.project(linePoint)
+  return Math.hypot(a.x - b.x, a.y - b.y) >= 2
+}
+
+/** Puts the vehicle and the split of the line at `d` meters (one frame); `exact` also moves the split exactly there */
+function place(d: number, exact = true) {
   at = d
   const { lngLat } = pointAlong(path.value, cum.value, d)
   const heading = headingAt(d)
-  ;(map?.getSource(sourceId) as Maplibre.GeoJSONSource | undefined)?.setData(data(d))
+  if (lineNeedsUpdate(d, lngLat, exact)) {
+    const source = map?.getSource(sourceId) as Maplibre.GeoJSONSource | undefined
+    if (source) {
+      source.setData(data(d))
+      lineAt = d
+      linePoint = lngLat
+    }
+  }
   vehicleMarker?.setLngLat(lngLat)
   if (rotates.value) vehicleMarker?.setRotation(heading)
   headingNow = heading
@@ -352,7 +374,7 @@ function moveTo(d: number) {
   const step = (now: number) => {
     const t = Math.min(1, (now - start) / ms)
     // Constant speed, as a vehicle between two GPS fixes
-    place(from + (d - from) * t)
+    place(from + (d - from) * t, t >= 1)
     if (t < 1) frame = requestAnimationFrame(step)
     else {
       travelled.value = d
@@ -411,6 +433,7 @@ watch(showVehicle, (show) => {
 // A new route (compared by value: an inline array is new on every parent render): redraw, refit
 watch(pathKey, () => {
   snapped = null
+  lineAt = -1
   target.value = computeTarget()
   if (!map) return
   at = Math.min(target.value ?? 0, total.value)
