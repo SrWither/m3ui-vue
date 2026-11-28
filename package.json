@@ -68,6 +68,10 @@
       "types": "./dist/pdf.d.ts",
       "import": "./dist/pdf.js"
     },
+    "./pdf-sign": {
+      "types": "./dist/pdf-sign.d.ts",
+      "import": "./dist/pdf-sign.js"
+    },
     "./flow": {
       "types": "./dist/flow.d.ts",
       "import": "./dist/flow.js"

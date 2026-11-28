@@ -1,5 +1,5 @@
-// Writing filled signature fields into a PDF (MPdfSigner). Uses pdf-lib, an optional peer dependency loaded only
-// when a document is saved
+// Writing filled signature fields into a PDF (MPdfSigner, the /pdf-sign entry). Uses pdf-lib, an optional peer
+// dependency loaded only when a document is saved
 
 /** A field placed on a page to sign or fill */
 export interface PdfSignField {

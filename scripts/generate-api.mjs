@@ -38,6 +38,7 @@ const entries = [
   ['src/map.ts', `${PKG}/map`],
   ['src/media.ts', `${PKG}/media`],
   ['src/pdf.ts', `${PKG}/pdf`],
+  ['src/pdf-sign.ts', `${PKG}/pdf-sign`],
   ['src/flow.ts', `${PKG}/flow`],
   ['src/gantt.ts', `${PKG}/gantt`],
   ['src/draw.ts', `${PKG}/draw`],

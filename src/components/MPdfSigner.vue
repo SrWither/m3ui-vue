@@ -7,7 +7,7 @@
  * of the page), so a backend can store them and send them to each signer (`signer` picks whose fields are active).
  * Built on MPdfViewer (zoom, search, thumbnails) and MSignaturePad. Writing the PDF needs `pdf-lib`. A visual
  * signature, as e-signature flows show and print; for a certificate-based digital signature (PAdES), sign the
- * saved file on your server. Available from the `/pdf` entry point. Not an M3 spec component.
+ * saved file on your server. Available from the `/pdf-sign` entry point (it needs `pdfjs-dist` and `pdf-lib`). Not an M3 spec component.
  *
  * @event update:fields The fields changed (placed, moved, filled)
  * @event complete Every required field is filled (after the last one is)

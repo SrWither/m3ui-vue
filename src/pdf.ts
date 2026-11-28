@@ -13,6 +13,3 @@ export type {
   PdfState,
   PdfjsModule,
 } from './composables/usePdf'
-export { default as MPdfSigner } from './components/MPdfSigner.vue'
-export { signPdf, shownToUser, fieldMissing } from './composables/pdfSign'
-export type { PdfSignField, SignPdfOptions } from './composables/pdfSign'
