@@ -19,7 +19,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **`MMapRoute`'s `duration` defaults to `'auto'` (it was 1000): the vehicle moves for as long as the time between its last two positions, so one fed every few seconds keeps an even pace instead of stopping before each new position, or slowing down when one comes early. A number still fixes it**
 
 ### Fixed
-- `MMapRoute`'s vehicle shook in Firefox, which draws an element moved only by `translate` at whole pixels: it's drawn under a hint of rotation now, so it glides there as in Chrome. The default vehicle no longer re-renders the component on every frame
+- `MMapRoute`'s vehicle shook in Firefox, which draws an element moved only by `translate` at whole pixels: it's drawn under a hint of rotation now, so it glides there as in Chrome. The default vehicle no longer re-renders the component on every frame; the travelled line is re-sent to MapLibre only once the vehicle has moved 2px on screen instead of every frame (re-tiling it cost Firefox one frame in ten)
 
 ## [1.7.0] - 2026-11-27
 
