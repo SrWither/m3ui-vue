@@ -217,6 +217,9 @@
     },
     "pdfjs-dist": {
       "optional": true
+    },
+    "pdf-lib": {
+      "optional": true
     }
   },
   "devDependencies": {
@@ -261,6 +264,7 @@
     "jsbarcode": "^3.12.3",
     "maplibre-gl": "^6.19.0",
     "markdown-it": "^15.0.3",
+    "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.5.438",
     "qrcode-generator": "^2.0.4",
     "typescript": "~6.0.3",

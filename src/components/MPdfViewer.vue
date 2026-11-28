@@ -88,6 +88,9 @@ export type PdfZoom = number | 'fit-width' | 'fit-page'
  *
  * @slot actions Extra buttons at the end of the top bar. Props: `{ pdf }`
  * @slot empty Shown without a `src`
+ * @slot page Drawn over each page (fields, stamps, your own marks), positioned in its box. Props: `{ page, width,
+ *   height, scale, rotation, size }`: the page's box in px, px per PDF point, the view's rotation, and the page's
+ *   own size in points (before that rotation)
  * @event loaded The document loaded, with its pdf.js proxy
  * @event error The document failed to load
  * @event link A link was followed: `{ url }` (opens in a new tab) or `{ page }` (scrolled to)
@@ -1025,6 +1028,15 @@ const TOOLS = computed(() => [
                 @erase-at="(at: { x: number; y: number; r: number }) => eraseAt(i + 1, at)"
                 @select="onSelect"
                 @text-selection="onTextSelection"
+              />
+              <slot
+                name="page"
+                :page="i + 1"
+                :width="box.width"
+                :height="box.height"
+                :scale="scale"
+                :rotation="rotation"
+                :size="pdf.pageSizes.value[i]"
               />
             </div>
           </div>

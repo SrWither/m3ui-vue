@@ -39,6 +39,7 @@ export default defineConfig({
         'jsbarcode',
         'maplibre-gl',
         /^pdfjs-dist(\/|$)/,
+        'pdf-lib',
       ],
       output: {
         globals: { vue: 'Vue' },

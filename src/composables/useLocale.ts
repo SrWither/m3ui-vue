@@ -267,6 +267,160 @@ export interface M3Locale {
   mapRouteStop: string
   /** MMapRoute: the vehicle marker's accessible name */
   mapRouteVehicle: string
+  /** MSpreadsheet: the grid's accessible name */
+  spreadsheet: string
+  /** MSpreadsheet: the formula bar's input */
+  spreadsheetFormula: string
+  /** MSpreadsheet: the box showing the selected cell's name (B3, A1:C4) */
+  spreadsheetName: string
+  /** MFormRenderer: the submit button */
+  formSubmit: string
+  /** MFormBuilder: the editing view */
+  formBuilderEdit: string
+  /** MFormBuilder: the form as it will look */
+  formBuilderPreview: string
+  /** MFormBuilder: the schema as JSON */
+  formBuilderJson: string
+  /** MFormBuilder: the field palette */
+  formBuilderAddField: string
+  /** MFormBuilder: an empty form */
+  formBuilderEmpty: string
+  /** MFormBuilder: the form settings */
+  formBuilderForm: string
+  /** MFormBuilder */
+  formBuilderTitle: string
+  /** MFormBuilder */
+  formBuilderDescription: string
+  /** MFormBuilder */
+  formBuilderSubmitLabel: string
+  /** MFormBuilder */
+  formBuilderLabel: string
+  /** MFormBuilder: the value key */
+  formBuilderName: string
+  /** MFormBuilder */
+  formBuilderPlaceholder: string
+  /** MFormBuilder */
+  formBuilderHint: string
+  /** MFormBuilder */
+  formBuilderRequired: string
+  /** MFormBuilder */
+  formBuilderWidth: string
+  /** MFormBuilder */
+  formBuilderWidthFull: string
+  /** MFormBuilder */
+  formBuilderWidthHalf: string
+  /** MFormBuilder */
+  formBuilderWidthThird: string
+  /** MFormBuilder */
+  formBuilderWidthTwoThirds: string
+  /** MFormBuilder */
+  formBuilderOptions: string
+  /** MFormBuilder */
+  formBuilderMin: string
+  /** MFormBuilder */
+  formBuilderMax: string
+  /** MFormBuilder */
+  formBuilderStep: string
+  /** MFormBuilder */
+  formBuilderMinLength: string
+  /** MFormBuilder */
+  formBuilderMaxLength: string
+  /** MFormBuilder */
+  formBuilderPattern: string
+  /** MFormBuilder */
+  formBuilderPatternMessage: string
+  /** MFormBuilder: textarea lines */
+  formBuilderRows: string
+  /** MFormBuilder: conditional field */
+  formBuilderShowWhen: string
+  /** MFormBuilder: no condition */
+  formBuilderAlways: string
+  /** MFormBuilder: the condition value */
+  formBuilderEquals: string
+  /** MFormBuilder */
+  formBuilderDuplicate: string
+  /** MFormBuilder */
+  formBuilderDelete: string
+  /** MFormBuilder: copy the JSON */
+  formBuilderCopy: string
+  /** MFormBuilder */
+  formBuilderCopied: string
+  /** MFormBuilder: what the preview submitted */
+  formBuilderSubmitted: string
+  /** MFormBuilder: the inspector with nothing selected */
+  formBuilderSelectField: string
+  /** MFormBuilder: field type */
+  formFieldText: string
+  /** MFormBuilder: field type */
+  formFieldEmail: string
+  /** MFormBuilder: field type */
+  formFieldPassword: string
+  /** MFormBuilder: field type */
+  formFieldTel: string
+  /** MFormBuilder: field type */
+  formFieldUrl: string
+  /** MFormBuilder: field type */
+  formFieldTextarea: string
+  /** MFormBuilder: field type */
+  formFieldNumber: string
+  /** MFormBuilder: field type */
+  formFieldSelect: string
+  /** MFormBuilder: field type */
+  formFieldAutocomplete: string
+  /** MFormBuilder: field type */
+  formFieldRadio: string
+  /** MFormBuilder: field type */
+  formFieldCheckbox: string
+  /** MFormBuilder: field type */
+  formFieldSwitch: string
+  /** MFormBuilder: field type */
+  formFieldDate: string
+  /** MFormBuilder: field type */
+  formFieldTime: string
+  /** MFormBuilder: field type */
+  formFieldSlider: string
+  /** MFormBuilder: field type */
+  formFieldRating: string
+  /** MFormBuilder: field type */
+  formFieldPhone: string
+  /** MFormBuilder: field type */
+  formFieldHeading: string
+  /** MFormBuilder: field type */
+  formFieldDivider: string
+  /** MPdfSigner: field type */
+  pdfSignSignature: string
+  /** MPdfSigner: field type */
+  pdfSignInitials: string
+  /** MPdfSigner: field type */
+  pdfSignName: string
+  /** MPdfSigner: field type */
+  pdfSignDate: string
+  /** MPdfSigner: field type */
+  pdfSignText: string
+  /** MPdfSigner: field type */
+  pdfSignCheckbox: string
+  /** MPdfSigner: an empty signature field */
+  pdfSignHere: string
+  /** MPdfSigner: go to the next empty field */
+  pdfSignNext: string
+  /** MPdfSigner: done signing */
+  pdfSignFinish: string
+  /** MPdfSigner: {done} and {total} are replaced */
+  pdfSignProgress: string
+  /** MPdfSigner: draw a signature */
+  pdfSignDraw: string
+  /** MPdfSigner: type a signature */
+  pdfSignTypeIt: string
+  /** MPdfSigner: use this signature */
+  pdfSignAdopt: string
+  /** MPdfSigner: the field palette */
+  pdfSignAddField: string
+  /** MPdfSigner */
+  pdfSignRequired: string
+  /** MPdfSigner */
+  pdfSignDelete: string
+  /** MPdfSigner: every field is filled */
+  pdfSignComplete: string
   // MTrackingTimeline ({time} is a clock time)
   trackingArrives: string
   trackingArrivingNow: string
@@ -989,6 +1143,83 @@ export const defaultLocale: M3Locale = {
   mapNoPlaces: 'No places found',
   mapRouteStop: 'Stop',
   mapRouteVehicle: 'Vehicle',
+  spreadsheet: 'Spreadsheet',
+  spreadsheetFormula: 'Formula',
+  spreadsheetName: 'Name box',
+  formSubmit: 'Submit',
+  formBuilderEdit: 'Edit',
+  formBuilderPreview: 'Preview',
+  formBuilderJson: 'JSON',
+  formBuilderAddField: 'Add a field',
+  formBuilderEmpty: 'No fields yet: add one from the list',
+  formBuilderForm: 'Form',
+  formBuilderTitle: 'Title',
+  formBuilderDescription: 'Description',
+  formBuilderSubmitLabel: 'Submit button text',
+  formBuilderLabel: 'Label',
+  formBuilderName: 'Name (key)',
+  formBuilderPlaceholder: 'Placeholder',
+  formBuilderHint: 'Help text',
+  formBuilderRequired: 'Required',
+  formBuilderWidth: 'Width',
+  formBuilderWidthFull: 'Full',
+  formBuilderWidthHalf: 'Half',
+  formBuilderWidthThird: 'Third',
+  formBuilderWidthTwoThirds: 'Two thirds',
+  formBuilderOptions: 'Options, one per line (label or label=value)',
+  formBuilderMin: 'Minimum',
+  formBuilderMax: 'Maximum',
+  formBuilderStep: 'Step',
+  formBuilderMinLength: 'Minimum length',
+  formBuilderMaxLength: 'Maximum length',
+  formBuilderPattern: 'Pattern (regular expression)',
+  formBuilderPatternMessage: 'Message when it doesn’t match',
+  formBuilderRows: 'Lines',
+  formBuilderShowWhen: 'Show only when',
+  formBuilderAlways: 'Always',
+  formBuilderEquals: 'is',
+  formBuilderDuplicate: 'Duplicate',
+  formBuilderDelete: 'Delete',
+  formBuilderCopy: 'Copy',
+  formBuilderCopied: 'Copied',
+  formBuilderSubmitted: 'Submitted values',
+  formBuilderSelectField: 'Select a field to edit it',
+  formFieldText: 'Text',
+  formFieldEmail: 'Email',
+  formFieldPassword: 'Password',
+  formFieldTel: 'Phone (plain)',
+  formFieldUrl: 'Link',
+  formFieldTextarea: 'Long text',
+  formFieldNumber: 'Number',
+  formFieldSelect: 'Dropdown',
+  formFieldAutocomplete: 'Searchable list',
+  formFieldRadio: 'Single choice',
+  formFieldCheckbox: 'Checkbox',
+  formFieldSwitch: 'Switch',
+  formFieldDate: 'Date',
+  formFieldTime: 'Time',
+  formFieldSlider: 'Slider',
+  formFieldRating: 'Rating',
+  formFieldPhone: 'Phone with country',
+  formFieldHeading: 'Heading',
+  formFieldDivider: 'Divider',
+  pdfSignSignature: 'Signature',
+  pdfSignInitials: 'Initials',
+  pdfSignName: 'Name',
+  pdfSignDate: 'Date',
+  pdfSignText: 'Text',
+  pdfSignCheckbox: 'Checkbox',
+  pdfSignHere: 'Sign here',
+  pdfSignNext: 'Next field',
+  pdfSignFinish: 'Finish',
+  pdfSignProgress: '{done} of {total} fields',
+  pdfSignDraw: 'Draw',
+  pdfSignTypeIt: 'Type',
+  pdfSignAdopt: 'Sign',
+  pdfSignAddField: 'Add a field',
+  pdfSignRequired: 'Required',
+  pdfSignDelete: 'Delete field',
+  pdfSignComplete: 'Every field is filled',
   trackingArrives: 'Arrives {time}',
   trackingArrivingNow: 'Arriving now',
   trackingDelivered: 'Delivered',
