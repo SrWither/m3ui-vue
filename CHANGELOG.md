@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.8.0] - Unreleased
+## [1.8.0] - 2026-11-28
 
 ### Added
 - `MSpreadsheet`: an editable grid of cells, like a small Excel or Google Sheets. Type into a cell (Enter or Tab stores it and moves on, Esc cancels, F2 or a double click edits keeping its contents), select ranges with the mouse, Shift+click or Shift+arrows, clear them with Delete, undo and redo (Ctrl+Z, Ctrl+Shift+Z / Ctrl+Y). Copy, cut and paste tab-separated text to and from Excel, Sheets and LibreOffice (quoted cells with tabs and line breaks included; a block pasted over a bigger selection repeats; pasting its own copy moves the formulas' references). The fill handle continues a series of numbers, repeats text, counts "Item 1" on and moves formulas' references. Formulas: `+ - * / ^ &`, comparisons, `%`, references (`B3`, `$B$3`), ranges, and `SUM`, `AVERAGE`, `MIN`, `MAX`, `PRODUCT`, `COUNT`, `COUNTA`, `COUNTBLANK`, `SUMIF`, `COUNTIF`, `ROUND`, `ABS`, `SQRT`, `POWER`, `MOD`, `INT`, `IF`, `IFERROR`, `AND`, `OR`, `NOT`, `CONCAT`, `CONCATENATE`, `LEN`, `UPPER`, `LOWER`, `TRIM`, `LEFT`, `RIGHT`, plus your own (`functions`); errors show as `#DIV/0!`, `#REF!`, `#NAME?`, `#VALUE!`, `#CIRC!`; clicking a cell while typing a formula inserts its reference. A formula bar with the cell's name, `frozenRows`/`frozenColumns`, columns resized from their header (`v-model:columnWidths`), `columnLabels`, `format` for currencies and dates, `readonly`; only the rows in view are rendered. `v-model` holds the cells as typed; `change` and `selection-change` events; `select()`, `value()`, `undo()`, `redo()`, `clear()` on a ref. New locale keys `spreadsheet`, `spreadsheetFormula`, `spreadsheetName`
