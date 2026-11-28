@@ -310,6 +310,40 @@ describe('MMapRoute vehicle steadiness', () => {
   })
 })
 
+describe('MMapRoute smooth motion', () => {
+  it("duration 'auto' moves for as long as the time between positions: no stop before the next one comes", async () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener() {}, removeEventListener() {} }))
+    let t = 0
+    const frames: FrameRequestCallback[] = []
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => frames.push(cb))
+    vi.stubGlobal('cancelAnimationFrame', () => {})
+    vi.spyOn(performance, 'now').mockImplementation(() => t)
+    const run = (until: number) => { while (t < until) { t = Math.min(t + 16, until); frames.splice(0).forEach((cb) => cb(t)) } }
+    const stops = [{ lngLat: path[0]! }, { lngLat: path[2]! }]
+    const { p } = await mountRoute({ stops, path, progress: 0, flow: false })
+    const vehicle = () => created.markers.find((m) => (m.getElement() as HTMLElement).classList?.contains('m3-map-route-vehicle'))!.getLngLat().lng
+    const set = async (progress: number) => { p.value = { stops, path, progress, flow: false }; await nextTick() }
+    run(1000)
+    await set(0.1) // first move: a second
+    run(2500)
+    await set(0.2) // came 1.5 s after the last one: this move takes 1.5 s
+    run(2500 + 1400)
+    const before = vehicle()
+    run(2500 + 1480)
+    expect(vehicle()).toBeGreaterThan(before) // still on its way (a fixed 1 s would have stopped at 3.5 s)
+    run(2500 + 1600)
+    const settled = vehicle()
+    run(2500 + 2000)
+    expect(vehicle()).toBe(settled)
+  })
+
+  it('the vehicle is drawn under a hint of rotation (Firefox draws a translate-only element at whole pixels)', async () => {
+    await mountRoute({ stops: [{ lngLat: path[0]! }, { lngLat: path[2]! }], path, progress: 0.3, vehicleIcon: 'two_wheeler' })
+    const inner = document.querySelector('.m3-map-route-vehicle > div') as HTMLElement
+    expect(inner.style.transform).toBe('rotate(0.01deg)')
+  })
+})
+
 describe('MMapRoute custom vehicle', () => {
   it('#vehicle gets { bearing, west }; rotateVehicle makes the marker turn it with the road', async () => {
     const scopes: { bearing: number; west: boolean }[] = []

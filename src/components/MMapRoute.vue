@@ -68,8 +68,12 @@ const props = withDefaults(
     rotateVehicle?: boolean
     /** Show the vehicle (when there's a `progress` or `vehicle`) */
     showVehicle?: boolean
-    /** How long the vehicle takes to move to a new position, in ms (0 jumps). Reduced motion jumps */
-    duration?: number
+    /**
+     * How long the vehicle takes to move to a new position, in ms (0 jumps). `auto` (default) takes as long as the
+     * time between the last two positions, so a vehicle fed every few seconds keeps moving at an even pace instead of
+     * stopping between fixes (or slowing down when one arrives early). Reduced motion jumps
+     */
+    duration?: number | 'auto'
     /** Fit the map to the whole route when it's shown and when the route changes */
     fit?: boolean
     /** Keep the vehicle in the middle of the map as it moves */
@@ -98,7 +102,7 @@ const props = withDefaults(
      */
     snap?: 'forward' | 'nearest'
   }>(),
-  { rotateVehicle: undefined, flow: true, vehicleIcon: 'navigation', showVehicle: true, duration: 1000, fit: true, follow: false, padding: 64, width: 5, snap: 'forward' },
+  { rotateVehicle: undefined, flow: true, vehicleIcon: 'navigation', showVehicle: true, duration: 'auto', fit: true, follow: false, padding: 64, width: 5, snap: 'forward' },
 )
 
 const emit = defineEmits<{
@@ -183,6 +187,7 @@ watch([() => JSON.stringify(props.stops.map((s) => s.lngLat)), () => props.provi
 let at = 0
 const travelled = ref(0)
 const bearingNow = ref(0)
+let headingNow = 0
 let frame = 0
 
 const stopDone = (i: number) => props.stops[i]?.done ?? (target.value != null && travelled.value >= stopAt.value[i]! - 1)
@@ -236,7 +241,9 @@ function place(d: number) {
   ;(map?.getSource(sourceId) as Maplibre.GeoJSONSource | undefined)?.setData(data(d))
   vehicleMarker?.setLngLat(lngLat)
   if (rotates.value) vehicleMarker?.setRotation(heading)
-  bearingNow.value = heading
+  headingNow = heading
+  // Only `#vehicle` reads it: updating it for the default icon would re-render the component every frame
+  if (slots.vehicle) bearingNow.value = heading
   // Turn the icon around only when clearly heading west or east: going north or south it keeps the way it faced,
   // instead of flipping back and forth as the heading wobbles around 180° on a real road's short segments
   if (heading > 200 && heading < 340) facingWest.value = true
@@ -316,10 +323,25 @@ function headingAt(d: number): number {
 /** An icon that turns with the road (the arrow) vs one drawn facing right, flipped when heading west */
 const rotates = computed(() => props.rotateVehicle ?? (props.vehicleIcon === 'navigation' && !slots.vehicle))
 
+// For `duration: 'auto'`: when the last position came, and the time between positions (smoothed)
+let lastTargetAt = 0
+let interval = 0
+function moveDuration(): number {
+  if (prefersReducedMotion()) return 0
+  if (props.duration !== 'auto') return props.duration
+  const now = performance.now()
+  const gap = now - lastTargetAt
+  // A gap over 5 s is a pause (the vehicle waiting, the tab hidden), not how often positions come
+  if (lastTargetAt && gap <= 5000) interval = interval ? (interval + Math.max(gap, 100)) / 2 : Math.max(gap, 100)
+  lastTargetAt = now
+  // Until two positions have come, a second
+  return interval || 1000
+}
+
 function moveTo(d: number) {
   cancelAnimationFrame(frame)
   const from = at
-  const ms = prefersReducedMotion() ? 0 : props.duration
+  const ms = moveDuration()
   if (ms <= 0 || from === d) {
     place(d)
     travelled.value = d
@@ -374,9 +396,13 @@ watch(() => props.flow, startFlow)
 watch(styleVersion, () => add())
 watch(rotates, (on) => {
   vehicleMarker?.setRotationAlignment(on ? 'map' : 'viewport')
-  vehicleMarker?.setRotation(on ? bearingNow.value : 0)
+  vehicleMarker?.setRotation(on ? headingNow : 0)
 })
-watch(target, (d) => { if (d != null && map) moveTo(d) })
+watch(target, (d) => {
+  // No vehicle any more: the next one starts counting its pace afresh
+  if (d == null) lastTargetAt = interval = 0
+  else if (map) moveTo(d)
+})
 watch(showVehicle, (show) => {
   if (!map || !vehicleMarker) return
   if (show) vehicleMarker.setLngLat(pointAlong(path.value, cum.value, at).lngLat).addTo(map)
@@ -451,6 +477,9 @@ defineExpose({
 
     <!-- Moved into the map by MapLibre -->
     <div ref="vehicleEl" class="m3-map-route-vehicle" :aria-label="locale.mapRouteVehicle" role="img">
+      <!-- A hint of rotation: Firefox draws an element moved only by translate() at whole pixels (measured), so a
+           slow vehicle stepped a pixel every few frames and shook; a rotated one is drawn where it really is -->
+      <div style="transform: rotate(0.01deg)">
       <slot name="vehicle" :bearing="bearingNow" :west="facingWest">
         <span
           class="flex h-10 w-10 items-center justify-center rounded-full border-2 border-surface bg-primary text-on-primary shadow-elevation-2"
@@ -465,6 +494,7 @@ defineExpose({
           />
         </span>
       </slot>
+      </div>
     </div>
   </div>
 </template>
